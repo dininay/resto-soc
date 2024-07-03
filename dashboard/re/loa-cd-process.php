@@ -36,7 +36,7 @@ $stmt->bind_param("sssssssss", $kode_lahan, $status_approvowner, $status_approvl
 
 if ($stmt->execute()) {
     // Redirect ke halaman datatable-land-sourcing
-    header("Location: /Resto/dashboard/datatables-loa-cd.php");
+    header("Location: " . $base_url . "/datatables-loa-cd.php");
     exit();
 } else {
     echo "Error: " . $stmt->error;

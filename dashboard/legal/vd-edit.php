@@ -37,7 +37,7 @@ $lamp_vd = "";
     $sql = "UPDATE dokumen_loacd SET kode_store='$kode_store', lamp_vd = '$lamp_vd' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-checkval-legal.php");
+        header("Location: " . $base_url . "/datatables-checkval-legal.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

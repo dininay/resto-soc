@@ -22,7 +22,7 @@ $stmt->bind_param("sssssssss", $kode_lahan, $nama_lahan, $lokasi, $lamp_land, $l
 
 if ($stmt->execute()) {
     // Redirect ke halaman datatable-land-sourcing
-    header("Location: /Resto/dashboard/datatables-dealing-draft-negosiator.php");
+    header("Location: " . $base_url . "/datatables-dealing-draft-negosiator.php");
     exit();
 } else {
     echo "Error: " . $stmt->error;

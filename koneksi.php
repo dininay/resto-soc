@@ -6,4 +6,5 @@ $conn = new mysqli("localhost", "root", "", "tracking_resto");
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
+$base_url = "/Resto-Soc/dashboard";
 ?>

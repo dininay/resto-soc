@@ -39,7 +39,7 @@ $lamp_draf = "";
     $sql = "UPDATE draft SET lamp_draf = '$lamp_draf', catatan_legal = '$catatan', jadwal_psm = '$jadwal_psm' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-draft-sewa-legal.php");
+        header("Location: " . $base_url . "/datatables-draft-sewa-legal.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

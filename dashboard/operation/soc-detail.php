@@ -37,7 +37,7 @@ INNER JOIN doc_legal ON note_legal.kode_lahan = doc_legal.kode_lahan
 INNER JOIN sign ON soc_fat.kode_lahan = sign.kode_lahan
 INNER JOIN land ON soc_fat.kode_lahan = land.kode_lahan
 INNER JOIN resto ON soc_fat.kode_lahan = resto.kode_lahan
-";
+WHERE soc_fat.id = $id";
 $result = $conn->query($sql);
 
     // Periksa apakah data ditemukan
@@ -136,14 +136,14 @@ $result = $conn->query($sql);
                                             <p class="form-control-static" style="margin-bottom: 0;"><?php echo $row['status_op']; ?></p>
                                         </div>
                                     </div>
-                                    <div class="col-2" style="margin-bottom: 1px;">
+                                    <div class="col-1" style="margin-bottom: 1px;">
                                         <div class="form-group row" style="margin-bottom: 1px; display: flex; flex-direction: column; align-items: flex-start;">
                                             <label class="col-sm-12 col-form-label" style="padding-right: 0; margin-bottom: 0;">File RTO</label>
                                             <div class="form-control-static" style="padding-left: 10px;">
                                                 <?php
                                                 $lamp_rto_files = explode(",", $row['lamp_rto']);
                                                 foreach ($lamp_rto_files as $file): ?>
-                                                    <a href="<?php echo $file; ?>" target="_blank" style="display: block; margin-top: 5px;">
+                                                    <a href="../uploads/<?php echo $file; ?>" target="_blank" style="display: block; margin-top: 5px;">
                                                         <i class="bi bi-file-earmark" style="font-size: 48px;"></i>
                                                     </a>
                                                 <?php endforeach; ?>
@@ -151,10 +151,10 @@ $result = $conn->query($sql);
                                         </div>
                                     </div>
 
-                                    <div class="col-5" style="margin-bottom: 1px;">
+                                    <div class="col-6" style="margin-bottom: 1px;">
                                         <div class="form-group row" style="margin-bottom: 1px; display: flex; align-items: center;">
-                                            <label class="col-sm-6 col-form-label" style="padding-right: 0;">Sukses RTO</label>
-                                            <div class="col-sm-6" style="padding-left: 0;">
+                                            <label class="col-sm-5 col-form-label" style="padding-right: 0;">Sukses RTO</label>
+                                            <div class="col-sm-7" style="padding-left: 0;">
                                                 <p class="form-control-static" style="margin-bottom: 0;">Skor RTO > 94% 
                                                     <?php if($total > 94): ?>
                                                         <i class="bi bi-check-circle-fill" style="color: green; font-size: 1.2rem;"></i>
@@ -163,8 +163,8 @@ $result = $conn->query($sql);
                                             </div>
                                         </div>
                                         <div class="form-group row" style="margin-bottom: 1px; display: flex; align-items: center;">
-                                            <label class="col-sm-6 col-form-label" style="padding-right: 0;">Failed RTO - Proceed GO</label>
-                                            <div class="col-sm-6" style="padding-left: 0;">
+                                            <label class="col-sm-5 col-form-label" style="padding-right: 0;">Failed RTO - Proceed GO</label>
+                                            <div class="col-sm-7" style="padding-left: 0;">
                                                 <p class="form-control-static" style="margin-bottom: 0; ">Skor RTO 75% - 94%</p>
                                                 <?php if($total > 75 && $total < 94): ?>
                                                     <i class="bi bi-check-circle-fill" style="color: green; font-size: 1.2rem;"></i>
@@ -172,8 +172,8 @@ $result = $conn->query($sql);
                                             </div>
                                         </div>
                                         <div class="form-group row" style="margin-bottom: 1px; display: flex; align-items: center;">
-                                            <label class="col-sm-6 col-form-label" style="padding-right: 0;">Failed RTO - Failed GO</label>
-                                            <div class="col-sm-6" style="padding-left: 0;">
+                                            <label class="col-sm-5 col-form-label" style="padding-right: 0;">Failed RTO - Failed GO</label>
+                                            <div class="col-sm-7" style="padding-left: 0;">
                                                     <?php if($total < 75): ?>
                                                         <i class="bi bi-check-circle-fill" style="color: green; font-size: 1.2rem;"></i>
                                                     <?php endif; ?>

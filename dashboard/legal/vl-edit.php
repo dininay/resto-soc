@@ -36,7 +36,7 @@ $lamp_vl = "";
     $sql = "UPDATE re SET lamp_vl = '$lamp_vl' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-wovl.php");
+        header("Location:" . $base_url . "/datatables-wovl.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

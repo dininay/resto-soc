@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sql = "UPDATE socdate_scm SET lamp_sj = '$lamp_sj' WHERE id = '$id'";
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-scm.php");
+        header("Location: " . $base_url . "/datatables-scm.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

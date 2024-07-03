@@ -39,7 +39,7 @@ $no_vd = $_POST['no_vd'];
     $sql = "UPDATE sdg_desain SET tc = '$tc', no_vd = '$no_vd', lamp_desainplan = '$lamp_desainplan' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-design.php");
+        header("Location: " . $base_url . "/datatables-design.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

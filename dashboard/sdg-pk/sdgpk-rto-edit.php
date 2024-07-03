@@ -71,7 +71,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sql = "UPDATE socdate_sdg SET no_listrik = '$no_listrik', lamp_listrik = '$lamp_listrik', lamp_ipal = '$lamp_ipal', lamp_ka = '$lamp_ka' WHERE id = '$id'";
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-sdgpk-rto.php");
+        header("Location:  " . $base_url . "/datatables-sdgpk-rto.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

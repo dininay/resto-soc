@@ -30,7 +30,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $sql_update = "UPDATE land SET status_land = '$status_land', status_approvre = '$status_approvre', status_date = '$status_date', sla = '$deadline' WHERE id = '$id'";
 
         if ($conn->query($sql_update) === TRUE) {
-            header("Location: /Resto/dashboard/datatables-bussiness-planning.php");
+            header("Location: " . $base_url . "/datatables-bussiness-planning.php");
             exit();
         } else {
             echo "Error: " . $sql_update . "<br>" . $conn->error;

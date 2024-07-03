@@ -82,7 +82,7 @@ $lamp_permit = "";
     $sql = "UPDATE sdg_desain SET lamp_pbg = '$lamp_pbg', lamp_permit = '$lamp_permit' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-sp-submit-legal.php");
+        header("Location: " . $base_url . "/datatables-sp-submit-legal.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

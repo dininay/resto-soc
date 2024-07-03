@@ -13,10 +13,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
     try {
         $status_fat = "In Process";
         $status_legalizin = "In Process";
+
+        // Ambil jumlah SLA dari tabel master_sla berdasarkan divisi "SPK-FAT"
+        $sql_select_sla_fat = "SELECT sla FROM master_sla WHERE divisi = 'SPK-FAT'";
+        $result_sla_fat = $conn->query($sql_select_sla_fat);
+        
+        if ($row_sla_fat = $result_sla_fat->fetch_assoc()) {
+            $sla_days_fat = $row_sla_fat['sla'];
+
+            // Hitung sla_fat dari spk_date
+            $sla_fat_obj = new DateTime($spk_date);
+            $sla_fat_obj->modify("+$sla_days_fat days");
+            $sla_fat = $sla_fat_obj->format("Y-m-d");
+
         // Query untuk memperbarui status_spk dan spk_date berdasarkan id
-        $sql_update = "UPDATE resto SET status_spk = ?, spk_date = ?, status_fat = ?, status_legalizin = ? WHERE id = ?";
+        $sql_update = "UPDATE resto SET status_spk = ?, spk_date = ?, sla_fat = ?, status_fat = ?, status_legalizin = ? WHERE id = ?";
         $stmt_update = $conn->prepare($sql_update);
-        $stmt_update->bind_param("ssssi", $status_spk, $spk_date, $status_fat, $status_legalizin, $id);
+        $stmt_update->bind_param("sssssi", $status_spk, $spk_date, $sla_fat, $status_fat, $status_legalizin, $id);
 
         // Eksekusi query update
         if ($stmt_update->execute() === TRUE) {
@@ -37,6 +50,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             $conn->rollback();
             echo "Error: " . $stmt_update->error;
         }
+    } else {
+        echo "SLA untuk divisi SPK-FAT tidak ditemukan.";
+    }
         // Redirect ke halaman datatables-checkval-legal.php
         header("Location: datatables-spk-sdgpk.php");
         exit; // Pastikan tidak ada output lain setelah header redirect

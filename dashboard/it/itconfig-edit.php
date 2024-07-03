@@ -39,7 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sql = "UPDATE socdate_it SET lamp_config = '$lamp_config', kode_dvr = '$kode_dvr', web_report = '$web_report', akun_gis = '$akun_gis' WHERE id = '$id'";
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-it-config.php");
+        header("Location: " . $base_url . "/datatables-it-config.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

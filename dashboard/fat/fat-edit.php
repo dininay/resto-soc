@@ -53,7 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sql = "UPDATE socdate_fat SET lamp_qris = '$lamp_qris', lamp_st = '$lamp_st' WHERE id = '$id'";
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-fat.php");
+        header("Location: " . $base_url . "/datatables-fat.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

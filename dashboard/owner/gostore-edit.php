@@ -16,11 +16,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sql_draft = "UPDATE draft SET nama_lahan='$nama_lokasi' WHERE kode_lahan = '$kode_lahan'";
 
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-gostore.php");
+        header("Location: " . $base_url . "/datatables-gostore.php");
         if ($conn->query($sql_land) === TRUE) {
             // Eksekusi query untuk tabel draft
             if ($conn->query($sql_draft) === TRUE) {
-                header("Location: /Resto/dashboard/datatables-resto-name.php");
+                header("Location: " . $base_url . "/datatables-resto-name.php");
                 exit();
             } else {
                 echo "Error: " . $sql_draft . "<br>" . $conn->error;

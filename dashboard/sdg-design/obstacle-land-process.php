@@ -17,7 +17,7 @@ $stmt->bind_param("sssss", $kode_lahan, $obstacle, $note, $obs_date, $status_obs
 
 if ($stmt->execute()) {
     // Redirect ke halaman datatable-land-sourcing
-    header("Location: /Resto/dashboard/datatables-obstacle-sdg.php");
+    header("Location: " . $base_url . "/datatables-obstacle-sdg.php");
     exit();
 } else {
     echo "Error: " . $stmt->error;

@@ -281,7 +281,7 @@ if(isset($_GET['id'])) {
         var obstacleDetail = document.getElementById("obstacle-detail");
         var lampSurvey = document.getElementById("lamp-survey");
         var noteDetail = document.getElementById("note");
-        if (obstacleSelect.value === "ya") {
+        if (obstacleSelect.value === "Yes") {
             obstacleDetail.style.display = "flex";
             noteDetail.style.display = "flex";
             lampSurvey.style.display = "flex";

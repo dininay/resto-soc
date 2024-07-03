@@ -46,7 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
 $sql = "SELECT r.*, l.kode_lahan, l.nama_lahan, l.lokasi, l.luas_area, l.lamp_land
         FROM re r
         JOIN land l ON r.kode_lahan = l.kode_lahan
-        WHERE r.status_approvowner = 'Approve'";
+        WHERE l.status_approvre = 'Approve'";
 
 $result = $conn->query($sql);
 

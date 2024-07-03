@@ -36,7 +36,7 @@ $lamp_signpsm = "";
     $sql = "UPDATE draft SET lamp_signpsm = '$lamp_signpsm' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-sign-psm-legal.php");
+        header("Location: " . $base_url . "/datatables-sign-psm-legal.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

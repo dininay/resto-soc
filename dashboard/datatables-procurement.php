@@ -3,16 +3,28 @@
 include "../koneksi.php";
 
 // Query untuk mengambil data dari tabel land
-$sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, d.lamp_draf, p.id, c.kode_store,
-               IFNULL(v.nama, '') AS nama_vendor, 
-               s.lamp_desainplan, q.lamp_rab, p.status_approvprocurement, p.sla_date, p.start_date, v.lamp_vendor, v.lamp_profil
-        FROM land l
-        INNER JOIN dokumen_loacd c ON l.kode_lahan = c.kode_lahan
-        INNER JOIN draft d ON l.kode_lahan = d.kode_lahan
-        INNER JOIN sdg_desain s ON l.kode_lahan = s.kode_lahan
-        INNER JOIN sdg_rab q ON l.kode_lahan = q.kode_lahan
-        INNER JOIN procurement p ON l.kode_lahan = p.kode_lahan
-        LEFT JOIN vendor v ON p.nama_vendor = v.kode_vendor";
+// $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, d.lamp_draf, p.id, c.kode_store,
+//                IFNULL(v.nama, '') AS nama_vendor, 
+//                s.lamp_desainplan, q.lamp_rab, p.status_approvprocurement, p.sla_date, p.start_date, v.lamp_vendor, v.lamp_profil
+//         FROM land l
+//         INNER JOIN dokumen_loacd c ON l.kode_lahan = c.kode_lahan
+//         INNER JOIN draft d ON l.kode_lahan = d.kode_lahan
+//         INNER JOIN sdg_desain s ON l.kode_lahan = s.kode_lahan
+//         INNER JOIN sdg_rab q ON l.kode_lahan = q.kode_lahan
+//         INNER JOIN procurement p ON l.kode_lahan = p.kode_lahan
+//         LEFT JOIN vendor v ON p.nama_vendor = v.kode_vendor
+//         WHERE confirm_sdgqs = 'Approve'";
+        $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, d.lamp_draf, r.id, r.kode_lahan, s.lamp_desainplan, r.keterangan, 
+        r.jenis_biaya, r.jumlah, r.date, r.lamp_rab, r.confirm_sdgqs, r.sla_date, r.start_date, c.kode_store, c.lamp_vd, c.status_approvlegalvd, p.status_approvprocurement,
+        IFNULL(v.nama, '') AS nama_vendor, v.lamp_vendor, v.lamp_profil
+        FROM draft d
+        INNER JOIN land l ON d.kode_lahan = l.kode_lahan
+        INNER JOIN dokumen_loacd c ON d.kode_lahan = c.kode_lahan
+        INNER JOIN sdg_rab r ON d.kode_lahan = r.kode_lahan
+        INNER JOIN procurement p ON d.kode_lahan = p.kode_lahan
+        INNER JOIN sdg_desain s ON d.kode_lahan = s.kode_lahan
+        LEFT JOIN vendor v ON p.nama_vendor = v.kode_vendor
+        WHERE r.confirm_sdgqs = 'Approve'";
 $result = $conn->query($sql);
 
 

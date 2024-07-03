@@ -53,7 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sql = "UPDATE socdate_ir SET lamp_rabcs = '$lamp_rabcs', lamp_rabsecurity = '$lamp_rabsecurity' WHERE id = '$id'";
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-ir.php");
+        header("Location: " . $base_url . "/datatables-ir.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

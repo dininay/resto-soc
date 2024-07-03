@@ -33,7 +33,7 @@ $stmt->bind_param("sssss", $kode_lahan, $lamp_land, $lamp_desainplan, $catatan_s
 
 if ($stmt->execute()) {
     // Redirect ke halaman datatable-land-sourcing
-    header("Location: /Resto/dashboard/datatables-design.php");
+    header("Location: " . $base_url . "/datatables-design.php");
     exit();
 } else {
     echo "Error: " . $stmt->error;

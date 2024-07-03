@@ -60,7 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sql = "UPDATE dokumen_loacd SET masa_berlaku = '$masa_berlaku', lamp_loacd = '$lamp_loacd', catatan = '$catatan' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-loa-cd.php");
+        header("Location: " . $base_url . "/datatables-loa-cd.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

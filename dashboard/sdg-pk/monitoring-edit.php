@@ -64,7 +64,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt_update->execute();
 
         // Redirect ke halaman data tabel setelah selesai
-        header("Location: /Resto/dashboard/datatables-monitoring-op.php");
+        header("Location:  " . $base_url . "/datatables-monitoring-op.php");
         exit();
     } else {
         echo "Error: " . $stmt->error;

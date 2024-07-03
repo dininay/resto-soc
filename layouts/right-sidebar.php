@@ -178,7 +178,8 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "Operation") : ?>
                     <li class="nav-item <?php echo ($current_page == 'datatables-soc-date' || $current_page == 'datatables-update-info' 
                     || $current_page == 'datatables-validation-monitoring' || $current_page == 'datatables-soc' || 
-                    $current_page == 'datatables-soc-summary') ? 'active' : ''; ?>" data-item="demos">
+                    $current_page == 'datatables-soc-summary' || $current_page == 'datatables-soc-date-act' || $current_page == 'datatables-soc-date-hold'
+                    || $current_page == 'datatables-soc-date-achieve') ? 'active' : ''; ?>" data-item="demos">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Safe-Box1"></i>
                             <span class="nav-text">PMO</span>
@@ -685,7 +686,25 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                         <li class="nav-item <?php echo $current_page == 'datatables-soc-date' ? 'active' : ''; ?>">
                             <a href="datatables-soc-date.php">
                                 <i class="nav-icon i-Width-Window"></i>
-                                <span class="item-name">Date SOC RTO</span>
+                                <span class="item-name">In Preparation Tracking</span>
+                            </a>
+                        </li>			
+                        <li class="nav-item <?php echo $current_page == 'datatables-soc-date-act' ? 'active' : ''; ?>">
+                            <a href="datatables-soc-date-act.php">
+                                <i class="nav-icon i-Speach-Bubble-3"></i>
+                                <span class="item-name">In Progress Tracking</span>
+                            </a>
+                        </li>		
+                        <li class="nav-item <?php echo $current_page == 'datatables-soc-date-hold' ? 'active' : ''; ?>">
+                            <a href="datatables-soc-date-hold.php">
+                                <i class="nav-icon i-Split-Vertical"></i>
+                                <span class="item-name">Hold Project Tracking</span>
+                            </a>
+                        </li>		
+                        <li class="nav-item <?php echo $current_page == 'datatables-soc-date-achieve' ? 'active' : ''; ?>">
+                            <a href="datatables-soc-date-achieve.php">
+                                <i class="nav-icon i-File-Clipboard-Text--Image"></i>
+                                <span class="item-name">All Achievement Division</span>
                             </a>
                         </li>
                         <li class="nav-item <?php echo $current_page == 'datatables-update-info' ? 'active' : ''; ?>">

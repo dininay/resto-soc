@@ -38,7 +38,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sql = "UPDATE sdg_rab SET keterangan = '$keterangan', jumlah = '$jumlah', lamp_rab = '$lamp_rab' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-rab.php");
+        header("Location:  " . $base_url . "/datatables-rab.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

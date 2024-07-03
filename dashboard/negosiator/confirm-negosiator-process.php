@@ -28,7 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         }
 
         // Ambil SLA dari tabel master_sla dengan divisi = Design
-        $sql_select_sla_sdgd = "SELECT sla FROM master_sla WHERE divisi = 'Design'";
+        $sql_select_sla_sdgd = "SELECT sla FROM master_sla WHERE divisi = 'Land Survey'";
         $result_select_sla_sdgd = $conn->query($sql_select_sla_sdgd);
 
         if ($result_select_sla_sdgd && $result_select_sla_sdgd->num_rows > 0) {
@@ -55,7 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             if ($status_approvnego == 'Approve') {
                 // Hitung sla_date dan sla_date_sdgd
                 $sla_date = date('Y-m-d', strtotime($nego_date . ' + ' . $sla . ' days'));
-                $sla_date_sdgd = date('Y-m-d', strtotime($nego_date . ' + ' . $sla_sdgd . ' days'));
+                $sla_survey = date('Y-m-d', strtotime($nego_date . ' + ' . $sla_sdgd . ' days'));
 
                 // Query untuk mengambil data yang diperbarui
                 $sql_select = "SELECT * FROM re WHERE id = ?";
@@ -68,6 +68,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 // Variabel tambahan untuk dokumen_loacd
                 $status_approvloacd = "In Process";
                 $confirm_sdgdesain = "In Process";
+                $confirm_survey = "In Process";
+                $confirm_layout = "In Process";
 
                 // Insert data ke tabel dokumen_loacd
                 $sql_dokumen = "INSERT INTO dokumen_loacd (kode_lahan, status_approvowner, status_approvlegal, status_approvnego, status_approvloacd, slaloa_date) 
@@ -77,10 +79,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 $stmt_dokumen->execute();
 
                 // Insert data ke tabel sdg_desain
-                $sql_sdgd = "INSERT INTO sdg_desain (kode_lahan, confirm_sdgdesain, sla_date) 
+                $sql_sdgd = "INSERT INTO sdg_desain (kode_lahan, confirm_sdgdesain, confirm_survey, confirm_layout, sla_survey) 
                              VALUES (?, ?, ?)";
                 $stmt_sdgd = $conn->prepare($sql_sdgd);
-                $stmt_sdgd->bind_param("sss", $updated_row['kode_lahan'], $confirm_sdgdesain, $sla_date_sdgd);
+                $stmt_sdgd->bind_param("sss", $updated_row['kode_lahan'], $confirm_sdgdesain, $confirm_survey, $confirm_layout, $sla_survey);
                 $stmt_sdgd->execute();
             }
 

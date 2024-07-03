@@ -37,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sql = "UPDATE sdg_desain SET lamp_legal = '$lamp_legal',  obslegal_date = '$obslegal_date' WHERE id = '$id'";
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-design-legal.php");
+        header("Location: " . $base_url . "/datatables-design-legal.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

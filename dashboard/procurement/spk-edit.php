@@ -57,7 +57,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sql = "UPDATE resto SET lamp_spk = '$lamp_spk', sla_kom = '$sla_kom' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-spk-sdgpk.php");
+        header("Location:" . $base_url . "/datatables-spk-sdgpk.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

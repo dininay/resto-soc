@@ -200,7 +200,7 @@ $stmt->execute();
 
 if ($stmt->execute()) {
     // Redirect ke halaman datatable-land-sourcing
-    header("Location: /Resto/dashboard/datatables-soc.php");
+    header("Location: " . $base_url . "/datatables-soc.php");
     exit();
 } else {
     echo "Error: " . $stmt->error;

@@ -31,7 +31,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             if ($stmt_update_tgl_end_date->execute()) {
                 // Redirect ke halaman datatable-validasi-lahan-legal
-                header("Location: /Resto/dashboard/datatables-validasi-lahan-legal.php");
+                header("Location: " . $base_url . "/datatables-validasi-lahan-legal.php");
                 exit();
             } else {
                 echo "Error updating tgl_end_date: " . $stmt_update_tgl_end_date->error;
@@ -41,7 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt_update_tgl_end_date->close();
         } else {
             // Redirect ke halaman datatable-validasi-lahan-legal
-            header("Location: /Resto/dashboard/datatables-validasi-lahan-legal.php");
+            header("Location: " . $base_url . "/datatables-validasi-lahan-legal.php");
             exit();
         }
     } else {

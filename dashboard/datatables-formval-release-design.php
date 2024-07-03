@@ -54,9 +54,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
 
     try {
         // Query untuk memperbarui confirm_sdgdesain dan obstacle
-        $sql = "UPDATE sdg_desain SET confirm_sdgdesain = ?, catatan_sdgdesain = ?, obstacle = ?, submit_legal = ?, start_date = ?, slalegal_date = ?, end_date = ? WHERE id = ?";
+        $sql = "UPDATE sdg_desain SET confirm_sdgdesain = ?, catatan_sdgdesain = ?, obstacle = ?, submit_legal = ?, start_date = ?, slalegal_date = ? WHERE id = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sssssssi", $confirm_sdgdesain, $catatan_sdgdesain, $obstacle, $submit_legal, $start_date, $slalegal_date, $end_date, $id);
+        $stmt->bind_param("ssssssi", $confirm_sdgdesain, $catatan_sdgdesain, $obstacle, $submit_legal, $start_date, $slalegal_date, $id);
 
         // Eksekusi query
         if ($stmt->execute() === TRUE) {

@@ -13,7 +13,7 @@ if (isset($_POST['id'])) {
     // Jalankan statement SQL untuk menghapus data
     if ($conn->query($sql) === TRUE) {
         // Kirim tanggapan jika penghapusan berhasil
-                header("Location: /Resto/dashboard/datatables-draft-sewa-legal.php");
+                header("Location: " . $base_url . "/datatables-draft-sewa-legal.php");
                 exit();
     } else {
         // Kirim tanggapan jika terjadi kesalahan saat penghapusan

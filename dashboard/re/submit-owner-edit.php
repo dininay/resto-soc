@@ -37,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $conn->commit();
 
             // Redirect setelah berhasil
-            header("Location: /Resto/dashboard/datatables-submit-to-owner.php");
+            header("Location:" . $base_url . "/datatables-submit-to-owner.php");
             exit();
         } catch (Exception $e) {
             // Rollback transaksi jika terjadi kesalahan

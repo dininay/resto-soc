@@ -63,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
      alamat_pemilik = '$alamat_pemilik', no_tlp = '$no_tlp', luas_area = '$luas_area', lamp_land = '$lamp_land' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-land-sourcing.php");
+        header("Location: " . $base_url . "/datatables-land-sourcing.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

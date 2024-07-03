@@ -16,7 +16,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sql = "UPDATE negosiator SET confirm_nego = '$confirm_nego', catatan_nego = '$catatan_nego', jadwal_psm = '$jadwal_psm' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-dealing-draft-negosiator.php");
+        header("Location: " . $base_url . "/datatables-dealing-draft-negosiator.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

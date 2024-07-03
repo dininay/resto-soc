@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sql = "UPDATE socdate_academy SET lamp_kpt3 = '$lamp_kpt3', kpt_3 = '$kpt_3' WHERE id = '$id'";
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-hr-kpt-3.php");
+        header("Location: " . $base_url . "/datatables-hr-kpt-3.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

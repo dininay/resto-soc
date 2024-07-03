@@ -18,7 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($conn->query($sql_land) === TRUE) {
         // Eksekusi query untuk tabel draft
         if ($conn->query($sql_draft) === TRUE) {
-            header("Location: /Resto/dashboard/datatables-resto-name.php");
+            header("Location: " . $base_url . "/datatables-resto-name.php");
             exit();
         } else {
             echo "Error: " . $sql_draft . "<br>" . $conn->error;

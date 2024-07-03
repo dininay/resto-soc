@@ -35,7 +35,7 @@ $stmt->bind_param("ssssssss", $kode_lahan, $nama_lahan, $lokasi, $lamp_land, $la
 
 if ($stmt->execute()) {
     // Redirect ke halaman datatable-land-sourcing
-    header("Location: /Resto/dashboard/datatables-draft-sewa-legal.php");
+    header("Location: " . $base_url . "/datatables-draft-sewa-legal.php");
     exit();
 } else {
     echo "Error: " . $stmt->error;

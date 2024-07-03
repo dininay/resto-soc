@@ -87,7 +87,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sql = "UPDATE socdate_it SET lamp_printer = '$lamp_printer', lamp_cctv = '$lamp_cctv', lamp_sound = '$lamp_sound', lamp_internet = '$lamp_internet' WHERE id = '$id'";
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-it.php");
+        header("Location: " . $base_url . "/datatables-it.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

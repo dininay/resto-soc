@@ -2,15 +2,71 @@
 // Koneksi ke database
 include "../koneksi.php";
 
-// Query untuk mengambil data dari tabel land
-$sql = "SELECT d.kode_lahan, d.nama_lahan, d.lokasi, r.id, r.kode_lahan, s.lamp_desainplan, r.keterangan, 
-r.jenis_biaya, r.jumlah, r.date, r.lamp_rab, r.confirm_sdgqs, t.lamp_vd, t.kode_store
-FROM land d
-INNER JOIN dokumen_loacd t ON d.kode_lahan = t.kode_lahan
-INNER JOIN sdg_rab r ON d.kode_lahan = r.kode_lahan
-INNER JOIN sdg_desain s ON d.kode_lahan = s.kode_lahan";
-$result = $conn->query($sql);
+// Proses jika ada pengiriman data dari formulir untuk memperbarui status
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["kode_lahan"]) && isset($_POST["valdoc_legal"])) {
+    $valdoc_legal = $_POST["valdoc_legal"];
+    $kode_lahan = $_POST["kode_lahan"];
 
+    // Mulai transaksi
+    $conn->begin_transaction();
+
+    try {
+        // Query untuk memperbarui valdoc_legal berdasarkan id
+        $sql_update = "UPDATE draft SET valdoc_legal = ? WHERE kode_lahan = ?";
+        $stmt_update = $conn->prepare($sql_update);
+        $stmt_update->bind_param("ss", $valdoc_legal, $kode_lahan);
+
+        // Eksekusi query update
+        if ($stmt_update->execute() === TRUE) {
+            // Jika valdoc_legal diubah menjadi Approve
+            if ($valdoc_legal == 'Approve') {
+                // Ambil data dari tabel draft berdasarkan id yang diedit
+                $sql_select = "SELECT kode_lahan, confirm_nego FROM draft WHERE kode_lahan = ?";
+                $stmt_select = $conn->prepare($sql_select);
+                $stmt_select->bind_param("s", $kode_lahan);
+                $stmt_select->execute();
+                $result_select = $stmt_select->get_result();
+                if ($row = $result_select->fetch_assoc()) {
+                    // Masukkan data ke tabel resto
+                    $sql_insert = "INSERT INTO resto (kode_lahan, status_finallegal) VALUES (?, ?)";
+                    $stmt_insert = $conn->prepare($sql_insert);
+                    $status_finallegal = "In Process";
+                    $stmt_insert->bind_param("ss", $row['kode_lahan'], $status_finallegal);
+                    $stmt_insert->execute();
+                } else {
+                    // Rollback transaksi jika terjadi kesalahan pada select
+                    $conn->rollback();
+                    echo "Error: Data not found for id: $kode_lahan.";
+                    exit;
+                }
+            }
+            // Komit transaksi
+            $conn->commit();
+        } else {
+            // Rollback transaksi jika terjadi kesalahan pada update
+            $conn->rollback();
+            echo "Error: " . $sql_update . "<br>" . $conn->error;
+        }
+    } catch (Exception $e) {
+        // Rollback transaksi jika terjadi kesalahan
+        $conn->rollback();
+        echo "Error: " . $e->getMessage();
+    }
+}
+
+// Query untuk mengambil data dari tabel land
+$sql = "SELECT land.id, land.kode_lahan, land.nama_lahan, land.lokasi, land.lamp_land, 
+resto.*,
+summary_soc.*,
+draft.end_date AS draft_end_date,
+dokumen_loacd.*
+FROM land
+JOIN draft ON land.kode_lahan = draft.kode_lahan
+LEFT JOIN resto ON land.kode_lahan = resto.kode_lahan
+LEFT JOIN summary_soc ON resto.kode_lahan = summary_soc.kode_lahan
+LEFT JOIN dokumen_loacd ON land.kode_lahan = dokumen_loacd.kode_lahan
+";
+$result = $conn->query($sql);
 
 // Inisialisasi variabel $data dengan array kosong
 $data = [];
@@ -20,6 +76,30 @@ if ($result && $result->num_rows > 0) {
     // Ambil data dan masukkan ke dalam array $data
     while ($row = $result->fetch_assoc()) {
         $data[] = $row;
+    }
+}
+// Fungsi untuk menentukan remarks berdasarkan perbandingan tanggal
+function getStatusRemarks($spk_date, $sla_spk) {
+    if ($spk_date === $sla_spk) {
+        return "meet";
+    } elseif ($spk_date > $sla_spk) {
+        return "delayed";
+    } else {
+        return "good";
+    }
+}
+
+// Fungsi untuk menentukan warna badge berdasarkan remarks
+function getStatusBadgeColor($remarks) {
+    switch ($remarks) {
+        case 'good':
+            return 'success'; // hijau
+        case 'delayed':
+            return 'danger'; // merah
+        case 'meet':
+            return 'warning'; // kuning
+        default:
+            return 'secondary';
     }
 }
 
@@ -36,8 +116,8 @@ if ($result && $result->num_rows > 0) {
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/datatables.min.css" rel="stylesheet"  />
-	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/icofont/1.0.1/css/icofont.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
@@ -54,7 +134,7 @@ if ($result && $result->num_rows > 0) {
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>List data RAB</h1>
+                    <h1>Update Information All Division</h1>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
                 <!-- end of row-->
@@ -69,127 +149,121 @@ if ($result && $result->num_rows > 0) {
 								</div>
                                 <p>
 							  <div class="table-responsive">
-                                    <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
+                              <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
                                                 <th>ID Lokasi</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
-                                                <th>Lampiran VD</th>
-                                                <th>Lampiran Desain</th>
-                                                <th>Keterangan</th>
-                                                <th>Jumlah</th>
-                                                <th>Lampiran RAB</th>
-                                                <th>Status</th>
-												<th>Action</th>
+                                                <th>Final VD</th>
+                                                <th>Final SPK</th>
+                                                <th>Actual SPK</th>
+                                                <th>Ach Final Tender (%)</th>
+                                                <th>Target Kick Off Meeting</th>
+                                                <th>Actual Kick Off</th>
+                                                <th>Ach Kick Off (%)</th>
+                                                <th>Target RTO</th>
+                                                <th>Actual RTO</th>
+                                                <th>Ach RTO (%)</th>
+                                                <th>Target GO</th>
+                                                <th>Actual GO</th>
+                                                <th>Ach GO (%)</th>
+                                                <th>Final Status</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                         <?php foreach ($data as $row): ?>
                                             <tr>
+                                                <?php
+                                                // Menetapkan nilai status berdasarkan perbandingan antara spk_date dan sla_spk
+                                                $status = '';
+                                                $badge_color = '';
+                                                if (!empty($row['spk_date']) && !empty($row['sla_spk'])) {
+                                                    $status = getStatusRemarks($row['spk_date'], $row['sla_spk']);
+                                                    $badge_color = getStatusBadgeColor($status);
+                                                }
+
+                                                ?>
                                                 <td><?= $row['kode_lahan'] ?></td>
                                                 <td><?= $row['kode_store'] ?></td>
                                                 <td><?= $row['nama_lahan'] ?></td>
                                                 <td><?= $row['lokasi'] ?></td>
-                                                <?php
-                                                // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_vd_files = explode(",", $row['lamp_vd']); // Pisahkan nama file menjadi array
-                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_vd'])) {
-                                                    echo '<td>
-                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
-                                                    // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_vd_files as $vd) {
-                                                        echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $vd . '" target="_blank">
-                                                                    <i class="fas fa-file-pdf nav-icon"></i>
-                                                                </a>
-                                                            </li>';
-                                                    }
-                                                    echo '</ul> 
-                                                        </td>';
-                                                } else {
-                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
-                                                    echo '<td></td>';
-                                                }
-                                                ?>
-                                                <?php
-                                                // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_desainplan_files = explode(",", $row['lamp_desainplan']); // Pisahkan nama file menjadi array
-                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_desainplan'])) {
-                                                    echo '<td>
-                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
-                                                    // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_desainplan_files as $desainplan) {
-                                                        echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $desainplan . '" target="_blank">
-                                                                    <i class="fas fa-file-pdf nav-icon"></i>
-                                                                </a>
-                                                            </li>';
-                                                    }
-                                                    echo '</ul> 
-                                                        </td>';
-                                                } else {
-                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
-                                                    echo '<td></td>';
-                                                }
-                                                ?>
-                                                <td><?= $row['keterangan'] ?></td>
-                                                <td>Rp. <?= $row['jumlah'] ?></td>
-                                                <?php
-                                                // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_rab_files = explode(",", $row['lamp_rab']); // Pisahkan nama file menjadi array
-                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_rab'])) {
-                                                    echo '<td>
-                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
-                                                    // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_rab_files as $rab) {
-                                                        echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $rab . '" target="_blank">
-                                                                    <i class="fas fa-file-pdf nav-icon"></i>
-                                                                </a>
-                                                            </li>';
-                                                    }
-                                                    echo '</ul>
-                                                        </td>';
-                                                } else {
-                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
-                                                    echo '<td></td>';
-                                                }
-                                                ?>
+                                                <td><?= $row['draft_end_date'] ?></td>
+                                                <td><?= $row['sla_spk'] ?></td>
+                                                <td><?= $row['spk_date'] ?></td>
                                                 <td>
-                                                    <?php
-                                                        // Tentukan warna badge berdasarkan status approval owner
-                                                        $badge_color = '';
-                                                        switch ($row['confirm_sdgqs']) {
-                                                            case 'Approve':
-                                                                $badge_color = 'success';
-                                                                break;
-                                                            case 'Pending':
-                                                                $badge_color = 'danger';
-                                                                break;
-                                                            case 'In Process':
-                                                                $badge_color = 'warning';
-                                                                break;
-                                                            default:
-                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
-                                                                break;
-                                                        }
-                                                    ?>
-                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['confirm_sdgqs']; ?>
+                                                    <span class="badge rounded-pill badge-<?= $badge_color ?>">
+                                                        <?= $status ?>
                                                     </span>
                                                 </td>
+                                                <td><?= $row['sla_kom'] ?></td>
+                                                <td><?= $row['kom_date'] ?></td>
+                                                <?php
+                                                $status = '';
+                                                $badge_color = '';
+                                                if (!empty($row['kom_date']) && !empty($row['sla_kom'])) {
+                                                    $status = getStatusRemarks($row['kom_date'], $row['sla_kom']);
+                                                    $badge_color = getStatusBadgeColor($status);
+                                                }
+                                                ?>
                                                 <td>
-                                                    <?php if ($row['confirm_sdgqs'] !== 'Approve') : ?>
-                                                        <a href="sdg-qs/rab-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
-                                                            <i class="nav-icon i-Pen-2"></i>
-                                                        </a>
-                                                    <?php endif; ?>
+                                                    <span class="badge rounded-pill badge-<?= $badge_color ?>">
+                                                        <?= $status ?>
+                                                    </span>
                                                 </td>
+                                                <?php
+                                                $target_rto = !empty($row['gostore_date']) ? date('Y-m-d', strtotime($row['gostore_date'] . ' -' . 3 . ' days')) : '';
+                                                ?>
+                                                <td><?= $target_rto ?></td>
+                                                <td><?= $row['rto_act'] ?></td>
+                                                <?php
+                                                $status = '';
+                                                $badge_color = '';
+                                                if (!empty($row['rto_act']) && !empty($target_rto)) {
+                                                    $status = getStatusRemarks($row['rto_act'], $target_rto);
+                                                    $badge_color = getStatusBadgeColor($status);
+                                                }
+                                                ?>
+                                                <td>
+                                                    <span class="badge rounded-pill badge-<?= $badge_color ?>">
+                                                        <?= $status ?>
+                                                    </span>
+                                                </td>
+                                                <td><?= $row['gostore_date'] ?></td>
+                                                <td><?= $row['go_fix'] ?></td>
+                                                <?php
+                                                $status = '';
+                                                $badge_color = '';
+                                                if (!empty($row['go_fix']) && !empty($row['gostore_date'])) {
+                                                    $status = getStatusRemarks($row['go_fix'], $row['gostore_date']);
+                                                    $badge_color = getStatusBadgeColor($status);
+                                                }
+                                                ?>
+                                                <td>
+                                                    <span class="badge rounded-pill badge-<?= $badge_color ?>">
+                                                        <?= $status ?>
+                                                    </span>
+                                                </td>
+                                                <?php
+                                                $final_status = '';
+                                                if (!empty($row['draft_end_date']) && (empty($row['spk_date']))) {
+                                                    $final_status = 'In Preparation';
+                                                    $final_badge_color = 'badge-warning'; 
+                                                } elseif (empty($row['actual_spk']) && (empty($row['spk_date']) || empty($row['sla_spk']) || empty($row['kom_date']) || empty($row['sla_kom']) || empty($row['rto_act']) || empty($row['go_fix']))) {
+                                                        $final_status = 'In Progress';
+                                                        $final_badge_color = 'badge-primary'; 
+                                                } else {
+                                                    $final_status = 'Done';
+                                                    $final_badge_color = 'badge-success'; 
+                                                }
+                                                ?>
+                                                <td>
+                                                    <span class="badge rounded-pill <?= $final_badge_color ?>">
+                                                        <?= $final_status ?>
+                                                    </span>
+                                                </td>
+                                                </tr>
                                         <?php endforeach; ?>
                                         </tbody>
                                         <tfoot>
@@ -198,13 +272,20 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
-                                                <th>Lampiran VD</th>
-                                                <th>Lampiran Desain</th>
-                                                <th>Keterangan</th>
-                                                <th>Jumlah</th>
-                                                <th>Lampiran RAB</th>
-                                                <th>Status</th>
-												<th>Action</th>
+                                                <th>Final VD</th>
+                                                <th>Final SPK</th>
+                                                <th>Actual SPK</th>
+                                                <th>Ach Final Tender (%)</th>
+                                                <th>Target Kick Off Meeting</th>
+                                                <th>Actual Kick Off</th>
+                                                <th>Ach Kick Off (%)</th>
+                                                <th>Target RTO</th>
+                                                <th>Actual RTO</th>
+                                                <th>Ach RTO (%)</th>
+                                                <th>Target GO</th>
+                                                <th>Actual GO</th>
+                                                <th>Ach GO (%)</th>
+                                                <th>Final Status</th>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -426,6 +507,16 @@ if ($result && $result->num_rows > 0) {
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
+    <script>
+$(document).ready(function() {
+    $(".edit-btn").click(function() {
+        // Sembunyikan semua form yang terbuka
+        $(".status-form").hide();
+        // Tampilkan form di samping tombol edit yang diklik
+        $(this).next(".status-form").show();
+    });
+});
+</script>
     <script>
         // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
         function setDelete(element) {

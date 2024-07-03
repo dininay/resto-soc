@@ -72,14 +72,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
 }
 
 // Query untuk mengambil data dari tabel land
-$sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, d.lamp_draf, r.id, r.kode_lahan, r.lamp_desainplan, r.keterangan, 
+$sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, d.lamp_draf, r.id, r.kode_lahan, s.lamp_desainplan, r.keterangan, 
 r.jenis_biaya, r.jumlah, r.date, r.lamp_rab, r.confirm_sdgqs, r.sla_date, r.start_date, c.kode_store, c.lamp_vd, c.status_approvlegalvd, p.status_approvprocurement
 FROM draft d
 INNER JOIN land l ON d.kode_lahan = l.kode_lahan
 INNER JOIN dokumen_loacd c ON d.kode_lahan = c.kode_lahan
 INNER JOIN sdg_rab r ON d.kode_lahan = r.kode_lahan
 INNER JOIN procurement p ON d.kode_lahan = p.kode_lahan
-WHERE confirm_sdgqs = 'Approve'";
+INNER JOIN sdg_desain s ON d.kode_lahan = s.kode_lahan
+WHERE r.confirm_sdgqs = 'Approve'";
 $result = $conn->query($sql);
 
 

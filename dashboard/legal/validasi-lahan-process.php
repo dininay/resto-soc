@@ -78,8 +78,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["kode_lahan"]) && isset
         $conn->commit();
         echo "Status berhasil diperbarui.";
     //     // Redirect ke halaman datatables-kom-sdgpk.php
-    // header("Location: ../datatables-validasi-lahan-legal.php");
-    // exit; // Pastikan tidak ada output lain setelah header redirect
+    header("Location: ../datatables-validasi-lahan-legal.php");
+    exit; // Pastikan tidak ada output lain setelah header redirect
     } catch (Exception $e) {
         // Rollback transaksi jika terjadi kesalahan
         $conn->rollback();

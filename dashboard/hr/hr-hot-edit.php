@@ -37,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sql = "UPDATE socdate_hr SET lamp_hot = '$lamp_hot', hot = '$hot' WHERE id = '$id'";
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-hr-hot.php");
+        header("Location: " . $base_url . "/datatables-hr-hot.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

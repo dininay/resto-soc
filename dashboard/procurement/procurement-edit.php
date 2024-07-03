@@ -52,7 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sql = "UPDATE procurement SET nama_vendor = '$nama_vendor' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-procurement.php");
+        header("Location: " . $base_url . "/datatables-procurement.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

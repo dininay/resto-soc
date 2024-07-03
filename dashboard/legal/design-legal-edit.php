@@ -14,7 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sql = "UPDATE sdg_desain SET submit_legal = '$submit_legal', catatan_legal = '$catatan_legal' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-design-legal.php");
+        header("Location: " . $base_url . "/datatables-design-legal.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

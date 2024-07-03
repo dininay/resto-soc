@@ -51,9 +51,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Update data di database
     $sql = "UPDATE sdg_desain SET obstacle = '$obstacle', note = '$note', obs_detail = '$obs_detail', lamp_survey = '$lamp_survey', status_obslegal = '$status_obslegal', status_obssdg = '$status_obssdg', obs_date = '$obs_date' WHERE id = '$id'";
-    // var_dump($sql);
+    var_dump($sql);
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-obstacle-sdg.php");
+        header("Location: " . $base_url . "/datatables-obstacle-sdg.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

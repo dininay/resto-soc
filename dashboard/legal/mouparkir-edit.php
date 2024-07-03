@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sql = "UPDATE socdate_legal SET mou_parkirsampah = '$mou_parkirsampah' WHERE id = '$id'";
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-mou-parkir.php");
+        header("Location: " . $base_url . "/datatables-mou-parkir.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

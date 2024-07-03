@@ -47,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Execute both queries
     if ($stmt1->execute()) {
-        header("Location: /Resto/dashboard/datatables-kom-sdgpk.php");
+        header("Location:  " . $base_url . "/datatables-kom-sdgpk.php");
         exit();
     } else {
         echo "Error: " . $stmt1->error;

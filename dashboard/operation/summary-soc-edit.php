@@ -23,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     rto_score = '$rto_score', status_go = '$status_go' WHERE id = '$id'";
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-soc-summary.php");
+        header("Location: " . $base_url . "/datatables-soc-summary.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

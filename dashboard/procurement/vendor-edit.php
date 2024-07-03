@@ -87,7 +87,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->bind_param("sssssssi", $kode_vendor, $nama, $alamat, $nohp, $detail, $lamp_profil, $lamp_vendor, $id);
 
     if ($stmt->execute()) {
-        header("Location: /Resto/dashboard/datatables-vendor.php");
+        header("Location: " . $base_url . "/datatables-vendor.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

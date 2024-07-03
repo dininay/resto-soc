@@ -36,7 +36,7 @@ $lamp_legalizin = "";
     $sql = "UPDATE resto SET lamp_legalizin = '$lamp_legalizin' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
-        header("Location: /Resto/dashboard/datatables-spk-legal.php");
+        header("Location: " . $base_url . "/datatables-spk-legal.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

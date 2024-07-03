@@ -75,7 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Execute both queries
     if ($stmt1->execute()) {
-        header("Location: /Resto/dashboard/datatables-st-eqp.php");
+        header("Location: " . $base_url . "/datatables-st-eqp.php");
         exit();
     } else {
         echo "Error: " . $stmt1->error;

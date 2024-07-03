@@ -75,6 +75,7 @@ if ($result && $result->num_rows > 0) {
                                                 <th>ID Merchant Shopee</th>
                                                 <th>ID Merchant Grab</th>
                                                 <th>Email Resto</th>
+                                                <th>Lampiran Pendukung Merchant</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -111,6 +112,28 @@ if ($result && $result->num_rows > 0) {
                                                 <td><?= $row['id_m_shopee'] ?></td>
                                                 <td><?= $row['id_m_grab'] ?></td>
                                                 <td><?= $row['email_resto'] ?></td>
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_merchant_files = explode(",", $row['lamp_merchant']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_merchant'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_merchant_files as $sj) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $sj . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -202,6 +225,7 @@ if ($result && $result->num_rows > 0) {
                                                 <th>ID Merchant Shopee</th>
                                                 <th>ID Merchant Grab</th>
                                                 <th>Email Resto</th>
+                                                <th>Lampiran Pendukung Merchant</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>

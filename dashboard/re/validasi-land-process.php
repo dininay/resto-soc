@@ -25,7 +25,7 @@ if ($result->num_rows > 0) {
 
     if ($conn->query($update_sql) === TRUE) {
         // Redirect ke halaman datatable-validasi-lahan
-        header("Location: /Resto/dashboard/datatables-validasi-lahan.php");
+        header("Location: " . $base_url . "/datatables-validasi-lahan.php");
         exit();
     } else {
         echo "Error: " . $update_sql . "<br>" . $conn->error;

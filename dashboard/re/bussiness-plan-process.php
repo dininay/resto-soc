@@ -16,7 +16,7 @@ $stmt->bind_param("ssss", $city, $kode_lahan, $nama_lahan, $status_land);
 
 if ($stmt->execute()) {
     // Redirect ke halaman datatable-land-sourcing
-    header("Location: /Resto/dashboard/datatables-bussiness-planning.php");
+    header("Location: " . $base_url . "/datatables-bussiness-planning.php");
     exit();
 } else {
     echo "Error: " . $stmt->error;

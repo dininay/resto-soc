@@ -39,7 +39,7 @@ $stmt->bind_param("ssssssssss", $kode_lahan, $nama_lahan, $lokasi, $luas_area, $
 
 if ($stmt->execute()) {
     // Redirect ke halaman datatable-land-sourcing
-    header("Location: /Resto/dashboard/datatables-approval-owner.php");
+    header("Location: " . $base_url . "/datatables-approval-owner.php");
     exit();
 } else {
     echo "Error: " . $stmt->error;
