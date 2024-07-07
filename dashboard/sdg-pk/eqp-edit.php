@@ -47,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Simpan file-file baru yang diunggah
         foreach ($_FILES['lamp_ba']['name'] as $key => $filename) {
             $target_dir = "../uploads/";
-            $target_file = $target_dir . basename($filename);
+            $target_file = basename($filename);
 
             // Buat direktori jika belum ada
             if (!is_dir($target_dir)) {

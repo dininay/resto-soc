@@ -42,7 +42,11 @@ $conn->close();
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
+<style>
+    .hidden {
+        display: none;
+    }
+</style>
 </head>
 
 <body class="text-left">
@@ -191,7 +195,7 @@ $conn->close();
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <form id="statusForm" method="post" action="owner/approval-owner-fix-process.php">
+                                                                <form id="statusForm" method="post" action="owner/approval-owner-fix-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="kode_lahan" id="modalKodeLahan">
                                                                     <div class="form-group">
                                                                         <label for="statusSelect">Status Approve Owner</label>
@@ -205,6 +209,24 @@ $conn->close();
                                                                     <div class="form-group">
                                                                         <label for="catatan">Catatan Owner</label>
                                                                         <input type="text" class="form-control" id="catatan" name="catatan_owner">
+                                                                    </div>
+                                                                    <div id="issueDetailSection" class="hidden">
+                                                                        <div class="form-group">
+                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="pic">PIC</label>
+                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]">
+                                                                        </div>
                                                                     </div>
                                                                     <button type="submit" class="btn btn-primary">Save changes</button>
                                                                 </form>
@@ -509,6 +531,25 @@ $conn->close();
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
     <script>
+        // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
+        function setDelete(element) {
+            var id = element.id;
+            document.getElementById('delete').value = id;
+        }
+    </script>
+
+    <script>
+    $(document).ready(function() {
+        $(".edit-btn").click(function() {
+            // Sembunyikan semua form yang terbuka
+            $(".status-form").hide();
+            // Tampilkan form di samping tombol edit yang diklik
+            $(this).next(".status-form").show();
+        });
+    });
+    </script>
+
+<script>
     // JavaScript to handle opening the modal and setting form values
     $('#editModal').on('show.bs.modal', function (event) {
         var button = $(event.relatedTarget); // Button that triggered the modal
@@ -519,27 +560,36 @@ $conn->close();
         var modal = $(this);
         modal.find('#modalKodeLahan').val(kodeLahan);
         modal.find('#statusSelect').val(status);
-    });
-</script>
 
-    <script>
-        // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
-        function setDelete(element) {
-            var id = element.id;
-            document.getElementById('delete').value = id;
+        // Toggle issue detail section visibility
+        toggleIssueDetail();
+    });
+
+    // Function to toggle the visibility of issue detail section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
         }
-    </script>
+    }
 
-<script>
-$(document).ready(function() {
-    $(".edit-btn").click(function() {
-        // Sembunyikan semua form yang terbuka
-        $(".status-form").hide();
-        // Tampilkan form di samping tombol edit yang diklik
-        $(this).next(".status-form").show();
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function () {
+        toggleIssueDetail();
     });
-});
 </script>
+<?php if ($status_approvowner == 'Pending') { ?>
+    <script>
+        $(document).ready(function () {
+            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+        });
+    </script>
+<?php } ?>
+
 
     <script>
     // When the document is ready

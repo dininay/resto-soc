@@ -20,7 +20,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $file_tmp = $_FILES['lamp_rab']['tmp_name'][$key];
             $file_name = $_FILES['lamp_rab']['name'][$key];
             $target_dir = "../uploads/";
-            $target_file = $target_dir . basename($file_name);
+            $target_file = basename($file_name);
 
             // Attempt to move the uploaded file to the target directory
             if (move_uploaded_file($file_tmp, $target_file)) {

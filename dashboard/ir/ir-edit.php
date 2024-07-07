@@ -18,7 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $file_tmp = $_FILES['lamp_rabcs']['tmp_name'][$key];
             $file_name = $_FILES['lamp_rabcs']['name'][$key];
             $target_dir = "../uploads/";
-            $target_file = $target_dir . basename($file_name);
+            $target_file = basename($file_name);
 
             // Attempt to move the uploaded file to the target directory
             if (move_uploaded_file($file_tmp, $target_file)) {
@@ -33,20 +33,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Periksa apakah kunci 'lampiran' ada dalam $_FILES
+    $lamp_rabsecurity = "";
+
     if(isset($_FILES["lamp_rabsecurity"])) {
-        // Simpan lampiran ke folder tertentu
-        $lamp_rabsecurity = array();
-        $total_files = count($_FILES['lamp_rabsecurity']['name']);
-        for($i = 0; $i < $total_files; $i++) {
-            $file_tmp = $_FILES['lamp_rabsecurity']['tmp_name'][$i];
-            $file_name = $_FILES['lamp_rabsecurity']['name'][$i];
-            $file_path = "../uploads/" . $file_name;
-            move_uploaded_file($file_tmp, $file_path);
-            $lamp_rabsecurity[] = $file_path;
+        $lamp_rabsecurity_paths = array();
+
+        // Loop through each file
+        foreach($_FILES['lamp_rabsecurity']['name'] as $key => $filename) {
+            $file_tmp = $_FILES['lamp_rabsecurity']['tmp_name'][$key];
+            $file_name = $_FILES['lamp_rabsecurity']['name'][$key];
+            $target_dir = "../uploads/";
+            $target_file = basename($file_name);
+
+            // Attempt to move the uploaded file to the target directory
+            if (move_uploaded_file($file_tmp, $target_file)) {
+                $lamp_rabsecurity_paths[] = $target_file;
+            } else {
+                echo "Gagal mengunggah file " . $file_name . "<br>";
+            }
         }
-        $lamp_rabsecurity = implode(",", $lamp_rabsecurity);
-    } else {
-        $lamp_rabsecurity = "";
+
+        // Join all file paths into a comma-separated string
+        $lamp_rabsecurity = implode(",", $lamp_rabsecurity_paths);
     }
 
     // Update data di database

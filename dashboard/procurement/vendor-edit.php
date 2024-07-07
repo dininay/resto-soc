@@ -58,7 +58,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (isset($_FILES['lamp_vendor']) && $_FILES['lamp_vendor']['error'][0] != UPLOAD_ERR_NO_FILE) {
             foreach ($_FILES['lamp_vendor']['name'] as $key => $filename) {
                 $target_dir = "uploads/";
-                $target_file = $target_dir . basename($filename);
+                $target_file = basename($filename);
 
                 // Buat direktori jika belum ada
                 if (!is_dir($target_dir)) {
