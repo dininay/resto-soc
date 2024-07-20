@@ -13,38 +13,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["kode_lahan"]) && isset
     $action_plan = isset($_POST["action_plan"]) ? $_POST["action_plan"] : null;
 
     // Inisialisasi variabel untuk status_approvlegal
-    $status_approvlegal = null;
+    $status_approvnego = null;
     $start_date = null;
     
     // Jika status_approvowner diubah menjadi Approve, ubah status_approvlegal menjadi In Process
     if ($status_approvowner == 'Approve') {
-        $status_approvlegal = 'In Process';
+        $status_approvnego = 'In Process';
         $status_vl = 'In Process';
         $start_date = date("Y-m-d H:i:s");
 
-        // Ambil jumlah hari SLA dari tabel master_sla berdasarkan divisi = Legal
-        $sql_select_sla_legal = "SELECT sla FROM master_sla WHERE divisi = 'Legal'";
-        $result_select_sla_legal = $conn->query($sql_select_sla_legal);
+        // Ambil jumlah hari SLA dari tabel master_sla berdasarkan divisi = VL
+            $sql_select_sla_vl = "SELECT sla FROM master_sla WHERE divisi = 'Negosiator'";
+            $result_select_sla_vl = $conn->query($sql_select_sla_vl);
 
-        if ($result_select_sla_legal && $result_select_sla_legal->num_rows > 0) {
-            $row_sla_legal = $result_select_sla_legal->fetch_assoc();
-            $sla_legal_days = $row_sla_legal['sla'];
+            if ($result_select_sla_vl && $result_select_sla_vl->num_rows > 0) {
+                $row_sla_vl = $result_select_sla_vl->fetch_assoc();
+                $sla_vl_days = $row_sla_vl['sla'];
 
-            // Tambahkan jumlah hari SLA Legal ke start_date untuk mendapatkan slalegal_date
-            $slalegal_date = date('Y-m-d H:i:s', strtotime($start_date . ' + ' . $sla_legal_days . ' days'));
-        } else {
-            echo "Error: Tidak dapat mengambil data SLA Legal dari tabel master_sla.";
-            exit();
-        }
+                // Tambahkan jumlah hari SLA VL ke end_date untuk mendapatkan vl_date
+                $slanego_date = date('Y-m-d H:i:s', strtotime($start_date . ' + ' . $sla_vl_days . ' days'));
+
+                // // Query untuk memperbarui status_approvlegal, status_approvnego, status_vl, end_date, dan vl_date
+                // $sql = "UPDATE re SET status_approvowner = ?, catatan_owner = ?, status_approvnego = ?, start_date = ? WHERE kode_lahan = ?";
+                // $stmt = $conn->prepare($sql);
+                // $stmt->bind_param("sssss", $status_approvowner, $catatan_owner, $status_approvnego, $start_date, $kode_lahan);
+                // $stmt->execute();
+                // $stmt->close();
+            } else {
+                echo "Error: Tkode_lahanak dapat mengambil data SLA VL dari tabel master_sla.";
+            }
 
         // Mulai transaksi
         $conn->begin_transaction();
 
         try {
             // Query untuk memperbarui status_approvowner, catatan_owner, status_approvlegal, start_date, slalegal_date, status_vl, dan slavl_date
-            $sql = "UPDATE re SET status_approvowner = ?, catatan_owner = ?, status_approvlegal = ?, start_date = ?, slalegal_date = ? WHERE kode_lahan = ?";
+            $sql = "UPDATE re SET status_approvowner = ?, catatan_owner = ?, status_approvnego = ?, start_date = ?, slanego_date = ? WHERE kode_lahan = ?";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ssssss", $status_approvowner, $catatan_owner, $status_approvlegal, $start_date, $slalegal_date, $kode_lahan);
+            $stmt->bind_param("ssssss", $status_approvowner, $catatan_owner, $status_approvnego, $start_date, $slanego_date, $kode_lahan);
             $stmt->execute();
 
             // Periksa apakah kode_lahan ada di tabel hold_project

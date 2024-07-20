@@ -1,6 +1,7 @@
 <?php
 // Koneksi ke database
 include "../koneksi.php";
+$confirm_sdgqs="";
 
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT d.kode_lahan, d.nama_lahan, d.lokasi, r.*, t.lamp_vd, t.kode_store, s.lamp_desainplan
@@ -38,6 +39,11 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+    .hidden {
+        display: none;
+    }
+</style>
 </head>
 
 <body class="text-left">
@@ -71,7 +77,7 @@ if ($result && $result->num_rows > 0) {
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
@@ -198,7 +204,7 @@ if ($result && $result->num_rows > 0) {
                                                     <!-- Tombol Edit -->
                                                     <?php if ($row['confirm_sdgqs'] != "Approve"): ?>
                                                         <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['confirm_sdgqs'] ?>">
-                                                            <i class="nav-icon i-Pen-2"></i>
+                                                            <i class="nav-icon i-Book"></i>
                                                         </button>
                                                     <?php endif; ?>
                                                 </td>
@@ -214,7 +220,7 @@ if ($result && $result->num_rows > 0) {
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <form id="statusForm" method="post" action="sdg-qs/valrab-process.php">
+                                                                <form id="statusForm" method="post" action="sdg-qs/valrab-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" id="modalKodeLahan">
                                                                     <div class="form-group">
                                                                         <label for="statusSelect">Status Approve SDG QS</label>
@@ -228,6 +234,24 @@ if ($result && $result->num_rows > 0) {
                                                                         <label for="catatan_sdgqs">Catatan SDG QS</label>
                                                                         <input type="text" class="form-control" id="catatan_sdgqs" name="catatan_sdgqs">
                                                                     </div>
+                                                                    <div id="issueDetailSection" class="hidden">
+                                                                        <div class="form-group">
+                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="pic">PIC</label>
+                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                                                                        </div>
+                                                                    </div>
                                                                     <button type="submit" class="btn btn-primary">Save changes</button>
                                                                 </form>
                                                             </div>
@@ -239,7 +263,7 @@ if ($result && $result->num_rows > 0) {
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
@@ -483,7 +507,30 @@ if ($result && $result->num_rows > 0) {
         modal.find('#modalKodeLahan').val(kodeLahan);
         modal.find('#statusSelect').val(status);
     });
+    // Function to toggle the visibility of issue detail section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
+        }
+    }
+
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function () {
+        toggleIssueDetail();
+    });
 </script>
+<?php if ($confirm_sdgqs == 'Pending') { ?>
+    <script>
+        $(document).ready(function () {
+            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+        });
+    </script>
+<?php } ?>
     <script>
 $(document).ready(function() {
     $(".edit-btn").click(function() {

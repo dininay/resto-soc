@@ -1,97 +1,11 @@
 <?php
 // Koneksi ke database
 include "../koneksi.php";
+$status_approvprocurement = "";
 
-// Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST["status_approvprocurement"])&& isset($_POST["catatan_proc"])) {
-    $id = $_POST["id"];
-    $status_approvprocurement = $_POST["status_approvprocurement"];
-    $catatan_proc = $_POST["catatan_proc"];
-    
-    // Mulai transaksi
-    $conn->begin_transaction();
-
-    try {
-        // Query untuk memperbarui status_approvprocurement berdasarkan id
-        $sql_update = "UPDATE procurement SET status_approvprocurement = ?, catatan_proc = ?, start_date = ? WHERE id = ?";
-        $stmt_update = $conn->prepare($sql_update);
-
-        // Tentukan start_date hari ini
-        $start_date = date("Y-m-d");
-
-        $stmt_update->bind_param("sssi", $status_approvprocurement, $catatan_proc, $start_date, $id);
-
-        // Eksekusi query update
-        if ($stmt_update->execute() === TRUE) {
-            // Jika status_approvprocurement diubah menjadi 'Approve'
-            if ($status_approvprocurement == 'Approve') {
-                // Tentukan start_date
-                $sql_subquery = "SELECT nama_vendor, start_date FROM procurement WHERE id = ?";
-                $stmt_subquery = $conn->prepare($sql_subquery);
-                $stmt_subquery->bind_param("i", $id);
-                $stmt_subquery->execute();
-                $result_subquery = $stmt_subquery->get_result();
-                
-                if ($result_subquery->num_rows > 0) {
-                    $row_subquery = $result_subquery->fetch_assoc();
-                    $nama_vendor = $row_subquery['nama_vendor'];
-                    $start_date = $row_subquery['start_date'];
-                    // Perbarui status_lokasi menjadi 'Aktif' berdasarkan nama_vendor yang diperoleh dari subquery
-                    $sql_update_status = "UPDATE vendor SET status_lokasi = 'Aktif' WHERE kode_vendor = ?";
-                    $stmt_update_status = $conn->prepare($sql_update_status);
-                    $stmt_update_status->bind_param("s", $nama_vendor);
-                    $stmt_update_status->execute();
-
-                    // Ambil jumlah hari dari tabel master_sla berdasarkan divisi SPK
-                    $sql_sla = "SELECT sla FROM master_sla WHERE divisi = 'SPK'";
-                    $result_sla = $conn->query($sql_sla);
-                    if ($result_sla->num_rows > 0) {
-                        $row_sla = $result_sla->fetch_assoc();
-                        $hari_sla = $row_sla['sla'];
-                        echo "SLA days: $hari_sla<br>";
-
-                        // Tentukan sla_spk
-                        $sla_spk = date("Y-m-d", strtotime("$start_date + $hari_sla days"));
-                        echo "SLA SPK: $sla_spk<br>";
-
-                        // Update sla_spk dan status_spk di tabel resto
-                        $sql_update_spk = "UPDATE resto SET sla_spk = ?, status_spk = 'In Process' WHERE kode_lahan = (SELECT kode_lahan FROM procurement WHERE id = ?)";
-                        $stmt_update_spk = $conn->prepare($sql_update_spk);
-                        $stmt_update_spk->bind_param("si", $sla_spk, $id);
-                        $stmt_update_spk->execute();
-                    } else {
-                        // Rollback transaksi jika data SLA tidak ditemukan
-                        $conn->rollback();
-                        echo "Error: Data SLA tidak ditemukan untuk divisi SPK.";
-                        exit;
-                    }
-                } else {
-                    // Rollback transaksi jika nama_vendor tidak ditemukan
-                    $conn->rollback();
-                    echo "Error: nama_vendor tidak ditemukan untuk id $id.";
-                    exit;
-                }
-            }
-            // Komit transaksi
-            $conn->commit();
-            echo "Status dan data berhasil diperbarui.";
-            // Redirect ke halaman datatables-checkval-legal.php
-            header("Location: datatables-tender.php");
-            exit; // Pastikan tidak ada output lain setelah header redirect
-        } else {
-            // Rollback transaksi jika terjadi kesalahan pada update
-            $conn->rollback();
-            echo "Error: " . $sql_update . "<br>" . $conn->error;
-        }
-    } catch (Exception $e) {
-        // Rollback transaksi jika terjadi kesalahan
-        $conn->rollback();
-        echo "Error: " . $e->getMessage();
-    }
-}
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, d.lamp_draf, p.id, c.kode_store, v.nama,
-               c.status_approvlegalvd, c.lamp_vd, r.status_finallegal, v.kode_vendor, p.nama_vendor, d.confirm_nego, d.valdoc_legal,
+               c.status_approvlegalvd, c.lamp_vd, v.kode_vendor, p.nama_vendor, d.confirm_nego, d.valdoc_legal,
                s.lamp_desainplan, q.lamp_rab, p.status_approvprocurement, p.sla_date, p.start_date, v.lamp_vendor, v.lamp_profil
         FROM land l
         INNER JOIN dokumen_loacd c ON l.kode_lahan = c.kode_lahan
@@ -131,6 +45,11 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+    .hidden {
+        display: none;
+    }
+</style>
 </head>
 
 <body class="text-left">
@@ -165,7 +84,7 @@ if ($result && $result->num_rows > 0) {
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
@@ -479,7 +398,7 @@ if ($result && $result->num_rows > 0) {
                                                     <!-- Tombol Edit -->
                                                     <?php if ($row['status_approvprocurement'] != "Approve"): ?>
                                                         <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_approvprocurement'] ?>">
-                                                            <i class="nav-icon i-Pen-2"></i>
+                                                            <i class="nav-icon i-Book"></i>
                                                         </button>
                                                     <?php endif; ?>
                                                 </td>
@@ -495,7 +414,7 @@ if ($result && $result->num_rows > 0) {
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <form id="statusForm" method="post" action="">
+                                                                <form id="statusForm" method="post" action="procurement/tender-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" id="modalKodeLahan">
                                                                     <div class="form-group">
                                                                         <label for="statusSelect">Status Approve Procurement</label>
@@ -509,6 +428,24 @@ if ($result && $result->num_rows > 0) {
                                                                         <label for="catatan_proc">Catatan Procurement</label>
                                                                         <input type="text" class="form-control" id="catatan_proc" name="catatan_proc">
                                                                     </div>
+                                                                    <div id="issueDetailSection" class="hidden">
+                                                                        <div class="form-group">
+                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="pic">PIC</label>
+                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                                                                        </div>
+                                                                    </div>
                                                                     <button type="submit" class="btn btn-primary">Save changes</button>
                                                                 </form>
                                                             </div>
@@ -520,7 +457,7 @@ if ($result && $result->num_rows > 0) {
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
@@ -772,7 +709,30 @@ if ($result && $result->num_rows > 0) {
         modal.find('#modalKodeLahan').val(kodeLahan);
         modal.find('#statusSelect').val(status);
     });
+    // Function to toggle the visibility of issue detail section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
+        }
+    }
+
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function () {
+        toggleIssueDetail();
+    });
 </script>
+<?php if ($status_approvprocurement == 'Pending') { ?>
+    <script>
+        $(document).ready(function () {
+            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+        });
+    </script>
+<?php } ?>
     <script>
         // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
         function setDelete(element) {

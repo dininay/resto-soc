@@ -97,7 +97,7 @@
             </script> © Pesta Pora Abadi - miegacoan.co.id
         </span>
     </footer>
-    <?php include 'layouts/footer-scripts.php'; ?>
+    
 
     <!-- App js -->
     <script src="assets/js/app.min.js"></script>

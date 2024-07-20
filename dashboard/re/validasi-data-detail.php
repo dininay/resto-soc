@@ -70,7 +70,7 @@ if(isset($_GET['id'])) {
                                 <div class="row">
                                     <div class="col-md-6">
                                     <div class="form-group row">
-                                        <label class="col-sm-4 col-form-label" for="kode_lokasi">Kode Lokasi</label>
+                                        <label class="col-sm-4 col-form-label" for="kode_lokasi">Inventory Code</label>
                                         <div class="col-sm-8">
                                             <p class="form-control-static"><?php echo $row['kode_lahan']; ?></p>
                                         </div>

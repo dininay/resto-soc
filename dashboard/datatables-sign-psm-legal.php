@@ -2,38 +2,7 @@
 // Koneksi ke database
 include "../koneksi.php";
 
-// Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["confirm_nego"])) {
-    $id = $_POST["id"];
-    $confirm_nego = $_POST["confirm_nego"];
-    $end_date = null;
-    
-
-    // Mulai transaksi
-    $conn->begin_transaction();
-
-    try {
-        
-        $end_date = date("Y-m-d H:i:s");
-        // Query untuk memperbarui status confirm_nego di tabel draft
-        $sql_update = "UPDATE draft SET confirm_nego = ?, end_date = ? WHERE id = ?";
-        $stmt_update = $conn->prepare($sql_update);
-        $stmt_update->bind_param("ssi", $confirm_nego, $end_date, $id);
-        $stmt_update->execute();
-
-        // Komit transaksi
-        $conn->commit();
-        echo "Status berhasil diperbarui.";
-        // Redirect ke halaman datatables-checkval-legal.php
-        header("Location: datatables-sign-psm-legal.php");
-        exit; // Pastikan tidak ada output lain setelah header redirect
-    } catch (Exception $e) {
-        // Rollback transaksi jika terjadi kesalahan
-        $conn->rollback();
-        echo "Error: " . $e->getMessage();
-    }
-}
-
+$confirm_nego = "";
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT d.*, 
                l.nama_lahan, l.lokasi, l.lamp_land,
@@ -93,6 +62,13 @@ $conn->close();
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
+<style>
+    .hidden {
+        display: none;
+    }
+</style>
 </head>
 
 <body class="text-left">
@@ -127,7 +103,7 @@ $conn->close();
                               <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
@@ -346,7 +322,7 @@ $conn->close();
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <form id="statusForm" method="post" action="">
+                                                                <form id="statusForm" method="post" action="legal/sign-psm-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" id="modalId" value="<?= $row['id']; ?>">
                                                                     <div class="form-group">
                                                                         <label for="statusSelect">Status Approve Sign PSM</label>
@@ -356,6 +332,28 @@ $conn->close();
                                                                             <option value="Approve">Approve</option>
                                                                             <option value="Reject">Reject</option>
                                                                         </select>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="catatan_psm">Catatan Sign PSM</label>
+                                                                        <input type="text" class="form-control" id="catatan_psm" name="catatan_psm">
+                                                                    </div>
+                                                                    <div id="issueDetailSection" class="hidden">
+                                                                        <div class="form-group">
+                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="pic">PIC</label>
+                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                                                                        </div>
                                                                     </div>
                                                                     <button type="submit" class="btn btn-primary">Save changes</button>
                                                                 </form>
@@ -369,7 +367,7 @@ $conn->close();
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
@@ -664,6 +662,8 @@ $conn->close();
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
+    <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>     -->
+    
     <script>
     $(document).ready(function(){
         // Saat tombol edit diklik
@@ -675,7 +675,31 @@ $conn->close();
             $('#modalId').val(id);
         });
     });
+    
+    // Function to toggle the visibility of issue detail section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
+        }
+    }
+
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function () {
+        toggleIssueDetail();
+    });
+</script>
+<?php if ($confirm_nego == 'Pending') { ?>
+    <script>
+        $(document).ready(function () {
+            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+        });
     </script>
+<?php } ?>
     <script>
 $(document).ready(function() {
     $(".edit-btn").click(function() {

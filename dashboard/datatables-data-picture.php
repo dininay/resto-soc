@@ -170,7 +170,7 @@ if ($result && $result->num_rows > 0) {
                               <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Lampiran Lahan</th>
                                                 <th>Lampiran Desain</th>
@@ -178,7 +178,6 @@ if ($result && $result->num_rows > 0) {
                                                 <th>TC / NO TC</th>
                                                 <th>Catatan SDG Design</th>
                                                 <th>Confirm SDG Design</th>
-                                                <th>Approve Legal</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -250,34 +249,11 @@ if ($result && $result->num_rows > 0) {
                                                         <?php echo $row['confirm_sdgdesain']; ?>
                                                     </span>
                                                 </td>
-                                                <td>
-                                                    <?php
-                                                        // Tentukan warna badge berdasarkan status approval owner
-                                                        $badge_color = '';
-                                                        switch ($row['submit_legal']) {
-                                                            case 'Approve':
-                                                                $badge_color = 'success';
-                                                                break;
-                                                            case 'Pending':
-                                                                $badge_color = 'danger';
-                                                                break;
-                                                            case 'In Process':
-                                                                $badge_color = 'warning';
-                                                                break;
-                                                            default:
-                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
-                                                                break;
-                                                        }
-                                                    ?>
-                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['submit_legal']; ?>
-                                                    </span>
-                                                </td>
                                         <?php endforeach; ?>
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Lampiran Lahan</th>
                                                 <th>Lampiran Desain</th>
@@ -285,7 +261,6 @@ if ($result && $result->num_rows > 0) {
                                                 <th>TC / NO TC</th>
                                                 <th>Catatan SDG Design</th>
                                                 <th>Confirm SDG Design</th>
-                                                <th>Approve Legal</th>
                                             </tr>
                                         </tfoot>
                                     </table>

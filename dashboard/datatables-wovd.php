@@ -148,7 +148,7 @@ if ($result && $result->num_rows > 0) {
                                 <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>Kode Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Approval Owner</th>
                                                 <th>Approval Legal</th>
                                                 <th>Approval Negosiator</th>
@@ -368,7 +368,7 @@ if ($result && $result->num_rows > 0) {
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>Kode Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Approval Owner</th>
                                                 <th>Approval Legal</th>
                                                 <th>Approval Negosiator</th>

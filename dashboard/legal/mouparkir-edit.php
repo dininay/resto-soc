@@ -18,11 +18,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $file_tmp = $_FILES['mou_parkir$mou_parkirsampah']['tmp_name'][$key];
             $file_name = $_FILES['mou_parkir$mou_parkirsampah']['name'][$key];
             $target_dir = "../uploads/";
-            $target_file = basename($file_name);
+            $target_file = $target_dir . basename($file_name);
 
             // Attempt to move the uploaded file to the target directory
             if (move_uploaded_file($file_tmp, $target_file)) {
-                $mou_parkirsampah_paths[] = $target_file;
+                $mou_parkirsampah_paths[] = $file_name;
             } else {
                 echo "Gagal mengunggah file " . $file_name . "<br>";
             }

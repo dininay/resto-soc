@@ -13,7 +13,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $alamat_pemilik = $_POST["alamat_pemilik"];
         $no_tlp = $_POST["no_tlp"];
         $luas_area = $_POST["luas_area"];
-    $id = $_POST['id'];
+        $maps = $_POST["maps"];
+        $latitude = $_POST["latitude"];
+        $longitude = $_POST["longitude"];
+        $id = $_POST['id'];
 
     // // Menggabungkan nama file baru dengan nama file sebelumnya, jika ada
     // if(isset($_FILES['lamp_land']) && $_FILES['lamp_land']['error'][0] != UPLOAD_ERR_NO_FILE) {
@@ -45,11 +48,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $file_tmp = $_FILES['lamp_land']['tmp_name'][$key];
             $file_name = $_FILES['lamp_land']['name'][$key];
             $target_dir = "../uploads/";
-            $target_file = basename($file_name);
+            $target_file = $target_dir . basename($file_name);
 
             // Attempt to move the uploaded file to the target directory
             if (move_uploaded_file($file_tmp, $target_file)) {
-                $lamp_land_paths[] = $target_file;
+                $lamp_land_paths[] = $file_name;
             } else {
                 echo "Gagal mengunggah file " . $file_name . "<br>";
             }
@@ -60,7 +63,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     // Update data di database
     $sql = "UPDATE land SET kode_lahan = '$kode_lahan', nama_lahan = '$nama_lahan', lokasi = '$lokasi', nama_pemilik = '$nama_pemilik',
-     alamat_pemilik = '$alamat_pemilik', no_tlp = '$no_tlp', luas_area = '$luas_area', lamp_land = '$lamp_land' WHERE id = '$id'";
+     alamat_pemilik = '$alamat_pemilik', no_tlp = '$no_tlp', luas_area = '$luas_area', lamp_land = '$lamp_land', maps = '$maps', 
+     latitude = '$latitude', longitude = '$longitude' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
         header("Location: " . $base_url . "/datatables-land-sourcing.php");

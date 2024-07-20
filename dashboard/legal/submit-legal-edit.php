@@ -7,6 +7,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     // Ambil nilai tgl_berlaku dan penanggungjawab dari formulir
     $id = $_POST['id'];
+    VAR_DUMP($id);
 
     // Periksa apakah kunci 'lampiran' ada dalam $_FILES
     $lamp_pbg = "";
@@ -23,7 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Attempt to move the uploaded file to the target directory
             if (move_uploaded_file($file_tmp, $target_file)) {
-                $lamp_pbg_paths[] = $target_file;
+                $lamp_pbg_paths[] = $file_name;
             } else {
                 echo "Gagal mengunggah file " . $file_name . "<br>";
             }
@@ -47,7 +48,7 @@ $lamp_permit = "";
 
             // Attempt to move the uploaded file to the target directory
             if (move_uploaded_file($file_tmp, $target_file)) {
-                $lamp_permit_paths[] = $target_file;
+                $lamp_permit_paths[] = $file_name;
             } else {
                 echo "Gagal mengunggah file " . $file_name . "<br>";
             }

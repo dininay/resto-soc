@@ -2,12 +2,15 @@
 // Koneksi ke database
 include "../koneksi.php";
 
-// Query untuk mengambil data dari tabel land dengan status_approvowner 'Approve'
-$sql = "SELECT r.*, l.kode_lahan, l.nama_lahan, l.lokasi, l.luas_area, l.lamp_land
- FROM re r JOIN land l
- ON r.kode_lahan = l.kode_lahan
- WHERE status_approvowner = 'Approve' AND status_approvlegal = 'Approve'";
+$status_approvnego = "";
+// Query untuk mengambil data dari tabel re
+$sql = "SELECT r.*, l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, l.luas_area
+FROM re r
+JOIN land l ON r.kode_lahan = l.kode_lahan";
 $result = $conn->query($sql);
+
+// Inisialisasi variabel $data dengan array kosong
+$data = [];
 
 // Periksa apakah query mengembalikan hasil yang valid
 if ($result && $result->num_rows > 0) {
@@ -20,7 +23,6 @@ if ($result && $result->num_rows > 0) {
 // Tutup koneksi database
 $conn->close();
 ?>
-
 <!DOCTYPE html>
 <html lang="en" dir="">
 
@@ -35,7 +37,16 @@ $conn->close();
     <link href="../dist-assets/css/plugins/datatables.min.css" rel="stylesheet"  />
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+    .hidden {
+        display: none;
+    }
+</style>
 </head>
 
 <body class="text-left">
@@ -51,7 +62,7 @@ $conn->close();
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Datatables Document Confirmation Negosiator From Legal & Owner Surveyor</h1>
+                    <h1>Datatables Approval Negotiator</h1>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
                 <!-- end of row-->
@@ -69,18 +80,22 @@ $conn->close();
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>Kode Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
-                                                <th>Start Date</th>
-                                                <th>Approval Owner</th>
-                                                <th>Catatan Owner</th>
-                                                <th>Approval Legal</th>
-                                                <th>Catatan Legal</th>
-                                                <th>Approval Negosiator</th>
-                                                <th>Catatan Negosiator</th>
+												<th>Luas Area</th>
                                                 <th>Lampiran Land</th>
-                                                <th>Action</th>
+                                                <th>Approval BoD</th>
+                                                <th>Catatan BoD</th>
+                                                <th>Lampiran VL</th>
+                                                <th>Status VL</th>
+                                                <th>VL Date</th>
+                                                <th>Approval BoD Date</th>
+                                                <th>Approval Negotiator</th>
+                                                <th>Catatan Negotiator</th>
+                                                <th>Approved Date</th>
+                                                <th>SLA</th>
+												<th>Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -89,7 +104,23 @@ $conn->close();
                                                 <td><?= $row['kode_lahan'] ?></td>
                                                 <td><?= $row['nama_lahan'] ?></td>
                                                 <td><?= $row['lokasi'] ?></td>
-                                                <td><?= $row['start_date'] ?></td>
+                                                <td><?= $row['luas_area'] ?></td>
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_land_files = explode(",", $row['lamp_land']); // Pisahkan nama file menjadi array
+                                                ?>
+
+                                                <td>
+                                                    <ul style="list-style-type: none; padding: 0; margin: 0;">
+                                                        <?php foreach ($lamp_land_files as $file): ?>
+                                                            <li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/<?= $file ?>" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>
+                                                        <?php endforeach; ?>
+                                                    </ul>
+                                                </td>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -114,11 +145,34 @@ $conn->close();
                                                     </span>
                                                 </td>
                                                 <td><?= $row['catatan_owner'] ?></td>
+                                                <td><?= $row['start_date'] ?></td>
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_kom_files = explode(",", $row['lamp_vl']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_vl'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_kom_files as $kom) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $kom . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>    
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
-                                                        switch ($row['status_approvlegal']) {
+                                                        switch ($row['status_vl']) {
                                                             case 'Approve':
                                                                 $badge_color = 'success';
                                                                 break;
@@ -134,10 +188,10 @@ $conn->close();
                                                         }
                                                     ?>
                                                     <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_approvlegal']; ?>
+                                                        <?php echo $row['status_vl']; ?>
                                                     </span>
                                                 </td>
-                                                <td><?= $row['catatan_legal'] ?></td>
+                                                <td><?= $row['vl_date'] ?></td>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -162,26 +216,46 @@ $conn->close();
                                                     </span>
                                                 </td>
                                                 <td><?= $row['catatan_nego'] ?></td>
-                                                <?php
-                                                // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_draf_files = explode(",", $row['lamp_land']); // Pisahkan nama file menjadi array
-                                                ?>
-
+                                                <td><?= $row['end_date'] ?></td>
                                                 <td>
-                                                    <ul style="list-style-type: none; padding: 0; margin: 0;">
-                                                        <?php foreach ($lamp_draf_files as $file): ?>
-                                                            <li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/<?= $file ?>" target="_blank">
-                                                                    <i class="fas fa-file-pdf nav-icon"></i>
-                                                                </a>
-                                                            </li>
-                                                        <?php endforeach; ?>
-                                                    </ul>
+                                                    <?php
+                                                    // Mendapatkan tanggal sla_date dari kolom data
+                                                    $slaLegalDate = new DateTime($row['slanego_date']);
+                                                    
+                                                    // Mendapatkan tanggal hari ini
+                                                    $today = new DateTime();
+                                                    
+                                                    // Menghitung selisih hari antara sla_date dan hari ini
+                                                    $diff = $today->diff($slaLegalDate);
+                                                    
+                                                    // Jika status_approvowner adalah "Approve"
+                                                    if ($row['status_approvnego'] == "Approve") {
+                                                        echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
+                                                        echo '<p>Status changed to Approved on: ' . $row['end_date'] . '</p>';
+                                                    } else {
+                                                        // Menghitung jumlah hari terlambat
+                                                        $lateDays = $slaLegalDate->diff($today)->days;
+                                                        
+                                                        // Jika terlambat
+                                                        if ($today > $slaLegalDate) {
+                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+                                                        } else {
+                                                            // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
+                                                            if ($diff) {
+                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
+                                                            } else {
+                                                                // Tampilkan peringatan "H + X"
+                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
+                                                            }
+                                                        }
+                                                    }
+                                                    ?>
                                                 </td>
+                                                
                                                 <td>
                                                     <!-- Tombol Edit -->
                                                     <?php if ($row['status_approvnego'] != "Approve"): ?>
-                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_approvnego'] ?>">
+                                                        <button class="btn btn-sm btn-warning edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_approvnego'] ?>">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </button>
                                                     <?php endif; ?>
@@ -198,10 +272,10 @@ $conn->close();
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <form id="statusForm" method="post" action="negosiator/confirm-negosiator-process.php">
+                                                                <form id="statusForm" method="post" action="negosiator/confirm-negosiator-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" id="modalKodeLahan">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve Negosiator</label>
+                                                                        <label for="statusSelect">Status Approve Negotiator</label>
                                                                         <select class="form-control" id="statusSelect" name="status_approvnego">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
@@ -210,8 +284,26 @@ $conn->close();
                                                                         </select>
                                                                     </div>
                                                                     <div class="form-group">
-                                                                        <label for="catatan_nego">Catatan Negosiator</label>
-                                                                        <input type="text" class="form-control" id="catatan_nego" name="catatan_nego">
+                                                                        <label for="catatan">Catatan Negotiator</label>
+                                                                        <input type="text" class="form-control" id="catatan" name="catatan_nego">
+                                                                    </div>
+                                                                    <div id="issueDetailSection" class="hidden">
+                                                                        <div class="form-group">
+                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="pic">PIC</label>
+                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                                                                        </div>
                                                                     </div>
                                                                     <button type="submit" class="btn btn-primary">Save changes</button>
                                                                 </form>
@@ -224,18 +316,22 @@ $conn->close();
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>Kode Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
-                                                <th>Start Date</th>
-                                                <th>Approval Owner</th>
-                                                <th>Catatan Owner</th>
-                                                <th>Approval Legal</th>
-                                                <th>Catatan Legal</th>
-                                                <th>Approval Negosiator</th>
-                                                <th>Catatan Negosiator</th>
+												<th>Luas Area</th>
                                                 <th>Lampiran Land</th>
-                                                <th>Action</th>
+                                                <th>Approval BoD</th>
+                                                <th>Catatan BoD</th>
+                                                <th>Lampiran VL</th>
+                                                <th>Status VL</th>
+                                                <th>VL Date</th>
+                                                <th>Approval BoD Date</th>
+                                                <th>Approval Negotiator</th>
+                                                <th>Catatan Negotiator</th>
+                                                <th>Approved Date</th>
+                                                <th>SLA</th>
+												<th>Action</th>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -254,7 +350,7 @@ $conn->close();
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                                                    <form method="POST" action="draft-sewa-delete.php">
+                                                    <form method="POST" action="owner/approval-owner-delete.php">
                                                         <input type="hidden" name="id" id="delete" value="">
                                                         <button type="submit" class="btn btn-danger">Hapus</button>
                                                     </form>
@@ -262,6 +358,65 @@ $conn->close();
                                             </div>
                                         </div>
                                     </div>
+                                    <!-- Modal untuk "Tepat Waktu" -->
+                                    <div class="modal fade" id="approvalModal" tabindex="-1" role="dialog" aria-labelledby="approvalModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="approvalModalLabel">Pemberitahuan</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Data sudah approve tepat waktu.
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Modal untuk "Deadline Approval" -->
+                                    <div class="modal fade" id="deadlineModal" tabindex="-1" role="dialog" aria-labelledby="deadlineModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="deadlineModalLabel">Pemberitahuan</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Tersisa waktu <?php echo $diff->days; ?> hari, segera lakukan approval.</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Modal untuk "Terlambat Approval" -->
+                                    <div class="modal fade" id="lateApprovalModal" tabindex="-1" role="dialog" aria-labelledby="lateApprovalModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="lateApprovalModalLabel">Pemberitahuan</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Data sudah terlambat untuk di-approve. Telah terlambat <?php echo $lateDays; ?> hari.</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -288,6 +443,7 @@ $conn->close();
                 <!-- fotter end -->
             </div>
         </div>
+
     </div><!-- ============ Search UI Start ============= -->
     <div class="search-ui">
         <div class="search-header">
@@ -458,6 +614,25 @@ $conn->close();
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
     <script>
+        // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
+        function setDelete(element) {
+            var id = element.id;
+            document.getElementById('delete').value = id;
+        }
+    </script>
+
+    <script>
+    $(document).ready(function() {
+        $(".edit-btn").click(function() {
+            // Sembunyikan semua form yang terbuka
+            $(".status-form").hide();
+            // Tampilkan form di samping tombol edit yang diklik
+            $(this).next(".status-form").show();
+        });
+    });
+    </script>
+
+<script>
     // JavaScript to handle opening the modal and setting form values
     $('#editModal').on('show.bs.modal', function (event) {
         var button = $(event.relatedTarget); // Button that triggered the modal
@@ -468,25 +643,91 @@ $conn->close();
         var modal = $(this);
         modal.find('#modalKodeLahan').val(kodeLahan);
         modal.find('#statusSelect').val(status);
+
+        // Toggle issue detail section visibility
+        toggleIssueDetail();
     });
-</script>
-    <script>
-        // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
-        function setDelete(element) {
-            var id = element.id;
-            document.getElementById('delete').value = id;
+
+    // Function to toggle the visibility of issue detail section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
         }
-    </script>
-    <script>
-$(document).ready(function() {
-    $(".edit-btn").click(function() {
-        // Sembunyikan semua form yang terbuka
-        $(".status-form").hide();
-        // Tampilkan form di samping tombol edit yang diklik
-        $(this).next(".status-form").show();
+    }
+
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function () {
+        toggleIssueDetail();
     });
-});
 </script>
+<?php if ($status_approvnego == 'Pending') { ?>
+    <script>
+        $(document).ready(function () {
+            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+        });
+    </script>
+<?php } ?>
+
+
+    <script>
+    // When the document is ready
+    $(document).ready(function() {
+        // Get the initial value of status approval owner
+        var initialStatus = $('#editStatusOwner').val();
+
+        // Function to generate dropdown options based on the initial status
+        function generateOptions(initialStatus) {
+            var optionsHtml = '';
+            // If the initial status is In Process
+            if (initialStatus === 'In Process') {
+                optionsHtml += '<option value="Pending">Pending</option>';
+                optionsHtml += '<option value="Approve">Approve</option>';
+            }
+            // If the initial status is Pending
+            else if (initialStatus === 'Pending') {
+                optionsHtml += '<option value="In Process">In Process</option>';
+                optionsHtml += '<option value="Approve">Approve</option>';
+            }
+            // If the initial status is Approve, disable the select input
+            else if (initialStatus === 'Approve') {
+                optionsHtml += '<option value="Approve" disabled selected>Approve</option>';
+            }
+            // Update the dropdown options
+            $('#editStatusOwner').html(optionsHtml);
+        }
+
+        // Generate initial dropdown options based on the initial status
+        generateOptions(initialStatus);
+
+        // When the value of the select input changes
+        $('#editStatusOwner').change(function() {
+            var selectedStatus = $(this).val();
+            // Regenerate dropdown options based on the selected status
+            generateOptions(selectedStatus);
+        });
+    });
+</script>
+
+<script>
+    
+</script>
+
+<script>
+    function showPopup(daysLeft) {
+        alert("Tersisa waktu " + daysLeft + " hari, segera lakukan approval.");
+    }
+
+    function showApprovalPopup() {
+        alert("Data sudah approve tepat waktu");
+    }
+</script>
+
+
 </body>
 
 </html>

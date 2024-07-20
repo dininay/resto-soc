@@ -3,16 +3,18 @@
 include "../../koneksi.php";
 
 // Periksa apakah ada data yang dikirimkan melalui URL (ID)
-if(isset($_GET['id'])) {
-    // Ambil ID dari URL
+if (isset($_GET['id'])) {
+    // Ambil id dari URL
     $id = $_GET['id'];
 
     // Query untuk mendapatkan data resep berdasarkan ID
-    $result = $conn->query("
-        SELECT 
-        draft.*,
+    $result = $conn->query("SELECT 
         summary_soc.*,
-        resto.*,
+        resto.gostore_date,
+        resto.sla_steqp,
+        land.kode_lahan,
+        land.nama_lahan,
+        land.lokasi,
         soc_fat.*, 
         soc_hrga.*, 
         soc_it.*, 
@@ -23,9 +25,51 @@ if(isset($_GET['id'])) {
         note_ba.*, 
         note_legal.*,
         doc_legal.*,
-        sign.*
-        FROM draft
-        INNER JOIN resto ON draft.kode_lahan = resto.kode_lahan
+        socdate_academy.kpt_1,
+        socdate_academy.kpt_2,
+        socdate_academy.kpt_3,
+        socdate_fat.lamp_qris,
+        socdate_fat.lamp_st,
+        socdate_hr.tm,
+        socdate_hr.lamp_tm,
+        socdate_hr.ff_1,
+        socdate_hr.ff_2,
+        socdate_hr.ff_3,
+        socdate_hr.lamp_ff1,
+        socdate_hr.lamp_ff2,
+        socdate_hr.lamp_ff3,
+        socdate_hr.hot,
+        socdate_hr.lamp_hot,
+        socdate_ir.lamp_rabcs,
+        socdate_ir.lamp_rabsecurity,
+        socdate_it.kode_dvr,
+        socdate_it.web_report,
+        socdate_it.akun_gis,
+        socdate_it.lamp_internet,
+        socdate_it.lamp_cctv,
+        socdate_it.lamp_printer,
+        socdate_it.lamp_sound,
+        socdate_it.lamp_config,
+        socdate_legal.mou_parkirsampah,
+        socdate_marketing.gmaps,
+        socdate_marketing.lamp_gmaps,
+        socdate_marketing.id_m_shopee,
+        socdate_marketing.id_m_gojek,
+        socdate_marketing.id_m_grab,
+        socdate_marketing.email_resto,
+        socdate_marketing.lamp_merchant,
+        socdate_scm.lamp_sj,
+        socdate_sdg.no_listrik,
+        socdate_sdg.lamp_listrik,
+        socdate_sdg.lamp_ka,
+        socdate_sdg.lamp_ipal,
+        socdate_sdg.lamp_eqp,
+        socdate_sdg.lamp_ba,
+        sdg_desain.lamp_permit,
+        sdg_desain.lamp_pbg,
+        dokumen_loacd.kode_store
+        FROM resto
+        INNER JOIN land ON resto.kode_lahan = land.kode_lahan
         INNER JOIN summary_soc ON resto.kode_lahan = summary_soc.kode_lahan
         INNER JOIN soc_fat ON summary_soc.kode_lahan = soc_fat.kode_lahan
         INNER JOIN soc_hrga ON soc_fat.kode_lahan = soc_hrga.kode_lahan
@@ -38,6 +82,17 @@ if(isset($_GET['id'])) {
         INNER JOIN note_legal ON soc_fat.kode_lahan = note_legal.kode_lahan
         INNER JOIN doc_legal ON note_legal.kode_lahan = doc_legal.kode_lahan
         INNER JOIN sign ON soc_fat.kode_lahan = sign.kode_lahan
+        INNER JOIN socdate_academy ON land.kode_lahan = socdate_academy.kode_lahan
+        INNER JOIN socdate_fat ON land.kode_lahan = socdate_fat.kode_lahan
+        INNER JOIN socdate_hr ON land.kode_lahan = socdate_hr.kode_lahan
+        INNER JOIN socdate_ir ON land.kode_lahan = socdate_ir.kode_lahan
+        INNER JOIN socdate_it ON land.kode_lahan = socdate_it.kode_lahan
+        INNER JOIN socdate_marketing ON land.kode_lahan = socdate_marketing.kode_lahan
+        INNER JOIN socdate_legal ON land.kode_lahan = socdate_legal.kode_lahan
+        INNER JOIN socdate_scm ON land.kode_lahan = socdate_scm.kode_lahan
+        INNER JOIN socdate_sdg ON land.kode_lahan = socdate_sdg.kode_lahan
+        INNER JOIN dokumen_loacd ON land.kode_lahan = dokumen_loacd.kode_lahan
+        INNER JOIN sdg_desain ON land.kode_lahan = sdg_desain.kode_lahan
         WHERE summary_soc.id = '$id'");
 
     // Periksa apakah data ditemukan
@@ -51,14 +106,14 @@ if(isset($_GET['id'])) {
 }
 $options = "";
 if ($status_go == "On Schedule") {
-    $options = "<option>Pilih</option><option value='On Schedule'>On Schedule</option><option value='Accelerated'>Accelerated</option><option value='Hold'>Hold</option><option value='Delay'>Delay</option>";
+    $options = "<option>Pilih</option><option value='On Schedule'>On Schedule</option><option value='Accelerated'>Accelerated</option><option value='Hold'>Hold</option><option value='Delayed'>Delayed</option>";
 } elseif ($status_go == "Hold") {
-    $options = "<option>Pilih</option><option value='On Schedule'>On Schedule</option><option value='Accelerated'>Accelerated</option><option value='Hold'>Hold</option><option value='Delay'>Delay</option>";
-} elseif ($status_go == "Delay") {
-    $options = "<option>Pilih</option><option value='On Schedule'>On Schedule</option><option value='Accelerated'>Accelerated</option><option value='Hold'>Hold</option><option value='Delay'>Delay</option>";
+    $options = "<option>Pilih</option><option value='On Schedule'>On Schedule</option><option value='Accelerated'>Accelerated</option><option value='Hold'>Hold</option><option value='Delayed'>Delayed</option>";
+} elseif ($status_go == "Delayed") {
+    $options = "<option>Pilih</option><option value='On Schedule'>On Schedule</option><option value='Accelerated'>Accelerated</option><option value='Hold'>Hold</option><option value='Delayed'>Delayed</option>";
 } else {
     // Default jika status tidak sesuai
-    $options = "<option>Pilih</option><option value='On Schedule'>On Schedule</option><option value='Accelerated'>Accelerated</option><option value='Hold'>Hold</option><option value='Delay'>Delay</option>";
+    $options = "<option>Pilih</option><option value='On Schedule'>On Schedule</option><option value='Accelerated'>Accelerated</option><option value='Hold'>Hold</option><option value='Delayed'>Delayed</option>";
 }
 ?>
 
@@ -106,7 +161,7 @@ if ($status_go == "On Schedule") {
                             <form method="post" action="summary-soc-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="kode_lahan">Kode Lokasi</label>
+                                    <label class="col-sm-3 col-form-label" for="kode_lahan">Inventory Code</label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="kode_lahan" name="kode_lahan" type="text" placeholder="" value="<?php echo $row['kode_lahan']; ?>" readonly/>
                                     </div>
@@ -161,7 +216,30 @@ if ($status_go == "On Schedule") {
                                 <div class="form-group row">
                                     <label class="col-sm-3 col-form-label" for="gocons_progress">RTO Score</label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="gocons_progress" name="gocons_progress" type="text" placeholder="" value="<?php echo $row['gocons_progress']; ?>"/>
+                                        <input class="form-control" id="gocons_progress" name="gocons_progress" type="text" placeholder="" value="
+                                            <?php 
+                                                $fat = (( !is_null($row['lamp_qris']) ? 100 : 0 ) + ( !is_null($row['lamp_st']) ? 100 : 0 )) / 2;
+
+                                                $academy = (( !is_null($row['kpt_1']) ? 100 : 0 ) + ( !is_null($row['kpt_2']) ? 100 : 0 ) + ( !is_null($row['kpt_3']) ? 100 : 0 )) / 3;
+
+                                                $hr = (( !is_null($row['tm']) ? 100 : 0 ) + ( !is_null($row['lamp_tm']) ? 100 : 0 ) + ( !is_null($row['ff_1']) ? 100 : 0 ) + ( !is_null($row['lamp_ff1']) ? 100 : 0 ) + ( !is_null($row['ff_2']) ? 100 : 0 ) + ( !is_null($row['lamp_ff2']) ? 100 : 0 ) + ( !is_null($row['ff_3']) ? 100 : 0 ) + ( !is_null($row['lamp_ff3']) ? 100 : 0 ) + ( !is_null($row['hot']) ? 100 : 0 ) + ( !is_null($row['lamp_hot']) ? 100 : 0 )) / 10;
+
+                                                $ir = (( !is_null($row['lamp_rabcs']) ? 100 : 0 ) + ( !is_null($row['lamp_rabsecurity']) ? 100 : 0 )) / 2;
+
+                                                $it = (( !is_null($row['kode_dvr']) ? 100 : 0 ) + ( !is_null($row['web_report']) ? 100 : 0 ) + ( !is_null($row['akun_gis']) ? 100 : 0 ) + ( !is_null($row['lamp_internet']) ? 100 : 0 ) + ( !is_null($row['lamp_cctv']) ? 100 : 0 ) + ( !is_null($row['lamp_config']) ? 100 : 0 ) + ( !is_null($row['lamp_printer']) ? 100 : 0 ) + ( !is_null($row['lamp_sound']) ? 100 : 0 )) / 8;
+
+                                                $legal = (( !is_null($row['mou_parkirsampah']) ? 100 : 0 ) + ( !is_null($row['lamp_pbg']) ? 100 : 0 ) + ( !is_null($row['lamp_permit']) ? 100 : 0 )) / 2;
+
+                                                $marketing = (( !is_null($row['gmaps']) ? 100 : 0 ) + ( !is_null($row['lamp_gmaps']) ? 100 : 0 ) + ( !is_null($row['id_m_shopee']) ? 100 : 0 ) + ( !is_null($row['id_m_gojek']) ? 100 : 0 ) + ( !is_null($row['id_m_grab']) ? 100 : 0 ) + ( !is_null($row['email_resto']) ? 100 : 0 ) + ( !is_null($row['lamp_merchant']) ? 100 : 0 )) / 7;
+
+                                                $scm = (( !is_null($row['lamp_sj']) ? 100 : 0 ));
+
+                                                $sdg = (( !is_null($row['no_listrik']) ? 100 : 0 ) + ( !is_null($row['lamp_listrik']) ? 100 : 0 ) + ( !is_null($row['lamp_ka']) ? 100 : 0 ) + ( !is_null($row['lamp_ipal']) ? 100 : 0 ) + ( !is_null($row['lamp_eqp']) ? 100 : 0 ) + ( !is_null($row['lamp_ba']) ? 100 : 0 )) / 6;
+
+                                                $total = ($fat + $academy + $hr + $ir + $it + $legal + $marketing + $scm + $sdg / 9);
+                                                $fix = number_format($total, 2);
+                                                echo $fix; 
+                                            ?>%" readonly/>
                                     </div>
                                 </div>
                                 <div class="form-group row">

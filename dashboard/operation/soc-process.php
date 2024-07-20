@@ -150,9 +150,9 @@ if(isset($_FILES["lamp_rto"])) {
 $status_rto = "In Process";
 
 // Proses penyimpanan data ke dalam tabel
-$stmt = $conn->prepare("INSERT INTO summary_soc (kode_lahan) VALUES (?)");
-$stmt->bind_param("s", $kode_lahan);
-$stmt->execute();
+// $stmt = $conn->prepare("INSERT INTO summary_soc (kode_lahan) VALUES (?)");
+// $stmt->bind_param("s", $kode_lahan);
+// $stmt->execute();
 
 $stmt = $conn->prepare("INSERT INTO soc_rto (kode_lahan, rto_date, pengaju_rto, status_op, status_rto) VALUES (?, ?, ?, ?, ?)");
 $stmt->bind_param("sssss", $kode_lahan, $rto_date, $pengaju_rto, $status_op, $status_rto);

@@ -2,44 +2,7 @@
 // Koneksi ke database
 include "../koneksi.php";
 
-// Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["draft_legal"])) {
-    $id = $_POST["id"];
-    $draft_legal = $_POST["draft_legal"];
-    $start_date = null;
-
-    // Mulai transaksi
-    $conn->begin_transaction();
-
-    try {
-        // Jika status_approvlegalvd diubah menjadi Approve
-        if ($draft_legal == 'Approve') {
-            $start_date = date("Y-m-d H:i:s");
-
-            // Query untuk memperbarui status draft_legal di tabel draft
-            $sql_update = "UPDATE draft SET draft_legal = ?, start_date = ? WHERE id = ?";
-            $stmt_update = $conn->prepare($sql_update);
-            $stmt_update->bind_param("ssi", $draft_legal, $start_date, $id);
-            $stmt_update->execute();
-
-            if ($stmt_update->affected_rows > 0) {
-                echo "Status berhasil diperbarui.";
-            } else {
-                echo "Gagal memperbarui status.";
-            }
-        }
-
-        // Komit transaksi
-        $conn->commit();
-        // Redirect ke halaman datatables-checkval-legal.php
-        header("Location: datatables-draft-sewa-legal.php");
-        exit; // Pastikan tidak ada output lain setelah header redirect
-    } catch (Exception $e) {
-        // Rollback transaksi jika terjadi kesalahan
-        $conn->rollback();
-        echo "Error: " . $e->getMessage();
-    }
-}
+$draft_legal = "";
 
 // Query untuk mengambil data dari tabel draft
 $sql = "SELECT d.*, 
@@ -82,6 +45,13 @@ $conn->close();
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
+<style>
+    .hidden {
+        display: none;
+    }
+</style>
 </head>
 
 <body class="text-left">
@@ -97,7 +67,7 @@ $conn->close();
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Datatables Draft Akta Sewa Legal</h1>
+                    <h1>Data Draft Akta Sewa Legal</h1>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
                 <!-- end of row-->
@@ -116,7 +86,7 @@ $conn->close();
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
@@ -320,7 +290,7 @@ $conn->close();
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <form id="statusForm" method="post" action="">
+                                                                <form id="statusForm" method="post" action="legal/draft-sewa-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" id="modalId" value="<?= $row['id']; ?>">
                                                                     <div class="form-group">
                                                                         <label for="statusSelect">Status Approve Draft</label>
@@ -330,6 +300,28 @@ $conn->close();
                                                                             <option value="Approve">Approve</option>
                                                                             <option value="Reject">Reject</option>
                                                                         </select>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="catatan_draft">Catatan Review PSM</label>
+                                                                        <input type="text" class="form-control" id="catatan_draft" name="catatan_draft">
+                                                                    </div>
+                                                                    <div id="issueDetailSection" class="hidden">
+                                                                        <div class="form-group">
+                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="pic">PIC</label>
+                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                                                                        </div>
                                                                     </div>
                                                                     <button type="submit" class="btn btn-primary">Save changes</button>
                                                                 </form>
@@ -343,7 +335,7 @@ $conn->close();
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
@@ -578,6 +570,8 @@ $conn->close();
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
+    <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>     -->
+    
     <script>
     $(document).ready(function(){
         // Saat tombol edit diklik
@@ -589,7 +583,31 @@ $conn->close();
             $('#modalId').val(id);
         });
     });
+    
+    // Function to toggle the visibility of issue detail section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
+        }
+    }
+
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function () {
+        toggleIssueDetail();
+    });
+</script>
+<?php if ($draft_legal == 'Pending') { ?>
+    <script>
+        $(document).ready(function () {
+            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+        });
     </script>
+<?php } ?>
     // <script>
     //     // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
     //     function setDelete(element) {

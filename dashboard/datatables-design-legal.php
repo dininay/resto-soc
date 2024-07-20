@@ -2,81 +2,6 @@
 // Koneksi ke database
 include "../koneksi.php";
 
-
-// Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["status_obslegal"]) && isset($_POST["catatan_obslegal"])) {
-    $id = $_POST["id"];
-    $status_obslegal = $_POST["status_obslegal"];
-    $catatan_obslegal = $_POST["catatan_obslegal"];
-    $end_date = date("Y-m-d H:i:s");
-
-    // Mulai transaksi
-    $conn->begin_transaction();
-
-    try {
-        // Query untuk memperbarui status_obslegal berdasarkan id
-        $sql_update_sdg_desain = "UPDATE sdg_desain SET status_obslegal = ?, catatan_obslegal = ?, end_date = ? WHERE id = ?";
-        $stmt_update_sdg_desain = $conn->prepare($sql_update_sdg_desain);
-        $stmt_update_sdg_desain->bind_param("sssi", $status_obslegal, $catatan_obslegal, $end_date, $id);
-
-        // Eksekusi query
-        if ($stmt_update_sdg_desain->execute() === TRUE) {
-            // Jika status_obslegal diubah menjadi Approve
-            if ($status_obslegal == 'Approve') {
-                // Ambil data dari tabel sdg_desain berdasarkan id yang diedit
-                $sql_select = "SELECT kode_lahan, end_date, lamp_desainplan FROM sdg_desain WHERE id = ?";
-                $stmt_select = $conn->prepare($sql_select);
-                $stmt_select->bind_param("i", $id);
-                $stmt_select->execute();
-                $result_select = $stmt_select->get_result();
-                if ($row = $result_select->fetch_assoc()) {
-                    // Ambil jumlah SLA dari tabel master_sla berdasarkan divisi "SDG-QS"
-                    $sql_select_sla_qs = "SELECT sla FROM master_sla WHERE divisi = 'QS'";
-                    $result_sla_qs = $conn->query($sql_select_sla_qs);
-                    
-                    if ($row_sla_qs = $result_sla_qs->fetch_assoc()) {
-                        $sla_days_qs = $row_sla_qs['sla'];
-                        $end_date_obj = new DateTime($row['end_date']);
-                        $end_date_obj->modify("+$sla_days_qs days");
-                        $sla_date = $end_date_obj->format("Y-m-d");
-
-                        // Masukkan data ke tabel sdg_rab
-                        $sql_insert = "INSERT INTO sdg_rab (kode_lahan, lamp_desainplan, confirm_sdgqs, sla_date) VALUES (?,?,?,?)";
-                        $stmt_insert = $conn->prepare($sql_insert);
-                        // Tambahkan 'In Process' untuk kolom confirm_sdgqs
-                        $confirm_sdgqs = 'In Process';
-                        $stmt_insert->bind_param("ssss", $row['kode_lahan'], $row['lamp_desainplan'], $confirm_sdgqs, $sla_date);
-                        $stmt_insert->execute();
-                    } else {
-                        $conn->rollback();
-                        echo "Error: SLA not found for divisi: SDG-QS.";
-                        exit;
-                    }
-                } else {
-                    // Rollback transaksi jika terjadi kesalahan pada select
-                    $conn->rollback();
-                    echo "Error: Data not found for id: $id.";
-                    exit;
-                }
-            }
-            // Komit transaksi
-            $conn->commit();
-            echo "Status, obstacle, dan status_obslegal berhasil diperbarui.";
-            // Redirect ke halaman datatables-checkval-legal.php
-            header("Location: datatables-design-legal.php");
-            exit; // Pastikan tidak ada output lain setelah header redirect
-        } else {
-            // Rollback transaksi jika terjadi kesalahan
-            $conn->rollback();
-            echo "Error: " . $sql . "<br>" . $conn->error;
-        }
-    } catch (Exception $e) {
-        // Rollback transaksi jika terjadi kesalahan
-        $conn->rollback();
-        echo "Error: " . $e->getMessage();
-    }
-}
-
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT sdg_desain.*, dokumen_loacd.kode_store
  FROM sdg_desain 
@@ -112,6 +37,11 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+    .hidden {
+        display: none;
+    }
+</style>
 </head>
 
 <body class="text-left">
@@ -145,7 +75,7 @@ if ($result && $result->num_rows > 0) {
                               <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Lampiran Desain</th>
                                                 <th>Catatan</th>
@@ -235,7 +165,7 @@ if ($result && $result->num_rows > 0) {
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['status_obslegal']) {
-                                                            case 'Approve':
+                                                            case 'Done':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -255,7 +185,7 @@ if ($result && $result->num_rows > 0) {
                                                 </td>
                                                 <td>
                                                     <!-- Tombol Edit -->
-                                                    <?php if ($row['status_obslegal'] != "Approve"): ?>
+                                                    <?php if ($row['status_obslegal'] != "Done"): ?>
                                                             <a href="legal/obstacle-legal-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
                                                             <i class="i-Pen-2"></i>
                                                             </a>
@@ -276,19 +206,37 @@ if ($result && $result->num_rows > 0) {
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <form id="statusForm" method="post" action="">
+                                                                <form id="statusForm" method="post" action="legal/obstacle-legal-process.php"  enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" id="modalKodeLahan">
                                                                     <div class="form-group">
                                                                         <label for="statusSelect">Status Approve Legal</label>
                                                                         <select class="form-control" id="statusSelect" name="status_obslegal" Placeholder="Pilih">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
-                                                                            <option value="Approve">Approve</option>
+                                                                            <option value="Done">Done</option>
                                                                         </select>
                                                                     </div>
                                                                     <div class="form-group">
                                                                         <label for="catatan_obslegal">Catatan Legal</label>
                                                                         <input type="text" class="form-control" id="catatan_obslegal" name="catatan_obslegal">
+                                                                    </div>
+                                                                    <div id="issueDetailSection" class="hidden">
+                                                                        <div class="form-group">
+                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="pic">PIC</label>
+                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                                                                        </div>
                                                                     </div>
                                                                     <button type="submit" class="btn btn-primary">Save changes</button>
                                                                 </form>
@@ -301,7 +249,7 @@ if ($result && $result->num_rows > 0) {
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Lampiran Desain</th>
                                                 <th>Catatan</th>
@@ -530,19 +478,44 @@ if ($result && $result->num_rows > 0) {
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
+    
     <script>
-    // JavaScript to handle opening the modal and setting form values
-    $('#editModal').on('show.bs.modal', function (event) {
-        var button = $(event.relatedTarget); // Button that triggered the modal
-        var kodeLahan = button.data('id'); // Extract info from data-* attributes
-        var status = button.data('status'); // Extract status
+    $(document).ready(function(){
+        // Saat tombol edit diklik
+        $('.edit-btn').click(function(){
+            // Ambil data-id dari tombol edit
+            var id = $(this).data('id');
 
-        // Update the modal's content.
-        var modal = $(this);
-        modal.find('#modalKodeLahan').val(kodeLahan);
-        modal.find('#statusSelect').val(status);
+            // Isi nilai input tersembunyi dengan ID yang diambil
+            $('#modalKodeLahan').val(id);
+        });
+    });
+    
+    // Function to toggle the visibility of issue detail section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
+        }
+    }
+
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function () {
+        toggleIssueDetail();
     });
 </script>
+<?php if ($status_obslegal == 'Pending') { ?>
+    <script>
+        $(document).ready(function () {
+            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+        });
+    </script>
+<?php } ?>
     <script>
 $(document).ready(function() {
     $(".edit-btn").click(function() {

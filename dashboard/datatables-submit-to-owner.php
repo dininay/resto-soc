@@ -2,6 +2,7 @@
 // Koneksi ke database
 include "../koneksi.php";
 
+$status_approvre = "";
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT * from land
         WHERE status_land = 'Aktif'";
@@ -67,13 +68,13 @@ if ($result && $result->num_rows > 0) {
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
 												<th>Luas Area</th>
                                                 <th>No Telepon</th>
                                                 <th>Lampiran</th>
-                                                <th>Status Confirm to Owner</th>
+                                                <th>Status Confirm to BoD</th>
                                                 <th>SLA</th>
 												<th>Action</th>
                                             </tr>
@@ -206,44 +207,61 @@ if ($result && $result->num_rows > 0) {
 
                                                 <!-- Modal -->
                                                 <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
-                                                    <div class="modal-dialog" role="document">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title" id="editModalLabel">Edit Status</h5>
-                                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                                    <span aria-hidden="true">&times;</span>
-                                                                </button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                <form id="statusForm" method="post" action="re/submit-to-owner-process.php">
-                                                                    <input type="hidden" name="id" id="modalKodeLahan">
-                                                                    <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve RE</label>
-                                                                        <select class="form-control" id="statusSelect" name="status_approvre">
-                                                                            <option value="In Process">In Process</option>
-                                                                            <option value="Pending">Pending</option>
-                                                                            <option value="Approve">Approve</option>
-                                                                        </select>
-                                                                    </div>
-                                                                    <button type="submit" class="btn btn-primary">Save changes</button>
-                                                                </form>
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Edit Status</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="statusForm" method="post" action="re/submit-to-owner-process.php" enctype="multipart/form-data">
+                    <input type="hidden" name="id" value="<?=$row["id"]?>" id="modalKodeLahan">
+                    <div class="form-group">
+                        <label for="statusSelect">Status Approve RE</label>
+                        <select class="form-control" id="statusSelect" name="status_approvre">
+                            <option value="In Process">In Process</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Approve">Approve</option>
+                        </select>
+                    </div>
+                    <div id="issueDetailSection" class="hidden">
+                        <div class="form-group">
+                            <label for="issue_detail">Issue Detail</label>
+                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="pic">PIC</label>
+                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="action_plan">Action Plan</label>
+                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="kronologi">Upload File Kronologi</label>
+                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </form>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                    </td>
                                             </tr>
-    <?php endforeach; ?>
+                                        <?php endforeach; ?>
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
 												<th>Luas Area</th>
                                                 <th>No Telepon</th>
                                                 <th>Lampiran</th>
-                                                <th>Status Confirm to Owner</th>
+                                                <th>Status Confirm to BoD</th>
                                                 <th>SLA</th>
 												<th>Action</th>
                                             </tr>
@@ -467,18 +485,53 @@ if ($result && $result->num_rows > 0) {
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
-    <script>
-    $(document).ready(function(){
-        // Saat tombol edit diklik
-        $('.edit-btn').click(function(){
-            // Ambil data-id dari tombol edit
-            var id = $(this).data('id');
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>   
+    <style>
+        .hidden {
+            display: none;
+        }
+    </style>
+<script>
+$(document).ready(function() {
+    // Saat tombol edit diklik
+    $('.edit-btn').click(function() {
+        // Ambil data-id dari tombol edit
+        var id = $(this).data('id');
 
-            // Isi nilai input tersembunyi dengan ID yang diambil
-            $('#modalKodeLahan').val(id);
-        });
+        // Isi nilai input tersembunyi dengan ID yang diambil
+        $('#modalKodeLahan').val(id);
     });
-    </script>
+
+    // Function to toggle the visibility of issue detail section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
+        }
+    }
+
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function() {
+        toggleIssueDetail();
+    });
+
+    // Call toggleIssueDetail on document ready to set initial state
+    toggleIssueDetail();
+});
+
+// Show modal if status_approvre is 'Pending'
+<?php if ($status_approvre == 'Pending') { ?>
+    $(document).ready(function() {
+        $('#editModal').modal('show');
+    });
+<?php } ?>
+</script>
+
     <script>
 $(document).ready(function() {
     $(".edit-btn").click(function() {

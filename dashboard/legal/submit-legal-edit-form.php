@@ -5,10 +5,10 @@ include "../../koneksi.php";
 $status_approvowner = ""; 
 // Periksa apakah ada data yang dikirimkan melalui URL (ID)
 if(isset($_GET['id'])) {
-    // Ambil ID dari URL
+    // Ambil id dari URL
     $id = $_GET['id'];
 
-    // Query untuk mendapatkan data resep berdasarkan ID
+    // Query untuk mendapatkan data resep berdasarkan id
     $result = $conn->query("SELECT * FROM sdg_desain WHERE id = '$id'");
 
     // Periksa apakah data ditemukan
@@ -64,18 +64,6 @@ if(isset($_GET['id'])) {
                             <div class="card-body">
                             <form method="post" action="submit-legal-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
-                                <!-- <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="submit_date">Tgl Submit</label>
-                                    <div class="col-sm-9">
-                                        <input class="form-control" id="submit_date" name="submit_date" type="date" value="<?php echo $row['submit_date']; ?>" placeholder="Submit Date" />
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="catatan_legal">Catatan</label>
-                                    <div class="col-sm-9">
-                                        <input class="form-control" id="catatan_legal" name="catatan_legal" type="text" value="<?php echo $row['catatan_legal']; ?>" placeholder="Catatan" />
-                                    </div>
-                                </div> -->
                                 <div class="form-group row">
                                     <label class="col-sm-3 col-form-label" for="lamp_pbg">Upload Lampiran PBG</label>
                                     <div class="col-sm-9">

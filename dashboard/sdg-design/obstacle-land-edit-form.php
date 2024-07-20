@@ -49,10 +49,10 @@ if(isset($_GET['id'])) {
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Land Survey & Layouting</h1>
+                    <h1>Layouting</h1>
                     <ul>
                         <li><a href="href">Edit</a></li>
-                        <li>Land Survey & Layouting</li>
+                        <li>Layouting</li>
                     </ul>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
@@ -86,10 +86,10 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row" id="lamp-survey" style="display: none;">
-                                    <label class="col-sm-3 col-form-label" for="lamp_survey">Upload Dokumen Pendukung</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_layouting">Upload Dokumen Pendukung</label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
-                                            <input name="lamp_survey[]" type="file" multiple="multiple" />
+                                            <input name="lamp_layouting[]" type="file" multiple="multiple" />
                                         </div>
                                     </div>
                                 </div>

@@ -14,7 +14,7 @@ include "../koneksi.php";
 //         INNER JOIN procurement p ON l.kode_lahan = p.kode_lahan
 //         LEFT JOIN vendor v ON p.nama_vendor = v.kode_vendor
 //         WHERE confirm_sdgqs = 'Approve'";
-        $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, d.lamp_draf, r.id, r.kode_lahan, s.lamp_desainplan, r.keterangan, 
+        $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, d.lamp_draf, p.id, r.kode_lahan, s.lamp_desainplan, r.keterangan, 
         r.jenis_biaya, r.jumlah, r.date, r.lamp_rab, r.confirm_sdgqs, r.sla_date, r.start_date, c.kode_store, c.lamp_vd, c.status_approvlegalvd, p.status_approvprocurement,
         IFNULL(v.nama, '') AS nama_vendor, v.lamp_vendor, v.lamp_profil
         FROM draft d
@@ -89,7 +89,7 @@ if ($result && $result->num_rows > 0) {
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
@@ -338,7 +338,7 @@ if ($result && $result->num_rows > 0) {
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>

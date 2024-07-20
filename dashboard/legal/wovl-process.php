@@ -3,9 +3,10 @@
 include "../../koneksi.php";
 
 // Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["status_vl"])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["status_vl"]) && isset($_POST["catatan_vl"])) {
     $id = $_POST["id"];
     $status_vl = $_POST["status_vl"];
+    $catatan_vl = $_POST["catatan_vl"];
     $vl_date = null;
     $issue_detail = isset($_POST["issue_detail"]) ? $_POST["issue_detail"] : null;
     $pic = isset($_POST["pic"]) ? $_POST["pic"] : null;
@@ -41,9 +42,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             $vl_date = date("Y-m-d H:i:s");
 
             // Query untuk memperbarui status_vl dan vl_date di tabel re
-            $sql_update_re = "UPDATE re SET status_vl = ?, vl_date = ? WHERE id = ?";
+            $sql_update_re = "UPDATE re SET status_vl = ?, catatan_vl = ?, vl_date = ? WHERE id = ?";
             $stmt_update_re = $conn->prepare($sql_update_re);
-            $stmt_update_re->bind_param("ssi", $status_vl, $vl_date, $id);
+            $stmt_update_re->bind_param("sssi", $status_vl, $catatan_vl, $vl_date, $id);
             $stmt_update_re->execute();
             
             // Ambil kode_lahan dari tabel re
@@ -85,9 +86,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             $stmt_get_kode_lahan->free_result();
 
             // Query untuk memperbarui status_vl, vl_date di tabel re dan memasukkan data ke dalam tabel hold_project
-            $sql_update_re = "UPDATE re SET status_vl = ?, vl_date = ? WHERE id = ?";
+            $sql_update_re = "UPDATE re SET status_vl = ?, catatan_vl = ?, vl_date = ? WHERE id = ?";
             $stmt_update_re = $conn->prepare($sql_update_re);
-            $stmt_update_re->bind_param("ssi", $status_vl, $vl_date, $id);
+            $stmt_update_re->bind_param("sssi", $status_vl,$catatan_vl, $vl_date, $id);
             $stmt_update_re->execute();
 
             $status_hold = "In Process";
@@ -104,9 +105,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             echo "Status berhasil diperbarui dan data ditahan.";
         } else {
             // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_vl di tabel re
-            $sql = "UPDATE re SET status_vl = ? WHERE id = ?";
+            $sql = "UPDATE re SET status_vl = ?, catatan_vl = ? WHERE id = ?";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("si", $status_vl, $id);
+            $stmt->bind_param("ssi", $status_vl, $catatan_vl, $id);
             $stmt->execute();
 
             // Check if update was successful
@@ -126,6 +127,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
     }
 
     // Pastikan tidak ada output lain setelah header redirect
+    header("Location: ../datatables-wovl.php");
     exit;
 }
 ?>

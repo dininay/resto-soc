@@ -1,41 +1,8 @@
 <?php
 // Koneksi ke database
 include "../koneksi.php";
-// Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["status_steqp"])) {
-    $id = $_POST["id"];
-    $status_steqp = $_POST["status_steqp"];
-    $steqp_date = date("Y-m-d H:i:s");
-    
-    // Mulai transaksi
-    $conn->begin_transaction();
 
-    try {
-        // Query untuk memperbarui status_finallegal berdasarkan id
-        $sql_update = "UPDATE resto SET status_steqp = ?, steqp_date = ? WHERE id = ?";
-        $stmt_update = $conn->prepare($sql_update);
-        $stmt_update->bind_param("ssi", $status_steqp, $steqp_date, $id);
-
-        // Eksekusi query update
-        if ($stmt_update->execute() === TRUE) {
-            // Jika status_finallegal diubah menjadi Approve
-            if ($status_steqp == 'Approve') {
-                
-            }
-            // Komit transaksi
-            $conn->commit();
-            echo "Status dan data berhasil diperbarui.";
-        } else {
-            // Rollback transaksi jika terjadi kesalahan pada update
-            $conn->rollback();
-            echo "Error: " . $sql_update . "<br>" . $conn->error;
-        }
-    } catch (Exception $e) {
-        // Rollback transaksi jika terjadi kesalahan
-        $conn->rollback();
-        echo "Error: " . $e->getMessage();
-    }
-}
+$status_steqp = "";
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, d.lamp_draf, r.*, p.*, r.*,
 d.jadwal_psm, s.lamp_desainplan, c.kode_store
@@ -78,6 +45,11 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 
 <body class="text-left">
@@ -112,7 +84,7 @@ if ($result && $result->num_rows > 0) {
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
@@ -200,9 +172,9 @@ if ($result && $result->num_rows > 0) {
                                                 ?>          
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_ba_files = explode(",", $row['lamp_ba']); // Pisahkan nama file menjadi array
+                                                $lamp_ba_files = explode(",", $row['lamp_basteqp']); // Pisahkan nama file menjadi array
                                                 // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_ba'])) {
+                                                if (!empty($row['lamp_basteqp'])) {
                                                     echo '<td>
                                                             <ul style="list-style-type: none; padding: 0; margin: 0;">';
                                                     // Loop untuk setiap file dalam array
@@ -290,31 +262,66 @@ if ($result && $result->num_rows > 0) {
                                                     // Menampilkan tombol jika status bukan Approve dan sudah mendekati H-21 dari deadline
                                                     if ($row['status_steqp'] !== 'Approve' && $interval <= 30 && $interval >= 0) : ?>
                                                         <div>
-                                                            <a href="sdg-pk/eqp-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                            <a href="sdg-pk/eqp-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
                                                                 <i class="i-Pen-2"></i>
                                                             </a>
-                                                        </div>
-                                                        <div>
-                                                            <button class="btn btn-sm btn-primary edit-btn" data-id="<?= $row['id'] ?>">
+                                                            <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_steqp'] ?>">
                                                                 <i class="nav-icon i-Book"></i>
                                                             </button>
-                                                            <form method="post" action="" class="status-form" style="display: none; margin-top: 10px;">
-                                                                <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                                                                <select class="form-control" name="status_steqp" onchange="this.form.submit()">
-                                                                    <option value="In Process" <?= $row['status_steqp'] == 'In Process' ? 'selected' : '' ?>>In Process</option>
-                                                                    <option value="Pending" <?= $row['status_steqp'] == 'Pending' ? 'selected' : '' ?>>Pending</option>
-                                                                    <option value="Approve" <?= $row['status_steqp'] == 'Approve' ? 'selected' : '' ?>>Approve</option>
-                                                                </select>
-                                                            </form>
                                                         </div>
                                                     <?php endif; ?>
-                                                </td>
 
-                                        <?php endforeach; ?>
+                                                    <!-- Modal -->
+                                                    <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+                                                        <div class="modal-dialog" role="document">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title" id="editModalLabel">Edit Status</h5>
+                                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                        <span aria-hidden="true">&times;</span>
+                                                                    </button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <form id="statusForm" method="post" action="sdg-pk/eqp-process.php"  enctype="multipart/form-data">
+                                                                        <input type="hidden" name="id" id="modalId" value="<?= $row['id']; ?>">
+                                                                        <div class="form-group">
+                                                                            <label for="statusSelect">Status Approve ST EQP</label>
+                                                                            <select class="form-control" id="statusSelect" name="status_steqp">
+                                                                                <option value="In Process">In Process</option>
+                                                                                <option value="Pending">Pending</option>
+                                                                                <option value="Approve">Approve</option>
+                                                                            </select>
+                                                                        </div>
+                                                                        <div id="issueDetailSection" class="hidden">
+                                                                            <div class="form-group">
+                                                                                <label for="issue_detail">Issue Detail</label>
+                                                                                <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                                                                            </div>
+                                                                            <div class="form-group">
+                                                                                <label for="pic">PIC</label>
+                                                                                <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                            </div>
+                                                                            <div class="form-group">
+                                                                                <label for="action_plan">Action Plan</label>
+                                                                                <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                                                                            </div>
+                                                                            <div class="form-group">
+                                                                                <label for="kronologi">Upload File Kronologi</label>
+                                                                                <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                                                                            </div>
+                                                                        </div>
+                                                                        <button type="submit" class="btn btn-primary">Save changes</button>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    </tr>
+                                                    <?php endforeach; ?>
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
@@ -546,6 +553,44 @@ if ($result && $result->num_rows > 0) {
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
+    
+    <script>
+    $(document).ready(function(){
+        // Saat tombol edit diklik
+        $('.edit-btn').click(function(){
+            // Ambil data-id dari tombol edit
+            var id = $(this).data('id');
+
+            // Isi nilai input tersembunyi dengan ID yang diambil
+            $('#modalId').val(id);
+        });
+    });
+    
+    // Function to toggle the visibility of issue detail section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
+        }
+    }
+
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function () {
+        toggleIssueDetail();
+    });
+</script>
+<?php if ($status_steqp == 'Pending') { ?>
+    <script>
+        $(document).ready(function () {
+            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+        });
+    </script>
+<?php } ?>
     <script>
         // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
         function setDelete(element) {

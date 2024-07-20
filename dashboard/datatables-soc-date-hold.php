@@ -13,6 +13,14 @@ $sql = "
         LEFT JOIN dokumen_loacd ON land.kode_lahan = dokumen_loacd.kode_lahan";
 $result = $conn->query($sql);
 
+// Count data for Hold (In Process) from hold_project table
+$sql_hold = "SELECT COUNT(*) as hold_count FROM hold_project WHERE status_hold = 'In Process'";
+$result_hold = $conn->query($sql_hold);
+$hold_count = 0;
+if ($result_hold->num_rows > 0) {
+    $row_hold = $result_hold->fetch_assoc();
+    $hold_count = $row_hold['hold_count'];
+}
 
 // Inisialisasi variabel $data dengan array kosong
 $data = [];
@@ -23,6 +31,46 @@ if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $data[] = $row;
     }
+}
+
+$sql_pic = "SELECT pic, COUNT(*) as jumlah FROM hold_project GROUP BY pic";
+$result_pic = $conn->query($sql_pic);
+
+$pics = [];
+$jumlahPics = [];
+
+// Proses hasil query
+if ($result_pic->num_rows > 0) {
+    while ($row = $result_pic->fetch_assoc()) {
+        $pics[] = $row['pic'];
+        $jumlahPics[] = $row['jumlah'];
+    }
+}
+
+// Konversi array PHP ke JSON untuk digunakan di dalam JavaScript
+$picsJSON = json_encode($pics);
+$jumlahPicsJSON = json_encode($jumlahPics);
+
+// Query untuk mengambil data Status Issue (Done dan In Process) dari tabel hold_project
+$sql_status_done = "SELECT COUNT(*) as jumlah FROM hold_project WHERE status_hold = 'Done'";
+$sql_status_in_process = "SELECT COUNT(*) as jumlah FROM hold_project WHERE status_hold = 'In Process'";
+
+$result_status_done = $conn->query($sql_status_done);
+$result_status_in_process = $conn->query($sql_status_in_process);
+
+$jumlahDone = 0;
+$jumlahInProcess = 0;
+
+// Ambil jumlah Done
+if ($result_status_done->num_rows > 0) {
+    $row_done = $result_status_done->fetch_assoc();
+    $jumlahDone = $row_done['jumlah'];
+}
+
+// Ambil jumlah In Process
+if ($result_status_in_process->num_rows > 0) {
+    $row_in_process = $result_status_in_process->fetch_assoc();
+    $jumlahInProcess = $row_in_process['jumlah'];
 }
 
 ?>
@@ -41,6 +89,7 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
 </head>
 
 <body class="text-left">
@@ -64,9 +113,40 @@ if ($result && $result->num_rows > 0) {
                     <div class="col-md-12 mb-4">
                         <div class="card text-left">
                             <div class="card-body">
+                                <div class="row justify-content-center">
+                                <div class="col-lg-3 col-md-6 col-sm-6">
+                                    <div class="card card-icon-bg card-icon-bg-primary o-hidden mb-4">
+                                        <div class="card-body">
+                                            <i class="i-Add-User mr-3"></i>
+                                            <h5 class="text-muted mt-2 mb-2">Total Store Hold</h5>
+                                            <div class="content">
+                                                <p class="text-primary text-24 line-height-1 mb-2"><?php echo $hold_count; ?></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-9 col-md-12">
+                                        <div class="card mb-4">
+                                            <div class="card-body">
+                                                <div class="card-title">PIC</div>
+                                                <div id="picChart" style="height: 300px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-md-12">
+                                        <div class="card mb-4">
+                                            <div class="card-body">
+                                                <div class="card-title">Status Issue</div>
+                                                <div id="statusChart" style="height: 300px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <h4 class="card-title mb-3"></h4>
 								<div class="footer-bottom float-right">
-                                <p><a class="btn btn-primary btn-icon m-1" href="operation/summary-soc-form.php">+ add Summary</a></p>
+                                <!-- <p><a class="btn btn-primary btn-icon m-1" href="operation/summary-soc-form.php">+ add Summary</a></p> -->
 									<p>
 									  <span class="flex-grow-1"></span></p>
 								</div>
@@ -75,7 +155,7 @@ if ($result && $result->num_rows > 0) {
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
@@ -160,7 +240,7 @@ if ($result && $result->num_rows > 0) {
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
@@ -410,6 +490,116 @@ $(document).ready(function() {
     });
 });
 </script>
+<script>
+    // Mengambil data PIC dari PHP
+    var pics = <?php echo $picsJSON; ?>;
+    var jumlahPics = <?php echo $jumlahPicsJSON; ?>;
+
+    // Inisialisasi chart menggunakan ECharts
+    var picChart = echarts.init(document.getElementById('picChart'));
+
+    // Opsi untuk chart
+    var optionPic = {
+        title: {
+            text: ''
+        },
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                type: 'shadow'
+            }
+        },
+        xAxis: {
+            type: 'category',
+            data: pics,
+            axisLabel: {
+                rotate: 45, // Rotate labels if needed
+                interval: 0 // Display all labels
+            }
+        },
+        yAxis: {
+            type: 'value',
+            min: 0
+        },
+        series: [
+            {
+                name: 'Count',
+                type: 'bar',
+                data: jumlahPics,
+                itemStyle: {
+                    color: function(params) {
+                        var colorList = ['#5A8770', '#759C6A', '#A3AD62', '#EABA6B', '#F08C4E']; // Warna untuk bar
+                        return colorList[params.dataIndex % colorList.length];
+                    }
+                }
+            }
+        ]
+    };
+
+    // Gunakan setOption untuk mengatur data dan opsi ke chart
+    picChart.setOption(optionPic);
+
+    // Resize chart on window resize
+    window.addEventListener("resize", function () {
+        setTimeout(function () {
+            picChart.resize();
+        }, 500);
+    });
+</script>
+
+<script>
+    // Inisialisasi chart menggunakan ECharts
+    var statusChart = echarts.init(document.getElementById('statusChart'));
+
+    // Opsi untuk chart
+    var optionStatus = {
+        title: {
+            text: ''
+        },
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                type: 'shadow'
+            }
+        },
+        xAxis: {
+            type: 'category',
+            data: ['Done', 'In Process'],
+            axisLabel: {
+                rotate: 45, // Rotate labels if needed
+                interval: 0 // Display all labels
+            }
+        },
+        yAxis: {
+            type: 'value',
+            min: 0
+        },
+        series: [
+            {
+                name: 'Count',
+                type: 'bar',
+                data: [<?php echo $jumlahDone; ?>, <?php echo $jumlahInProcess; ?>],
+                itemStyle: {
+                    color: function(params) {
+                        var colorList = ['#5A8770', '#759C6A', '#A3AD62', '#EABA6B', '#F08C4E']; // Warna untuk bar
+                        return colorList[params.dataIndex % colorList.length];
+                    }
+                }
+            }
+        ]
+    };
+
+    // Gunakan setOption untuk mengatur data dan opsi ke chart
+    statusChart.setOption(optionStatus);
+
+    // Resize chart on window resize
+    window.addEventListener("resize", function () {
+        setTimeout(function () {
+            statusChart.resize();
+        }, 500);
+    });
+</script>
+
 </body>
 
 </html>

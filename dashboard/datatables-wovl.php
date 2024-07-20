@@ -1,6 +1,7 @@
 <?php
 // Koneksi ke database
 include "../koneksi.php";
+$status_vl = "";
 
 // Proses jika ada pengiriman data dari formulir untuk memperbarui status
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["status_vl"])) {
@@ -88,6 +89,8 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
 <style>
     .hidden {
         display: none;
@@ -108,7 +111,7 @@ if ($result && $result->num_rows > 0) {
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Datatables Validasi Lahan From RE</h1>
+                    <h1>Data Validasi Lahan From RE</h1>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
                 <!-- end of row-->
@@ -125,14 +128,12 @@ if ($result && $result->num_rows > 0) {
                               <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>Kode Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
                                                 <th>Luas Area</th>
-                                                <th>Approval Owner</th>
-                                                <th>Owner Date</th>
-                                                <th>Approval Legal</th>
-                                                <th>Legal Date</th>
+                                                <th>Approval BoD</th>
+                                                <th>Approval BoD Date</th>
                                                 <th>Lampiran Land</th>
                                                 <th>Status VL</th>
                                                 <th>Lampiran VL</th>
@@ -171,30 +172,6 @@ if ($result && $result->num_rows > 0) {
                                                     </span>
                                                 </td>
                                                 <td><?= $row['start_date'] ?></td>
-                                                <td>
-                                                    <?php
-                                                        // Tentukan warna badge berdasarkan status approval owner
-                                                        $badge_color = '';
-                                                        switch ($row['status_approvlegal']) {
-                                                            case 'Approve':
-                                                                $badge_color = 'success';
-                                                                break;
-                                                            case 'Pending':
-                                                                $badge_color = 'danger';
-                                                                break;
-                                                            case 'In Process':
-                                                                $badge_color = 'warning';
-                                                                break;
-                                                            default:
-                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
-                                                                break;
-                                                        }
-                                                    ?>
-                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_approvlegal']; ?>
-                                                    </span>
-                                                </td>
-                                                <td><?= $row['end_date'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_land_files = explode(",", $row['lamp_land']); // Pisahkan nama file menjadi array
@@ -313,9 +290,9 @@ if ($result && $result->num_rows > 0) {
                                                     <!-- Tombol Edit -->
                                                     <?php if ($row['status_vl'] != "Approve"): ?>
                                                         <div>
-                                                        <a href="legal/vl-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
+                                                        <!-- <a href="legal/vl-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
                                                             <i class="nav-icon i-Pen-2"></i>
-                                                        </a>
+                                                        </a> -->
                                                         <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_vl'] ?>">
                                                             <i class="nav-icon i-Book"></i>
                                                         </button>
@@ -333,8 +310,8 @@ if ($result && $result->num_rows > 0) {
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <form id="statusForm" method="post" action="legal/wovl-process.php">
-                                                                    <input type="hidden" name="id" id="modalKodeLahan">
+                                                                <form id="statusForm" method="post" action="legal/wovl-process.php" enctype="multipart/form-data">
+                                                                    <input type="hidden" name="id" value="<?=$row["id"]?>"  id="modalKodeLahan">
                                                                     <div class="form-group">
                                                                         <label for="statusSelect">Status Approve VL</label>
                                                                         <select class="form-control" id="statusSelect" name="status_vl">
@@ -343,6 +320,10 @@ if ($result && $result->num_rows > 0) {
                                                                             <option value="Approve">Approve</option>
                                                                             <option value="Reject">Reject</option>
                                                                         </select>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="catatan_vl">Catatan VL</label>
+                                                                        <input type="text" class="form-control" id="catatan_vl" name="catatan_vl">
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">
                                                                         <div class="form-group">
@@ -359,7 +340,7 @@ if ($result && $result->num_rows > 0) {
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="kronologi">Upload File Kronologi</label>
-                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]">
+                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
                                                                         </div>
                                                                     </div>
                                                                     <button type="submit" class="btn btn-primary">Save changes</button>
@@ -374,18 +355,16 @@ if ($result && $result->num_rows > 0) {
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>Kode Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
                                                 <th>Luas Area</th>
-                                                <th>Approval Owner</th>
-                                                <th>Owner Date</th>
-                                                <th>Approval Legal</th>
-                                                <th>Legal Date</th>
-                                                <th>SLA Date</th>
+                                                <th>Approval BoD</th>
+                                                <th>Approval BoD Date</th>
                                                 <th>Lampiran Land</th>
                                                 <th>Status VL</th>
                                                 <th>Lampiran VL</th>
+                                                <th>SLA</th>
                                                 <th>Action</th>
                                             </tr>
                                         </tfoot>
@@ -643,8 +622,6 @@ if ($result && $result->num_rows > 0) {
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-
     <script>
     $(document).ready(function(){
         // Saat tombol edit diklik
@@ -674,7 +651,7 @@ if ($result && $result->num_rows > 0) {
         toggleIssueDetail();
     });
 </script>
-<?php if ($status_approvowner == 'Pending') { ?>
+<?php if ($status_vl == 'Pending') { ?>
     <script>
         $(document).ready(function () {
             $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'

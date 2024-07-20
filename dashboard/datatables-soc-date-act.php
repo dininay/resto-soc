@@ -28,6 +28,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         echo "Error: " . $e->getMessage();
     }
 }
+
+// Ambil total existing store dari tabel land dengan status_land = 'Aktif'
+$sql_existing_store = "SELECT COUNT(*) as total_existing_store FROM land WHERE status_land = 'Aktif'";
+$result_existing_store = $conn->query($sql_existing_store);
+$total_existing_store = 0;
+if ($result_existing_store->num_rows > 0) {
+    $row_existing_store = $result_existing_store->fetch_assoc();
+    $total_existing_store = $row_existing_store['total_existing_store'];
+}
+// Filter kode_lahan yang memiliki status_kom = 'Approve' di tabel resto
+$sql_filter_approve_kom = "SELECT COUNT(*) as total_approve_kom FROM resto WHERE status_kom = 'Approve'";
+$result_filter_approve_kom = $conn->query($sql_filter_approve_kom);
+$total_approve_kom = 0;
+if ($result_filter_approve_kom->num_rows > 0) {
+    $row_filter_approve_kom = $result_filter_approve_kom->fetch_assoc();
+    $total_approve_kom = $row_filter_approve_kom['total_approve_kom'];
+}
+
+// Jumlah total store yang tidak memiliki kode_lahan dengan status_kom = 'Approve'
+$total_existing_store_without_approve_kom = $total_existing_store - $total_approve_kom;
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT 
 land.kode_lahan,
@@ -62,14 +82,29 @@ LEFT JOIN summary_soc ON summary_soc.kode_lahan = land.kode_lahan
 WHERE resto.status_kom = 'Approve'";
 $result = $conn->query($sql);
 
-$data = [];
-if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $data[] = $row;
+
+// Fungsi untuk menambahkan nilai ke total remarks
+function addToTotal(&$total_array, $remarks, $kode_lahan) {
+    if (!isset($total_array[$kode_lahan])) {
+        $total_array[$kode_lahan] = ['good' => 0, 'poor' => 0, 'failed' => 0];
     }
-} else {
-    echo "0 results";
+
+    switch ($remarks) {
+        case 'good':
+            $total_array[$kode_lahan]['good']++;
+            break;
+        case 'poor':
+            $total_array[$kode_lahan]['poor']++;
+            break;
+        case 'failed':
+            $total_array[$kode_lahan]['failed']++;
+            break;
+        default:
+            // Tambahkan logika jika terdapat remarks lainnya, jika diperlukan
+            break;
+    }
 }
+$data = [];
 
 // Query untuk mengambil nilai SLA dari master_sla
 $sla_query = "SELECT sla, divisi FROM master_sla";
@@ -151,7 +186,311 @@ function getBadgeColor($remarks) {
     }
 }
 
-$conn->close();
+$total_remarks_2 = [];
+
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        // ... (lanjutkan untuk semua remarks yang diperlukan)
+        
+        $kode_lahan = $row['kode_lahan'];
+
+        $dev_ff1 = 0; // default jika tidak ada nilai yang valid
+        if (is_numeric($row['ff_1'])) {
+            $dev_ff1 = (int)$row['ff_1'] - 100;
+        }
+        $dev_ff2 = 0; // default jika tidak ada nilai yang valid
+        if (is_numeric($row['ff_2'])) {
+            $dev_ff2 = (int)$row['ff_2'] - 100;
+        }
+        $dev_ff3 = 0; // default jika tidak ada nilai yang valid
+        if (is_numeric($row['ff_3'])) {
+            $dev_ff3 = (int)$row['ff_3'] - 100;
+        }
+        $dev_kpt1 = 0; // default jika tidak ada nilai yang valid
+        if (is_numeric($row['kpt_1'])) {
+            $dev_kpt1 = (int)$row['kpt_1'] - 100;
+        }
+        $dev_kpt2 = 0; // default jika tidak ada nilai yang valid
+        if (is_numeric($row['kpt_2'])) {
+            $dev_kpt2 = (int)$row['kpt_2'] - 100;
+        }
+        $dev_kpt3 = 0; // default jika tidak ada nilai yang valid
+        if (is_numeric($row['kpt_3'])) {
+            $dev_kpt3 = (int)$row['kpt_3'] - 100;
+        }
+        $dev_scm = 0; // default jika tidak ada nilai yang valid
+        if (is_numeric($row['lamp_sj'])) {
+            $dev_scm = (int)$row['lamp_sj'] - 100;
+        }
+        $dev_it = 0; // default jika tidak ada nilai yang valid
+        if (is_numeric($row['lamp_config'])) {
+            $dev_it = (int)$row['lamp_config'] - 100;
+        }
+        $dev_it2 = 0; // default jika tidak ada nilai yang valid
+        if (is_numeric($row['lamp_printer'])) {
+            $dev_it2 = (int)$row['lamp_printer'] - 100;
+        }
+        $dev_it3 = 0; // default jika tidak ada nilai yang valid
+        if (is_numeric($row['lamp_cctv'])) {
+            $dev_it3 = (int)$row['lamp_cctv'] - 100;
+        }
+        $dev_it4 = 0; // default jika tidak ada nilai yang valid
+        if (is_numeric($row['lamp_internet'])) {
+            $dev_it4 = (int)$row['lamp_internet'] - 100;
+        }
+        $dev_marketing = 0; // default jika tidak ada nilai yang valid
+        if (is_numeric($row['lamp_merchant'])) {
+            $dev_marketing = (int)$row['lamp_merchant'] - 100;
+        }
+        $dev_taf = 0; // default jika tidak ada nilai yang valid
+        if (is_numeric($row['lamp_qris'])) {
+            $dev_taf = (int)$row['lamp_qris'] - 100;
+        }
+        $dev_ho = 0; // default jika tidak ada nilai yang valid
+        if (is_numeric($row['lamp_qris'])) {
+            $dev_ho = (int)$row['lamp_qris'] - 100;
+        }
+        $dev_rto = 0; // default jika tidak ada nilai yang valid
+        if (is_numeric($row['lamp_qris'])) {
+            $dev_rto = (int)$row['lamp_qris'] - 100;
+        }
+        $dev_go = 0; // default jika tidak ada nilai yang valid
+        if (is_numeric($row['lamp_qris'])) {
+            $dev_go = (int)$row['lamp_qris'] - 100;
+        }
+
+        // Hitung scoring dan remarks untuk masing-masing data
+        $scoring1_2 = ($row['month_1'] + $row['month_2'] + $row['month_3']) - 100;
+        $scoring2_2 = (!empty($row['lamp_steqp']) ? 100 : 0) - 100;
+        $scoring3_2 = $row['bangunan_mural']-100;
+        $scoring4_2 = ($row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) / 5 - 100;
+        $scoring5_2 = (!empty($row['lamp_tm']) ? 100 : 0) - 100; 
+        $scoring6_2 = $dev_ff1;
+        $scoring7_2 = $dev_ff2;
+        $scoring8_2 = $dev_ff3;
+        $scoring9_2 = $dev_kpt1;
+        $scoring10_2 = $dev_kpt2;
+        $scoring11_2 = $dev_kpt3;
+        $scoring12_2 = $dev_scm;
+        $scoring13_2 = $dev_scm;
+        $scoring14_2 = $dev_scm;
+        $scoring15_2 = $dev_it;
+        $scoring16_2 = $dev_it;
+        $scoring17_2 = $dev_it2;
+        $scoring18_2 = $dev_it3;
+        $scoring19_2 = $dev_it4;
+        $scoring20_2 = $dev_marketing;
+        $scoring21_2 = $dev_marketing;
+        $scoring22_2 = $dev_marketing;
+        $scoring23_2 = $dev_taf;
+        $scoring24_2 = $dev_taf;
+        $scoring25_2 = $dev_ho;
+        $scoring26_2 = $dev_rto;
+        $scoring27_2 = $dev_go;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
+        // ... (lanjutkan untuk semua scoring yang diperlukan)
+
+        // Tentukan remarks untuk masing-masing scoring
+        $remark1_2 = getRemarks($scoring1_2);
+        $remark2_2 = getRemarks($scoring2_2);
+        $remark3_2 = getRemarks($scoring3_2);
+        $remark4_2 = getRemarks($scoring4_2);
+        $remark5_2 = getRemarks($scoring5_2);
+        $remark6_2 = getRemarks($scoring6_2);
+        $remark7_2 = getRemarks($scoring7_2);
+        $remark8_2 = getRemarks($scoring8_2);
+        $remark9_2 = getRemarks($scoring9_2);
+        $remark10_2 = getRemarks($scoring10_2);
+        $remark11_2 = getRemarks($scoring11_2);
+        $remark12_2 = getRemarks($scoring12_2);
+        $remark13_2 = getRemarks($scoring13_2);
+        $remark14_2 = getRemarks($scoring14_2);
+        $remark15_2 = getRemarks($scoring15_2);
+        $remark16_2 = getRemarks($scoring16_2);
+        $remark17_2 = getRemarks($scoring17_2);
+        $remark18_2 = getRemarks($scoring18_2);
+        $remark19_2 = getRemarks($scoring19_2);
+        $remark20_2 = getRemarks($scoring20_2);
+        $remark21_2 = getRemarks($scoring21_2);
+        $remark22_2 = getRemarks($scoring22_2);
+        $remark23_2 = getRemarks($scoring23_2);
+        $remark24_2 = getRemarks($scoring24_2);
+        $remark25_2 = getRemarks($scoring25_2);
+        $remark26_2 = getRemarks($scoring26_2);
+        $remark27_2 = getRemarks($scoring27_2);
+        // ... (lanjutkan untuk semua remark yang diperlukan)
+
+        // Tambahkan ke total remark berdasarkan kode_lahan
+        addToTotal($total_remarks_2, $remark1_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark2_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark3_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark4_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark5_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark6_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark7_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark8_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark9_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark10_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark11_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark12_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark13_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark14_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark15_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark16_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark17_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark18_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark19_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark20_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark21_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark22_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark23_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark24_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark25_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark26_2, $row['kode_lahan']);
+        addToTotal($total_remarks_2, $remark27_2, $row['kode_lahan']);
+
+        // Tambahkan data ke dalam array $data jika diperlukan
+        $data[] = $row;
+    }
+} else {
+    echo "0 results";
+}
+
+$statusData2 = [
+    'good' => 0,
+    'poor' => 0,
+    'failed' => 0,
+];
+
+// Loop untuk setiap kode lahan yang ada dalam $total_remarks_2
+foreach ($total_remarks_2 as $totals) {
+    // Ambil jumlah good, poor, dan failed dari total_remarks_2
+    $statusData2['good'] += $totals['good'] ?? 0;
+    $statusData2['poor'] += $totals['poor'] ?? 0;
+    $statusData2['failed'] += $totals['failed'] ?? 0;
+}
+
+// Encode statusData2 ke dalam format JSON
+$statusData2 = json_encode($statusData2);
+
+
+$sql_chartteam = "SELECT 
+    land.kode_lahan,
+    land.nama_lahan,
+    AVG(CASE WHEN socdate_fat.lamp_qris IS NOT NULL AND socdate_fat.lamp_st IS NOT NULL THEN 100 ELSE 0 END) AS FAT,
+    AVG(CASE WHEN socdate_academy.kpt_1 IS NOT NULL AND socdate_academy.kpt_2 IS NOT NULL AND socdate_academy.kpt_3 IS NOT NULL THEN 100 ELSE 0 END) AS ACADEMY,
+    AVG(CASE WHEN socdate_hr.tm IS NOT NULL AND socdate_hr.lamp_tm IS NOT NULL AND socdate_hr.ff_1 IS NOT NULL AND socdate_hr.lamp_ff1 IS NOT NULL AND socdate_hr.ff_2 IS NOT NULL AND socdate_hr.lamp_ff2 IS NOT NULL AND socdate_hr.ff_3 IS NOT NULL AND socdate_hr.lamp_ff3 IS NOT NULL AND socdate_hr.hot IS NOT NULL AND socdate_hr.lamp_hot IS NOT NULL THEN 100 ELSE 0 END) AS HR,
+    AVG(CASE WHEN socdate_ir.lamp_rabcs IS NOT NULL AND socdate_ir.lamp_rabsecurity IS NOT NULL THEN 100 ELSE 0 END) AS IR,
+    AVG(CASE WHEN socdate_it.kode_dvr IS NOT NULL AND socdate_it.web_report IS NOT NULL AND socdate_it.akun_gis IS NOT NULL AND socdate_it.lamp_internet IS NOT NULL AND socdate_it.lamp_cctv IS NOT NULL AND socdate_it.lamp_printer IS NOT NULL AND socdate_it.lamp_sound IS NOT NULL AND socdate_it.lamp_config IS NOT NULL THEN 100 ELSE 0 END) AS IT,
+    AVG(CASE WHEN socdate_legal.mou_parkirsampah IS NOT NULL AND sdg_desain.lamp_pbg IS NOT NULL AND sdg_desain.lamp_permit IS NOT NULL THEN 100 ELSE 0 END) AS LEGAL,
+    AVG(CASE WHEN socdate_marketing.gmaps IS NOT NULL AND socdate_marketing.lamp_gmaps IS NOT NULL AND socdate_marketing.id_m_shopee IS NOT NULL AND socdate_marketing.id_m_gojek IS NOT NULL AND socdate_marketing.id_m_grab IS NOT NULL AND socdate_marketing.email_resto IS NOT NULL AND socdate_marketing.lamp_merchant IS NOT NULL THEN 100 ELSE 0 END) AS MARKETING,
+    AVG(CASE WHEN socdate_scm.lamp_sj IS NOT NULL THEN 100 ELSE 0 END) AS SCM,
+    AVG(CASE WHEN socdate_sdg.no_listrik IS NOT NULL AND socdate_sdg.lamp_listrik IS NOT NULL AND socdate_sdg.lamp_ka IS NOT NULL AND socdate_sdg.lamp_ipal IS NOT NULL AND socdate_sdg.lamp_eqp IS NOT NULL AND socdate_sdg.lamp_ba IS NOT NULL THEN 100 ELSE 0 END) AS SDG
+FROM 
+    land
+    JOIN resto ON land.kode_lahan = resto.kode_lahan
+    JOIN dokumen_loacd ON land.kode_lahan = dokumen_loacd.kode_lahan
+    LEFT JOIN summary_soc ON land.kode_lahan = summary_soc.kode_lahan
+    INNER JOIN socdate_academy ON land.kode_lahan = socdate_academy.kode_lahan
+    INNER JOIN socdate_fat ON land.kode_lahan = socdate_fat.kode_lahan
+    INNER JOIN socdate_hr ON land.kode_lahan = socdate_hr.kode_lahan
+    INNER JOIN socdate_ir ON land.kode_lahan = socdate_ir.kode_lahan
+    INNER JOIN socdate_it ON land.kode_lahan = socdate_it.kode_lahan
+    INNER JOIN socdate_marketing ON land.kode_lahan = socdate_marketing.kode_lahan
+    INNER JOIN socdate_legal ON land.kode_lahan = socdate_legal.kode_lahan
+    INNER JOIN socdate_scm ON land.kode_lahan = socdate_scm.kode_lahan
+    INNER JOIN socdate_sdg ON land.kode_lahan = socdate_sdg.kode_lahan
+    INNER JOIN sdg_desain ON land.kode_lahan = sdg_desain.kode_lahan
+GROUP BY 
+    land.kode_lahan, land.nama_lahan";
+
+$result_chartteam = $conn->query($sql_chartteam);
+
+$kodeLahans = [];
+$fixValues = [];
+
+// Proses hasil query
+if ($result_chartteam->num_rows > 0) {
+    while ($row = $result_chartteam->fetch_assoc()) {
+        $kodeLahan = $row['kode_lahan'];
+        $fix = ($row['FAT'] + $row['ACADEMY'] + $row['HR'] + $row['IR'] + $row['IT'] + $row['LEGAL'] + $row['MARKETING'] + $row['SCM'] + $row['SDG']) / 9;
+
+        // Masukkan ke dalam array
+        $kodeLahans[] = $kodeLahan;
+        $fixValues[] = round($fix, 2); // Pembulatan 2 angka di belakang koma
+    }
+}
+
+// Konversi array PHP ke JSON untuk digunakan di dalam JavaScript
+$kodeLahansJSON = json_encode($kodeLahans);
+$fixValuesJSON = json_encode($fixValues);
+
+$sql_chartteam = "SELECT 
+    land.kode_lahan,
+    land.nama_lahan,
+    AVG(CASE WHEN socdate_fat.lamp_qris IS NOT NULL AND socdate_fat.lamp_st IS NOT NULL THEN 100 ELSE 0 END) AS FAT,
+    AVG(CASE WHEN socdate_academy.kpt_1 IS NOT NULL AND socdate_academy.kpt_2 IS NOT NULL AND socdate_academy.kpt_3 IS NOT NULL THEN 100 ELSE 0 END) AS ACADEMY,
+    AVG(CASE WHEN socdate_hr.tm IS NOT NULL AND socdate_hr.lamp_tm IS NOT NULL AND socdate_hr.ff_1 IS NOT NULL AND socdate_hr.lamp_ff1 IS NOT NULL AND socdate_hr.ff_2 IS NOT NULL AND socdate_hr.lamp_ff2 IS NOT NULL AND socdate_hr.ff_3 IS NOT NULL AND socdate_hr.lamp_ff3 IS NOT NULL AND socdate_hr.hot IS NOT NULL AND socdate_hr.lamp_hot IS NOT NULL THEN 100 ELSE 0 END) AS HR,
+    AVG(CASE WHEN socdate_ir.lamp_rabcs IS NOT NULL AND socdate_ir.lamp_rabsecurity IS NOT NULL THEN 100 ELSE 0 END) AS IR,
+    AVG(CASE WHEN socdate_it.kode_dvr IS NOT NULL AND socdate_it.web_report IS NOT NULL AND socdate_it.akun_gis IS NOT NULL AND socdate_it.lamp_internet IS NOT NULL AND socdate_it.lamp_cctv IS NOT NULL AND socdate_it.lamp_printer IS NOT NULL AND socdate_it.lamp_sound IS NOT NULL AND socdate_it.lamp_config IS NOT NULL THEN 100 ELSE 0 END) AS IT,
+    AVG(CASE WHEN socdate_legal.mou_parkirsampah IS NOT NULL AND sdg_desain.lamp_pbg IS NOT NULL AND sdg_desain.lamp_permit IS NOT NULL THEN 100 ELSE 0 END) AS LEGAL,
+    AVG(CASE WHEN socdate_marketing.gmaps IS NOT NULL AND socdate_marketing.lamp_gmaps IS NOT NULL AND socdate_marketing.id_m_shopee IS NOT NULL AND socdate_marketing.id_m_gojek IS NOT NULL AND socdate_marketing.id_m_grab IS NOT NULL AND socdate_marketing.email_resto IS NOT NULL AND socdate_marketing.lamp_merchant IS NOT NULL THEN 100 ELSE 0 END) AS MARKETING,
+    AVG(CASE WHEN socdate_scm.lamp_sj IS NOT NULL THEN 100 ELSE 0 END) AS SCM,
+    AVG(CASE WHEN socdate_sdg.no_listrik IS NOT NULL AND socdate_sdg.lamp_listrik IS NOT NULL AND socdate_sdg.lamp_ka IS NOT NULL AND socdate_sdg.lamp_ipal IS NOT NULL AND socdate_sdg.lamp_eqp IS NOT NULL AND socdate_sdg.lamp_ba IS NOT NULL THEN 100 ELSE 0 END) AS SDG
+FROM 
+    land
+    JOIN resto ON land.kode_lahan = resto.kode_lahan
+    JOIN dokumen_loacd ON land.kode_lahan = dokumen_loacd.kode_lahan
+    LEFT JOIN summary_soc ON land.kode_lahan = summary_soc.kode_lahan
+    INNER JOIN socdate_academy ON land.kode_lahan = socdate_academy.kode_lahan
+    INNER JOIN socdate_fat ON land.kode_lahan = socdate_fat.kode_lahan
+    INNER JOIN socdate_hr ON land.kode_lahan = socdate_hr.kode_lahan
+    INNER JOIN socdate_ir ON land.kode_lahan = socdate_ir.kode_lahan
+    INNER JOIN socdate_it ON land.kode_lahan = socdate_it.kode_lahan
+    INNER JOIN socdate_marketing ON land.kode_lahan = socdate_marketing.kode_lahan
+    INNER JOIN socdate_legal ON land.kode_lahan = socdate_legal.kode_lahan
+    INNER JOIN socdate_scm ON land.kode_lahan = socdate_scm.kode_lahan
+    INNER JOIN socdate_sdg ON land.kode_lahan = socdate_sdg.kode_lahan
+    INNER JOIN sdg_desain ON land.kode_lahan = sdg_desain.kode_lahan
+GROUP BY 
+    land.kode_lahan, land.nama_lahan";
+
+$result_chartteam = $conn->query($sql_chartteam);
+
+// Array untuk menyimpan data departemen
+$departmentData = [
+    'FAT' => 0,
+    'ACADEMY' => 0,
+    'HR' => 0,
+    'IR' => 0,
+    'IT' => 0,
+    'LEGAL' => 0,
+    'MARKETING' => 0,
+    'SCM' => 0,
+    'SDG' => 0
+];
+
+if ($result_chartteam->num_rows > 0) {
+    while ($row = $result_chartteam->fetch_assoc()) {
+        // Menghitung nilai rata-rata untuk setiap departemen
+        $departmentData['FAT'] += round($row['FAT'], 2);
+        $departmentData['ACADEMY'] += round($row['ACADEMY'], 2);
+        $departmentData['HR'] += round($row['HR'], 2);
+        $departmentData['IR'] += round($row['IR'], 2);
+        $departmentData['IT'] += round($row['IT'], 2);
+        $departmentData['LEGAL'] += round($row['LEGAL'], 2);
+        $departmentData['MARKETING'] += round($row['MARKETING'], 2);
+        $departmentData['SCM'] += round($row['SCM'], 2);
+        $departmentData['SDG'] += round($row['SDG'], 2);
+    }
+    // Pembagian rata-rata untuk mendapatkan nilai akhir
+    foreach ($departmentData as $key => $value) {
+        $departmentData[$key] = $value / $result_chartteam->num_rows;
+    }
+}
+
+$departmentDataJSON = json_encode($departmentData);
+
 
 ?>
 <!DOCTYPE html>
@@ -169,6 +508,7 @@ $conn->close();
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
 </head>
 
 <body class="text-left">
@@ -199,8 +539,52 @@ $conn->close();
 									  <span class="flex-grow-1"></span></p>
 								</div>
                                 <p>
+                                
+                                <div class="row justify-content-center">
+                                <div class="col-lg-3 col-md-6 col-sm-6">
+                                    <div class="card card-icon-bg card-icon-bg-primary o-hidden mb-4">
+                                        <div class="card-body">
+                                            <i class="i-Add-User mr-3"></i>
+                                            <h5 class="text-muted mt-2 mb-2">Total Store In Progress</h5>
+                                            <div class="content">
+                                                <p class="text-primary text-24 line-height-1 mb-2"><?php echo $total_approve_kom; ?></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-8 col-md-12">
+                                        <div class="card mb-4">
+                                            <div class="card-body">
+                                                <div class="card-title">New Store Rank</div>
+                                                <div id="storeRank" style="height: 300px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4 col-sm-12">
+                                        <div class="card mb-4">
+                                            <div class="card-body">
+                                                <div class="card-title">Status In Progress</div>
+                                                <div id="echartGo2" style="height: 300px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-12 col-md-12">
+                                        <div class="card mb-4">
+                                            <div class="card-body">
+                                                <div class="card-title">Department Performance</div>
+                                                <div id="teamChart" style="height: 300px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                    
 							  <div class="table-responsive">
-                              <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
+                                    <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                                 <tr>
                                                     <th rowspan="5" class="sticky" style="background-color: #6c757d; color: white;">Proses Phase</th>
@@ -1108,6 +1492,28 @@ $conn->close();
                                                 </td>
                                                 <?php endforeach; ?>
                                             </tr>
+                                            <tr>
+                                                <td rowspan="1"  class="sticky" style="background-color: #b6c7aa; color: white;"></td>
+                                                <td  class="sticky" style="background-color: #b6c7aa; color: white;"></td>
+                                                <td rowspan="1"  class="sticky" style="background-color: #b6c7aa; color: white;"></td>
+                                                <?php foreach ($data as $row): ?>
+                                                    <td><?= $row ['kode_lahan'] ?></td>
+                                                <?php
+                                                // Ambil total remarks untuk kode lahan saat ini
+                                                $good_count2 = isset($total_remarks_2[$row['kode_lahan']]['good']) ? $total_remarks_2[$row['kode_lahan']]['good'] : 0;
+                                                $poor_count2 = isset($total_remarks_2[$row['kode_lahan']]['poor']) ? $total_remarks_2[$row['kode_lahan']]['poor'] : 0;
+                                                $failed_count2 = isset($total_remarks_2[$row['kode_lahan']]['failed']) ? $total_remarks_2[$row['kode_lahan']]['failed'] : 0;
+                                                ?>
+                                                <td><span class="badge badge-<?= getBadgeColor('good') ?>">Total Good</span></td>
+                                                <td><?= $good_count2 ?></td>
+                                                <td><span class="badge badge-<?= getBadgeColor('poor') ?>">Total Poor</span></td>
+                                                <td><?= $poor_count2 ?></td>
+                                                <td><span class="badge badge-<?= getBadgeColor('failed') ?>">Total Failed</span></td>
+                                                <td><?= $failed_count2 ?></td>
+                                                <td></td>
+                                                <td></td>
+                                                <?php endforeach; ?>
+                                            </tr>
                                         </tbody>
                                     </table>
                                     <!-- Modal Konfirmasi Hapus -->
@@ -1345,6 +1751,212 @@ $(document).ready(function() {
     });
 });
 </script>
+    
+<script>
+    // Mengambil data kodeLahans dan fixValues dari PHP
+    var kodeLahans = <?php echo $kodeLahansJSON; ?>;
+    var fixValues = <?php echo $fixValuesJSON; ?>;
+
+    // Gabungkan kodeLahans dan fixValues ke dalam satu array untuk pengurutan
+    var combinedData = kodeLahans.map(function(e, i) {
+        return { kodeLahan: e, fixValue: fixValues[i] };
+    });
+
+    // Urutkan data berdasarkan fixValues dari yang terbesar ke yang terkecil
+    combinedData.sort(function(a, b) {
+        return b.fixValue - a.fixValue;
+    });
+
+    // Pisahkan kembali data yang sudah diurutkan
+    kodeLahans = combinedData.map(function(e) { return e.kodeLahan; });
+    fixValues = combinedData.map(function(e) { return e.fixValue; });
+
+    // Inisialisasi chart menggunakan ECharts
+    var storeRankChart = echarts.init(document.getElementById('storeRank'));
+
+    // Opsi untuk chart
+    var option = {
+        title: {
+            text: ''
+        },
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                type: 'shadow'
+            },
+            formatter: function (params) {
+                var value = params[0].value.toFixed(2);
+                return params[0].name + ': ' + value + '%';
+            }
+        },
+        xAxis: {
+            type: 'category',
+            data: kodeLahans,
+            axisLabel: {
+                rotate: 45, // Rotate labels if needed
+                interval: 0 // Display all labels
+            }
+        },
+        yAxis: {
+            type: 'value',
+            min: 0,
+            max: 100 // Sesuaikan dengan skala yang sesuai
+        },
+        series: [
+            {
+                name: 'Score',
+                type: 'bar',
+                data: fixValues,
+                itemStyle: {
+                    color: function(params) {
+                        var colors = ['#405D72', '#758694']; // Warna untuk bar
+                        return colors[params.dataIndex % colors.length];
+                    }
+                }
+            }
+        ]
+    };
+
+    // Gunakan setOption untuk mengatur data dan opsi ke chart
+    storeRankChart.setOption(option);
+
+    // Resize chart on window resize
+    window.addEventListener("resize", function () {
+        setTimeout(function () {
+            storeRankChart.resize();
+        }, 500);
+    });
+</script>
+
+<script>
+        // Mengirim data department ke JavaScript
+        var departmentData = <?php echo $departmentDataJSON; ?>;
+
+        // Inisialisasi chart menggunakan ECharts
+        var teamChart = echarts.init(document.getElementById('teamChart'));
+
+        // Data untuk chart
+        var departments = ['FAT', 'Academy', 'HR', 'IR', 'IT', 'Legal', 'Marketing', 'SCM', 'SDG'];
+        var values = [
+            departmentData.FAT,
+            departmentData.Academy,
+            departmentData.HR,
+            departmentData.IR,
+            departmentData.IT,
+            departmentData.Legal,
+            departmentData.Marketing,
+            departmentData.SCM,
+            departmentData.SDG
+        ];
+
+        // Option untuk chart
+        var option = {
+            title: {
+                text: ''
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                },
+            formatter: function (params) {
+                var value = params[0].value.toFixed(2);
+                return params[0].name + ': ' + value + '%';
+            }
+            },
+            xAxis: {
+                type: 'category',
+                data: departments
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: [{
+                data: values,
+                type: 'bar',
+                itemStyle: {
+                    color: function(params) {
+                        var colors = ['#DCA47C', '#758694'];
+                        return colors[params.dataIndex % colors.length];
+                    }
+                }
+            }]
+        };
+
+        // Gunakan setOption untuk mengatur data dan opsi ke chart
+        teamChart.setOption(option);
+
+        // Resize chart on window resize
+        window.addEventListener("resize", function () {
+            setTimeout(function () {
+                teamChart.resize();
+            }, 500);
+        });
+    </script>
+
+    
+<script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <script>
+        // Convert the PHP statusData to JavaScript object
+        var statusData2 = <?php echo $statusData2; ?>;
+
+        // Initialize ECharts
+        var echartElemPie = document.getElementById("echartGo2");
+
+        if (echartElemPie) {
+            var echartPie = echarts.init(echartElemPie);
+            echartPie.setOption({
+                title: {
+                    text: '',
+                    left: 'center'
+                },
+                color: ["#DCA47C", "#405D72", "#758694"],
+                tooltip: {
+                    trigger: 'item'
+                },
+                legend: {
+                    orient: 'vertical',
+                    left: 'left'
+                },
+                series: [
+                    {
+                        name: "Status In Progress",
+                        type: "pie",
+                        radius: "50%",
+                        center: ["50%", "50%"],
+                        data: [
+                            {
+                                value: statusData2.good,
+                                name: "Good",
+                            },
+                            {
+                                value: statusData2.poor,
+                                name: "Poor",
+                            },
+                            {
+                                value: statusData2.failed,
+                                name: "Failed",
+                            }
+                        ],
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: "rgba(0, 0, 0, 0.5)",
+                            },
+                        },
+                    },
+                ],
+            });
+
+            // Resize chart on window resize
+            window.addEventListener("resize", function () {
+                setTimeout(function () {
+                    echartPie.resize();
+                }, 500);
+            });
+        }
+    </script>
 </body>
 
 </html>

@@ -1,6 +1,7 @@
 <?php
 // Koneksi ke database
 include "../koneksi.php";
+
 // Proses jika ada pengiriman data dari formulir untuk memperbarui status
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["status_land"])) {
     $id = $_POST["id"];
@@ -14,9 +15,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         $sql_update = "UPDATE resto SET status_land = ? WHERE id = ?";
         $stmt_update = $conn->prepare($sql_update);
         $stmt_update->bind_param("si", $status_land, $id);
+        
         // Eksekusi query update
         if ($stmt_update->execute() === TRUE) {
-            
+            // Commit transaksi jika berhasil
+            $conn->commit();
         } else {
             // Rollback transaksi jika terjadi kesalahan pada update
             $conn->rollback();
@@ -28,19 +31,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         echo "Error: " . $e->getMessage();
     }
 }
+// Ambil total existing store dari tabel land dengan status_land = 'Aktif'
+$sql_existing_store = "SELECT COUNT(*) as total_existing_store FROM land WHERE status_land = 'Aktif'";
+$result_existing_store = $conn->query($sql_existing_store);
+$total_existing_store = 0;
+if ($result_existing_store->num_rows > 0) {
+    $row_existing_store = $result_existing_store->fetch_assoc();
+    $total_existing_store = $row_existing_store['total_existing_store'];
+}
+// Filter kode_lahan yang memiliki status_kom = 'Approve' di tabel resto
+$sql_filter_approve_kom = "SELECT COUNT(*) as total_approve_kom FROM resto WHERE status_kom = 'Approve'";
+$result_filter_approve_kom = $conn->query($sql_filter_approve_kom);
+$total_approve_kom = 0;
+if ($result_filter_approve_kom->num_rows > 0) {
+    $row_filter_approve_kom = $result_filter_approve_kom->fetch_assoc();
+    $total_approve_kom = $row_filter_approve_kom['total_approve_kom'];
+}
+
+// Jumlah total store yang tidak memiliki kode_lahan dengan status_kom = 'Approve'
+$total_existing_store_without_approve_kom = $total_existing_store - $total_approve_kom;
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT 
-land.kode_lahan,
-land.*,
-re.*,
-dokumen_loacd.*,
-sdg_desain.*,
-sdg_rab.*,
-draft.*,
-procurement.*,
-resto.*,
-socdate_hr.*,
             land.kode_lahan AS land_kode_lahan,
+            land.*,
+            re.*,
+            dokumen_loacd.*,
+            sdg_desain.*,
+            sdg_rab.*,
+            draft.*,
+            procurement.*,
+            resto.*,
+            socdate_hr.*,
             re.start_date AS re_start_date,
             dokumen_loacd.start_date AS dokumen_loacd_start_date,
             dokumen_loacd.end_date AS dokumen_loacd_end_date,
@@ -58,25 +79,18 @@ socdate_hr.*,
             draft.slafat_date AS draft_slafat_date,
             procurement.start_date AS procurement_start_date,
             procurement.sla_date AS procurement_sla_date
-FROM land
-LEFT JOIN re ON re.kode_lahan = land.kode_lahan
-LEFT JOIN dokumen_loacd ON dokumen_loacd.kode_lahan = land.kode_lahan
-LEFT JOIN sdg_desain ON sdg_desain.kode_lahan = land.kode_lahan
-LEFT JOIN sdg_rab ON sdg_rab.kode_lahan = land.kode_lahan
-LEFT JOIN draft ON draft.kode_lahan = land.kode_lahan
-LEFT JOIN procurement ON procurement.kode_lahan = land.kode_lahan
-LEFT JOIN resto ON resto.kode_lahan = land.kode_lahan
-LEFT JOIN socdate_hr ON socdate_hr.kode_lahan = land.kode_lahan";
+        FROM land
+        LEFT JOIN re ON re.kode_lahan = land.kode_lahan
+        LEFT JOIN dokumen_loacd ON dokumen_loacd.kode_lahan = land.kode_lahan
+        LEFT JOIN sdg_desain ON sdg_desain.kode_lahan = land.kode_lahan
+        LEFT JOIN sdg_rab ON sdg_rab.kode_lahan = land.kode_lahan
+        LEFT JOIN draft ON draft.kode_lahan = land.kode_lahan
+        LEFT JOIN procurement ON procurement.kode_lahan = land.kode_lahan
+        LEFT JOIN resto ON resto.kode_lahan = land.kode_lahan
+        LEFT JOIN socdate_hr ON socdate_hr.kode_lahan = land.kode_lahan";
 $result = $conn->query($sql);
 
-$data = [];
-if ($result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $data[] = $row;
-    }
-} else {
-    echo "0 results";
-}
+$total_remarks = [];
 
 // Query untuk mengambil nilai SLA dari master_sla
 $sla_query = "SELECT sla, divisi FROM master_sla";
@@ -91,7 +105,7 @@ if ($sla_result->num_rows > 0) {
     echo "0 results";
 }
 
-// Query untuk mengambil nilai SLA dari master_sla
+// Query untuk mengambil nilai SLA dari master_slacons
 $slacons_query = "SELECT sla, divisi FROM master_slacons";
 $slacons_result = $conn->query($slacons_query);
 
@@ -129,16 +143,19 @@ function calculateScoring($start_date, $end_date, $sla) {
     return round($scoring, 2);
 }
 
-// Fungsi untuk menentukan remarks
+$data = [];
+$good_totals = [];
+
+// Fungsi untuk menentukan remarks berdasarkan scoring
 function getRemarks($scoring) {
     if ($scoring >= 0) {
         return "good";
     } elseif ($scoring >= -30) {
         return "poor";
     } elseif ($scoring >= -50) {
-        return "bad";
-    } else {
         return "failed";
+    } else {
+        return "failed"; // Kembalikan "failed" untuk skenario lain yang tidak tertangani
     }
 }
 
@@ -149,8 +166,6 @@ function getBadgeColor($remarks) {
             return 'success';
         case 'poor':
             return 'warning';
-        case 'bad':
-            return 'orange';
         case 'failed':
             return 'danger';
         default:
@@ -158,9 +173,231 @@ function getBadgeColor($remarks) {
     }
 }
 
-$conn->close();
+// Fungsi untuk menambahkan nilai ke total remarks
+function addToTotal(&$total_array, $remarks, $kode_lahan) {
+    if (!isset($total_array[$kode_lahan])) {
+        $total_array[$kode_lahan] = ['good' => 0, 'poor' => 0, 'failed' => 0];
+    }
 
+    switch ($remarks) {
+        case 'good':
+            $total_array[$kode_lahan]['good']++;
+            break;
+        case 'poor':
+            $total_array[$kode_lahan]['poor']++;
+            break;
+        case 'failed':
+            $total_array[$kode_lahan]['failed']++;
+            break;
+        default:
+            // Tambahkan logika jika terdapat remarks lainnya, jika diperlukan
+            break;
+    }
+}
+$totals_per_kode_lahan = [];
+
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+
+        $kode_lahan = $row['kode_lahan'];
+        // Hitung scoring dan remarks untuk masing-masing data
+        $scoring1 = calculateScoring($row['status_date'], $row['re_date'], $master_sla['RE']);
+        $scoring2 = calculateScoring($row['re_date'], $row['re_start_date'], $master_sla['Owner Surveyor']);
+        $scoring3 = calculateScoring($row['re_start_date'], $row['vl_date'], $master_sla['VL']);
+        $scoring4 = calculateScoring($row['end_date'], $row['nego_date'], $master_sla['Negosiator']);
+        $scoring5 = calculateScoring($row['nego_date'], $row['dokumen_loacd_start_date'], $master_sla['LOA-CD']);
+        $scoring6 = calculateScoring($row['vl_date'], $row['dokumen_loacd_end_date'], $master_sla['VD']);
+        $scoring7 = calculateScoring($row['nego_date'], $row['survey_date'], $master_sla['Land Survey']);
+        $scoring8 = calculateScoring($row['survey_date'], $row['layout_date'], $master_sla['Layouting']);
+        $scoring9 = calculateScoring($row['layout_date'], $row['sdg_desain_start_date'], $master_sla['Design']);
+        $scoring10 = calculateScoring($row['sdg_desain_start_date'], $row['sdg_qs_start_date'], $master_sla['QS']);
+        $scoring11 = calculateScoring($row['dokumen_loacd_end_date'], $row['draft_start_date'], $master_sla['Draft-Sewa']);
+        $scoring12 = calculateScoring($row['draft_start_date'], $row['draft_fat_date'], $master_sla['FAT-Sewa']);
+        $scoring13 = calculateScoring($row['draft_start_date'], $row['draft_end_date'], $master_sla['TTD-Sewa']);
+        $scoring14 = calculateScoring($row['sdg_desain_start_date'], $row['sdg_desain_submit_date'], $master_sla['Legal']);
+        $scoring15 = calculateScoring($row['sdg_desain_start_date'], $row['procurement_start_date'], $master_sla['Tender']);
+        $scoring16 = calculateScoring($row['procurement_start_date'], $row['spk_date'], $master_sla['SPK']);
+        $scoring17 = calculateScoring($row['spk_date'], $row['fat_date'], $master_sla['SPK-FAT']);
+        $scoring18 = calculateScoring($row['fat_date'], $row['kom_date'], $master_sla['KOM']);
+        $scoring19 = calculateScoring($row['kom_date'], $row['ff3_date'], $master_slacons['hrga_tm']);
+        $scoring20 = calculateScoring($row['kom_date'], $row['ff3_date'], $master_slacons['hrga_tm']);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
+        // Tentukan remarks untuk masing-masing scoring
+        $remarks1 = getRemarks($scoring1);
+        $remarks2 = getRemarks($scoring2);
+        $remarks3 = getRemarks($scoring3);
+        $remarks4 = getRemarks($scoring4);
+        $remarks5 = getRemarks($scoring5);
+        $remarks6 = getRemarks($scoring6);
+        $remarks7 = getRemarks($scoring7);
+        $remarks8 = getRemarks($scoring8);
+        $remarks9 = getRemarks($scoring9);
+        $remarks10 = getRemarks($scoring10);
+        $remarks11 = getRemarks($scoring11);
+        $remarks12 = getRemarks($scoring12);
+        $remarks13 = getRemarks($scoring13);
+        $remarks14 = getRemarks($scoring14);
+        $remarks15 = getRemarks($scoring15);
+        $remarks16 = getRemarks($scoring16);
+        $remarks17 = getRemarks($scoring17);
+        $remarks18 = getRemarks($scoring18);
+        $remarks19 = getRemarks($scoring19);
+        $remarks20 = getRemarks($scoring20);
+        // ... (lanjutkan untuk semua remarks yang diperlukan)
+
+        // Tambahkan ke total remarks berdasarkan kode_lahan
+        addToTotal($totals_per_kode_lahan, $remarks1, $row['kode_lahan']);
+        addToTotal($totals_per_kode_lahan, $remarks2, $row['kode_lahan']);
+        addToTotal($totals_per_kode_lahan, $remarks3, $row['kode_lahan']);
+        addToTotal($totals_per_kode_lahan, $remarks4, $row['kode_lahan']);
+        addToTotal($totals_per_kode_lahan, $remarks5, $row['kode_lahan']);
+        addToTotal($totals_per_kode_lahan, $remarks6, $row['kode_lahan']);
+        addToTotal($totals_per_kode_lahan, $remarks7, $row['kode_lahan']);
+        addToTotal($totals_per_kode_lahan, $remarks8, $row['kode_lahan']);
+        addToTotal($totals_per_kode_lahan, $remarks9, $row['kode_lahan']);
+        addToTotal($totals_per_kode_lahan, $remarks10, $row['kode_lahan']);
+        addToTotal($totals_per_kode_lahan, $remarks11, $row['kode_lahan']);
+        addToTotal($totals_per_kode_lahan, $remarks12, $row['kode_lahan']);
+        addToTotal($totals_per_kode_lahan, $remarks13, $row['kode_lahan']);
+        addToTotal($totals_per_kode_lahan, $remarks14, $row['kode_lahan']);
+        addToTotal($totals_per_kode_lahan, $remarks15, $row['kode_lahan']);
+        addToTotal($totals_per_kode_lahan, $remarks16, $row['kode_lahan']);
+        addToTotal($totals_per_kode_lahan, $remarks17, $row['kode_lahan']);
+        addToTotal($totals_per_kode_lahan, $remarks18, $row['kode_lahan']);
+        addToTotal($totals_per_kode_lahan, $remarks19, $row['kode_lahan']);
+        addToTotal($totals_per_kode_lahan, $remarks20, $row['kode_lahan']);
+        // ... (lanjutkan untuk semua remarks yang diperlukan)
+
+        // Tambahkan data ke dalam array $data jika diperlukan
+        $data[] = $row;
+    }
+} else {
+    echo "0 results";
+}
+
+$statusDataList = [];
+
+// Loop untuk setiap kode lahan yang ada dalam $totals_per_kode_lahan
+foreach ($totals_per_kode_lahan as $kode_lahan => $totals) {
+    // Ambil jumlah good, poor, dan failed dari totals_per_kode_lahan
+    $good_count = $totals['good'];
+    $poor_count = $totals['poor'];
+    $failed_count = $totals['failed'];
+
+    // Buat statusData untuk kode lahan saat ini
+    $statusData = json_encode([
+        'good' => $good_count ?? 0, // Default value jika tidak ada data
+        'poor' => $poor_count ?? 0, // Default value jika tidak ada data
+        'failed' => $failed_count ?? 0, // Default value jika tidak ada data
+    ]);
+
+    // Tambahkan statusData ke dalam list untuk digunakan dalam script JavaScript
+    $statusDataList[$kode_lahan] = $statusData;
+}
+
+$sql_chartteam = "SELECT 
+    land.kode_lahan,
+    land.nama_lahan,
+    AVG(CASE WHEN land.status_date IS NOT NULL AND land.re_date IS NOT NULL AND dokumen_loacd.start_date IS NOT NULL THEN 100 ELSE 0 END) AS RE,
+    AVG(CASE WHEN re.start_date IS NOT NULL AND resto.gostore_date IS NOT NULL THEN 100 ELSE 0 END) AS BoD,
+    AVG(CASE WHEN re.vl_date IS NOT NULL AND dokumen_loacd.end_date IS NOT NULL AND draft.start_date IS NOT NULL AND draft.end_date IS NOT NULL THEN 100 ELSE 0 END) AS Legal,
+    AVG(CASE WHEN re.nego_date IS NOT NULL AND resto.gostore_date IS NOT NULL THEN 100 ELSE 0 END) AS Negotiator,
+    AVG(CASE WHEN sdg_desain.survey_date IS NOT NULL AND resto.gostore_date IS NOT NULL AND sdg_desain.obs_date IS NOT NULL AND sdg_desain.start_date IS NOT NULL THEN 100 ELSE 0 END) AS Design,
+    AVG(CASE WHEN sdg_rab.start_date IS NOT NULL THEN 100 ELSE 0 END) AS QS,
+    AVG(CASE WHEN procurement.start_date IS NOT NULL THEN 100 ELSE 0 END) AS Procurement
+FROM 
+    land
+    JOIN resto ON land.kode_lahan = resto.kode_lahan
+    JOIN dokumen_loacd ON land.kode_lahan = dokumen_loacd.kode_lahan
+    INNER JOIN re ON land.kode_lahan = re.kode_lahan
+    INNER JOIN draft ON land.kode_lahan = draft.kode_lahan
+    INNER JOIN procurement ON land.kode_lahan = procurement.kode_lahan
+    INNER JOIN sdg_desain ON land.kode_lahan = sdg_desain.kode_lahan
+    INNER JOIN sdg_rab ON land.kode_lahan = sdg_rab.kode_lahan
+GROUP BY 
+    land.kode_lahan, land.nama_lahan";
+
+$result_chartteam = $conn->query($sql_chartteam);
+
+// Array untuk menyimpan data $fix per kode_lahan
+$kodeLahans = [];
+$fixValues = [];
+
+// Proses hasil query
+if ($result_chartteam->num_rows > 0) {
+    while ($row = $result_chartteam->fetch_assoc()) {
+        $kodeLahan = $row['kode_lahan'];
+        $fix = ($row['RE'] + $row['BoD'] + $row['Legal'] + $row['Negotiator'] + $row['Design'] + $row['QS'] + $row['Procurement']) / 7;
+
+        // Masukkan ke dalam array
+        $kodeLahans[] = $kodeLahan;
+        $fixValues[] = round($fix, 2); // Pembulatan 2 angka di belakang koma
+    }
+}
+
+// Konversi array PHP ke JSON untuk digunakan di dalam JavaScript
+$kodeLahansJSON = json_encode($kodeLahans);
+$fixValuesJSON = json_encode($fixValues);
+
+$sql_chartteam = "SELECT 
+    land.kode_lahan,
+    land.nama_lahan,
+    AVG(CASE WHEN land.status_date IS NOT NULL AND land.re_date IS NOT NULL AND dokumen_loacd.start_date IS NOT NULL THEN 100 ELSE 0 END) AS RE,
+    AVG(CASE WHEN re.start_date IS NOT NULL AND resto.gostore_date IS NOT NULL THEN 100 ELSE 0 END) AS BoD,
+    AVG(CASE WHEN re.vl_date IS NOT NULL AND dokumen_loacd.end_date IS NOT NULL AND draft.start_date IS NOT NULL AND draft.end_date IS NOT NULL THEN 100 ELSE 0 END) AS Legal,
+    AVG(CASE WHEN re.nego_date IS NOT NULL AND resto.gostore_date IS NOT NULL THEN 100 ELSE 0 END) AS Negotiator,
+    AVG(CASE WHEN sdg_desain.survey_date IS NOT NULL AND resto.gostore_date IS NOT NULL AND sdg_desain.obs_date IS NOT NULL AND sdg_desain.start_date IS NOT NULL THEN 100 ELSE 0 END) AS Design,
+    AVG(CASE WHEN sdg_rab.start_date IS NOT NULL THEN 100 ELSE 0 END) AS QS,
+    AVG(CASE WHEN procurement.start_date IS NOT NULL THEN 100 ELSE 0 END) AS Procurement
+FROM 
+    land
+    JOIN resto ON land.kode_lahan = resto.kode_lahan
+    JOIN dokumen_loacd ON land.kode_lahan = dokumen_loacd.kode_lahan
+    INNER JOIN re ON land.kode_lahan = re.kode_lahan
+    INNER JOIN draft ON land.kode_lahan = draft.kode_lahan
+    INNER JOIN procurement ON land.kode_lahan = procurement.kode_lahan
+    INNER JOIN sdg_desain ON land.kode_lahan = sdg_desain.kode_lahan
+    INNER JOIN sdg_rab ON land.kode_lahan = sdg_rab.kode_lahan
+GROUP BY 
+    land.kode_lahan, land.nama_lahan";
+
+$result_chartteam = $conn->query($sql_chartteam);
+
+// Array untuk menyimpan data departemen
+$departmentData = [
+    'RE' => 0,
+    'BoD' => 0,
+    'Legal' => 0,
+    'Negotiator' => 0,
+    'Design' => 0,
+    'QS' => 0,
+    'Procurement' => 0
+];
+
+if ($result_chartteam->num_rows > 0) {
+    while ($row = $result_chartteam->fetch_assoc()) {
+        // Menghitung nilai rata-rata untuk setiap departemen
+        $departmentData['RE'] += round($row['RE'], 2);
+        $departmentData['BoD'] += round($row['BoD'], 2);
+        $departmentData['Legal'] += round($row['Legal'], 2);
+        $departmentData['Negotiator'] += round($row['Negotiator'], 2);
+        $departmentData['Design'] += round($row['Design'], 2);
+        $departmentData['QS'] += round($row['QS'], 2);
+        $departmentData['Procurement'] += round($row['Procurement'], 2);
+    }
+    // Pembagian rata-rata untuk mendapatkan nilai akhir
+    foreach ($departmentData as $key => $value) {
+        $departmentData[$key] = $value / $result_chartteam->num_rows;
+    }
+}
+
+$departmentDataJSON = json_encode($departmentData);
+
+
+
+$conn->close();
 ?>
+
 <!DOCTYPE html>
 <html lang="en" dir="">
 
@@ -176,6 +413,7 @@ $conn->close();
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
 </head>
 
 <body class="text-left">
@@ -206,8 +444,50 @@ $conn->close();
 									  <span class="flex-grow-1"></span></p>
 								</div>
                                 <p>
+                                <div class="row justify-content-center">
+                                <div class="col-lg-3 col-md-6 col-sm-6">
+                                    <div class="card card-icon-bg card-icon-bg-primary o-hidden mb-4">
+                                        <div class="card-body">
+                                            <i class="i-Add-User mr-3"></i>
+                                            <h5 class="text-muted mt-2 mb-2">Total Store In Preparation</h5>
+                                            <div class="content">
+                                                <p class="text-primary text-24 line-height-1 mb-2"><?php echo $total_existing_store_without_approve_kom; ?></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-8 col-md-12">
+                                        <div class="card mb-4">
+                                            <div class="card-body">
+                                                <div class="card-title">New Store Rank</div>
+                                                <div id="storeRank" style="height: 300px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4 col-sm-12">
+                                        <div class="card mb-4">
+                                            <div class="card-body">
+                                                <div class="card-title">Status In Preparation</div>
+                                                <div id="echartGo" style="height: 300px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-12 col-md-12">
+                                        <div class="card mb-4">
+                                            <div class="card-body">
+                                                <div class="card-title">Department Performance</div>
+                                                <div id="teamChart" style="height: 300px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
 							  <div class="table-responsive">
-                              <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
+                                <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                                 <tr>
                                                     <th rowspan="4" class="sticky" style="background-color: #6c757d; color: white;">Proses Phase</th>
@@ -764,6 +1044,31 @@ $conn->close();
                                                 </td>
                                                 <?php endforeach; ?>
                                             </tr>
+                                            <tr>
+                                            <?php foreach ($data as $row): ?>
+                                                <td class="sticky" rowspan="1" style="background-color: white"></td>
+                                                <td class="sticky" style="background-color: white"></td>
+                                                <td class="sticky" style="background-color: white"></td>
+                                                <?php foreach ($data as $row): ?>
+                                                    <?php                                              
+                                                    $sla_ff_date = $sla_kom_date != 'N/A' ? date('Y-m-d', strtotime($sla_kom_date . ' +' . ($master_slacons['hrga_tm'] ?? 0) . ' days')) : 'N/A';
+                                                    ?>
+                                                <td><?= $row ['kode_lahan'] ?></td>
+                                                <?php
+                                                // Ambil total remarks untuk kode lahan saat ini
+                                                $good_count = isset($totals_per_kode_lahan[$row['kode_lahan']]['good']) ? $totals_per_kode_lahan[$row['kode_lahan']]['good'] : 0;
+                                                $poor_count = isset($totals_per_kode_lahan[$row['kode_lahan']]['poor']) ? $totals_per_kode_lahan[$row['kode_lahan']]['poor'] : 0;
+                                                $failed_count = isset($totals_per_kode_lahan[$row['kode_lahan']]['failed']) ? $totals_per_kode_lahan[$row['kode_lahan']]['failed'] : 0;
+                                                ?>
+                                                <td><span class="badge badge-<?= getBadgeColor('good') ?>">Total Good</span></td>
+                                                <td><?= $good_count ?></td>
+                                                <td><span class="badge badge-<?= getBadgeColor('poor') ?>">Total Poor</span></td>
+                                                <td><?= $poor_count ?></td>
+                                                <td><span class="badge badge-<?= getBadgeColor('failed') ?>">Total Failed</span></td>
+                                                <td><?= $failed_count ?></td>
+                                                <?php endforeach; ?>
+                                                <?php endforeach; ?>
+                                            </tr>
                                             
                                         </tbody>
                                     </table>
@@ -1002,6 +1307,213 @@ $(document).ready(function() {
     });
 });
 </script>
+
+<script>
+    // Mengambil data kodeLahans dan fixValues dari PHP
+    var kodeLahans = <?php echo $kodeLahansJSON; ?>;
+    var fixValues = <?php echo $fixValuesJSON; ?>;
+
+    // Gabungkan kodeLahans dan fixValues ke dalam satu array untuk pengurutan
+    var combinedData = kodeLahans.map(function(e, i) {
+        return { kodeLahan: e, fixValue: fixValues[i] };
+    });
+
+    // Urutkan data berdasarkan fixValues dari yang terbesar ke yang terkecil
+    combinedData.sort(function(a, b) {
+        return b.fixValue - a.fixValue;
+    });
+
+    // Pisahkan kembali data yang sudah diurutkan
+    kodeLahans = combinedData.map(function(e) { return e.kodeLahan; });
+    fixValues = combinedData.map(function(e) { return e.fixValue; });
+
+    // Inisialisasi chart menggunakan ECharts
+    var storeRankChart = echarts.init(document.getElementById('storeRank'));
+
+    // Opsi untuk chart
+    var option = {
+        title: {
+            text: ''
+        },
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                type: 'shadow'
+            },
+            formatter: function (params) {
+                var value = params[0].value.toFixed(2);
+                return params[0].name + ': ' + value + '%';
+            }
+        },
+        xAxis: {
+            type: 'category',
+            data: kodeLahans,
+            axisLabel: {
+                rotate: 45, // Rotate labels if needed
+                interval: 0 // Display all labels
+            }
+        },
+        yAxis: {
+            type: 'value',
+            axisLabel: {
+                formatter: '{value} %'
+            }
+        },
+        series: [
+            {
+                name: 'Score',
+                type: 'bar',
+                data: fixValues,
+                itemStyle: {
+                    color: function(params) {
+                        var colors = ['#405D72', '#758694']; // Warna untuk bar
+                        return colors[params.dataIndex % colors.length];
+                    }
+                }
+            }
+        ]
+    };
+
+    // Gunakan setOption untuk mengatur data dan opsi ke chart
+    storeRankChart.setOption(option);
+
+    // Resize chart on window resize
+    window.addEventListener("resize", function () {
+        setTimeout(function () {
+            storeRankChart.resize();
+        }, 500);
+    });
+</script>
+
+<script>
+    // Mengirim data department ke JavaScript
+    var departmentData = <?php echo $departmentDataJSON; ?>;
+
+    // Inisialisasi chart menggunakan ECharts
+    var teamChart = echarts.init(document.getElementById('teamChart'));
+
+    // Data untuk chart
+    var departments = ['RE', 'BoD', 'Legal', 'Negotiator', 'Design', 'QS', 'Procurement'];
+    var values = [
+        departmentData.RE,
+        departmentData.BoD,
+        departmentData.Legal,
+        departmentData.Negotiator,
+        departmentData.Design,
+        departmentData.QS,
+        departmentData.Procurement
+    ];
+
+    // Option untuk chart
+    var option = {
+        title: {
+            text: ''
+        },
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                type: 'shadow'
+            },
+            formatter: function (params) {
+                var value = params[0].value.toFixed(2);
+                return params[0].name + ': ' + value + '%';
+            }
+        },
+        xAxis: {
+            type: 'category',
+            data: departments
+        },
+        yAxis: {
+            type: 'value',
+            axisLabel: {
+                formatter: '{value} %'
+            }
+        },
+        series: [{
+            data: values,
+            type: 'bar',
+            itemStyle: {
+                color: function(params) {
+                    var colors = ['#DCA47C', '#758694'];
+                    return colors[params.dataIndex % colors.length];
+                }
+            }
+        }]
+    };
+
+    // Gunakan setOption untuk mengatur data dan opsi ke chart
+    teamChart.setOption(option);
+
+    // Resize chart on window resize
+    window.addEventListener("resize", function () {
+        setTimeout(function () {
+            teamChart.resize();
+        }, 500);
+    });
+</script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <script>
+        // Convert the PHP statusData to JavaScript object
+        var statusData = <?php echo $statusData; ?>;
+
+        // Initialize ECharts
+        var echartElemPie = document.getElementById("echartGo");
+
+        if (echartElemPie) {
+            var echartPie = echarts.init(echartElemPie);
+            echartPie.setOption({
+                title: {
+                    text: '',
+                    left: 'center'
+                },
+                color: ["#DCA47C", "#405D72", "#758694"],
+                tooltip: {
+                    trigger: 'item'
+                },
+                legend: {
+                    orient: 'vertical',
+                    left: 'left'
+                },
+                series: [
+                    {
+                        name: "Status In Preparation",
+                        type: "pie",
+                        radius: "50%",
+                        center: ["50%", "50%"],
+                        data: [
+                            {
+                                value: statusData.good,
+                                name: "Good",
+                            },
+                            {
+                                value: statusData.poor,
+                                name: "Poor",
+                            },
+                            {
+                                value: statusData.failed,
+                                name: "Failed",
+                            }
+                        ],
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: "rgba(0, 0, 0, 0.5)",
+                            },
+                        },
+                    },
+                ],
+            });
+
+            // Resize chart on window resize
+            window.addEventListener("resize", function () {
+                setTimeout(function () {
+                    echartPie.resize();
+                }, 500);
+            });
+        }
+    </script>
+    
 </body>
 
 </html>

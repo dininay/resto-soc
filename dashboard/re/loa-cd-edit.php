@@ -21,11 +21,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $file_tmp = $_FILES['lamp_loacd']['tmp_name'][$key];
             $file_name = $_FILES['lamp_loacd']['name'][$key];
             $target_dir = "../uploads/";
-            $target_file = basename($file_name);
+            $target_file = $target_dir . basename($file_name);
 
             // Attempt to move the uploaded file to the target directory
             if (move_uploaded_file($file_tmp, $target_file)) {
-                $lamp_loacd_paths[] = $target_file;
+                $lamp_loacd_paths[] = $file_name;
             } else {
                 echo "Gagal mengunggah file " . $file_name . "<br>";
             }

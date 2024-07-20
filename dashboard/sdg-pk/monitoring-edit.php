@@ -27,7 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         foreach ($_FILES['lamp_monitoring']['name'] as $key => $filename) {
             if ($filename) {
                 $target_dir = "../uploads/";
-                $target_file = basename($filename);
+                $target_file = $target_dir . basename($filename);
 
                 if (!is_dir($target_dir)) {
                     mkdir($target_dir, 0777, true);

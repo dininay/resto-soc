@@ -62,7 +62,7 @@ t.lamp_draf, t.draft_legal, t.jadwal_psm, t.valdoc_legal, t.lamp_signpsm, t.conf
 c.status_obssdg, c.obstacle, c.lamp_legal, c.status_obslegal, k.all_progress, 
 b.jumlah, b.lamp_rab, b.confirm_sdgqs, v.nama, p.nama_vendor, v.lamp_profil, v.lamp_vendor, p.status_approvprocurement, 
 r.lamp_spk, r.sla_kom, r.status_spk, r.gostore_date, r.lamp_kom, r.start_konstruksi, r.status_kom,
-r.lamp_steqp, r.lamp_ba, r.status_steqp, r.lamp_stkonstruksi, r.status_stkonstruksi
+r.lamp_steqp, r.lamp_basteqp, r.status_steqp, r.lamp_stkonstruksi, r.status_stkonstruksi
 FROM land l
 LEFT JOIN sdg_desain s ON l.kode_lahan = s.kode_lahan
 LEFT JOIN draft t ON s.kode_lahan = t.kode_lahan
@@ -136,7 +136,7 @@ if ($result && $result->num_rows > 0) {
                               <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
@@ -938,9 +938,9 @@ if ($result && $result->num_rows > 0) {
                                                 </td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_ba_files = explode(",", $row['lamp_ba']); // Pisahkan nama file menjadi array
+                                                $lamp_ba_files = explode(",", $row['lamp_basteqp']); // Pisahkan nama file menjadi array
                                                 // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_ba'])) {
+                                                if (!empty($row['lamp_basteqp'])) {
                                                     echo '<td>
                                                             <ul style="list-style-type: none; padding: 0; margin: 0;">';
                                                     // Loop untuk setiap file dalam array
@@ -1033,7 +1033,7 @@ if ($result && $result->num_rows > 0) {
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>

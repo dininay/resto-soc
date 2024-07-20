@@ -1,121 +1,7 @@
 <?php
 // Koneksi ke database
 include "../koneksi.php";
-
-// Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["confirm_sdgdesain"]) && isset($_POST["catatan_sdgdesain"])) {
-    $id = $_POST["id"];
-    $confirm_sdgdesain = $_POST["confirm_sdgdesain"];
-    $catatan_sdgdesain = $_POST["catatan_sdgdesain"];
-    $start_date = null;
-    $end_date = null;
-    $slalegal_date = null;
-
-    if ($confirm_sdgdesain == 'Approve') {
-        $submit_legal = 'In Process';
-        $start_date = date("Y-m-d H:i:s");
-        $end_date = date("Y-m-d H:i:s");
-    } else {
-        $start_date = date("Y-m-d H:i:s");
-
-    // Ambil start_date dari database
-    $sql_select_start_date = "SELECT start_date FROM sdg_desain WHERE id = ?";
-    $stmt_select_start_date = $conn->prepare($sql_select_start_date);
-    $stmt_select_start_date->bind_param("i", $id);
-    $stmt_select_start_date->execute();
-    $result_start_date = $stmt_select_start_date->get_result();
-    
-    if ($row = $result_start_date->fetch_assoc()) {
-        $start_date = $row['start_date'];
-    } else {
-        $conn->rollback();
-        echo "Error: Data not found for id: $id.";
-        exit;
-    }
-
-    // Ambil jumlah SLA dari tabel master_sla berdasarkan divisi "Legal"
-    $sql_select_sla = "SELECT sla FROM master_sla WHERE divisi = 'Legal'";
-    $result_sla = $conn->query($sql_select_sla);
-    
-    if ($row_sla = $result_sla->fetch_assoc()) {
-        $sla_days = $row_sla['sla'];
-        $start_date_obj = new DateTime($start_date);
-        $start_date_obj->modify("+$sla_days days");
-        $slaLegal_date = $start_date_obj->format("Y-m-d");
-    } else {
-        $conn->rollback();
-        echo "Error: SLA not found for divisi: Legal.";
-        exit;
-    }
-}
-
-    // Mulai transaksi
-    $conn->begin_transaction();
-
-    try {
-        // Query untuk memperbarui confirm_sdgdesain dan obstacle
-        $sql = "UPDATE sdg_desain SET confirm_sdgdesain = ?, catatan_sdgdesain = ?, obstacle = ?, submit_legal = ?, start_date = ?, slalegal_date = ? WHERE id = ?";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param("ssssssi", $confirm_sdgdesain, $catatan_sdgdesain, $obstacle, $submit_legal, $start_date, $slalegal_date, $id);
-
-        // Eksekusi query
-        if ($stmt->execute() === TRUE) {
-            // Jika submit_legal diubah menjadi Approve
-            if ($submit_legal == 'Approve') {
-                // Ambil data dari tabel sdg_desain berdasarkan id yang diedit
-                $sql_select = "SELECT kode_lahan, end_date, lamp_desainplan FROM sdg_desain WHERE id = ?";
-                $stmt_select = $conn->prepare($sql_select);
-                $stmt_select->bind_param("i", $id);
-                $stmt_select->execute();
-                $result_select = $stmt_select->get_result();
-                if ($row = $result_select->fetch_assoc()) {
-                    // Ambil jumlah SLA dari tabel master_sla berdasarkan divisi "SDG-QS"
-                    $sql_select_sla_qs = "SELECT sla FROM master_sla WHERE divisi = 'QS'";
-                    $result_sla_qs = $conn->query($sql_select_sla_qs);
-                    
-                    if ($row_sla_qs = $result_sla_qs->fetch_assoc()) {
-                        $sla_days_qs = $row_sla_qs['sla'];
-                        $end_date_obj = new DateTime($row['end_date']);
-                        $end_date_obj->modify("+$sla_days_qs days");
-                        $sla_date = $end_date_obj->format("Y-m-d");
-
-                        // Masukkan data ke tabel sdg_rab
-                        $sql_insert = "INSERT INTO sdg_rab (kode_lahan, lamp_desainplan, confirm_sdgqs, sla_date) VALUES (?,?,?,?)";
-                        $stmt_insert = $conn->prepare($sql_insert);
-                        // Tambahkan 'In Process' untuk kolom confirm_sdgqs
-                        $confirm_sdgqs = 'In Process';
-                        $stmt_insert->bind_param("ssss", $row['kode_lahan'], $row['lamp_desainplan'], $confirm_sdgqs, $sla_date);
-                        $stmt_insert->execute();
-                    } else {
-                        $conn->rollback();
-                        echo "Error: SLA not found for divisi: SDG-QS.";
-                        exit;
-                    }
-                } else {
-                    // Rollback transaksi jika terjadi kesalahan pada select
-                    $conn->rollback();
-                    echo "Error: Data not found for id: $id.";
-                    exit;
-                }
-            }
-            // Komit transaksi
-            $conn->commit();
-            echo "Status, obstacle, dan submit_legal berhasil diperbarui.";
-            // Redirect ke halaman datatables-checkval-legal.php
-            header("Location: datatables-formval-release-design.php");
-            exit; // Pastikan tidak ada output lain setelah header redirect
-        } else {
-            // Rollback transaksi jika terjadi kesalahan
-            $conn->rollback();
-            echo "Error: " . $sql . "<br>" . $conn->error;
-        }
-    } catch (Exception $e) {
-        // Rollback transaksi jika terjadi kesalahan
-        $conn->rollback();
-        echo "Error: " . $e->getMessage();
-    }
-}
-
+$status_obssdg = "";
 
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT sdg_desain.*, land.lamp_land , dl.kode_store, dl.lamp_vd
@@ -124,7 +10,6 @@ $sql = "SELECT sdg_desain.*, land.lamp_land , dl.kode_store, dl.lamp_vd
         LEFT JOIN dokumen_loacd dl ON sdg_desain.kode_lahan = dl.kode_lahan 
         WHERE sdg_desain.lamp_desainplan IS NOT NULL";
 $result = $conn->query($sql);
-
 
 // Inisialisasi variabel $data dengan array kosong
 $data = [];
@@ -153,6 +38,13 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
+    <style>
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 
 <body class="text-left">
@@ -186,7 +78,7 @@ if ($result && $result->num_rows > 0) {
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                     <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Lampiran Land</th>
                                                 <th>Lampiran VD</th>
@@ -380,7 +272,7 @@ if ($result && $result->num_rows > 0) {
                                                     $diff = $today->diff($slaLegalDate);
                                                     
                                                     // Jika status_approvowner adalah "Approve"
-                                                    if ($row['confirm_sdgdesain'] == "Approve" || $row['submit_legal'] == "Approve") {
+                                                    if ($row['confirm_sdgdesain'] == "Approve") {
                                                         echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
                                                         echo '<p>Status changed to Approved on: ' . $row['start_date'] . '</p>';
                                                     } elseif ($row['confirm_sdgdesain'] == "Obstacle") {
@@ -409,7 +301,7 @@ if ($result && $result->num_rows > 0) {
                                                     <!-- Tombol Edit -->
                                                     <?php if ($row['confirm_sdgdesain'] != "Approve"): ?>
                                                         <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['confirm_sdgdesain'] ?>">
-                                                            <i class="nav-icon i-Pen-2"></i>
+                                                            <i class="nav-icon i-Book"></i>
                                                         </button>
                                                     <?php endif; ?>
                                                 </td>
@@ -425,8 +317,8 @@ if ($result && $result->num_rows > 0) {
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <form id="statusForm" method="post" action="">
-                                                                    <input type="hidden" name="id" id="modalKodeLahan">
+                                                                <form id="statusForm" method="post" action="sdg-design/formval-process.php" enctype="multipart/form-data">
+                                                                    <input type="hidden" name="id" value=<?=$row["id"]?> id="modalKodeLahan">
                                                                     <div class="form-group">
                                                                         <label for="statusSelect">Status Approve SDG Design</label>
                                                                         <select class="form-control" id="statusSelect" name="confirm_sdgdesain" Placeholder="Pilih">
@@ -439,6 +331,24 @@ if ($result && $result->num_rows > 0) {
                                                                         <label for="catatan_sdgdesain">Catatan SDG Design</label>
                                                                         <input type="text" class="form-control" id="catatan_sdgdesain" name="catatan_sdgdesain">
                                                                     </div>
+                                                                    <div id="issueDetailSection" class="hidden">
+                                                                        <div class="form-group">
+                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="pic">PIC</label>
+                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                                                                        </div>
+                                                                    </div>
                                                                     <button type="submit" class="btn btn-primary">Save changes</button>
                                                                 </form>
                                                             </div>
@@ -450,15 +360,17 @@ if ($result && $result->num_rows > 0) {
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
-                                                <th>Lampiran Lahan</th>
-                                                <th>Lampiran Desain</th>
+                                                <th>Lampiran Land</th>
+                                                <th>Lampiran VD</th>
+                                                <th>Obstacle</th>
+                                                <th>Lampiran Legal</th>
+                                                <th>Status Legal</th>
+                                                <th>TC / NO</th>
                                                 <th>No VD</th>
-                                                <th>TC / NO TC</th>
-                                                <th>Catatan SDG Design</th>
+                                                <th>Lampiran Desain</th>
                                                 <th>Confirm SDG Design</th>
-                                                <th>Approve Legal</th>
                                                 <th>SLA</th>
                                                 <th>Action</th>
                                             </tr>
@@ -681,20 +593,43 @@ if ($result && $result->num_rows > 0) {
     <script src="../dist-assets/js/plugins/datatables.min.js"></script>
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
-    <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
+    <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script> 
     <script>
-    // JavaScript to handle opening the modal and setting form values
-    $('#editModal').on('show.bs.modal', function (event) {
-        var button = $(event.relatedTarget); // Button that triggered the modal
-        var kodeLahan = button.data('id'); // Extract info from data-* attributes
-        var status = button.data('status'); // Extract status
+    $(document).ready(function(){
+        // Saat tombol edit diklik
+        $('.edit-btn').click(function(){
+            // Ambil data-id dari tombol edit
+            var id = $(this).data('id');
 
-        // Update the modal's content.
-        var modal = $(this);
-        modal.find('#modalKodeLahan').val(kodeLahan);
-        modal.find('#statusSelect').val(status);
+            // Isi nilai input tersembunyi dengan ID yang diambil
+            $('#modalKodeLahan').val(id);
+        });
+    });
+    
+    // Function to toggle the visibility of issue detail section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
+        }
+    }
+
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function () {
+        toggleIssueDetail();
     });
 </script>
+<?php if ($status_obssdg == 'Pending') { ?>
+    <script>
+        $(document).ready(function () {
+            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+        });
+    </script>
+<?php } ?>
     <script>
 $(document).ready(function() {
     $(".edit-btn").click(function() {

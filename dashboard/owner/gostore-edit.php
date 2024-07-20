@@ -11,20 +11,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $gostore_date = $_POST['gostore_date'];
     $nama_lokasi = $_POST['nama_lahan'];
     // Update data di database
-    $sql = "UPDATE resto SET gostore_date='$gostore_date' WHERE kode_lahan = '$kode_lahan'";
+    $sql = "UPDATE resto SET gostore_date='$gostore_date', approved_by = 'Last Updated by BoD' WHERE kode_lahan = '$kode_lahan'";
     $sql_land = "UPDATE land SET nama_lahan='$nama_lokasi' WHERE kode_lahan = '$kode_lahan'";
-    $sql_draft = "UPDATE draft SET nama_lahan='$nama_lokasi' WHERE kode_lahan = '$kode_lahan'";
 
     if ($conn->query($sql) === TRUE) {
         header("Location: " . $base_url . "/datatables-gostore.php");
         if ($conn->query($sql_land) === TRUE) {
-            // Eksekusi query untuk tabel draft
-            if ($conn->query($sql_draft) === TRUE) {
-                header("Location: " . $base_url . "/datatables-resto-name.php");
-                exit();
-            } else {
-                echo "Error: " . $sql_draft . "<br>" . $conn->error;
-            }
         } else {
             echo "Error: " . $sql_land . "<br>" . $conn->error;
         }

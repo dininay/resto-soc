@@ -107,10 +107,10 @@ if ($result && $result->num_rows > 0) {
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Alamat Lokasi</th>
-                                                <th>Status Land</th>
+                                                <th>Status Name</th>
                                                 <th>Nama Store</th>
 												<th>Action</th>
                                             </tr>
@@ -191,10 +191,10 @@ if ($result && $result->num_rows > 0) {
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Alamat Lokasi</th>
-                                                <th>Status Land</th>
+                                                <th>Status Name</th>
                                                 <th>Nama Store</th>
 												<th>Action</th>
                                             </tr>

@@ -8,7 +8,8 @@ r.jenis_biaya, r.jumlah, r.date, r.lamp_rab, r.confirm_sdgqs, t.lamp_vd, t.kode_
 FROM land d
 INNER JOIN dokumen_loacd t ON d.kode_lahan = t.kode_lahan
 INNER JOIN sdg_rab r ON d.kode_lahan = r.kode_lahan
-INNER JOIN sdg_desain s ON d.kode_lahan = s.kode_lahan";
+INNER JOIN sdg_desain s ON d.kode_lahan = s.kode_lahan
+GROUP BY s.kode_lahan";
 $result = $conn->query($sql);
 
 
@@ -72,7 +73,7 @@ if ($result && $result->num_rows > 0) {
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
@@ -194,7 +195,7 @@ if ($result && $result->num_rows > 0) {
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>

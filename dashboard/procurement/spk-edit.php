@@ -8,35 +8,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Ambil nilai tgl_berlaku dan penanggungjawab dari formulir
         $id = $_POST['id'];
         $sla_kom = $_POST['sla_kom'];
-        $lamp_spk = "";
-    // Menggabungkan nama file baru dengan nama file sebelumnya, jika ada
-    // Proses file yang diunggah
-    if (isset($_FILES['lamp_spk']) && $_FILES['lamp_spk']['error'][0] != UPLOAD_ERR_NO_FILE) {
-        $existing_files = isset($_POST['existing_files']) ? explode(", ", $_POST['existing_files']) : array(); // Ambil nama file sebelumnya
-        $new_files = array();
+        
+    $lamp_spk = "";
 
-        // Simpan file-file baru yang diunggah
-        foreach ($_FILES['lamp_spk']['name'] as $key => $filename) {
-            $target_dir = "uploads/";
-            $target_file = basename($filename);
+    if(isset($_FILES["lamp_spk"])) {
+        $lamp_spk_paths = array();
 
-            // Buat direktori jika belum ada
-            if (!is_dir($target_dir)) {
-                mkdir($target_dir, 0777, true);
-            }
+        // Loop through each file
+        foreach($_FILES['lamp_spk']['name'] as $key => $filename) {
+            $file_tmp = $_FILES['lamp_spk']['tmp_name'][$key];
+            $file_name = $_FILES['lamp_spk']['name'][$key];
+            $target_dir = "../uploads/";
+            $target_file = $target_dir . basename($file_name);
 
-            if (move_uploaded_file($_FILES['lamp_spk']['tmp_name'][$key], $target_file)) {
-                $new_files[] = $target_file;
+            // Attempt to move the uploaded file to the target directory
+            if (move_uploaded_file($file_tmp, $target_file)) {
+                $lamp_spk_paths[] = $file_name;
             } else {
-                echo "Failed to upload file: " . $_FILES['lamp_spk']['name'][$key] . "<br>";
+                echo "Gagal mengunggah file " . $file_name . "<br>";
             }
         }
 
-        // Gabungkan file-file baru dengan file-file sebelumnya
-        $lamp_spk = implode(", ", array_merge($existing_files, $new_files));
-    } else {
-        // Jika tidak ada file baru diunggah, gunakan file yang sudah ada
-        $lamp_spk = isset($_POST['existing_files']) ? $_POST['existing_files'] : "";
+        // Join all file paths into a comma-separated string
+        $lamp_spk = implode(",", $lamp_spk_paths);
     }
     // if(isset($_FILES["lamp_vendor"])) {
     //     // Simpan lampiran ke folder tertentu
@@ -47,7 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     //         $file_name = $_FILES['lamp_vendor']['name'][$i];
     //         $file_path = "../uploads/" . $file_name;
     //         move_uploaded_file($file_tmp, $file_path);
-    //         $lamp_land[] = $file_path;
+    //         $lamp_spk[] = $file_path;
     //     }
     //     $lamp_vendor = implode(",", $lamp_vendor);
     // } else {

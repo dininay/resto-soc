@@ -1,7 +1,7 @@
 <?php
 // Koneksi ke database
 include "../koneksi.php";
-
+$status_ff1 = "";
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT * from socdate_hr";
 $result = $conn->query($sql);
@@ -34,6 +34,11 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 
 <body class="text-left">
@@ -168,21 +173,62 @@ if ($result && $result->num_rows > 0) {
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>
                                                     <?php endif; ?>
-                                                <?php if ($row['status_ff1'] != "Approve"): ?>
-                                                    <button class="btn btn-sm btn-primary edit-btn" data-id="<?= $row['id'] ?>">
-                                                        <i class="nav-icon i-Book"></i>
-                                                    </button>
-                                                    <form method="post" action="" class="status-form" style="display: none; margin-top: 10px;">
-                                                        <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                                                        <select class="form-control" name="status_ff1" onchange="this.form.submit()">
-                                                            <option value="In Process" <?= $row['status_ff1'] == 'In Process' ? 'selected' : '' ?>>In Process</option>
-                                                            <option value="Pending" <?= $row['status_ff1'] == 'Pending' ? 'selected' : '' ?>>Pending</option>
-                                                            <option value="Approve" <?= $row['status_ff1'] == 'Approve' ? 'selected' : '' ?>>Approve</option>
-                                                        </select>
-                                                    </form>
-                                                <?php endif; ?>
+                                                    <?php if ($row['status_ff1'] != "Approve"): ?>
+                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_ff1'] ?>">
+                                                            <i class="nav-icon i-Book"></i>
+                                                        </button>
+                                                    <?php endif; ?>
                                                 </td>
-                                            </td>
+                                                <!-- Modal -->
+                                                <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+                                                    <div class="modal-dialog" role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="editModalLabel">Edit Status</h5>
+                                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <form id="statusForm" method="post" action="hr/ff1-process.php" enctype="multipart/form-data">
+                                                                    <input type="hidden" name="id" value=<?= $row['id'] ?> id="modalKodeLahan">
+                                                                    <div class="form-group">
+                                                                        <label for="statusSelect">Status Approve FF 1</label>
+                                                                        <select class="form-control" id="statusSelect" name="status_ff1" Placeholder="Pilih">
+                                                                            <option value="In Process">In Process</option>
+                                                                            <option value="Pending">Pending</option>
+                                                                            <option value="Approve">Approve</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="catatan_ff1">Catatan FF 1</label>
+                                                                        <input type="text" class="form-control" id="catatan_ff1" name="catatan_ff1">
+                                                                    </div>
+                                                                    <div id="issueDetailSection" class="hidden">
+                                                                        <div class="form-group">
+                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="pic">PIC</label>
+                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                                                                        </div>
+                                                                    </div>
+                                                                    <button type="submit" class="btn btn-primary">Save changes</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </tr>
                                         <?php endforeach; ?>
                                         </tbody>
                                         <tfoot>
@@ -414,6 +460,43 @@ if ($result && $result->num_rows > 0) {
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
+    <script>
+    $(document).ready(function(){
+        // Saat tombol edit diklik
+        $('.edit-btn').click(function(){
+            // Ambil data-id dari tombol edit
+            var id = $(this).data('id');
+
+            // Isi nilai input tersembunyi dengan ID yang diambil
+            $('#modalKodeLahan').val(id);
+        });
+    });
+    
+    // Function to toggle the visibility of issue detail section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
+        }
+    }
+
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function () {
+        toggleIssueDetail();
+    });
+</script>
+<?php if ($status_ff1 == 'Pending') { ?>
+    <script>
+        $(document).ready(function () {
+            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+        });
+    </script>
+<?php } ?>
+
     <script>
         // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
         function setDelete(element) {

@@ -2,37 +2,6 @@
 // Koneksi ke database
 include "../koneksi.php";
 
-// Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["kode_lahan"]) && isset($_POST["submit_legal"])) {
-    $kode_lahan = $_POST["kode_lahan"];
-    $submit_legal = $_POST["submit_legal"];
-    $submit_date = null;
-    
-
-    // Mulai transaksi
-    $conn->begin_transaction();
-
-    try {
-        
-        $submit_date = date("Y-m-d H:i:s");
-        // Query untuk memperbarui status submit_legal di tabel draft
-        $sql_update = "UPDATE sdg_desain SET submit_legal = ?, submit_date = ? WHERE kode_lahan = ?";
-        $stmt_update = $conn->prepare($sql_update);
-        $stmt_update->bind_param("sss", $submit_legal, $submit_date, $kode_lahan);
-        $stmt_update->execute();
-
-        // Komit transaksi
-        $conn->commit();
-        echo "Status berhasil diperbarui.";
-        // Redirect ke halaman datatables-checkval-legal.php
-        header("Location: datatables-validasi-sp.php");
-        exit; // Pastikan tidak ada output lain setelah header redirect
-    } catch (Exception $e) {
-        // Rollback transaksi jika terjadi kesalahan
-        $conn->rollback();
-        echo "Error: " . $e->getMessage();
-    }
-}
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, d.lamp_draf, s.submit_legal,
 d.jadwal_psm, s.lamp_desainplan, r.id, r.lamp_splegal, r.catatan_legal, r.submit_date,
@@ -108,7 +77,7 @@ if ($result && $result->num_rows > 0) {
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
@@ -350,7 +319,7 @@ if ($result && $result->num_rows > 0) {
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>

@@ -2,7 +2,7 @@
 // Koneksi ke database
 include "../koneksi.php";
 
-
+$status_approvowner = "";
 // Query untuk mengambil data dari tabel re
 $sql = "SELECT r.*, l.*
 FROM re r
@@ -80,7 +80,7 @@ $conn->close();
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
 												<th>Luas Area</th>
@@ -225,7 +225,7 @@ $conn->close();
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="kronologi">Upload File Kronologi</label>
-                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]">
+                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
                                                                         </div>
                                                                     </div>
                                                                     <button type="submit" class="btn btn-primary">Save changes</button>
@@ -239,7 +239,7 @@ $conn->close();
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
 												<th>Luas Area</th>

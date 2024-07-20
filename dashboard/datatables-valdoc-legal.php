@@ -21,26 +21,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["kode_lahan"]) && isset
         if ($stmt_update->execute() === TRUE) {
             // Jika valdoc_legal diubah menjadi Approve
             if ($valdoc_legal == 'Approve') {
-                // Ambil data dari tabel draft berdasarkan id yang diedit
-                $sql_select = "SELECT kode_lahan, confirm_nego FROM draft WHERE kode_lahan = ?";
-                $stmt_select = $conn->prepare($sql_select);
-                $stmt_select->bind_param("s", $kode_lahan);
-                $stmt_select->execute();
-                $result_select = $stmt_select->get_result();
-                if ($row = $result_select->fetch_assoc()) {
-                    // Masukkan data ke tabel resto
-                    $sql_insert = "INSERT INTO resto (kode_lahan, status_finallegal) VALUES (?, ?)";
-                    $stmt_insert = $conn->prepare($sql_insert);
-                    $status_finallegal = "In Process";
-                    $stmt_insert->bind_param("ss", $row['kode_lahan'], $status_finallegal);
-                    $stmt_insert->execute();
-                } else {
-                    // Rollback transaksi jika terjadi kesalahan pada select
-                    $conn->rollback();
-                    echo "Error: Data not found for id: $kode_lahan.";
-                    exit;
+                $sql_update = "UPDATE draft SET valdoc_legal = ?, catatan_valdoc = ? WHERE kode_lahan = ?";
+                $stmt_update = $conn->prepare($sql_update);
+                $stmt_update->bind_param("sss", $valdoc_legal, $catatan_valdoc, $kode_lahan);
                 }
-            }
+            
             // Komit transaksi
             $conn->commit();
         } else {
@@ -137,19 +122,18 @@ if ($result && $result->num_rows > 0) {
                               <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
                                                 <th>Lampiran Land</th>
-                                                <th>Approval RE</th>
+                                                <th>Approval Loa CD</th>
                                                 <th>Lampiran Loa CD</th>
                                                 <th>Approval Legal VD</th>
                                                 <th>Lampiran Draft</th>
                                                 <th>Confirm Legal</th>
                                                 <th>Penjadwalan PSM</th>
                                                 <th>Approval SDG Design</th>
-                                                <th>Acc Design Legal</th>
                                                 <th>Lampiran Desain</th>
                                                 <th>Validasi</th>
                                                 <th>Action</th>
@@ -317,29 +301,6 @@ if ($result && $result->num_rows > 0) {
                                                         <?php echo $row['confirm_sdgdesain']; ?>
                                                     </span>
                                                 </td>
-                                                <td>
-                                                    <?php
-                                                        // Tentukan warna badge berdasarkan status approval owner
-                                                        $badge_color = '';
-                                                        switch ($row['submit_legal']) {
-                                                            case 'Approve':
-                                                                $badge_color = 'success';
-                                                                break;
-                                                            case 'Pending':
-                                                                $badge_color = 'danger';
-                                                                break;
-                                                            case 'In Process':
-                                                                $badge_color = 'warning';
-                                                                break;
-                                                            default:
-                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
-                                                                break;
-                                                        }
-                                                    ?>
-                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['submit_legal']; ?>
-                                                    </span>
-                                                </td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_desain_files = explode(",", $row['lamp_desainplan']); // Pisahkan nama file menjadi array
@@ -432,19 +393,18 @@ if ($result && $result->num_rows > 0) {
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
                                                 <th>Lampiran Land</th>
-                                                <th>Approval RE</th>
+                                                <th>Approval LOA CD</th>
                                                 <th>Lampiran Loa CD</th>
                                                 <th>Approval Legal VD</th>
                                                 <th>Lampiran Draft</th>
                                                 <th>Confirm Legal</th>
                                                 <th>Penjadwalan PSM</th>
                                                 <th>Approval SDG Design</th>
-                                                <th>Acc Design Legal</th>
                                                 <th>Lampiran Desain</th>
                                                 <th>Validasi</th>
                                                 <th>Action</th>

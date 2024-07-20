@@ -1,11 +1,12 @@
 <?php
 // Koneksi ke database
 include "../koneksi.php";
+$status_kom = "";
 // Query untuk mengambil data dari tabel land
-$sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, d.lamp_draf, r.lamp_spk, r.lamp_kom, r.status_kom,
-        d.jadwal_psm, s.lamp_desainplan, r.id, r.lamp_splegal, r.catatan_legal, r.submit_date, r.sla_kom, r.kom_date, s.lamp_permit, s.lamp_pbg,
-        v.nama AS nama_vendor, v.kode_vendor, r.status_spk, r.sla_spk, p.nama_vendor AS nama_vendor_procurement, v.lamp_vendor, v.lamp_profil, 
-        r.start_date, p.status_approvprocurement, r.*, c.kode_store
+$sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, d.lamp_draf,
+        d.jadwal_psm, s.lamp_desainplan, s.lamp_permit, s.lamp_pbg,
+        v.nama AS nama_vendor, v.kode_vendor, p.nama_vendor AS nama_vendor_procurement, v.lamp_vendor, v.lamp_profil, 
+        p.status_approvprocurement, r.*, c.kode_store
         FROM draft d
         INNER JOIN land l ON d.kode_lahan = l.kode_lahan
         INNER JOIN dokumen_loacd c ON d.kode_lahan = c.kode_lahan
@@ -44,6 +45,13 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <style>
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 
 <body class="text-left">
@@ -78,7 +86,7 @@ if ($result && $result->num_rows > 0) {
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
@@ -507,8 +515,8 @@ if ($result && $result->num_rows > 0) {
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <form id="statusForm" method="post" action="kom-sdgpk-process.php">
-                                                                    <input type="hidden" name="id" id="modalId" value="<?= $row['id']; ?>">
+                                                                <form id="statusForm" method="post" action="sdg-pk/kom-sdgpk-process.php" enctype="multipart/form-data">
+                                                                    <input type="hidden" name="id" id="modalKodeLahan" value="<?= $row['id']; ?>">
                                                                     <div class="form-group">
                                                                         <label for="statusSelect">Status Approve KOM</label>
                                                                         <select class="form-control" id="statusSelect" name="status_kom">
@@ -517,19 +525,55 @@ if ($result && $result->num_rows > 0) {
                                                                             <option value="Approve">Approve</option>
                                                                         </select>
                                                                     </div>
+                                                                    <div id="issueDetailSection" class="hidden">
+                                                                        <div class="form-group">
+                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="pic">PIC</label>
+                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                                                                        </div>
+                                                                    </div>
                                                                     <button type="submit" class="btn btn-primary">Save changes</button>
                                                                 </form>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                    </td>
+                                                
+                                                <div class="modal fade" id="alertModal" tabindex="-1" role="dialog" aria-labelledby="alertModalLabel" aria-hidden="true">
+                                                    <div class="modal-dialog" role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="alertModalLabel">Peringatan</h5>
+                                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                Tanggal GO Store belum dimasukkan. Harap input tanggal go store date terlebih dahulu. Infokan kepada pihak terkait.
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </tr>
                                         <?php endforeach; ?>
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
@@ -557,6 +601,7 @@ if ($result && $result->num_rows > 0) {
                                             </tr>
                                         </tfoot>
                                     </table>
+
                                     <!-- Modal Konfirmasi Hapus -->
                                     <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
                                         <div class="modal-dialog" role="document">
@@ -774,19 +819,76 @@ if ($result && $result->num_rows > 0) {
     <script src="../dist-assets/js/plugins/datatables.min.js"></script>
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
-    <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
+    <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script> 
+    
     <script>
-    $(document).ready(function(){
-        // Saat tombol edit diklik
-        $('.edit-btn').click(function(){
-            // Ambil data-id dari tombol edit
-            var id = $(this).data('id');
+$(document).ready(function(){
+    // Saat tombol edit diklik
+    $('.edit-btn').click(function(){
+        var id = $(this).data('id');
+        console.log('Edit button clicked, ID:', id);
+        $('#modalKodeLahan').val(id);
+    });
 
-            // Isi nilai input tersembunyi dengan ID yang diambil
-            $('#modalId').val(id);
+    // Toggle Issue Detail Section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
+        }
+    }
+
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function () {
+        toggleIssueDetail();
+    });
+
+    // Form submit event
+    $('#statusForm').submit(function(e){
+        e.preventDefault();
+        var form = $(this);
+        var id = $('#modalKodeLahan').val();
+        console.log('Form submitted, ID:', id);
+
+        $.ajax({
+            url: 'sdg-pk/check-gostore-date.php',
+            type: 'POST',
+            data: { id: id },
+            success: function(response) {
+                console.log('Response from server:', response);
+                if (response === 'empty') {
+                    // Tampilkan modal peringatan
+                    console.log('GO Store date is empty');
+                    $('#alertModal').modal('show');
+                } else if (response === 'not_empty') {
+                    // Jika gostore_date tidak kosong, lanjutkan submit form
+                    console.log('GO Store date is not empty');
+                    form.unbind('submit').submit();
+                } else {
+                    console.log('Data not found');
+                    alert('Data tidak ditemukan');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log('AJAX Error:', xhr.responseText);
+            }
         });
     });
+});
+</script>
+
+<?php if ($status_kom == 'Pending') { ?>
+    <script>
+        $(document).ready(function () {
+            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+        });
     </script>
+<?php } ?>
+
     <script>
         // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
         function setDelete(element) {

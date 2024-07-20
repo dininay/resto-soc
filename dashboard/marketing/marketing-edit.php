@@ -23,11 +23,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $file_tmp = $_FILES['lamp_gmaps']['tmp_name'][$key];
             $file_name = $_FILES['lamp_gmaps']['name'][$key];
             $target_dir = "../uploads/";
-            $target_file = basename($file_name);
+            $target_file = $target_dir . basename($file_name);
 
             // Attempt to move the uploaded file to the target directory
             if (move_uploaded_file($file_tmp, $target_file)) {
-                $lamp_gmaps_paths[] = $target_file;
+                $lamp_gmaps_paths[] = $file_name;
             } else {
                 echo "Gagal mengunggah file " . $file_name . "<br>";
             }
@@ -52,7 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Attempt to move the uploaded file to the target directory
             if (move_uploaded_file($file_tmp, $target_file)) {
-                $lamp_merchant_paths[] = $target_file;
+                $lamp_merchant_paths[] = $file_name;
             } else {
                 echo "Gagal mengunggah file " . $file_name . "<br>";
             }

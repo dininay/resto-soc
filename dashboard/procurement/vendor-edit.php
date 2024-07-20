@@ -26,7 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (isset($_FILES['lamp_profil']) && $_FILES['lamp_profil']['error'][0] != UPLOAD_ERR_NO_FILE) {
             foreach ($_FILES['lamp_profil']['name'] as $key => $filename) {
                 $target_dir = "uploads/";
-                $target_file = basename($filename);
+                $target_file = $target_dir . basename($filename);
 
                 // Buat direktori jika belum ada
                 if (!is_dir($target_dir)) {
@@ -34,7 +34,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
 
                 if (move_uploaded_file($_FILES['lamp_profil']['tmp_name'][$key], $target_file)) {
-                    $new_files_profil[] = $target_file;
+                    $new_files_profil[] = $filename;
                 } else {
                     echo "Failed to upload file: " . $_FILES['lamp_profil']['name'][$key] . "<br>";
                 }
@@ -58,7 +58,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (isset($_FILES['lamp_vendor']) && $_FILES['lamp_vendor']['error'][0] != UPLOAD_ERR_NO_FILE) {
             foreach ($_FILES['lamp_vendor']['name'] as $key => $filename) {
                 $target_dir = "uploads/";
-                $target_file = basename($filename);
+                $target_file = $target_dir . basename($filename);
 
                 // Buat direktori jika belum ada
                 if (!is_dir($target_dir)) {
@@ -66,7 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
 
                 if (move_uploaded_file($_FILES['lamp_vendor']['tmp_name'][$key], $target_file)) {
-                    $new_files_vendor[] = $target_file;
+                    $new_files_vendor[] = $filename;
                 } else {
                     echo "Failed to upload file: " . $_FILES['lamp_vendor']['name'][$key] . "<br>";
                 }

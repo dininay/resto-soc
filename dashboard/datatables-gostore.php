@@ -108,14 +108,15 @@ if ($result && $result->num_rows > 0) {
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Store</th>
                                                 <th>Alamat Lokasi</th>
-                                                <th>Status Owner</th>
+                                                <th>Status BoD</th>
                                                 <th>End Date SPK</th>
                                                 <th>Jadwal Kick Off Meeting</th>
                                                 <th>Target GO Store</th>
+                                                <th>Last Updated by</th>
 												<th>Action</th>
                                             </tr>
                                         </thead>
@@ -152,9 +153,10 @@ if ($result && $result->num_rows > 0) {
                                                 <td><?= $row['spk_date'] ?></td>
                                                 <td><?= $row['sla_kom'] ?></td>
                                                 <td><?= $row['gostore_date'] ?></td>
+                                                <td><?= $row['approved_by'] ?></td>
                                                 <td>
                                                     <!-- Tombol Edit -->
-                                                    <?php if ($row['status_gostore'] != "Approve"): ?>
+                                                    
                                                         <div>
                                                         <a href="owner/gostore-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
                                                             <i class="nav-icon i-Pen-2"></i>
@@ -163,7 +165,6 @@ if ($result && $result->num_rows > 0) {
                                                             <i class="nav-icon i-Book"></i>
                                                         </button>
                                                     </div>
-                                                    <?php endif; ?>
 
                                                 <!-- Modal -->
                                                 <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
@@ -198,14 +199,15 @@ if ($result && $result->num_rows > 0) {
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Store</th>
                                                 <th>Alamat Lokasi</th>
-                                                <th>Status Owner</th>
+                                                <th>Status BoD</th>
                                                 <th>End Date SPK</th>
                                                 <th>Jadwal Kick Off Meeting</th>
                                                 <th>Target GO Store</th>
+                                                <th>Last Updated by</th>
 												<th>Action</th>
                                             </tr>
                                         </tfoot>

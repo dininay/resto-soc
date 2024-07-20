@@ -1,11 +1,66 @@
 <?php
 // Koneksi ke database
 include "../koneksi.php";
+$status_vl = "";
+
+// Proses jika ada pengiriman data dari formulir untuk memperbarui status
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["status_vl"])) {
+    $id = $_POST["id"];
+    $status_vl = $_POST["status_vl"];
+    $vl_date = null;
+
+    // Mulai transaksi
+    $conn->begin_transaction();
+
+    try {
+        // Jika status_approvlegalvd diubah menjadi Approve
+        if ($status_vl == 'Approve') {
+            $vl_date = date("Y-m-d H:i:s");
+
+            // Query untuk memperbarui status status_vl di tabel draft
+            $sql_update = "UPDATE re SET status_vl = ?, vl_date = ? WHERE id = ?";
+            $stmt_update = $conn->prepare($sql_update);
+            $stmt_update->bind_param("ssi", $status_vl, $vl_date, $id);
+            $stmt_update->execute();
+
+            if ($stmt_update->affected_rows > 0) {
+                echo "Status berhasil diperbarui.";
+            } else {
+                echo "Gagal memperbarui status.";
+            }
+        } else {
+            // Query untuk memperbarui status status_vl di tabel draft
+            $sql_update = "UPDATE re SET status_vl = ?, vl_date = ? WHERE id = ?";
+            $stmt_update = $conn->prepare($sql_update);
+            $stmt_update->bind_param("ssi", $status_vl, $vl_date, $id);
+            $stmt_update->execute();
+
+            if ($stmt_update->affected_rows > 0) {
+                echo "Status berhasil diperbarui.";
+            } else {
+                echo "Gagal memperbarui status.";
+            }
+        }
+
+        // Komit transaksi
+        $conn->commit();
+        // Redirect ke halaman datatables-checkval-legal.php
+        header("Location: datatables-wovl.php");
+        exit; // Pastikan tidak ada output lain setelah header redirect
+    } catch (Exception $e) {
+        // Rollback transaksi jika terjadi kesalahan
+        $conn->rollback();
+        echo "Error: " . $e->getMessage();
+    }
+}
+
 
 // Query untuk mengambil data dari tabel land dengan status_approvowner 'Approve'
-$sql = "SELECT r.*, l.*
-FROM re r
-JOIN land l ON r.kode_lahan = l.kode_lahan WHERE status_approvowner = 'Approve'";
+$sql = "SELECT r.*, l.kode_lahan, l.nama_lahan, l.lokasi, l.luas_area, l.lamp_land
+        FROM re r
+        JOIN land l ON r.kode_lahan = l.kode_lahan
+        WHERE l.status_approvre = 'Approve'";
+
 $result = $conn->query($sql);
 
 // Inisialisasi variabel $data dengan array kosong
@@ -34,6 +89,13 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
+<style>
+    .hidden {
+        display: none;
+    }
+</style>
 </head>
 
 <body class="text-left">
@@ -49,7 +111,7 @@ if ($result && $result->num_rows > 0) {
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Datatables Validasi Lahan to Legal</h1>
+                    <h1>Data Validasi Lahan From RE</h1>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
                 <!-- end of row-->
@@ -59,22 +121,23 @@ if ($result && $result->num_rows > 0) {
                             <div class="card-body">
                                 <h4 class="card-title mb-3"></h4>
 								<div class="footer-bottom border-top float-right">
-									<p><span class="flex-grow-1"></span></p>
+									  <span class="flex-grow-1"></span></p>
 								</div>
                                 <p>
-                                <div class="table-responsive">
-                                    <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
+							  <div class="table-responsive">
+                              <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
                                                 <th>Luas Area</th>
-                                                <th>Approval Owner</th>
-                                                <th>Approval Legal</th>
-                                                <th>Start Date</th>
-                                                <th>End Date</th>
-                                                <th>Lampiran</th>
+                                                <th>Approval BoD</th>
+                                                <th>Approval BoD Date</th>
+                                                <th>Lampiran Land</th>
+                                                <th>Status VL</th>
+                                                <th>Lampiran VL</th>
+                                                <th>SLA</th>
                                                 <th>Action</th>
                                             </tr>
                                         </thead>
@@ -108,31 +171,7 @@ if ($result && $result->num_rows > 0) {
                                                         <?php echo $row['status_approvowner']; ?>
                                                     </span>
                                                 </td>
-                                                <td>
-                                                    <?php
-                                                        // Tentukan warna badge berdasarkan status approval owner
-                                                        $badge_color = '';
-                                                        switch ($row['status_approvlegal']) {
-                                                            case 'Approve':
-                                                                $badge_color = 'success';
-                                                                break;
-                                                            case 'Pending':
-                                                                $badge_color = 'danger';
-                                                                break;
-                                                            case 'In Process':
-                                                                $badge_color = 'warning';
-                                                                break;
-                                                            default:
-                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
-                                                                break;
-                                                        }
-                                                    ?>
-                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_approvlegal']; ?>
-                                                    </span>
-                                                </td>
                                                 <td><?= $row['start_date'] ?></td>
-                                                <td><?= $row['end_date'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_land_files = explode(",", $row['lamp_land']); // Pisahkan nama file menjadi array
@@ -150,28 +189,242 @@ if ($result && $result->num_rows > 0) {
                                                     </ul>
                                                 </td>
                                                 <td>
-                                                    <a href="re/validasi-land-detail.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-info">
-                                                        <i class="nav-icon i-File-Text"></i> Detail
-                                                    </a>
+                                                    <?php
+                                                        // Tentukan warna badge berdasarkan status approval owner
+                                                        $badge_color = '';
+                                                        switch ($row['status_vl']) {
+                                                            case 'Approve':
+                                                                $badge_color = 'success';
+                                                                break;
+                                                            case 'Pending':
+                                                                $badge_color = 'danger';
+                                                                break;
+                                                            case 'In Process':
+                                                                $badge_color = 'warning';
+                                                                break;
+                                                            default:
+                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
+                                                                break;
+                                                        }
+                                                    ?>
+                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
+                                                        <?php echo $row['status_vl']; ?>
+                                                    </span>
+                                                </td>     
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_kom_files = explode(",", $row['lamp_vl']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_vl'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_kom_files as $kom) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $kom . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>       
+                                                <td>
+                                                    <?php
+                                                    // Mendapatkan tanggal sla_date dari kolom data
+                                                    $slaLegalDate = new DateTime($row['slavl_date']);
+                                                    
+                                                    // Mendapatkan tanggal hari ini
+                                                    $today = new DateTime();
+                                                    
+                                                    // Menghitung selisih hari antara sla_date dan hari ini
+                                                    $diff = $today->diff($slaLegalDate);
+                                                    
+                                                    // Jika status_approvowner adalah "Approve"
+                                                    if ($row['status_vl'] == "Approve") {
+                                                        echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
+                                                        echo '<p>Status changed to Approved on: ' . $row['vl_date'] . '</p>';
+                                                    } else {
+                                                        // Menghitung jumlah hari terlambat
+                                                        $lateDays = $slaLegalDate->diff($today)->days;
+                                                        
+                                                        // Jika terlambat
+                                                        if ($today > $slaLegalDate) {
+                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+                                                        } else {
+                                                            // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
+                                                            if ($diff) {
+                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
+                                                            } else {
+                                                                // Tampilkan peringatan "H + X"
+                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
+                                                            }
+                                                        }
+                                                    }
+                                                    ?>
                                                 </td>
+                                                <!-- <td>
+                                                    <?php if ($row['status_vl'] != "Approve"): ?>
+                                                        <a href="legal/vl-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                            <i class="nav-icon i-Pen-2"></i>
+                                                        </a>
+                                                    <button class="btn btn-sm btn-primary edit-btn" data-id="<?= $row['id'] ?>">
+                                                        <i class="nav-icon i-Book"></i>
+                                                    </button>
+                                                    <form method="post" action="" class="status-form" style="display: none; margin-top: 10px;">
+                                                        <input type="hidden" name="id" value="<?= $row['id'] ?>">
+                                                        <select class="form-control" name="status_vl" onchange="this.form.submit()">
+                                                            <option value="In Process" <?= $row['status_vl'] == 'In Process' ? 'selected' : '' ?>>In Process</option>
+                                                            <option value="Pending" <?= $row['status_vl'] == 'Pending' ? 'selected' : '' ?>>Pending</option>
+                                                            <option value="Approve" <?= $row['status_vl'] == 'Approve' ? 'selected' : '' ?>>Approve</option>
+                                                        </select>
+                                                    </form>
+                                                <?php endif; ?>
+                                                </td> -->
+                                                
+                                                <td>
+                                                    <!-- Tombol Edit -->
+                                                    <?php if ($row['status_vl'] != "Approve"): ?>
+                                                        <div>
+                                                        <a href="legal/vl-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
+                                                            <i class="nav-icon i-Pen-2"></i>
+                                                        </a>
+                                                        <!-- <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_vl'] ?>">
+                                                            <i class="nav-icon i-Book"></i>
+                                                        </button> -->
+                                                    </div>
+                                                    <?php endif; ?>
+
+                                                <!-- Modal -->
+                                                <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+                                                    <div class="modal-dialog" role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="editModalLabel">Edit Status</h5>
+                                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <form id="statusForm" method="post" action="legal/wovl-process.php" enctype="multipart/form-data">
+                                                                    <input type="hidden" name="id" value="<?=$row["id"]?>"  id="modalKodeLahan">
+                                                                    <div class="form-group">
+                                                                        <label for="statusSelect">Status Approve VL</label>
+                                                                        <select class="form-control" id="statusSelect" name="status_vl">
+                                                                            <option value="In Process">In Process</option>
+                                                                            <option value="Pending">Pending</option>
+                                                                            <option value="Approve">Approve</option>
+                                                                            <option value="Reject">Reject</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div id="issueDetailSection" class="hidden">
+                                                                        <div class="form-group">
+                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="pic">PIC</label>
+                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                                                                        </div>
+                                                                    </div>
+                                                                    <button type="submit" class="btn btn-primary">Save changes</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                    </td>
+                                            </tr>
                                             <?php endforeach; ?>
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
                                                 <th>Luas Area</th>
-                                                <th>Approval Owner</th>
-                                                <th>Approval Legal</th>
-                                                <th>Start Date</th>
-                                                <th>End Date</th>
-                                                <th>Lampiran</th>
+                                                <th>Approval BoD</th>
+                                                <th>Approval BoD Date</th>
+                                                <th>Lampiran Land</th>
+                                                <th>Status VL</th>
+                                                <th>Lampiran VL</th>
+                                                <th>SLA</th>
                                                 <th>Action</th>
                                             </tr>
                                         </tfoot>
                                     </table>
+                                    <!-- Modal untuk "Tepat Waktu" -->
+                                    <div class="modal fade" id="approvalModal" tabindex="-1" role="dialog" aria-labelledby="approvalModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="approvalModalLabel">Pemberitahuan</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Data sudah approve tepat waktu.
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Modal untuk "Deadline Approval" -->
+                                    <div class="modal fade" id="deadlineModal" tabindex="-1" role="dialog" aria-labelledby="deadlineModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="deadlineModalLabel">Pemberitahuan</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Tersisa waktu <?php echo $diff->days; ?> hari, segera lakukan approval.</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Modal untuk "Terlambat Approval" -->
+                                    <div class="modal fade" id="lateApprovalModal" tabindex="-1" role="dialog" aria-labelledby="lateApprovalModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="lateApprovalModalLabel">Pemberitahuan</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Data sudah terlambat untuk di-approve. Telah terlambat <?php echo $lateDays; ?> hari.</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+                            </div>
                         </div>
                     </div>
                     <!-- end of col-->
@@ -365,6 +618,53 @@ if ($result && $result->num_rows > 0) {
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
+    <script>
+    $(document).ready(function(){
+        // Saat tombol edit diklik
+        $('.edit-btn').click(function(){
+            // Ambil data-id dari tombol edit
+            var id = $(this).data('id');
+
+            // Isi nilai input tersembunyi dengan ID yang diambil
+            $('#modalKodeLahan').val(id);
+        });
+    });
+    
+    // Function to toggle the visibility of issue detail section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
+        }
+    }
+
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function () {
+        toggleIssueDetail();
+    });
+</script>
+<?php if ($status_vl == 'Pending') { ?>
+    <script>
+        $(document).ready(function () {
+            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+        });
+    </script>
+<?php } ?>
+
+    <script>
+$(document).ready(function() {
+    $(".edit-btn").click(function() {
+        // Sembunyikan semua form yang terbuka
+        $(".status-form").hide();
+        // Tampilkan form di samping tombol edit yang diklik
+        $(this).next(".status-form").show();
+    });
+});
+</script>
 </body>
 
 </html>

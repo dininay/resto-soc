@@ -1,49 +1,8 @@
 <?php
 // Koneksi ke database
 include "../koneksi.php";
-// Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["status_legalizin"])) {
-    $id = $_POST["id"];
-    $status_legalizin = $_POST["status_legalizin"];
-    $legalizin_date = date("Y-m-d H:i:s");
 
-    // Mulai transaksi
-    $conn->begin_transaction();
-
-    try {
-        // Query untuk memperbarui status_legalizin dan legalizin_date berdasarkan id
-        $sql_update = "UPDATE resto SET status_legalizin = ?, legalizin_date = ? WHERE id = ?";
-        $stmt_update = $conn->prepare($sql_update);
-        $stmt_update->bind_param("ssi", $status_legalizin, $legalizin_date, $id);
-
-        // Eksekusi query update
-        if ($stmt_update->execute() === TRUE) {
-            // Jika status_spk diubah menjadi Approve
-            if ($status_legalizin == 'Approve') {
-                // Update status_kom di tabel resto menjadi "In Process"
-                $sql_update_kom = "UPDATE resto SET status_legalizin = ?, legalizin_date = ? WHERE id = ?";
-                $stmt_update_kom = $conn->prepare($sql_update_kom);
-                $stmt_update_kom->bind_param("ssi", $status_legalizin, $legalizin_date, $id);
-                $stmt_update_kom->execute();
-            }
-
-            // Komit transaksi
-            $conn->commit();
-            echo "Status dan data berhasil diperbarui.";
-        } else {
-            // Rollback transaksi jika terjadi kesalahan pada update
-            $conn->rollback();
-            echo "Error: " . $stmt_update->error;
-        }
-        // Redirect ke halaman datatables-checkval-legal.php
-        header("Location: datatables-spk-legal.php");
-        exit; // Pastikan tidak ada output lain setelah header redirect
-    } catch (Exception $e) {
-        // Rollback transaksi jika terjadi kesalahan
-        $conn->rollback();
-        echo "Error: " . $e->getMessage();
-    }
-}
+$status_legalizin = "";
 
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, d.lamp_draf, c.lamp_loacd, p.status_approvprocurement, 
@@ -92,6 +51,11 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 
 <body class="text-left">
@@ -127,7 +91,7 @@ if ($result && $result->num_rows > 0) {
                               <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
@@ -464,7 +428,7 @@ if ($result && $result->num_rows > 0) {
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <form id="statusForm" method="post" action="">
+                                                                <form id="statusForm" method="post" action="legal/izin-konstruksi-process.php"  enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" id="modalId" value="<?= $row['id']; ?>">
                                                                     <div class="form-group">
                                                                         <label for="statusSelect">Status Approve SPK Legal</label>
@@ -474,19 +438,36 @@ if ($result && $result->num_rows > 0) {
                                                                             <option value="Approve">Approve</option>
                                                                         </select>
                                                                     </div>
+                                                                    <div id="issueDetailSection" class="hidden">
+                                                                        <div class="form-group">
+                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="pic">PIC</label>
+                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                                                                        </div>
+                                                                    </div>
                                                                     <button type="submit" class="btn btn-primary">Save changes</button>
                                                                 </form>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                    </td>
                                             </tr>
                                         <?php endforeach; ?>
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
@@ -727,6 +708,8 @@ if ($result && $result->num_rows > 0) {
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
+    
     <script>
     $(document).ready(function(){
         // Saat tombol edit diklik
@@ -738,7 +721,31 @@ if ($result && $result->num_rows > 0) {
             $('#modalId').val(id);
         });
     });
+    
+    // Function to toggle the visibility of issue detail section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
+        }
+    }
+
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function () {
+        toggleIssueDetail();
+    });
+</script>
+<?php if ($status_legalizin == 'Pending') { ?>
+    <script>
+        $(document).ready(function () {
+            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+        });
     </script>
+<?php } ?>
     <script>
         // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
         function setDelete(element) {

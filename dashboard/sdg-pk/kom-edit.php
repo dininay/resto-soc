@@ -19,7 +19,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Simpan file-file baru yang diunggah
         foreach ($_FILES['lamp_kom']['name'] as $key => $filename) {
             $target_dir = "../uploads/";
-            $target_file = basename($filename);
+            $target_file = $target_dir . basename($filename);
 
             // Buat direktori jika belum ada
             if (!is_dir($target_dir)) {
@@ -27,7 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             }
 
             if (move_uploaded_file($_FILES['lamp_kom']['tmp_name'][$key], $target_file)) {
-                $new_files[] = $target_file;
+                $new_files[] = $filename;
             } else {
                 echo "Failed to upload file: " . $_FILES['lamp_kom']['name'][$key] . "<br>";
             }

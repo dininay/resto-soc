@@ -13,7 +13,8 @@ $sql = "SELECT
         LEFT JOIN 
             land ON sdg_desain.kode_lahan = land.kode_lahan
         LEFT JOIN 
-            dokumen_loacd ON sdg_desain.kode_lahan = dokumen_loacd.kode_lahan";
+            dokumen_loacd ON sdg_desain.kode_lahan = dokumen_loacd.kode_lahan
+            WHERE sdg_desain.status_obssdg IN ('Not Obstacle', 'Diajukan', 'Pending')";
 $result = $conn->query($sql);
 
 
@@ -78,11 +79,13 @@ if ($result && $result->num_rows > 0) {
                               <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Lampiran Land</th>
                                                 <th>Lampiran VD</th>
                                                 <th>Obstacle</th>
+                                                <th>Status Survey Lahan</th>
+                                                <th>Status Obstacle</th>
                                                 <th>Lampiran Legal</th>
                                                 <th>Status Legal</th>
                                                 <th>TC / NO</th>
@@ -162,6 +165,52 @@ if ($result && $result->num_rows > 0) {
                                                     ?>
                                                     <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
                                                         <?php echo $row['obstacle']; ?>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <?php
+                                                        // Tentukan warna badge berdasarkan status approval owner
+                                                        $badge_color = '';
+                                                        switch ($row['status_survey']) {
+                                                            case 'Done':
+                                                                $badge_color = 'success';
+                                                                break;
+                                                            case 'Pending':
+                                                                $badge_color = 'danger';
+                                                                break;
+                                                            case 'In Process':
+                                                                $badge_color = 'warning';
+                                                                break;
+                                                            default:
+                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
+                                                                break;
+                                                        }
+                                                    ?>
+                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
+                                                        <?php echo $row['status_survey']; ?>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <?php
+                                                        // Tentukan warna badge berdasarkan status approval owner
+                                                        $badge_color = '';
+                                                        switch ($row['status_obssdg']) {
+                                                            case 'Diajukan':
+                                                                $badge_color = 'warning';
+                                                                break;
+                                                            case 'Pending':
+                                                                $badge_color = 'danger';
+                                                                break;
+                                                            case 'Not Obstacle':
+                                                                $badge_color = 'success';
+                                                                break;
+                                                            default:
+                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
+                                                                break;
+                                                        }
+                                                    ?>
+                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
+                                                        <?php echo $row['status_obssdg']; ?>
                                                     </span>
                                                 </td>
                                                 <?php
@@ -303,16 +352,74 @@ if ($result && $result->num_rows > 0) {
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>
                                                     <?php endif; ?>
+                                                    <?php if ($row['confirm_sdgdesain'] != "Approve"): ?>
+                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['confirm_sdgdesain'] ?>">
+                                                            <i class="nav-icon i-Book"></i>
+                                                        </button>
+                                                    <?php endif; ?>
                                                 </td>
+
+                                                <!-- Modal -->
+                                                <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+                                                    <div class="modal-dialog" role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="editModalLabel">Edit Status</h5>
+                                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <form id="statusForm" method="post" action="sdg-design/formval-process.php" enctype="multipart/form-data">
+                                                                    <input type="hidden" name="id" value=<?=$row["id"]?> id="modalKodeLahan">
+                                                                    <div class="form-group">
+                                                                        <label for="statusSelect">Status Approve SDG Design</label>
+                                                                        <select class="form-control" id="statusSelect" name="confirm_sdgdesain" Placeholder="Pilih">
+                                                                            <option value="In Process">In Process</option>
+                                                                            <option value="Pending">Pending</option>
+                                                                            <option value="Approve">Approve</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="catatan_sdgdesain">Catatan SDG Design</label>
+                                                                        <input type="text" class="form-control" id="catatan_sdgdesain" name="catatan_sdgdesain">
+                                                                    </div>
+                                                                    <div id="issueDetailSection" class="hidden">
+                                                                        <div class="form-group">
+                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="pic">PIC</label>
+                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                                                                        </div>
+                                                                    </div>
+                                                                    <button type="submit" class="btn btn-primary">Save changes</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </tr>
                                         <?php endforeach; ?>
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Lampiran Land</th>
                                                 <th>Lampiran VD</th>
                                                 <th>Obstacle</th>
+                                                <th>Status Survey Lahan</th>
+                                                <th>Status Obstacle</th>
                                                 <th>Lampiran Legal</th>
                                                 <th>Status Legal</th>
                                                 <th>TC / NO</th>

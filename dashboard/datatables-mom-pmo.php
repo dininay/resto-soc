@@ -3,9 +3,8 @@
 include "../koneksi.php";
 
 // Query untuk mengambil data dari tabel land
-$sql = "SELECT * FROM draft";
+$sql = "SELECT * FROM mom";
 $result = $conn->query($sql);
-
 
 // Inisialisasi variabel $data dengan array kosong
 $data = [];
@@ -17,8 +16,8 @@ if ($result && $result->num_rows > 0) {
         $data[] = $row;
     }
 }
-
 ?>
+
 <!DOCTYPE html>
 <html lang="en" dir="">
 
@@ -33,6 +32,7 @@ if ($result && $result->num_rows > 0) {
     <link href="../dist-assets/css/plugins/datatables.min.css" rel="stylesheet"  />
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
 <body class="text-left">
@@ -48,7 +48,7 @@ if ($result && $result->num_rows > 0) {
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Datatables Analytics</h1>
+                    <h1>List MoM</h1>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
                 <!-- end of row-->
@@ -58,7 +58,7 @@ if ($result && $result->num_rows > 0) {
                             <div class="card-body">
                                 <h4 class="card-title mb-3"></h4>
 								<div class="footer-bottom float-right">
-									<p><a class="btn btn-primary btn-icon m-1" href="legal/draft-sewa-from.php">+ add Draft Sewa </a></p>
+									<p><a class="btn btn-primary btn-icon m-1" href="operation/mom-form.php">+ add MoM</a></p>
 									<p>
 									  <span class="flex-grow-1"></span></p>
 								</div>
@@ -67,35 +67,32 @@ if ($result && $result->num_rows > 0) {
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>Kode Lokasi</th>
-                                                <th>Nama Lokasi</th>
-                                                <th>Alamat Lokasi</th>
-                                                <th>Approval Owner</th>
-                                                <th>Start Date</th>
-                                                <th>Approval Legal</th>
-                                                <th>End Date</th>
-                                                <th>Lampiran Draft</th>
+                                                <th>Notes</th>
+                                                <th>Date</th>
+                                                <th>Updated By</th>
+                                                <th>Status</th>
+                                                <th>File</th>
 												<th>Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                         <?php foreach ($data as $row): ?>
-                                            <tr>
-                                                <td><?= $row['kode_lahan'] ?></td>
-                                                <td><?= $row['nama_lahan'] ?></td>
-                                                <td><?= $row['lokasi'] ?></td>
+                                        <tr>
+                                            <td><?= $row['notes'] ?></td>
+                                            <td><?= $row['date'] ?></td>
+                                            <td><?= $row['updated_by'] ?></td>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
-                                                        switch ($row['status_approvowner']) {
-                                                            case 'Approve':
+                                                        switch ($row['status']) {
+                                                            case 'New':
                                                                 $badge_color = 'success';
                                                                 break;
-                                                            case 'Pending':
+                                                            case 'Urgent':
                                                                 $badge_color = 'danger';
                                                                 break;
-                                                            case 'In Process':
+                                                            case 'Standard':
                                                                 $badge_color = 'warning';
                                                                 break;
                                                             default:
@@ -104,86 +101,78 @@ if ($result && $result->num_rows > 0) {
                                                         }
                                                     ?>
                                                     <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_approvowner']; ?>
+                                                        <?php echo $row['status']; ?>
                                                     </span>
                                                 </td>
-                                                <td><?= $row['start_date'] ?></td>
-                                                <td>
-                                                    <?php
-                                                        // Tentukan warna badge berdasarkan status approval owner
-                                                        $badge_color = '';
-                                                        switch ($row['status_approvlegal']) {
-                                                            case 'Approve':
-                                                                $badge_color = 'success';
-                                                                break;
-                                                            case 'Pending':
-                                                                $badge_color = 'danger';
-                                                                break;
-                                                            case 'In Process':
-                                                                $badge_color = 'warning';
-                                                                break;
-                                                            default:
-                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
-                                                                break;
-                                                        }
-                                                    ?>
-                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_approvlegal']; ?>
-                                                    </span>
-                                                </td>
-                                                <td><?= $row['end_date'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_draf_files = explode(",", $row['lamp_draf']); // Pisahkan nama file menjadi array
-                                                ?>
-
-                                                <td>
-                                                    <ul style="list-style-type: none; padding: 0; margin: 0;">
-                                                        <?php foreach ($lamp_draf_files as $file): ?>
-                                                            <li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="../uploads/<?= $file ?>" target="_blank">
-                                                                    <i class="icofont icofont-file-pdf"></i>
+                                                $file_files = explode(",", $row['file']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['file'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($file_files as $file) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $file . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
                                                                 </a>
-                                                            </li>
-                                                        <?php endforeach; ?>
-                                                    </ul>
-                                                </td>
-                                                <td>
-                                                    <a href="legal/draft-sewa-detail.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-info">
-                                                        <i class="nav-icon i-File-Text"></i> Detail
-                                                    </a>
-                                                    <a href="legal/draft-sewa-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
-                                                        <i class="nav-icon i-Pen-2"></i>
-                                                    </a>
-                                                    <?php
-                                                    // Periksa status dari $row['status_approvowner']
-                                                    if ($row['status_approvowner'] != "Approve") {
-                                                        // Jika status belum "Approve", tampilkan tautan edit
-                                                        echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" id="' . $row['id'] . '" onclick="setDelete(this)">';
-                                                        echo '<i class="nav-icon i-Close-Window"></i>';
-                                                        echo '</button>';
-                                                    } else {
-                                                        // Jika status sudah "Approve", tampilkan pesan atau tautan non-aktif
-                                                        echo '<button class="btn btn-sm btn-danger" disabled>';
-                                                        echo '<i class="nav-icon i-Close-Window"></i>';
-                                                        echo '</button>';
-                                                        // atau
-                                                        // echo 'Data sudah disetujui, tidak dapat diedit.';
+                                                            </li>';
                                                     }
-                                                    ?>
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>
+                                                
+                                                <td>
+                                                    <!-- Tombol Edit -->
+                                                        <button class="btn btn-sm btn-warning edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status'] ?>">
+                                                            <i class="nav-icon i-Pen-2"></i>
+                                                        </button>
                                                 </td>
+
+                                                <!-- Modal -->
+                                                <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+                                                    <div class="modal-dialog" role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="editModalLabel">Edit Status</h5>
+                                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <form id="statusForm" method="post" action="re/bussiness-plan-edit.php">
+                                                                    <input type="hidden" name="id" id="modalKodeLahan">
+                                                                    <div class="form-group">
+                                                                        <label for="statusSelect">Status Land</label>
+                                                                        <select class="form-control" id="statusSelect" name="status_land">
+                                                                            <option value="On Planning">On Planning</option>
+                                                                            <option value="Aktif">Aktif</option>
+                                                                            <option value="Reject">Reject</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <button type="submit" class="btn btn-primary">Save changes</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </tr>
+                                            
+                                        </tr>
                                         <?php endforeach; ?>
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>Kode Lokasi</th>
-                                                <th>Nama Lokasi</th>
-                                                <th>Alamat Lokasi</th>
-                                                <th>Approval Owner</th>
-                                                <th>Start Date</th>
-                                                <th>Approval Legal</th>
-                                                <th>End Date</th>
-                                                <th>Lampiran Draft</th>
+                                                <th>Notes</th>
+                                                <th>Date</th>
+                                                <th>Updated By</th>
+                                                <th>Status</th>
+                                                <th>File</th>
 												<th>Action</th>
                                             </tr>
                                         </tfoot>
@@ -203,7 +192,7 @@ if ($result && $result->num_rows > 0) {
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                                                    <form method="POST" action="draft-sewa-delete.php">
+                                                    <form method="POST" action="re/land-sourcing-delete.php">
                                                         <input type="hidden" name="id" id="delete" value="">
                                                         <button type="submit" class="btn btn-danger">Hapus</button>
                                                     </form>
@@ -240,7 +229,7 @@ if ($result && $result->num_rows > 0) {
     </div><!-- ============ Search UI Start ============= -->
     <div class="search-ui">
         <div class="search-header">
-            <img src="../dist-assets/images/logo.png" alt="" class="logo">
+            <img src="../../dist-assets/images/logo.png" alt="" class="logo">
             <button class="search-close btn btn-icon bg-transparent float-right mt-2">
                 <i class="i-Close-Window text-22 text-muted"></i>
             </button>
@@ -254,7 +243,7 @@ if ($result && $result->num_rows > 0) {
                 <div class="card o-hidden flex-row mb-4 d-flex">
                     <div class="list-thumb d-flex">
                         <!-- TUMBNAIL -->
-                        <img src="../dist-assets/images/products/headphone-1.jpg" alt="">
+                        <img src="../../dist-assets/images/products/headphone-1.jpg" alt="">
                     </div>
                     <div class="flex-grow-1 pl-2 d-flex">
                         <div class="card-body align-self-center d-flex flex-column justify-content-between align-items-lg-center flex-lg-row">
@@ -277,7 +266,7 @@ if ($result && $result->num_rows > 0) {
                 <div class="card o-hidden flex-row mb-4 d-flex">
                     <div class="list-thumb d-flex">
                         <!-- TUMBNAIL -->
-                        <img src="../dist-assets/images/products/headphone-2.jpg" alt="">
+                        <img src="../../dist-assets/images/products/headphone-2.jpg" alt="">
                     </div>
                     <div class="flex-grow-1 pl-2 d-flex">
                         <div class="card-body align-self-center d-flex flex-column justify-content-between align-items-lg-center flex-lg-row">
@@ -300,7 +289,7 @@ if ($result && $result->num_rows > 0) {
                 <div class="card o-hidden flex-row mb-4 d-flex">
                     <div class="list-thumb d-flex">
                         <!-- TUMBNAIL -->
-                        <img src="../dist-assets/images/products/headphone-3.jpg" alt="">
+                        <img src="../../dist-assets/images/products/headphone-3.jpg" alt="">
                     </div>
                     <div class="flex-grow-1 pl-2 d-flex">
                         <div class="card-body align-self-center d-flex flex-column justify-content-between align-items-lg-center flex-lg-row">
@@ -323,7 +312,7 @@ if ($result && $result->num_rows > 0) {
                 <div class="card o-hidden flex-row mb-4 d-flex">
                     <div class="list-thumb d-flex">
                         <!-- TUMBNAIL -->
-                        <img src="../dist-assets/images/products/headphone-4.jpg" alt="">
+                        <img src="../../dist-assets/images/products/headphone-4.jpg" alt="">
                     </div>
                     <div class="flex-grow-1 pl-2 d-flex">
                         <div class="card-body align-self-center d-flex flex-column justify-content-between align-items-lg-center flex-lg-row">
@@ -406,6 +395,19 @@ if ($result && $result->num_rows > 0) {
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
+    <script>
+    // JavaScript to handle opening the modal and setting form values
+    $('#editModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); // Button that triggered the modal
+        var kodeLahan = button.data('id'); // Extract info from data-* attributes
+        var status = button.data('status'); // Extract status
+
+        // Update the modal's content.
+        var modal = $(this);
+        modal.find('#modalKodeLahan').val(kodeLahan);
+        modal.find('#statusSelect').val(status);
+    });
+</script>
     <script>
         // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
         function setDelete(element) {

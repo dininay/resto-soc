@@ -1,36 +1,4 @@
-<?php
-// Koneksi ke database
-include "../koneksi.php";
-
-// Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["status_kom"])) {
-    $id = $_POST["id"];
-    $status_kom = $_POST["status_kom"];
-
-    // Mulai transaksi
-    $conn->begin_transaction();
-
-    try {
-        // Query untuk memperbarui status_kom berdasarkan id
-        $sql_update = "UPDATE resto SET status_kom = ?, kom_date = ? WHERE id = ?";
-        $stmt_update = $conn->prepare($sql_update);
-
-        // Menggunakan start_konstruksi untuk kom_date saat ini
-        $start_konstruksi = date("Y-m-d H:i:s");
-        $stmt_update->bind_param("ssi", $status_kom, $start_konstruksi, $id);
-
-        // Eksekusi query update
-        if ($stmt_update->execute() === TRUE) {
-            // Jika status_kom diubah menjadi Approve
-            if ($status_kom == 'Approve') {
-                // Ambil data dari tabel resto berdasarkan id yang diedit
-                $sql_get_data = "SELECT kode_lahan, start_konstruksi, gostore_date FROM resto WHERE id = ?";
-                $stmt_get_data = $conn->prepare($sql_get_data);
-                $stmt_get_data->bind_param("i", $id);
-                $stmt_get_data->execute();
-                $stmt_get_data->store_result();
-
-                if ($stmt_get_data->num_rows > 0) {
+if ($stmt_get_data->num_rows > 0) {
                     $stmt_get_data->bind_result($kode_lahan, $start_konstruksi, $gostore_date);
                     $stmt_get_data->fetch();
 
@@ -461,18 +429,3 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                     $conn->rollback();
                     echo "Error: Kode lahan tidak ditemukan untuk id $id.";
                 }
-            }
-        } else {
-            $conn->rollback();
-            echo "Error: " . $sql_update . "<br>" . $conn->error;
-        }
-        // Redirect ke halaman datatables-kom-sdgpk.php
-    header("Location: datatables-kom-sdgpk.php");
-    exit; // Pastikan tidak ada output lain setelah header redirect
-    } catch (Exception $e) {
-        $conn->rollback();
-        echo "Error: " . $e->getMessage();
-    }
-}
-
-?>

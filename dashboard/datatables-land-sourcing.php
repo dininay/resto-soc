@@ -66,12 +66,15 @@ if ($result && $result->num_rows > 0) {
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>Kode Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kota</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
 												<th>Luas Area</th>
                                                 <th>No Telepon</th>
+                                                <th>Maps</th>
+                                                <th>Latitude</th>
+                                                <th>Longitude</th>
                                                 <th>Lampiran</th>
 												<th>Action</th>
                                             </tr>
@@ -85,6 +88,9 @@ if ($result && $result->num_rows > 0) {
                                             <td><?= $row['lokasi'] ?></td>
                                             <td><?= $row['luas_area'] ?></td>
                                             <td><?= $row['no_tlp'] ?></td>
+                                            <td><?= $row['maps'] ?></td>
+                                            <td><?= $row['latitude'] ?></td>
+                                            <td><?= $row['longitude'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_loacd_files = explode(",", $row['lamp_land']); // Pisahkan nama file menjadi array
@@ -109,9 +115,11 @@ if ($result && $result->num_rows > 0) {
                                                 ?>
                                             <td>
                                             <!-- Tombol Edit -->
+                                            <?php if ($row['status_approvre'] != "Approve"): ?>
                                             <a href="re/land-sourcing-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
                                                 <i class="i-Pen-2"></i>
                                             </a>
+                                            <?php endif; ?>
                                                 <!-- Tombol Hapus -->
                                         <!-- <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" id="<?php echo $row['id']; ?>" onclick="setDelete(this)">
                                             <i class="nav-icon i-Close-Window"></i>
@@ -122,12 +130,15 @@ if ($result && $result->num_rows > 0) {
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>Kode Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kota</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
 												<th>Luas Area</th>
                                                 <th>No Telepon</th>
+                                                <th>Maps</th>
+                                                <th>Latitude</th>
+                                                <th>Longitude</th>
                                                 <th>Lampiran</th>
 												<th>Action</th>
                                             </tr>

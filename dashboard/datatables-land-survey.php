@@ -2,6 +2,7 @@
 // Koneksi ke database
 include "../koneksi.php";
 
+$status_survey = "";
 // Query untuk mengambil data dari tabel land
 $sql = "
 SELECT
@@ -11,8 +12,10 @@ land.nama_lahan,
 land.lokasi,
 dokumen_loacd.kode_store
 FROM sdg_desain
-INNER JOIN land ON sdg_desain.kode_lahan = land.kode_lahan
-INNER JOIN dokumen_loacd ON sdg_desain.kode_lahan = dokumen_loacd.kode_lahan";
+JOIN land ON sdg_desain.kode_lahan = land.kode_lahan
+JOIN dokumen_loacd ON sdg_desain.kode_lahan = dokumen_loacd.kode_lahan
+WHERE sdg_desain.status_survey IN ('Done', 'In Process', 'Pending')
+GROUP BY land.kode_lahan";
 $result = $conn->query($sql);
 
 
@@ -43,6 +46,13 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
+<style>
+    .hidden {
+        display: none;
+    }
+</style>
 </head>
 
 <body class="text-left">
@@ -58,7 +68,7 @@ if ($result && $result->num_rows > 0) {
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>List Data Obstacle Land</h1>
+                    <h1>Land Survey</h1>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
                 <!-- end of row-->
@@ -68,7 +78,7 @@ if ($result && $result->num_rows > 0) {
                             <div class="card-body">
                                 <h4 class="card-title mb-3"></h4>
 								<div class="footer-bottom float-right">
-                                <p><a class="btn btn-primary btn-icon m-1" href="sdg-design/obstacle-land-form.php">+ add Obstacle</a></p>
+                                <!-- <p><a class="btn btn-primary btn-icon m-1" href="sdg-design/obstacle-land-form.php">+ add Obstacle</a></p> -->
 									<p>
 									  <span class="flex-grow-1"></span></p>
 								</div>
@@ -77,17 +87,14 @@ if ($result && $result->num_rows > 0) {
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
-                                                <th>Obstacle</th>
-                                                <th>Note</th>
-                                                <th>Obstacle Date</th>
-												<th>Status SDG</th>
-                                                <th>Lampiran Legal</th>
-                                                <th>Obstacle Legal Date</th>
-                                                <th>Status Legal</th>
+                                                <th>Lampiran Survey</th>
+                                                <th>Survey Date</th>
+                                                <th>SLA</th>
+												<th>Status Survey</th>
                                                 <th>Action</th>
                                             </tr>
                                         </thead>
@@ -98,37 +105,17 @@ if ($result && $result->num_rows > 0) {
                                                 <td><?= $row['kode_store'] ?></td>
                                                 <td><?= $row['nama_lahan'] ?></td>
                                                 <td><?= $row['lokasi'] ?></td>
-                                                <td><?= $row['obstacle'] ?></td>
-                                                <td><?= $row['note'] ?></td>
-                                                <td><?= $row['obs_date'] ?></td>
-                                                <td>
-                                                    <?php
-                                                        // Tentukan warna badge berdasarkan status approval owner
-                                                        $badge_color = '';
-                                                        switch ($row['status_obssdg']) {
-                                                            case 'Diajukan':
-                                                                $badge_color = 'success';
-                                                                break;
-                                                            default:
-                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
-                                                                break;
-                                                        }
-                                                    ?>
-                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_obssdg']; ?>
-                                                    </span>
-                                                </td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_legal_files = explode(",", $row['lamp_legal']); // Pisahkan nama file menjadi array
+                                                $lamp_survey_files = explode(",", $row['lamp_survey']); // Pisahkan nama file menjadi array
                                                 // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_legal'])) {
+                                                if (!empty($row['lamp_survey'])) {
                                                     echo '<td>
                                                             <ul style="list-style-type: none; padding: 0; margin: 0;">';
                                                     // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_legal_files as $loacd) {
+                                                    foreach ($lamp_survey_files as $survey) {
                                                         echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $loacd . '" target="_blank">
+                                                                <a href="uploads/' . $survey . '" target="_blank">
                                                                     <i class="fas fa-file-pdf nav-icon"></i>
                                                                 </a>
                                                             </li>';
@@ -140,13 +127,48 @@ if ($result && $result->num_rows > 0) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>
-                                                <td><?= $row['obslegal_date'] ?></td>
+                                                <td><?= $row['survey_date'] ?></td>
+                                                <td>
+                                                    <?php
+                                                    // Mendapatkan tanggal sla_survey dari kolom data dan mengurangi 25 hari
+                                                    $sla_survey = new DateTime($row['sla_survey']);
+                                                    // $sla_survey->modify('-25 days');
+                                                    
+                                                    // Mendapatkan tanggal hari ini
+                                                    $today = new DateTime();
+                                                    
+                                                    // Menghitung selisih hari antara sla_survey dan hari ini
+                                                    $diff = $today->diff($sla_survey);
+                                                    
+                                                    // Jika status_approvowner adalah "Approve"
+                                                    if ($row['status_survey'] == "Done" ) {
+                                                        echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
+                                                        echo '<p>Status changed to Approved on: ' . $row['survey_date'] . '</p>';
+                                                    } else {
+                                                        // Menghitung jumlah hari terlambat
+                                                        $lateDays = $sla_survey->diff($today)->days;
+                                                        
+                                                        // Jika terlambat
+                                                        if ($today > $sla_survey) {
+                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+                                                        } else {
+                                                            // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
+                                                            if ($diff) {
+                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
+                                                            } else {
+                                                                // Tampilkan peringatan "H + X"
+                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
+                                                            }
+                                                        }
+                                                    }
+                                                    ?>
+                                                </td>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
-                                                        switch ($row['status_obslegal']) {
-                                                            case 'Approve':
+                                                        switch ($row['status_survey']) {
+                                                            case 'Done':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -161,35 +183,82 @@ if ($result && $result->num_rows > 0) {
                                                         }
                                                     ?>
                                                     <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_obslegal']; ?>
+                                                        <?php echo $row['status_survey']; ?>
                                                     </span>
                                                 </td>
                                                 <td>
                                                 <!-- Tombol Edit -->
                                                         <div>
-                                                            <?php if ($row['status_obslegal'] !== 'Done') : ?>
-                                                            <a href="sdg-design/obstacle-land-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                            <?php if ($row['status_survey'] !== 'Done') : ?>
+                                                            <a href="sdg-design/survey-land-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
                                                             <i class="i-Pen-2"></i>
                                                             </a>
-                                                            <?php endif; ?>
-                                                        </div>
+                                                            <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_survey'] ?>">
+                                                            <i class="nav-icon i-Book"></i>
+                                                        </button>
+                                                    <?php endif; ?>
                                                 </td>
+
+                                                <!-- Modal -->
+                                                <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+                                                    <div class="modal-dialog" role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="editModalLabel">Edit Status</h5>
+                                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <form id="statusForm" method="post" action="sdg-design/survey-land-process.php" enctype="multipart/form-data">
+                                                                    <input type="hidden" name="id" id="modalKodeLahan">
+                                                                    <div class="form-group">
+                                                                        <label for="statusSelect">Status Land Survey</label>
+                                                                        <select class="form-control" id="statusSelect" name="status_survey">
+                                                                            <option value="In Process">In Process</option>
+                                                                            <option value="Pending">Pending</option>
+                                                                            <option value="Done">Done</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div id="issueDetailSection" class="hidden">
+                                                                        <div class="form-group">
+                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="pic">PIC</label>
+                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                                                                        </div>
+                                                                    </div>
+                                                                    <button type="submit" class="btn btn-primary">Save changes</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </tr>
                                         <?php endforeach; ?>
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lokasi</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
-                                                <th>Obstacle</th>
-                                                <th>Note</th>
-                                                <th>Obstacle Date</th>
-												<th>Status SDG</th>
-                                                <th>Lampiran Legal</th>
-                                                <th>Obstacle Legal Date</th>
-                                                <th>Status Legal</th>
+                                                <th>Lampiran Survey</th>
+                                                <th>Survey Date</th>
+                                                <th>SLA</th>
+												<th>Status Survey</th>
                                                 <th>Action</th>
+                                            </tr>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -245,7 +314,7 @@ if ($result && $result->num_rows > 0) {
     </div><!-- ============ Search UI Start ============= -->
     <div class="search-ui">
         <div class="search-header">
-            <img src="../dist-assets/images/logo.png" alt="" class="logo">
+            <img src="../../dist-assets/images/logo.png" alt="" class="logo">
             <button class="search-close btn btn-icon bg-transparent float-right mt-2">
                 <i class="i-Close-Window text-22 text-muted"></i>
             </button>
@@ -259,7 +328,7 @@ if ($result && $result->num_rows > 0) {
                 <div class="card o-hidden flex-row mb-4 d-flex">
                     <div class="list-thumb d-flex">
                         <!-- TUMBNAIL -->
-                        <img src="../dist-assets/images/products/headphone-1.jpg" alt="">
+                        <img src="../../dist-assets/images/products/headphone-1.jpg" alt="">
                     </div>
                     <div class="flex-grow-1 pl-2 d-flex">
                         <div class="card-body align-self-center d-flex flex-column justify-content-between align-items-lg-center flex-lg-row">
@@ -282,7 +351,7 @@ if ($result && $result->num_rows > 0) {
                 <div class="card o-hidden flex-row mb-4 d-flex">
                     <div class="list-thumb d-flex">
                         <!-- TUMBNAIL -->
-                        <img src="../dist-assets/images/products/headphone-2.jpg" alt="">
+                        <img src="../../dist-assets/images/products/headphone-2.jpg" alt="">
                     </div>
                     <div class="flex-grow-1 pl-2 d-flex">
                         <div class="card-body align-self-center d-flex flex-column justify-content-between align-items-lg-center flex-lg-row">
@@ -305,7 +374,7 @@ if ($result && $result->num_rows > 0) {
                 <div class="card o-hidden flex-row mb-4 d-flex">
                     <div class="list-thumb d-flex">
                         <!-- TUMBNAIL -->
-                        <img src="../dist-assets/images/products/headphone-3.jpg" alt="">
+                        <img src="../../dist-assets/images/products/headphone-3.jpg" alt="">
                     </div>
                     <div class="flex-grow-1 pl-2 d-flex">
                         <div class="card-body align-self-center d-flex flex-column justify-content-between align-items-lg-center flex-lg-row">
@@ -328,7 +397,7 @@ if ($result && $result->num_rows > 0) {
                 <div class="card o-hidden flex-row mb-4 d-flex">
                     <div class="list-thumb d-flex">
                         <!-- TUMBNAIL -->
-                        <img src="../dist-assets/images/products/headphone-4.jpg" alt="">
+                        <img src="../../dist-assets/images/products/headphone-4.jpg" alt="">
                     </div>
                     <div class="flex-grow-1 pl-2 d-flex">
                         <div class="card-body align-self-center d-flex flex-column justify-content-between align-items-lg-center flex-lg-row">
@@ -411,6 +480,42 @@ if ($result && $result->num_rows > 0) {
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
+    <script>
+    $(document).ready(function(){
+        // Saat tombol edit diklik
+        $('.edit-btn').click(function(){
+            // Ambil data-id dari tombol edit
+            var id = $(this).data('id');
+
+            // Isi nilai input tersembunyi dengan ID yang diambil
+            $('#modalKodeLahan').val(id);
+        });
+    });
+    
+    // Function to toggle the visibility of issue detail section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
+        }
+    }
+
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function () {
+        toggleIssueDetail();
+    });
+</script>
+<?php if ($status_survey == 'Pending') { ?>
+    <script>
+        $(document).ready(function () {
+            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+        });
+    </script>
+<?php } ?>
     <script>
         // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
         function setDelete(element) {

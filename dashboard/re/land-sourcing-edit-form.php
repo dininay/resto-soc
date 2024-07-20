@@ -63,9 +63,9 @@ if(isset($_GET['id'])) {
                             <form method="post" action="land-sourcing-edit.php" enctype="multipart/form-data">
                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label" for="kode_lokasi">Kode Lokasi</label>
+                                    <label class="col-sm-2 col-form-label" for="kode_lokasi">Inventory Code</label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="kode_lokasi" name="kode_lahan" type="text" value="<?php echo $row['kode_lahan']; ?>" placeholder="Penanggungjawab" />
+                                        <input class="form-control" id="kode_lokasi" name="kode_lahan" type="text" value="<?php echo $row['kode_lahan']; ?>" placeholder="Penanggungjawab" readonly/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -127,7 +127,24 @@ if(isset($_GET['id'])) {
                                         </div>
                                     </div>
                                 </div>
-
+                                <div class="form-group row">
+                                    <label class="col-sm-2 col-form-label" for="maps">Link Maps</label>
+                                    <div class="col-sm-10">
+                                        <input class="form-control" id="maps" name="maps" type="text" value="<?php echo $row['maps']; ?>" placeholder="Link Maps" />
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-2 col-form-label" for="latitude">Latitude</label>
+                                    <div class="col-sm-10">
+                                        <input class="form-control" id="latitude" name="latitude" type="text" value="<?php echo $row['latitude']; ?>" placeholder="Latitude" />
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-2 col-form-label" for="longitude">Longitude</label>
+                                    <div class="col-sm-10">
+                                        <input class="form-control" id="longitude" name="longitude" type="text" value="<?php echo $row['longitude']; ?>" placeholder="Longitude" />
+                                    </div>
+                                </div>
                                 <div class="form-group row">
                                     <div class="col-sm-10">
                                         <button class="btn btn-primary" type="submit">Simpan</button>
