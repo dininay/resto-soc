@@ -649,7 +649,8 @@ $phaseQuery = "SELECT
     sdg_rab.start_date AS qs_start_date,
     procurement.start_date AS procur_start_date,
     resto.*,
-    summary_soc.*
+    summary_soc.*,
+    sdg_pk.consact_date
 FROM land
 JOIN re ON land.kode_lahan = re.kode_lahan
 JOIN dokumen_loacd ON land.kode_lahan = dokumen_loacd.kode_lahan
@@ -659,6 +660,7 @@ JOIN sdg_rab ON land.kode_lahan = sdg_rab.kode_lahan
 JOIN procurement ON land.kode_lahan = procurement.kode_lahan
 JOIN resto ON land.kode_lahan = resto.kode_lahan
 JOIN summary_soc ON land.kode_lahan = summary_soc.kode_lahan
+JOIN sdg_pk ON land.kode_lahan = sdg_pk.kode_lahan
 WHERE land.kode_lahan = '$kode_lahan'
 GROUP BY land.kode_lahan";
 $phaseResult = $conn->query($phaseQuery);
@@ -756,7 +758,7 @@ while ($row = $phaseResult->fetch_assoc()) {
     
     $phases[] = [
         'start' => $row['start_konstruksi'],
-        'end' => $row['end_konstruksi'],
+        'end' => $row['consact_date'],
         'phase_name' => 'Konstruksi'
     ];
     
@@ -815,111 +817,111 @@ $conn->close();
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
     <style>
-    body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-}
-.container {
-    width: 100%;
-    overflow: hidden;
-}
+        body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        }
+        .container {
+            width: 100%;
+            overflow: hidden;
+        }
 
-.scroll-container {
-    overflow-x: auto;
-    white-space: nowrap;
-    width: 100%;
-}
+        .scroll-container {
+            overflow-x: auto;
+            white-space: nowrap;
+            width: 100%;
+        }
 
-.timeline-header,
-.timeline-content {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-}
+        .timeline-header,
+        .timeline-content {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
 
-.timeline-header {
-    background: #f9f9f9;
-    border-bottom: 2px solid #ccc;
-    padding: 5px 0;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-}
+        .timeline-header {
+            background: #f9f9f9;
+            border-bottom: 2px solid #ccc;
+            padding: 5px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
 
-.timeline-header .phase,
-.timeline-header .phase-label,
-.timeline-header .day {
-    padding: 10px;
-    text-align: center;
-    border-right: 1px solid #ccc;
-    min-width: 100px; /* Width for day columns */
-    box-sizing: border-box;
-}
+        .timeline-header .phase,
+        .timeline-header .phase-label,
+        .timeline-header .day {
+            padding: 10px;
+            text-align: center;
+            border-right: 1px solid #ccc;
+            min-width: 100px; /* Width for day columns */
+            box-sizing: border-box;
+        }
 
-.timeline-header .phase {
-    width: 50px; /* Width for phase number column */
-    text-align: center;
-}
+        .timeline-header .phase {
+            width: 50px; /* Width for phase number column */
+            text-align: center;
+        }
 
-.timeline-header .phase-label {
-    width: 200px; /* Width for phase name column */
-    text-align: left;
-}
+        .timeline-header .phase-label {
+            width: 200px; /* Width for phase name column */
+            text-align: left;
+        }
 
-.timeline-content {
-    width: max-content;
-    display: flex;
-    flex-direction: column;
-}
+        .timeline-content {
+            width: max-content;
+            display: flex;
+            flex-direction: column;
+        }
 
-.timeline-row {
-    display: flex;
-    align-items: center;
-    border-bottom: 1px solid #ccc;
-    position: relative;
-    min-height: 60px; /* Height of each row */
-}
+        .timeline-row {
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #ccc;
+            position: relative;
+            min-height: 60px; /* Height of each row */
+        }
 
-.timeline-row:nth-child(even) {
-    background-color: #f2f2f2;
-}
+        .timeline-row:nth-child(even) {
+            background-color: #f2f2f2;
+        }
 
-.phase {
-    width: 50px; 
-    text-align: center;
-    border-right: 1px solid #ccc;
-}
+        .phase {
+            width: 50px; 
+            text-align: center;
+            border-right: 1px solid #ccc;
+        }
 
-.phase-label {
-    width: 150px; 
-    border-right: 1px solid #ccc;
-    text-align: center;
-}
+        .phase-label {
+            width: 150px; 
+            border-right: 1px solid #ccc;
+            text-align: center;
+        }
 
-.timeline {
-    display: flex;
-    flex-direction: row;
-    width: max-content;
-    position: relative;
-}
+        .timeline {
+            display: flex;
+            flex-direction: row;
+            width: max-content;
+            position: relative;
+        }
 
-.day {
-    min-width: 100px; /* Width of each day cell */
-    padding: 15px; /* Padding for better spacing */
-    text-align: center;
-    border-right: 1px solid #ccc;
-    position: relative;
-    box-sizing: border-box;
-}
+        .day {
+            min-width: 100px; /* Width of each day cell */
+            padding: 15px; /* Padding for better spacing */
+            text-align: center;
+            border-right: 1px solid #ccc;
+            position: relative;
+            box-sizing: border-box;
+        }
 
-.bar {
-    position: absolute;
-    top: 30px; /* Adjusted top position for bars */
-    height: 15px; /* Height of the bar */
-    background-color: #4CAF50;
-    z-index: 1;
-}
+        .bar {
+            position: absolute;
+            top: 30px; /* Adjusted top position for bars */
+            height: 15px; /* Height of the bar */
+            background-color: #4CAF50;
+            z-index: 1;
+        }
     </style>
 </head>
 
@@ -1016,52 +1018,49 @@ $conn->close();
                         </div>
                 </div>
                 <div class="row">
-                <div class="container">
-                    <div class="scroll-container">
-        <div class="timeline-header">
-            <div class="phase">No</div>
-            <div class="phase-label">Phase</div>
-            <?php foreach ($timeline as $day) : ?>
-                <div class="day"><?php echo $day; ?></div>
-            <?php endforeach; ?>
-        </div>
-        <div class="timeline-content">
-            <?php
+                    <div class="container">
+                        <div class="scroll-container">
+                            <div class="timeline-header">
+                                <div class="phase">No</div>
+                                <div class="phase-label">Phase</div>
+                                <?php foreach ($timeline as $day) : ?>
+                                    <div class="day"><?php echo $day; ?></div>
+                                <?php endforeach; ?>
+                            </div>
+                            <div class="timeline-content">
+                                <?php
+                                $phaseNumber = 1;
+                                foreach ($phases as $phase) {
+                                    $phaseName = isset($phase['phase_name']) ? $phase['phase_name'] : 'Unknown Phase';
 
-            $phaseNumber = 1;
-                foreach ($phases as $phase) {
-                    $phaseName = isset($phase['phase_name']) ? $phase['phase_name'] : 'Unknown Phase';
-                    
-                    $startDateIndex = array_search($phase['start'], $timeline);
-                    $endDateIndex = array_search($phase['end'], $timeline);
+                                    $startDateIndex = array_search($phase['start'], $timeline);
+                                    $endDateIndex = array_search($phase['end'], $timeline);
 
-                    // Calculate the indices for bars
-                    $startIndex = $startDateIndex !== false ? $startDateIndex : 0;
-                    $endIndex = $endDateIndex !== false ? $endDateIndex : count($timeline) - 1;
+                                    // Calculate the indices for bars
+                                    $startIndex = $startDateIndex !== false ? $startDateIndex : -1;
+                                    $endIndex = $endDateIndex !== false ? $endDateIndex : -1;
 
-                    // Calculate bar width and position
-                    $barWidth = ($endIndex - $startIndex + 1) * 100; // Adjust width if needed
-                    $barLeft = $startIndex * 100; // Adjust left position if needed
-
-                    echo '<div class="timeline-row">';
-                    echo '<div class="phase">' . $phaseNumber . '</div>';
-                    echo '<div class="phase-label">' . $phaseName . '</div>';
-                    echo '<div class="timeline">';
-                    foreach ($timeline as $index => $day) {
-                        echo '<div class="day">';
-                        if ($index >= $startIndex && $index <= $endIndex) {
-                            echo '<div class="bar" style="width: ' . $barWidth . 'px; left: ' . $barLeft . 'px;"></div>';
-                        }
-                        echo '</div>';
-                    }
-                    echo '</div>';
-                    echo '</div>';
-                    $phaseNumber++;
-                }
-                ?>
-        </div>
+                                    echo '<div class="timeline-row">';
+                                    echo '<div class="phase">' . $phaseNumber . '</div>';
+                                    echo '<div class="phase-label">' . $phaseName . '</div>';
+                                    echo '<div class="timeline">';
+                                    foreach ($timeline as $index => $day) {
+                                        echo '<div class="day">';
+                                        if ($startIndex != -1 && $endIndex != -1 && $index >= $startIndex && $index <= $endIndex) {
+                                            $barWidth = ($endIndex - $startIndex + 1) * 100; // Adjust width if needed
+                                            $barLeft = $startIndex * 100; // Adjust left position if needed
+                                            echo '<div class="bar" style="width: ' . $barWidth . 'px; left: ' . $barLeft . 'px;"></div>';
+                                        }
+                                        echo '</div>';
+                                    }
+                                    echo '</div>';
+                                    echo '</div>';
+                                    $phaseNumber++;
+                                }
+                                ?>
+                            </div>
+                        </div>
                     </div>
-                </div>
                 </div>
 
                 
