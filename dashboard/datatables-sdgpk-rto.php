@@ -218,7 +218,7 @@ if ($result && $result->num_rows > 0) {
                                                 <td>
                                                 <!-- Tombol Edit -->
                                                 <?php if ($row['status_sdg'] != "Approve"): ?>
-                                                        <a href="sdg-pk/sdgpk-rto-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                        <a href="sdg-pk/sdgpk-rto-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>
                                                     <?php endif; ?>

@@ -175,6 +175,9 @@ if ($result && $result->num_rows > 0) {
                                                             case 'In Process':
                                                                 $badge_color = 'warning';
                                                                 break;
+                                                            case 'In Design Revision':
+                                                                $badge_color = 'primary';
+                                                                break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
                                                                 break;

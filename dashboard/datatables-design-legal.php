@@ -82,6 +82,7 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Confirm SDG</th>
                                                 <th>Lampiran Legal</th>
                                                 <th>Approve Legal</th>
+                                                <th>SLA Legal</th>
                                                 <th>Action</th>
                                             </tr>
                                         </thead>
@@ -184,6 +185,41 @@ if ($result && $result->num_rows > 0) {
                                                     </span>
                                                 </td>
                                                 <td>
+                                                    <?php
+                                                    // Mendapatkan tanggal sla_survey dari kolom data dan mengurangi 25 hari
+                                                    $sla_survey = new DateTime($row['sla_obslegal']);
+                                                    // $sla_survey->modify('-25 days');
+                                                    
+                                                    // Mendapatkan tanggal hari ini
+                                                    $today = new DateTime();
+                                                    
+                                                    // Menghitung selisih hari antara sla_survey dan hari ini
+                                                    $diff = $today->diff($sla_survey);
+                                                    
+                                                    // Jika status_approvowner adalah "Approve"
+                                                    if ($row['status_obslegal'] == "Done" ) {
+                                                        echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
+                                                        echo '<p>Status changed to Approved on: ' . $row['obslegal_date'] . '</p>';
+                                                    } else {
+                                                        // Menghitung jumlah hari terlambat
+                                                        $lateDays = $sla_survey->diff($today)->days;
+                                                        
+                                                        // Jika terlambat
+                                                        if ($today > $sla_survey) {
+                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+                                                        } else {
+                                                            // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
+                                                            if ($diff) {
+                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
+                                                            } else {
+                                                                // Tampilkan peringatan "H + X"
+                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
+                                                            }
+                                                        }
+                                                    }
+                                                    ?>
+                                                </td>
+                                                <td>
                                                     <!-- Tombol Edit -->
                                                     <?php if ($row['status_obslegal'] != "Done"): ?>
                                                             <a href="legal/obstacle-legal-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
@@ -256,6 +292,7 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Confirm SDG</th>
                                                 <th>Lampiran Legal</th>
                                                 <th>Approve Legal</th>
+                                                <th>SLA Legal</th>
                                                 <th>Action</th>
                                             </tr>
                                         </tfoot>

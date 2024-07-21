@@ -19,7 +19,18 @@ SELECT
     land.kode_lahan, 
     land.nama_lahan, 
     land.lokasi, 
-    resto.nama_store
+    resto.nama_store,
+    socdate_it.catatan_it,
+    socdate_it.catatan_config,
+    socdate_marketing.catatan_marketing,
+    socdate_legal.catatan_legal,
+    socdate_sdg.catatan_sdg,
+    socdate_fat.catatan_fat,
+    socdate_hr.catatan_tm,
+    socdate_hr.catatan_hot,
+    socdate_hr.catatan_ff1,
+    socdate_hr.catatan_ff2,
+    socdate_hr.catatan_ff3
 FROM soc_fat 
 INNER JOIN soc_hrga ON soc_fat.kode_lahan = soc_hrga.kode_lahan
 INNER JOIN soc_it ON soc_fat.kode_lahan = soc_it.kode_lahan
@@ -32,7 +43,13 @@ INNER JOIN note_legal ON soc_fat.kode_lahan = note_legal.kode_lahan
 INNER JOIN doc_legal ON note_legal.kode_lahan = doc_legal.kode_lahan
 INNER JOIN sign ON soc_fat.kode_lahan = sign.kode_lahan
 INNER JOIN land ON soc_fat.kode_lahan = land.kode_lahan
-INNER JOIN resto ON soc_fat.kode_lahan = resto.kode_lahan";
+INNER JOIN resto ON soc_fat.kode_lahan = resto.kode_lahan
+INNER JOIN socdate_it ON soc_fat.kode_lahan = socdate_it.kode_lahan
+INNER JOIN socdate_legal ON soc_fat.kode_lahan = socdate_legal.kode_lahan
+INNER JOIN socdate_marketing ON soc_fat.kode_lahan = socdate_marketing.kode_lahan
+INNER JOIN socdate_fat ON soc_fat.kode_lahan = socdate_fat.kode_lahan
+INNER JOIN socdate_sdg ON soc_fat.kode_lahan = socdate_sdg.kode_lahan
+INNER JOIN socdate_hr ON soc_fat.kode_lahan = socdate_hr.kode_lahan";
 $result = $conn->query($sql);
 
 $data = [];
@@ -44,6 +61,8 @@ $failedRTOFailedGO = 0;
 
 // Process each row and categorize based on total score
 while ($row = $result->fetch_assoc()) {
+    
+    $data[] = $row;
     $total1 = rtrim(50 * number_format(($row['bangunan_mural'] + $row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) / 6, 2) / 100, '0') . (number_format(50 * (($row['bangunan_mural'] + $row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) / 6 / 100), 2)[strlen(number_format(50 * (($row['bangunan_mural'] + $row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) / 6 / 100), 2)) - 1] == '.' ? '0' : '');
     $total2 = rtrim(25 * number_format(($row['perijinan'] + $row['sampah_parkir'] + $row['akses_jkm'] + $row['pkl']) / 4, 2) / 100, '0') . (number_format(25 * (($row['perijinan'] + $row['sampah_parkir'] + $row['akses_jkm'] + $row['pkl']) / 4 / 100), 2)[strlen(number_format(25 * (($row['perijinan'] + $row['sampah_parkir'] + $row['akses_jkm'] + $row['pkl']) / 4 / 100), 2)) - 1] == '.' ? '0' : '');
     $total3 = rtrim(6 * number_format(($row['cctv'] + $row['audio_system'] + $row['lan_infra'] + $row['internet_cust'] + $row['internet_km']) / 5, 2) / 100, '0') . (number_format(6 * (($row['cctv'] + $row['audio_system'] + $row['lan_infra'] + $row['internet_cust'] + $row['internet_km']) / 5 / 100), 2)[strlen(number_format(6 * (($row['cctv'] + $row['audio_system'] + $row['lan_infra'] + $row['internet_cust'] + $row['internet_km']) / 5 / 100), 2)) - 1] == '.' ? '0' : '');
@@ -61,6 +80,8 @@ while ($row = $result->fetch_assoc()) {
         $failedRTOFailedGO++;
     }
 }
+
+$no = 1;
 
 $schedule = [];
 // Ambil data dari tabel resto
@@ -221,6 +242,77 @@ $averageScoresJSON = json_encode(array_values($averageScores));
                         </div>
                     </div>
                 </div>
+                
+                <div class="row">
+                    <div class="col-lg-12 col-md-12">
+                        <!-- <div class="row">
+                            <div class="col-lg-6 col-md-12">
+                                <div class="card card-chart-bottom o-hidden mb-4">
+                                    <div class="card-body">
+                                        <div class="text-muted">Last Month Sales</div>
+                                        <p class="mb-4 text-primary text-24">$40250</p>
+                                    </div>
+                                    <div id="echart1" style="height: 260px;"></div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-md-12">
+                                <div class="card card-chart-bottom o-hidden mb-4">
+                                    <div class="card-body">
+                                        <div class="text-muted">Last Week Sales</div>
+                                        <p class="mb-4 text-warning text-24">$10250</p>
+                                    </div>
+                                    <div id="echart2" style="height: 260px;"></div>
+                                </div>
+                            </div>
+                        </div> -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card o-hidden mb-4">
+                                    <div class="card-header d-flex align-items-center border-0">
+                                        <h3 class="w-50 float-left card-title m-0">Note Feedback RTO</h3>
+                                        <!-- <div class="dropdown dropleft text-right w-50 float-right">
+                                            <button class="btn bg-gray-100" id="dropdownMenuButton1" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="nav-icon i-Gear-2"></i></button>
+                                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton1"><a class="dropdown-item" href="#">Add new user</a><a class="dropdown-item" href="#">View All users</a><a class="dropdown-item" href="#">Something else here</a></div>
+                                        </div> -->
+                                    </div>
+                                    <div>
+                                        <div class="table-responsive">
+                                            <table class="table text-center" id="user_table">
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col">No</th>
+                                                        <th scope="col">Inventory Code</th>
+                                                        <th scope="col">SDG</th>
+                                                        <th scope="col">Legal</th>
+                                                        <th scope="col">IT</th>
+                                                        <th scope="col">HRGA</th>
+                                                        <th scope="col">Marketing</th>
+                                                        <th scope="col">TAF</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                <?php foreach ($data as $row): ?>
+                                                    <tr>
+                                                        <th scope="row"><?php echo $no++ ?></th>
+                                                        <td><?php echo $row ['kode_lahan']?></td>
+                                                        <td><?php echo $row ['catatan_sdg']?></td>
+                                                        <td><?php echo $row ['catatan_legal']?></td>
+                                                        <td><?php echo nl2br($row['catatan_it'] . "\n" . $row['catatan_config']) ?></td>
+                                                        <td><?php echo nl2br($row['catatan_tm'] . "\n" . $row['catatan_hot'] . "\n" . $row['catatan_ff1'] . "\n" . $row['catatan_ff2'] . "\n" . $row['catatan_ff3']) ?></td>
+                                                        <td><?php echo $row ['catatan_marketing']?></td>
+                                                        <td><?php echo $row ['catatan_fat']?></td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="row">
                     <div class="col-lg-6 col-md-12">
                         <!-- <div class="row">
@@ -679,12 +771,19 @@ $averageScoresJSON = json_encode(array_values($averageScores));
 
     var option = {
         title: {
-            text: 'Average Score All Dept vs. Month'
+            text: ''
         },
         tooltip: {
             trigger: 'axis',
             axisPointer: {
                 type: 'shadow'
+            },
+            formatter: function (params) {
+                var tooltipContent = params[0].name + '<br/>';
+                params.forEach(function (item) {
+                    tooltipContent += item.seriesName + ': ' + item.data + '%<br/>';
+                });
+                return tooltipContent;
             }
         },
         xAxis: {
@@ -692,7 +791,10 @@ $averageScoresJSON = json_encode(array_values($averageScores));
             data: months
         },
         yAxis: {
-            type: 'value'
+            type: 'value',
+            axisLabel: {
+                formatter: '{value} %'
+            }
         },
         series: [{
             name: 'Average Score',

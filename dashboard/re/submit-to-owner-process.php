@@ -176,6 +176,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 // Komit transaksi
                 $conn->commit();
                 echo "Status berhasil diperbarui dan data ditahan.";
+            } elseif ($status_approvre == 'Reject') {
+                // Ambil kode lahan sebelum menghapus dari tabel re
+                $sql = "SELECT kode_lahan FROM land WHERE kode_lahan = ?";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("s", $kode_lahan);
+                $stmt->execute();
+                $stmt->bind_result($kode_lahan);
+                $stmt->fetch();
+                $stmt->close();
+        
+                // Mulai transaksi
+                $conn->begin_transaction();
+        
+                try {
+                    // // Hapus data dari tabel re berdasarkan kode_lahan
+                    // $sql = "DELETE FROM re WHERE kode_lahan = ?";
+                    // $stmt = $conn->prepare($sql);
+                    // $stmt->bind_param("s", $kode_lahan);
+                    // $stmt->execute();
+        
+                    // Perbarui status_land menjadi Reject pada tabel land berdasarkan kode lahan
+                    $sql = "UPDATE land SET status_land = 'Reject' WHERE id = ?";
+                    $stmt = $conn->prepare($sql);
+                    $stmt->bind_param("i", $id);
+                    $stmt->execute();
+        
+                    // Komit transaksi
+                    $conn->commit();
+                    echo "Data berhasil dihapus dan status berhasil diperbarui.";
+                } catch (Exception $e) {
+                    // Rollback transaksi jika terjadi kesalahan
+                    $conn->rollback();
+                    echo "Error: " . $e->getMessage();
+                }
             } else {
                 // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_$status_obssdg
                 $sql = "UPDATE land SET status_approvre = ?, re_date = ? WHERE id = ?";

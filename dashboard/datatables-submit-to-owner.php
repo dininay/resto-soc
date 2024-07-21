@@ -207,45 +207,46 @@ if ($result && $result->num_rows > 0) {
 
                                                 <!-- Modal -->
                                                 <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editModalLabel">Edit Status</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="statusForm" method="post" action="re/submit-to-owner-process.php" enctype="multipart/form-data">
-                    <input type="hidden" name="id" value="<?=$row["id"]?>" id="modalKodeLahan">
-                    <div class="form-group">
-                        <label for="statusSelect">Status Approve RE</label>
-                        <select class="form-control" id="statusSelect" name="status_approvre">
-                            <option value="In Process">In Process</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Approve">Approve</option>
-                        </select>
-                    </div>
-                    <div id="issueDetailSection" class="hidden">
-                        <div class="form-group">
-                            <label for="issue_detail">Issue Detail</label>
-                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="pic">PIC</label>
-                            <textarea class="form-control" id="pic" name="pic"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="action_plan">Action Plan</label>
-                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="kronologi">Upload File Kronologi</label>
-                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Save changes</button>
-                </form>
+                                                    <div class="modal-dialog" role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="editModalLabel">Edit Status</h5>
+                                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <form id="statusForm" method="post" action="re/submit-to-owner-process.php" enctype="multipart/form-data">
+                                                                    <input type="hidden" name="id" value="<?=$row["id"]?>" id="modalKodeLahan">
+                                                                    <div class="form-group">
+                                                                        <label for="statusSelect">Status Approve RE</label>
+                                                                        <select class="form-control" id="statusSelect" name="status_approvre">
+                                                                            <option value="In Process">In Process</option>
+                                                                            <option value="Pending">Pending</option>
+                                                                            <option value="Approve">Approve</option>
+                                                                            <option value="Reject">Reject</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div id="issueDetailSection" class="hidden">
+                                                                        <div class="form-group">
+                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="pic">PIC</label>
+                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                                                                        </div>
+                                                                    </div>
+                                                                    <button type="submit" class="btn btn-primary">Save changes</button>
+                                                                </form>
                                                             </div>
                                                         </div>
                                                     </div>

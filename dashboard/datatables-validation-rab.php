@@ -157,6 +157,9 @@ if ($result && $result->num_rows > 0) {
                                                             case 'In Process':
                                                                 $badge_color = 'warning';
                                                                 break;
+                                                                case 'In Design Revision':
+                                                                    $badge_color = 'primary';
+                                                                    break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
                                                                 break;
@@ -228,6 +231,7 @@ if ($result && $result->num_rows > 0) {
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
                                                                             <option value="Approve">Approve</option>
+                                                                            <option value="In Design Revision">In Design Revision</option>
                                                                         </select>
                                                                     </div>
                                                                     <div class="form-group">

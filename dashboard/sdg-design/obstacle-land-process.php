@@ -130,10 +130,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 echo "Error: " . $e->getMessage();
             }
         } elseif ($status_obssdg == 'Diajukan') {
-            // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_$status_obssdg
-            $sql = "UPDATE sdg_desain SET status_obssdg = ?, obs_date = ?, sla_date = ?, confirm_sdgdesain = ? WHERE id = ?";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("sssi", $status_obssdg, $obs_date, $slavd_date, $confirm_sdgdesain, $id);
+            $start_date = date("Y-m-d H:i:s");
+                // Ambil kode_lahan dari tabel sdg_desain
+                $sql_get_kode_lahan = "SELECT kode_lahan FROM sdg_desain WHERE id = ?";
+                $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+                $stmt_get_kode_lahan->bind_param("i", $id);
+                $stmt_get_kode_lahan->execute();
+                $stmt_get_kode_lahan->bind_result($kode_lahan);
+                $stmt_get_kode_lahan->fetch();
+                $stmt_get_kode_lahan->free_result();
+
+                // Ambil kode_lahan dari tabel sdg_desain
+                $sql_get_kode_lahan = "SELECT slaloa_date FROM dokumen_loacd WHERE kode_lahan = ?";
+                $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+                $stmt_get_kode_lahan->bind_param("s", $kode_lahan);
+                $stmt_get_kode_lahan->execute();
+                $stmt_get_kode_lahan->bind_result($slaloa_date);
+                $stmt_get_kode_lahan->fetch();
+                $stmt_get_kode_lahan->free_result();
+
+                // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_$status_obssdg
+                $sql = "UPDATE sdg_desain SET status_obssdg = ?, obs_date = ?, sla_date = ?, confirm_sdgdesain = ?, status_obslegal = ?, sla_obslegal = ? WHERE id = ?";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("sssssi", $status_obssdg, $obs_date, $slavd_date, $confirm_sdgdesain, $status_obslegal, $slaloa_date, $id);
         
             // Eksekusi query
             if ($stmt->execute() === TRUE) {
