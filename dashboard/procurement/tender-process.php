@@ -13,6 +13,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
     $submit_legal = null;
     $obstacle = null;
     $kronologi = null;
+    $start_date = date("Y-m-d");
 
     // Periksa apakah file kronologi ada dalam $_FILES
     if (isset($_FILES["kronologi"])) {
@@ -47,7 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
         // Eksekusi query update
         if ($stmt_update->execute() === TRUE) {
             // Jika status_approvprocurement diubah menjadi 'Approve'
-            if ($status_approvprocurement == 'Approve') {
+            if ($status_approvprocurement == 'Signed') {
                 // Tentukan start_date
                 $sql_subquery = "SELECT nama_vendor, start_date FROM procurement WHERE id = ?";
                 $stmt_subquery = $conn->prepare($sql_subquery);
@@ -75,18 +76,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
 
                         // Tentukan sla_spk
                         $sla_spk = date("Y-m-d", strtotime("$start_date + $hari_sla days"));
+                        $sla_fattender = date("Y-m-d", strtotime("$start_date + $hari_sla days"));
                         echo "SLA SPK: $sla_spk<br>";
-
-                        // Update sla_spk dan status_spk di tabel resto
-                        $sql_update_spk = "UPDATE resto SET sla_spk = ?, status_spk = 'In Process' WHERE kode_lahan = (SELECT kode_lahan FROM procurement WHERE id = ?)";
-                        $stmt_update_spk = $conn->prepare($sql_update_spk);
-                        $stmt_update_spk->bind_param("si", $sla_spk, $id);
-                        $stmt_update_spk->execute();
                     } else {
                         // Rollback transaksi jika data SLA tidak ditemukan
                         $conn->rollback();
                         echo "Error: Data SLA tidak ditemukan untuk divisi SPK.";
                     }
+
+                    
+                // Query untuk memperbarui submit_legal dan catatan_owner di tabel procurement
+                $sql_update_pending = "UPDATE procurement SET status_approvprocurement = ?, catatan_proc = ?, start_date = ? WHERE id = ?";
+                $stmt_update_pending = $conn->prepare($sql_update_pending);
+                $stmt_update_pending->bind_param("sssi", $status_approvprocurement, $catatan_proc, $start_date, $id);
+                $stmt_update_pending->execute();
+                    
+                        // Update sla_spk dan status_spk di tabel resto
+                        $sql_update_spk = "UPDATE resto SET sla_spk = ?, status_spk = 'In Process' WHERE kode_lahan = (SELECT kode_lahan FROM procurement WHERE id = ?)";
+                        $stmt_update_spk = $conn->prepare($sql_update_spk);
+                        $stmt_update_spk->bind_param("si", $sla_spk, $id);
+                        $stmt_update_spk->execute();
                 }
                 // Periksa apakah kode_lahan ada di tabel hold_project
                 $sql_check_hold = "SELECT kode_lahan FROM hold_project WHERE kode_lahan = (SELECT kode_lahan FROM procurement WHERE id = ?)";
@@ -135,10 +144,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                 $conn->commit();
                 echo "Status berhasil diperbarui dan data ditahan.";
             } else {
-                // Jika status tidak diubah menjadi Approve atau Pending, hanya perlu memperbarui status_approvprocurement
-                $sql_update_other = "UPDATE procurement SET status_approvprocurement = ?, catatan_proc = ?, start_date = ? WHERE id = ?";
-                $stmt_update_other = $conn->prepare($sql_update_other);
-                $stmt_update_other->bind_param("sssi", $status_approvprocurement, $catatan_proc, $start_date, $id);
+                
+                    // Ambil SLA dari tabel master_sla untuk divisi ST-Konstruksi
+                    $sql_sla_stkonstruksi = "SELECT sla FROM master_sla WHERE divisi = 'Review PSM TAF'";
+                    $result_sla_stkonstruksi = $conn->query($sql_sla_stkonstruksi);
+                    if ($result_sla_stkonstruksi->num_rows > 0) {
+                        $row_sla_stkonstruksi = $result_sla_stkonstruksi->fetch_assoc();
+                        $hari_sla_stkonstruksi = $row_sla_stkonstruksi['sla'];
+                        $sla_fat = date("Y-m-d", strtotime($start_date . ' + ' . $hari_sla_stkonstruksi . ' days'));
+                    } else {
+                        $conn->rollback();
+                        echo "Error: Data SLA tidak ditemukan untuk divisi ST-Konstruksi.";
+                        exit;
+                    }
+                    // Jika status tidak diubah menjadi Approve atau Pending, hanya perlu memperbarui status_approvprocurement
+                    $sql_update_other = "UPDATE procurement SET status_approvprocurement = ?, catatan_proc = ?, start_date = ? WHERE id = ?";
+                    $stmt_update_other = $conn->prepare($sql_update_other);
+                    $stmt_update_other->bind_param("sssi", $status_approvprocurement, $catatan_proc, $start_date, $id);
+                
+                        // Update sla_spk dan status_spk di tabel resto
+                        $sql_update_spk = "UPDATE resto SET status_fat = 'In Process', sla_fat WHERE kode_lahan = (SELECT kode_lahan FROM procurement WHERE id = ?)";
+                        $stmt_update_spk = $conn->prepare($sql_update_spk);
+                        $stmt_update_spk->bind_param("si", $sla_fat, $id);
+                        $stmt_update_spk->execute();
 
                 // Eksekusi query
                 if ($stmt_update_other->execute() === TRUE) {

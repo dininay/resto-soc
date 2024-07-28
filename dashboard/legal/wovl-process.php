@@ -103,6 +103,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             // Komit transaksi
             $conn->commit();
             echo "Status berhasil diperbarui dan data ditahan.";
+        } elseif ($status_vl == 'In Revision') {
+            
+            // Ambil kode_lahan dari tabel re
+            $sql_get_kode_lahan = "SELECT kode_lahan FROM re WHERE id = ?";
+            $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+            $stmt_get_kode_lahan->bind_param("i", $id);
+            $stmt_get_kode_lahan->execute();
+            $stmt_get_kode_lahan->bind_result($kode_lahan);
+            $stmt_get_kode_lahan->fetch();
+            $stmt_get_kode_lahan->free_result();
+
+            // Query untuk memperbarui status_vl, vl_date di tabel re dan memasukkan data ke dalam tabel hold_project
+            $sql_update_re = "UPDATE re SET status_vl = ?, catatan_vl = ?, vl_date = ? WHERE id = ?";
+            $stmt_update_re = $conn->prepare($sql_update_re);
+            $stmt_update_re->bind_param("sssi", $status_vl, $catatan_vl, $vl_date, $id);
+            $stmt_update_re->execute();
+            
+            // Komit transaksi
+            $conn->commit();
+            echo "Status berhasil diperbarui dan data ditahan.";
         } elseif ($status_vl == 'Reject') {
             // Ambil kode lahan sebelum menghapus dari tabel re
             $sql = "SELECT kode_lahan FROM re WHERE kode_lahan = ?";

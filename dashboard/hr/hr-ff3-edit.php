@@ -8,6 +8,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Ambil nilai tgl_berlaku dan penanggungjawab dari formulir
     $id = $_POST['id'];
     $ff_3 = $_POST['ff_3'];
+    $persenff_3 = $_POST['persenff_3'];
     // Periksa apakah kunci 'lampiran' ada dalam $_FILES
     $lamp_ff3 = "";
 
@@ -34,7 +35,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Update data di database
-    $sql = "UPDATE socdate_hr SET lamp_ff3 = '$lamp_ff3', ff_3 = '$ff_3' WHERE id = '$id'";
+    $sql = "UPDATE socdate_hr SET lamp_ff3 = '$lamp_ff3', persen_ff3 = '$persen_ff3', ff_3 = '$ff_3' WHERE id = '$id'";
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
         header("Location: " . $base_url . "/datatables-hr-fulfillment-3.php");

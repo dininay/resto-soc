@@ -52,12 +52,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             $sla_fat_obj->modify("+$sla_days_fat days");
             $sla_fat = $sla_fat_obj->format("Y-m-d");
 
-            if ($status_spk == 'Approve') {
+            if ($status_spk == 'Signed') {
                 // Query untuk memperbarui status_spk dan spk_date berdasarkan id
-                $sql_update = "UPDATE resto SET status_spk = ?, spk_date = ?, sla_fat = ?, status_fat = ?, status_legalizin = ?, status_gostore = ? WHERE id = ?";
+                $sql_update = "UPDATE resto SET status_spk = ?, spk_date = ?, status_legalizin = ?, status_gostore = ? WHERE id = ?";
                 $stmt_update = $conn->prepare($sql_update);
                 $status_gostore = 'In Process';
-                $stmt_update->bind_param("sssssi", $status_spk, $spk_date, $sla_fat, $status_fat, $status_legalizin, $status_gostore, $id);
+                $stmt_update->bind_param("ssssi", $status_spk, $spk_date, $status_legalizin, $status_gostore, $id);
                 $stmt_update->execute();
 
                 // Update status_kom di tabel resto menjadi "In Process"
@@ -113,11 +113,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 $conn->commit();
                 echo "Status berhasil diperbarui dan data ditahan.";
             } else {
-                // Jika status tidak diubah menjadi Approve atau Pending, hanya perlu memperbarui status_spk
-                $sql_update_other = "UPDATE resto SET status_spk = ?, spk_date = ? WHERE id = ?";
-                $stmt_update_other = $conn->prepare($sql_update_other);
-                $stmt_update_other->bind_param("ssi", $status_spk, $spk_date, $id);
-                $stmt_update_other->execute();
+                 // Ambil SLA dari tabel master_sla untuk divisi ST-Konstruksi
+                 $sql_sla_stkonstruksi = "SELECT sla FROM master_sla WHERE divisi = 'Review PSM TAF'";
+                 $result_sla_stkonstruksi = $conn->query($sql_sla_stkonstruksi);
+                 if ($result_sla_stkonstruksi->num_rows > 0) {
+                     $row_sla_stkonstruksi = $result_sla_stkonstruksi->fetch_assoc();
+                     $hari_sla_stkonstruksi = $row_sla_stkonstruksi['sla'];
+                     $sla_fat = date("Y-m-d", strtotime($spk_date . ' + ' . $hari_sla_stkonstruksi . ' days'));
+                 } else {
+                     $conn->rollback();
+                     echo "Error: Data SLA tidak ditemukan untuk divisi ST-Konstruksi.";
+                     exit;
+                 }
+                // Query untuk memperbarui status_spk dan spk_date berdasarkan id
+                $sql_update = "UPDATE resto SET status_spk = ?, spk_date = ?, sla_fat = ?, status_fat = ?, status_legalizin = ?, status_gostore = ? WHERE id = ?";
+                $stmt_update = $conn->prepare($sql_update);
+                $status_gostore = 'In Process';
+                $stmt_update->bind_param("ssssssi", $status_spk, $spk_date, $sla_fat, $status_fat, $status_legalizin, $status_gostore, $id);
+                $stmt_update->execute();
 
                 echo "<script>
                         alert('Status berhasil diperbarui.');

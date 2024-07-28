@@ -18,7 +18,7 @@ $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, d.lamp_draf, c
             SELECT v1.nama, v1.kode_vendor, v1.lamp_vendor, v1.lamp_profil
             FROM vendor v1
         ) v ON p.nama_vendor = v.kode_vendor
-        WHERE r.status_fat IN ('In Process', 'Approve', 'Pending')";
+        WHERE r.status_fat IN ('In Process', 'Signed', 'Pending', 'In Revision')";
 
 $result = $conn->query($sql);
 
@@ -50,11 +50,13 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        .hidden {
-            display: none;
-        }
-    </style>
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
+<style>
+    .hidden {
+        display: none;
+    }
+</style>
 </head>
 
 <body class="text-left">
@@ -97,11 +99,10 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Status VD</th>
                                                 <th>Lampiran VD</th>
                                                 <th>Status Validasi Document Legal</th>
-                                                <th>Status Procurement</th>
-                                                <th>Kode Vendor</th>
                                                 <th>Nama Vendor</th>
                                                 <th>Lampiran Profil</th>
                                                 <th>Lampiran Vendor</th>
+                                                <th>Status Procurement</th>
                                                 <th>Lampiran SPK</th>
                                                 <th>Status SPK</th>
                                                 <th>Jadwal Kick Off Meeting</th>
@@ -207,31 +208,7 @@ if ($result && $result->num_rows > 0) {
                                                         <?php echo $row['valdoc_legal']; ?>
                                                     </span>
                                                 </td>
-                                                <td>
-                                                    <?php
-                                                        // Tentukan warna badge berdasarkan status approval owner
-                                                        $badge_color = '';
-                                                        switch ($row['status_approvprocurement']) {
-                                                            case 'Approve':
-                                                                $badge_color = 'success';
-                                                                break;
-                                                            case 'Pending':
-                                                                $badge_color = 'danger';
-                                                                break;
-                                                            case 'In Process':
-                                                                $badge_color = 'warning';
-                                                                break;
-                                                            default:
-                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
-                                                                break;
-                                                        }
-                                                    ?>
-                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_approvprocurement']; ?>
-                                                    </span>
-                                                </td>
                                                 <td><?= $row['nama_vendor'] ?></td>  
-                                                <td><?= $row['nama'] ?></td>  
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_profil_files = explode(",", $row['lamp_profil']); // Pisahkan nama file menjadi array
@@ -276,6 +253,32 @@ if ($result && $result->num_rows > 0) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>    
+                                                <td>
+                                                    <?php
+                                                        // Tentukan warna badge berdasarkan status approval owner
+                                                        $badge_color = '';
+                                                        switch ($row['status_approvprocurement']) {
+                                                            case 'Signed':
+                                                                $badge_color = 'success';
+                                                                break;
+                                                            case 'Pending':
+                                                                $badge_color = 'danger';
+                                                                break;
+                                                            case 'In Process':
+                                                                $badge_color = 'warning';
+                                                                break;
+                                                                case 'In Revision':
+                                                                    $badge_color = 'primary';
+                                                                    break;
+                                                            default:
+                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
+                                                                break;
+                                                        }
+                                                    ?>
+                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
+                                                        <?php echo $row['status_approvprocurement']; ?>
+                                                    </span>
+                                                </td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_spk_files = explode(",", $row['lamp_spk']); // Pisahkan nama file menjadi array
@@ -303,7 +306,7 @@ if ($result && $result->num_rows > 0) {
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['status_spk']) {
-                                                            case 'Approve':
+                                                            case 'Signed':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -327,7 +330,7 @@ if ($result && $result->num_rows > 0) {
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['status_fat']) {
-                                                            case 'Approve':
+                                                            case 'Signed':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -336,6 +339,9 @@ if ($result && $result->num_rows > 0) {
                                                             case 'In Process':
                                                                 $badge_color = 'warning';
                                                                 break;
+                                                                case 'In Revision':
+                                                                    $badge_color = 'primary';
+                                                                    break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
                                                                 break;
@@ -357,7 +363,7 @@ if ($result && $result->num_rows > 0) {
                                                     $diff = $today->diff($slaLegalDate);
                                                     
                                                     // Jika status_approvowner adalah "Approve"
-                                                    if ($row['status_fat'] == "Approve") {
+                                                    if ($row['status_fat'] == "Signed") {
                                                         echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
                                                         echo '<p>Status changed to Approved on: ' . $row['fat_date'] . '</p>';
                                                     } else {
@@ -381,7 +387,7 @@ if ($result && $result->num_rows > 0) {
                                                 </td>
                                                 <td>
                                                     <!-- Tombol Edit -->
-                                                    <?php if ($row['status_fat'] != "Approve"): ?>
+                                                    <?php if ($row['status_fat'] != "Signed"): ?>
                                                         <div>
                                                         <!-- <a href="fat/spk-fat-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
                                                             <i class="nav-icon i-Pen-2"></i>
@@ -406,11 +412,12 @@ if ($result && $result->num_rows > 0) {
                                                                 <form id="statusForm" method="post" action="fat/spk-fat-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" id="modalId" value="<?= $row['id']; ?>">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve SPK FAT</label>
+                                                                        <label for="statusSelect">Status Signing SPK FAT</label>
                                                                         <select class="form-control" id="statusSelect" name="status_fat">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
-                                                                            <option value="Approve">Approve</option>
+                                                                            <option value="Signed">Signed</option>
+                                                                            <option value="In Revision">In Revision</option>
                                                                         </select>
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">
@@ -450,11 +457,10 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Status VD</th>
                                                 <th>Lampiran VD</th>
                                                 <th>Status Validasi Document Legal</th>
-                                                <th>Status Procurement</th>
-                                                <th>Kode Vendor</th>
                                                 <th>Nama Vendor</th>
                                                 <th>Lampiran Profil</th>
                                                 <th>Lampiran Vendor</th>
+                                                <th>Status Procurement</th>
                                                 <th>Lampiran SPK</th>
                                                 <th>Status SPK</th>
                                                 <th>Jadwal Kick Off Meeting</th>
@@ -682,7 +688,6 @@ if ($result && $result->num_rows > 0) {
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
     
     <script>
     $(document).ready(function(){

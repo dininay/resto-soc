@@ -40,7 +40,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["kode_lahan"]) && isset
 
     try {
         
-        if ($submit_legal == 'Approve') {
+        if ($submit_legal == 'Done') {
         // Query untuk memperbarui status_approvowner, catatan_owner, status_approvlegal, start_date, submit_date, status_vl, dan slavl_date
         $sql = "UPDATE sdg_desain SET submit_legal = ?, submit_date = ? WHERE kode_lahan = ?";
         $stmt = $conn->prepare($sql);

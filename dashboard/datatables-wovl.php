@@ -137,6 +137,7 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Lampiran Land</th>
                                                 <th>Status VL</th>
                                                 <th>Lampiran VL</th>
+                                                <th>Catatan VL</th>
                                                 <th>SLA</th>
                                                 <th>Action</th>
                                             </tr>
@@ -233,6 +234,7 @@ if ($result && $result->num_rows > 0) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>       
+                                                <td><?= $row['catatan_vl'] ?></td>
                                                 <td>
                                                     <?php
                                                     // Mendapatkan tanggal sla_date dari kolom data
@@ -364,6 +366,7 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Lampiran Land</th>
                                                 <th>Status VL</th>
                                                 <th>Lampiran VL</th>
+                                                <th>Catatan VL</th>
                                                 <th>SLA</th>
                                                 <th>Action</th>
                                             </tr>

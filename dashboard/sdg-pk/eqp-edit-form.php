@@ -74,11 +74,21 @@ if(isset($_GET['id'])) {
                             <form method="post" action="eqp-edit.php" enctype="multipart/form-data">
                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                             <div class="form-group row">
-                                <label class="col-sm-2 col-form-label" for="kode_lahan">Kode Lahan</label>
-                                <div class="col-sm-10">
+                                <label class="col-sm-3 col-form-label" for="kode_lahan">Kode Lahan</label>
+                                <div class="col-sm-9">
                                     <input class="form-control" id="kode_lahan" name="kode_lahan" type="text" placeholder="Kode Lahan" value="<?php echo $row['kode_lahan']; ?>" readonly/>
                                 </div>
                             </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="submit_gis">Apakah sudah submit GIS ?</label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="submit_gis" name="submit_gis">
+                                        <option>Pilih</option>
+                                            <option value="Yes" <?php echo ($row['submit_gis'] == 'Yes') ? 'selected' : ''; ?>>Ya</option>
+                                            <option value="No" <?php echo ($row['submit_gis'] == 'No') ? 'selected' : ''; ?>>Tidak</option>
+                                        </select>
+                                    </div>
+                                </div>
                             <div class="form-group row">
     <label class="col-sm-3 col-form-label">Lampiran ST Equipment</label>
     <div class="col-sm-9">
@@ -105,7 +115,7 @@ if(isset($_GET['id'])) {
 <div class="form-group row">
     <label class="col-sm-3 col-form-label">Lampiran Berita Acara Sebelumnya</label>
     <div class="col-sm-9">
-        <?php echo $row['lamp_ba']; ?>
+        <?php echo $row['lamp_basteqp']; ?>
     </div>
 </div>
 <!-- Tambahkan pertanyaan apakah ingin mengganti lampiran -->
@@ -121,7 +131,7 @@ if(isset($_GET['id'])) {
     <label class="col-sm-3 col-form-label" for="lamp_ba">Upload Baru</label>
     <div class="col-sm-9">
         <div class="dropzone" id="multple-file-upload">
-            <input name="lamp_ba[]" type="file" multiple="multiple" />
+            <input name="lamp_basteqp[]" type="file" multiple="multiple" />
         </div>
     </div>
 </div>

@@ -91,6 +91,14 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="lamp_printer">Upload Lampiran Printer</label>
+                                    <div class="col-sm-9">
+                                        <div class="dropzone" id="multple-file-upload" >
+                                            <input name="lamp_printer[]" type="file" multiple="multiple" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
                                     <div class="col-sm-9">
                                         <button class="btn btn-primary" type="submit">Simpan</button>
                                     </div>

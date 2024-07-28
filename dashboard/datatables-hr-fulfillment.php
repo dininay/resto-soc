@@ -75,6 +75,7 @@ if ($result && $result->num_rows > 0) {
                                             <tr>
                                                 <th>Kode Lahan</th>
                                                 <th>Fulfillment Batch 1</th>
+                                                <th>Persen Batch 1</th>
                                                 <th>Lampiran Fulfillment 1</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
@@ -86,6 +87,7 @@ if ($result && $result->num_rows > 0) {
                                             <tr>
                                                 <td><?= $row['kode_lahan'] ?></td>
                                                 <td><?= $row['ff_1'] ?></td>
+                                                <td><?= $row['persen_ff1'] ?>%</td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_ff1_files = explode(",", $row['lamp_ff1']); // Pisahkan nama file menjadi array
@@ -235,6 +237,7 @@ if ($result && $result->num_rows > 0) {
                                             <tr>
                                                 <th>Kode Lahan</th>
                                                 <th>Fulfillment Batch 1</th>
+                                                <th>Persen Batch 1</th>
                                                 <th>Lampiran Fulfillment 1</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>

@@ -7,6 +7,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Ambil nilai dari formulir
     $id = $_POST['id'];
     $kode_lahan = $_POST['kode_lahan'];
+    $obstacle_stkons = $_POST['obstacle_stkons'];
+    $note_stkons = isset($_POST["note_stkons"]) ? $_POST["note_stkons"] : null;
     $lamp_stkonstruksi = "";
 
     // Menggabungkan nama file baru dengan nama file sebelumnya, jika ada
@@ -39,9 +41,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Update data di database untuk tabel resto
-    $sql1 = "UPDATE resto SET lamp_stkonstruksi = ? WHERE id = ?";
+    $sql1 = "UPDATE resto SET lamp_stkonstruksi = ?, obstacle_stkons = ?, note_stkons = ? WHERE id = ?";
     $stmt1 = $conn->prepare($sql1);
-    $stmt1->bind_param("si", $lamp_stkonstruksi,  $id);
+    $stmt1->bind_param("sssi", $lamp_stkonstruksi, $obstacle_stkons, $note_stkons, $id);
+    
+    $status_defect = "In Process";
+    // Query untuk memasukkan data ke dalam tabel hold_project
+    $sql1 = "INSERT INTO issue (kode_lahan, status_defect) VALUES (?, ?)";
+    $stmt1 = $conn->prepare($sql1);
+    $stmt1->bind_param("ss", $kode_lahan, $status_defect);
+    
 
     // Execute both queries
     if ($stmt1->execute()) {

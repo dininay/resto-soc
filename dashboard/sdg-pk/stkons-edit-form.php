@@ -74,8 +74,8 @@ if(isset($_GET['id'])) {
                             <form method="post" action="stkons-edit.php" enctype="multipart/form-data">
                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                             <div class="form-group row">
-                                <label class="col-sm-2 col-form-label" for="kode_lahan">Kode Lahan</label>
-                                <div class="col-sm-10">
+                                <label class="col-sm-3 col-form-label" for="kode_lahan">Kode Lahan</label>
+                                <div class="col-sm-9">
                                     <input class="form-control" id="kode_lahan" name="kode_lahan" type="text" placeholder="Kode Lahan" value="<?php echo $row['kode_lahan']; ?>" readonly/>
                                 </div>
                             </div>
@@ -100,6 +100,22 @@ if(isset($_GET['id'])) {
                                         <div class="dropzone" id="multple-file-upload">
                                             <input name="lamp_stkonstruksi[]" type="file" multiple="multiple" />
                                         </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="obstacle_stkons">Obstacle</label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="obstacle_stkons" name="obstacle_stkons" onchange="toggleObstacleDetail()">
+                                        <option>Pilih</option>
+                                            <option value="Yes" <?php echo ($row['obstacle_stkons'] == 'Yes') ? 'selected' : ''; ?>>Ya</option>
+                                            <option value="No" <?php echo ($row['obstacle_stkons'] == 'No') ? 'selected' : ''; ?>>Tidak</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group row" id="note_stkons" style="display: none;">
+                                    <label class="col-sm-3 col-form-label" for="note_stkons">Catatan</label>
+                                    <div class="col-sm-9">
+                                        <textarea class="form-control" id="note_stkons" name="note_stkons" rows="4" cols="50"><?php echo $row['note_stkons']; ?></textarea>
                                     </div>
                                 </div>
                                 <div class="form-group row">

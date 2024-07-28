@@ -69,13 +69,13 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label" for="jumlah">Jumlah</label>
+                                    <label class="col-sm-2 col-form-label" for="jumlah">Volume (include PPN)</label>
                                     <div class="col-sm-10">
                                         <input class="form-control" id="jumlah" name="jumlah" type="number" placeholder="Jumlah" value="<?php echo $row['jumlah']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label" for="lamp_rab">Upload Lampiran RAB</label>
+                                    <label class="col-sm-2 col-form-label" for="lamp_rab">Upload Lampiran WO + RAB</label>
                                     <div class="col-sm-10">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_rab[]" type="file" multiple="multiple" />

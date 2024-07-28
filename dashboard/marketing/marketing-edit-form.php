@@ -65,13 +65,13 @@ if(isset($_GET['id'])) {
                             <form method="post" action="marketing-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="gmaps">Link GMAPS</label>
+                                    <label class="col-sm-3 col-form-label" for="gmaps">Link GMaps</label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="gmaps" name="gmaps" type="text" placeholder="GMAPS" value="<?php echo $row['gmaps']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_gmaps">Upload Lampiran GMAPS</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_gmaps">Upload Lampiran GMaps</label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_gmaps[]" type="file" multiple="multiple" />
@@ -103,11 +103,37 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_merchant">Upload Lampiran Pendukung Merchant</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_content">Status Content & Promo</label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="lamp_content" name="lamp_content"  onchange="toggleContentDetail()">
+                                        <option>Pilih</option>
+                                            <option value="Yes" <?php echo ($row['lamp_content'] == 'Yes') ? 'selected' : ''; ?>>Ya</option>
+                                            <option value="No" <?php echo ($row['lamp_content'] == 'No') ? 'selected' : ''; ?>>Tidak</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group row" style="display: none;" id="lamp_merchant">
+                                    <label class="col-sm-3 col-form-label" for="lamp_merchant">Upload Lampiran Pendukung Content & Promo</label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_merchant[]" type="file" multiple="multiple" />
                                         </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="issue_marketing">Apakah ada issue?</label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="issue_marketing" name="issue_marketing" onchange="toggleIssueDetail()">
+                                        <option>Pilih</option>
+                                            <option value="Yes" <?php echo ($row['issue_marketing'] == 'Yes') ? 'selected' : ''; ?>>Ya</option>
+                                            <option value="No" <?php echo ($row['issue_marketing'] == 'No') ? 'selected' : ''; ?>>Tidak</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group row" id="note_issuemarketing" style="display: none;">
+                                    <label class="col-sm-3 col-form-label" for="note_issuemarketing">Catatan</label>
+                                    <div class="col-sm-9">
+                                        <textarea class="form-control" id="note_issuemarketing" name="note_issuemarketing" rows="4" cols="50"><?php echo $row['note_issuemarketing']; ?></textarea>
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -292,6 +318,35 @@ if(isset($_GET['id'])) {
     <script src="../../dist-assets/js/scripts/script.min.js"></script>
     <script src="../../dist-assets/js/scripts/sidebar.compact.script.min.js"></script>
     <script src="../../dist-assets/js/scripts/customizer.script.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.2/dropzone.min.js"></script>
+    <script>
+    function toggleIssueDetail() {
+        var issueSelect = document.getElementById("issue_marketing");
+        var noteIssue = document.getElementById("note_issuemarketing");
+        if (issueSelect.value === "Yes") {
+            noteIssue.style.display = "flex";
+        } else {
+            noteIssue.style.display = "none";
+        }
+    }
+
+    // Panggil fungsi saat halaman dimuat untuk menyesuaikan tampilan berdasarkan nilai awal
+    window.onload = toggleIssueDetail;
+</script>
+    <script>
+    function toggleContentDetail() {
+        var contentSelect = document.getElementById("lamp_content");
+        var lampMerchant = document.getElementById("lamp_merchant");
+        if (contentSelect.value === "Yes") {
+            lampMerchant.style.display = "flex";
+        } else {
+            lampMerchant.style.display = "none";
+        }
+    }
+
+    // Panggil fungsi saat halaman dimuat untuk menyesuaikan tampilan berdasarkan nilai awal
+    window.onload = toggleContentDetail;
+</script>
 </body>
 
 </html>

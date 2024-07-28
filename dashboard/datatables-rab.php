@@ -189,12 +189,67 @@ if ($result && $result->num_rows > 0) {
                                                 </td>
                                                 <td>
                                                     <?php if ($row['confirm_sdgqs'] !== 'Approve') : ?>
-                                                        <a href="sdg-qs/rab-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                        <a href="sdg-qs/rab-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>
+                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['confirm_sdgqs'] ?>">
+                                                            <i class="nav-icon i-Book"></i>
+                                                        </button>
                                                     <?php endif; ?>
                                                 </td>
-                                        <?php endforeach; ?>
+
+                                            <!-- Modal -->
+                                            <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="editModalLabel">Edit Status</h5>
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <form id="statusForm" method="post" action="sdg-qs/valrab-process.php" enctype="multipart/form-data">
+                                                                <input type="hidden" name="id" id="modalKodeLahan">
+                                                                <div class="form-group">
+                                                                    <label for="statusSelect">Status Approve SDG QS</label>
+                                                                    <select class="form-control" id="statusSelect" name="confirm_sdgqs" Placeholder="Pilih">
+                                                                        <option value="In Process">In Process</option>
+                                                                        <option value="Pending">Pending</option>
+                                                                        <option value="Approve">Approve</option>
+                                                                        <option value="In Design Revision">In Design Revision</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="catatan_sdgqs">Catatan SDG QS</label>
+                                                                    <input type="text" class="form-control" id="catatan_sdgqs" name="catatan_sdgqs">
+                                                                </div>
+                                                                <div id="issueDetailSection" class="hidden">
+                                                                    <div class="form-group">
+                                                                        <label for="issue_detail">Issue Detail</label>
+                                                                        <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="pic">PIC</label>
+                                                                        <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="action_plan">Action Plan</label>
+                                                                        <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="kronologi">Upload File Kronologi</label>
+                                                                        <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                                                                    </div>
+                                                                </div>
+                                                                <button type="submit" class="btn btn-primary">Save changes</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            </tr>
+                                            <?php endforeach; ?>
                                         </tbody>
                                         <tfoot>
                                             <tr>

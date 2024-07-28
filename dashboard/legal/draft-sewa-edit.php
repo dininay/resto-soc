@@ -9,7 +9,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $id = $_POST['id'];
 
     $catatan = $_POST["catatan_legal"];
-$jadwal_psm = $_POST["jadwal_psm"];
 // Periksa apakah kunci 'lampiran' ada dalam $_FILES
 $lamp_draf = "";
 
@@ -36,7 +35,7 @@ $lamp_draf = "";
     }
 
     // Update data di database
-    $sql = "UPDATE draft SET lamp_draf = '$lamp_draf', catatan_legal = '$catatan', jadwal_psm = '$jadwal_psm' WHERE id = '$id'";
+    $sql = "UPDATE draft SET lamp_draf = '$lamp_draf', catatan_legal = '$catatan' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
         header("Location: " . $base_url . "/datatables-draft-sewa-legal.php");

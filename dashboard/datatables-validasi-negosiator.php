@@ -2,10 +2,19 @@
 // Koneksi ke database
 include "../koneksi.php";
 
-// Query untuk mengambil data dari tabel land
-$sql = "SELECT * FROM negosiator  WHERE confirm_nego = 'Approve'";
-$result = $conn->query($sql);
+$status_approvowner = "";
+// Query untuk mengambil data dari tabel re
 
+$sql = "SELECT d.*, 
+               l.nama_lahan, l.lokasi, l.lamp_land,
+               dl.lamp_loacd, dl.lamp_vd, dl.kode_store,
+               r.lamp_vl
+        FROM draft d
+        LEFT JOIN land l ON d.kode_lahan = l.kode_lahan
+        LEFT JOIN dokumen_loacd dl ON d.kode_lahan = dl.kode_lahan
+        LEFT JOIN re r ON d.kode_lahan = r.kode_lahan
+        WHERE d.draft_legal = 'Approve'";
+$result = $conn->query($sql);
 
 // Inisialisasi variabel $data dengan array kosong
 $data = [];
@@ -18,6 +27,8 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
+// Tutup koneksi database
+$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="">
@@ -33,7 +44,16 @@ if ($result && $result->num_rows > 0) {
     <link href="../dist-assets/css/plugins/datatables.min.css" rel="stylesheet"  />
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+    .hidden {
+        display: none;
+    }
+</style>
 </head>
 
 <body class="text-left">
@@ -49,7 +69,7 @@ if ($result && $result->num_rows > 0) {
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Datatables Validasi Negosiator To SDG Design</h1>
+                    <h1>Sign Final Doc</h1>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
                 <!-- end of row-->
@@ -64,24 +84,31 @@ if ($result && $result->num_rows > 0) {
 								</div>
                                 <p>
 							  <div class="table-responsive">
-                              <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
+                                    <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
                                                 <th>Inventory Code</th>
+                                                <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
                                                 <th>Lampiran Land</th>
                                                 <th>Lampiran Loa CD</th>
+                                                <th>Lampiran VL</th>
+                                                <th>Lampiran VD</th>
+                                                <th>Lampiran PSM Legal</th>
                                                 <th>Lampiran Draft</th>
-                                                <th>Penjadwalan PSM</th>
-                                                <th>Catatan</th>
-                                                <th>Confirm Negosiator</th>
+                                                <th>Lampiran Draft Signed</th>
+                                                <th>Catatan Negotiator</th>
+                                                <th>Status Negotiator</th>
+                                                <th>SLA</th>
+												<th>Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                         <?php foreach ($data as $row): ?>
                                             <tr>
                                                 <td><?= $row['kode_lahan'] ?></td>
+                                                <td><?= $row['kode_store'] ?></td>
                                                 <td><?= $row['nama_lahan'] ?></td>
                                                 <td><?= $row['lokasi'] ?></td>
                                                 <?php
@@ -118,33 +145,127 @@ if ($result && $result->num_rows > 0) {
                                                 </td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_draf_files = explode(",", $row['lamp_draf']); // Pisahkan nama file menjadi array
-                                                ?>
-                                                <td>
-                                                    <ul style="list-style-type: none; padding: 0; margin: 0;">
-                                                        <?php foreach ($lamp_draf_files as $file): ?>
-                                                            <li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/<?= $file ?>" target="_blank">
+                                                $lamp_vl_files = explode(",", $row['lamp_vl']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_vl'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_vl_files as $file) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $file . '" target="_blank">
                                                                     <i class="fas fa-file-pdf nav-icon"></i>
                                                                 </a>
-                                                            </li>
-                                                        <?php endforeach; ?>
-                                                    </ul>
-                                                </td>
-                                                <td><?= $row['jadwal_psm'] ?></td>
-                                                <td><?= $row['catatan_nego'] ?></td>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>  
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_vd_files = explode(",", $row['lamp_vd']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_vd'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_vd_files as $file) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $file . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>                     
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_psm_files = explode(",", $row['lamp_signpsm']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_signpsm'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_psm_files as $file) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $file . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>                       
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_loacd_files = explode(",", $row['lamp_draf']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_draf'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_loacd_files as $file) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $file . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>                         
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_bod_files = explode(",", $row['lamp_bod']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_bod'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_bod_files as $file) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $file . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>      
+                                                <td><?= $row['catatan_negovaldoc'] ?></td>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
-                                                        switch ($row['confirm_nego']) {
-                                                            case 'Approve':
+                                                        switch ($row['confirm_negovaldoc']) {
+                                                            case 'Signed':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
                                                                 $badge_color = 'danger';
                                                                 break;
-                                                            case 'In Process':
+                                                            case 'In Progress':
                                                                 $badge_color = 'warning';
                                                                 break;
                                                             default:
@@ -153,22 +274,127 @@ if ($result && $result->num_rows > 0) {
                                                         }
                                                     ?>
                                                     <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['confirm_nego']; ?>
+                                                        <?php echo $row['confirm_negovaldoc']; ?>
                                                     </span>
+                                                </td>         
+                                                <td>
+                                                    <?php
+                                                    // Mendapatkan tanggal sla_date dari kolom data
+                                                    $slaLegalDate = new DateTime($row['slanegovaldoc_date']);
+                                                    
+                                                    // Mendapatkan tanggal hari ini
+                                                    $today = new DateTime();
+                                                    
+                                                    // Menghitung selisih hari antara sla_date dan hari ini
+                                                    $diff = $today->diff($slaLegalDate);
+                                                    
+                                                    // Jika status_approvowner adalah "Approve"
+                                                    if ($row['confirm_negovaldoc'] == "Approve") {
+                                                        echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
+                                                        echo '<p>Status changed to Approved on: ' . $row['negovaldoc_date'] . '</p>';
+                                                    } else {
+                                                        // Menghitung jumlah hari terlambat
+                                                        $lateDays = $slaLegalDate->diff($today)->days;
+                                                        
+                                                        // Jika terlambat
+                                                        if ($today > $slaLegalDate) {
+                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+                                                        } else {
+                                                            // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
+                                                            if ($diff) {
+                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
+                                                            } else {
+                                                                // Tampilkan peringatan "H + X"
+                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
+                                                            }
+                                                        }
+                                                    }
+                                                    ?>
                                                 </td>
+                                                <td>
+                                                    <!-- Tombol Edit -->
+                                                    <?php if ($row['confirm_negovaldoc'] != "Approve"): ?>
+                                                        <div>
+                                                        <!-- <a href="owner/draft-sewa-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
+                                                            <i class="nav-icon i-Pen-2"></i>
+                                                        </a> -->
+                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['confirm_negovaldoc'] ?>">
+                                                            <i class="nav-icon i-Book"></i>
+                                                        </button>
+                                                    </div>
+                                                    <?php endif; ?>
+
+                                                <!-- Modal -->
+                                                <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+                                                    <div class="modal-dialog" role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="editModalLabel">Edit Status</h5>
+                                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <form id="statusForm" method="post" action="negosiator/draft-sewa-process.php" enctype="multipart/form-data">
+                                                                    <input type="hidden" name="id" id="modalId" value="<?= $row['id']; ?>">
+                                                                    <div class="form-group">
+                                                                        <label for="statusSelect">Status Approve</label>
+                                                                        <select class="form-control" id="statusSelect" name="confirm_negovaldoc">
+                                                                            <option value="In Process">In Process</option>
+                                                                            <option value="Pending">Pending</option>
+                                                                            <option value="Approve">Approve</option>
+                                                                            <option value="Reject">Reject</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="catatan_negovaldoc">Catatan Negotiator</label>
+                                                                        <input type="text" class="form-control" id="catatan_negovaldoc" name="catatan_negovaldoc">
+                                                                    </div>
+                                                                    <div id="issueDetailSection" class="hidden">
+                                                                        <div class="form-group">
+                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="pic">PIC</label>
+                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                                                                        </div>
+                                                                    </div>
+                                                                    <button type="submit" class="btn btn-primary">Save changes</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                    </td>
+                                            </tr>
                                         <?php endforeach; ?>
                                         </tbody>
                                         <tfoot>
                                             <tr>
                                                 <th>Inventory Code</th>
+                                                <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
                                                 <th>Lampiran Land</th>
                                                 <th>Lampiran Loa CD</th>
+                                                <th>Lampiran VL</th>
+                                                <th>Lampiran VD</th>
+                                                <th>Lampiran PSM Legal</th>
                                                 <th>Lampiran Draft</th>
-                                                <th>Penjadwalan PSM</th>
-                                                <th>Catatan</th>
-                                                <th>Confirm Negosiator</th>
+                                                <th>Lampiran Draft Signed</th>
+                                                <th>Catatan Negotiator</th>
+                                                <th>Status Negotiator</th>
+                                                <th>SLA</th>
+												<th>Action</th>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -187,7 +413,7 @@ if ($result && $result->num_rows > 0) {
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                                                    <form method="POST" action="draft-sewa-delete.php">
+                                                    <form method="POST" action="owner/approval-owner-delete.php">
                                                         <input type="hidden" name="id" id="delete" value="">
                                                         <button type="submit" class="btn btn-danger">Hapus</button>
                                                     </form>
@@ -195,6 +421,65 @@ if ($result && $result->num_rows > 0) {
                                             </div>
                                         </div>
                                     </div>
+                                    <!-- Modal untuk "Tepat Waktu" -->
+                                    <div class="modal fade" id="approvalModal" tabindex="-1" role="dialog" aria-labelledby="approvalModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="approvalModalLabel">Pemberitahuan</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Data sudah approve tepat waktu.
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Modal untuk "Deadline Approval" -->
+                                    <div class="modal fade" id="deadlineModal" tabindex="-1" role="dialog" aria-labelledby="deadlineModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="deadlineModalLabel">Pemberitahuan</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Tersisa waktu <?php echo $diff->days; ?> hari, segera lakukan approval.</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Modal untuk "Terlambat Approval" -->
+                                    <div class="modal fade" id="lateApprovalModal" tabindex="-1" role="dialog" aria-labelledby="lateApprovalModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="lateApprovalModalLabel">Pemberitahuan</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Data sudah terlambat untuk di-approve. Telah terlambat <?php echo $lateDays; ?> hari.</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -221,6 +506,7 @@ if ($result && $result->num_rows > 0) {
                 <!-- fotter end -->
             </div>
         </div>
+
     </div><!-- ============ Search UI Start ============= -->
     <div class="search-ui">
         <div class="search-header">
@@ -397,6 +683,114 @@ if ($result && $result->num_rows > 0) {
             document.getElementById('delete').value = id;
         }
     </script>
+
+    <script>
+    $(document).ready(function() {
+        $(".edit-btn").click(function() {
+            // Sembunyikan semua form yang terbuka
+            $(".status-form").hide();
+            // Tampilkan form di samping tombol edit yang diklik
+            $(this).next(".status-form").show();
+        });
+    });
+    </script>
+
+<script>
+    // JavaScript to handle opening the modal and setting form values
+    $('#editModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); // Button that triggered the modal
+        var kodeLahan = button.data('id'); // Extract info from data-* attributes
+        var status = button.data('status'); // Extract status
+
+        // Update the modal's content.
+        var modal = $(this);
+        modal.find('#modalKodeLahan').val(kodeLahan);
+        modal.find('#statusSelect').val(status);
+
+        // Toggle issue detail section visibility
+        toggleIssueDetail();
+    });
+
+    // Function to toggle the visibility of issue detail section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
+        }
+    }
+
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function () {
+        toggleIssueDetail();
+    });
+</script>
+<?php if ($status_approvowner == 'Pending') { ?>
+    <script>
+        $(document).ready(function () {
+            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+        });
+    </script>
+<?php } ?>
+
+
+    <script>
+    // When the document is ready
+    $(document).ready(function() {
+        // Get the initial value of status approval owner
+        var initialStatus = $('#editStatusOwner').val();
+
+        // Function to generate dropdown options based on the initial status
+        function generateOptions(initialStatus) {
+            var optionsHtml = '';
+            // If the initial status is In Process
+            if (initialStatus === 'In Process') {
+                optionsHtml += '<option value="Pending">Pending</option>';
+                optionsHtml += '<option value="Approve">Approve</option>';
+            }
+            // If the initial status is Pending
+            else if (initialStatus === 'Pending') {
+                optionsHtml += '<option value="In Process">In Process</option>';
+                optionsHtml += '<option value="Approve">Approve</option>';
+            }
+            // If the initial status is Approve, disable the select input
+            else if (initialStatus === 'Approve') {
+                optionsHtml += '<option value="Approve" disabled selected>Approve</option>';
+            }
+            // Update the dropdown options
+            $('#editStatusOwner').html(optionsHtml);
+        }
+
+        // Generate initial dropdown options based on the initial status
+        generateOptions(initialStatus);
+
+        // When the value of the select input changes
+        $('#editStatusOwner').change(function() {
+            var selectedStatus = $(this).val();
+            // Regenerate dropdown options based on the selected status
+            generateOptions(selectedStatus);
+        });
+    });
+</script>
+
+<script>
+    
+</script>
+
+<script>
+    function showPopup(daysLeft) {
+        alert("Tersisa waktu " + daysLeft + " hari, segera lakukan approval.");
+    }
+
+    function showApprovalPopup() {
+        alert("Data sudah approve tepat waktu");
+    }
+</script>
+
+
 </body>
 
 </html>

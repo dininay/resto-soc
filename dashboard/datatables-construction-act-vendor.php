@@ -76,7 +76,8 @@ SELECT
     v.kode_vendor, 
     v.lamp_vendor, 
     v.lamp_profil,
-    c.kode_store
+    c.kode_store,
+    k.*
 FROM 
     draft d
 INNER JOIN 
@@ -89,6 +90,8 @@ INNER JOIN
     sdg_pk s ON r.kode_lahan = s.kode_lahan
 INNER JOIN 
     procurement p ON r.kode_lahan = p.kode_lahan
+INNER JOIN 
+    konstruksi k ON r.kode_lahan = k.kode_lahan
 LEFT JOIN (
     SELECT 
         v1.nama AS nama_vendor, 
@@ -302,18 +305,18 @@ if ($result && $result->num_rows > 0) {
                                                     <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
                                                         <?php echo $row['status_consact']; ?>
                                                     </span>
-                                                </td>   
+                                                </td>  
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_consact_files = explode(",", $row['lamp_consact']); // Pisahkan nama file menjadi array
+                                                $lamp_monitoring_files = explode(",", $row['lamp_monitoring']); // Pisahkan nama file menjadi array
                                                 // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_consact'])) {
+                                                if (!empty($row['lamp_monitoring'])) {
                                                     echo '<td>
                                                             <ul style="list-style-type: none; padding: 0; margin: 0;">';
                                                     // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_consact_files as $consact) {
+                                                    foreach ($lamp_monitoring_files as $monitoring) {
                                                         echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $consact . '" target="_blank">
+                                                                <a href="uploads/' . $monitoring . '" target="_blank">
                                                                     <i class="fas fa-file-pdf nav-icon"></i>
                                                                 </a>
                                                             </li>';

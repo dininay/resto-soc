@@ -65,26 +65,10 @@ if(isset($_GET['id'])) {
                             <form method="post" action="it-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_printer">Upload Lampiran Printer</label>
-                                    <div class="col-sm-9">
-                                        <div class="dropzone" id="multple-file-upload" >
-                                            <input name="lamp_printer[]" type="file" multiple="multiple" />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_cctv">Upload Lampiran CCTV</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_cctv">Upload Lampiran CCTV & Sound</label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_cctv[]" type="file" multiple="multiple" />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_sound">Upload Lampiran Sound</label>
-                                    <div class="col-sm-9">
-                                        <div class="dropzone" id="multple-file-upload" >
-                                            <input name="lamp_sound[]" type="file" multiple="multiple" />
                                         </div>
                                     </div>
                                 </div>

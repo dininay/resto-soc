@@ -46,7 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         // Eksekusi query
         if ($stmt_update_sdg_desain->execute() === TRUE) {
             // Jika status_obslegal diubah menjadi Approve
-            if ($status_obslegal == 'Approve') {
+            if ($status_obslegal == 'Done') {
                 // Ambil data dari tabel sdg_desain berdasarkan id yang diedit
                 $sql_select = "SELECT kode_lahan, end_date, lamp_desainplan FROM sdg_desain WHERE id = ?";
                 $stmt_select = $conn->prepare($sql_select);

@@ -40,45 +40,86 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         // Jika status_approvlegalvd diubah menjadi Approve
         if ($draft_legal == 'Approve') {
             $start_date = date("Y-m-d H:i:s");
+            $confirm_fatpsm = "In Process";
+            $confirm_bod = "In Process";
+            
+                // Ambil SLA dari tabel master_sla untuk divisi ST-EQP
+                $sql_sla_steqp = "SELECT sla FROM master_sla WHERE divisi = 'Table Sewa'";
+                $result_sla_steqp = $conn->query($sql_sla_steqp);
+                if ($result_sla_steqp->num_rows > 0) {
+                    $row_sla_steqp = $result_sla_steqp->fetch_assoc();
+                    $hari_sla_steqp = $row_sla_steqp['sla'];
+                    $slafatpsm_date = date("Y-m-d", strtotime($start_date . ' + ' . $hari_sla_steqp . ' days'));
+                } else {
+                    $conn->rollback();
+                    echo "Error: Data SLA tidak ditemukan untuk divisi ST-EQP.";
+                    exit;
+                }
 
-            // Query untuk memperbarui status draft_legal di tabel draft
-            $sql_update = "UPDATE draft SET draft_legal = ?, catatan_draft = ?, start_date = ? WHERE id = ?";
-            $stmt_update = $conn->prepare($sql_update);
-            $stmt_update->bind_param("sssi", $draft_legal, $catatan_draft, $start_date, $id);
-            $stmt_update->execute();
+                // Ambil SLA dari tabel master_sla untuk divisi ST-Konstruksi
+                $sql_sla_stkonstruksi = "SELECT sla FROM master_sla WHERE divisi = 'Sign'";
+                $result_sla_stkonstruksi = $conn->query($sql_sla_stkonstruksi);
+                if ($result_sla_stkonstruksi->num_rows > 0) {
+                    $row_sla_stkonstruksi = $result_sla_stkonstruksi->fetch_assoc();
+                    $hari_sla_stkonstruksi = $row_sla_stkonstruksi['sla'];
+                    $slabod_date = date("Y-m-d", strtotime($start_date . ' + ' . $hari_sla_stkonstruksi . ' days'));
+                } else {
+                    $conn->rollback();
+                    echo "Error: Data SLA tidak ditemukan untuk divisi ST-Konstruksi.";
+                    exit;
+                }
 
-            if ($stmt_update->affected_rows > 0) {
-                echo "Status berhasil diperbarui.";
-            } else {
-                echo "Gagal memperbarui status.";
-            }
-            // Ambil kode_lahan dari tabel re
-            $sql_get_kode_lahan = "SELECT kode_lahan FROM draft WHERE id = ?";
-            $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
-            $stmt_get_kode_lahan->bind_param("i", $id);
-            $stmt_get_kode_lahan->execute();
-            $stmt_get_kode_lahan->bind_result($kode_lahan);
-            $stmt_get_kode_lahan->fetch();
-            $stmt_get_kode_lahan->free_result();
+                // Ambil SLA dari tabel master_sla untuk divisi ST-Konstruksi
+                $sql_sla_st = "SELECT sla FROM master_sla WHERE divisi = 'Sign'";
+                $result_sla_st = $conn->query($sql_sla_st);
+                if ($result_sla_st->num_rows > 0) {
+                    $row_sla_st = $result_sla_st->fetch_assoc();
+                    $hari_sla_st = $row_sla_st['sla'];
+                    $slanegovaldoc_date = date("Y-m-d", strtotime($start_date . ' + ' . $hari_sla_st . ' days'));
+                } else {
+                    $conn->rollback();
+                    echo "Error: Data SLA tidak ditemukan untuk divisi ST-Konstruksi.";
+                    exit;
+                }
 
-            // Periksa apakah kode_lahan ada di tabel hold_project
-            $sql_check_hold = "SELECT kode_lahan FROM hold_project WHERE kode_lahan = ?";
-            $stmt_check_hold = $conn->prepare($sql_check_hold);
-            $stmt_check_hold->bind_param("s", $kode_lahan);
-            $stmt_check_hold->execute();
-            $stmt_check_hold->store_result();
+                        // Query untuk memperbarui status draft_legal di tabel draft
+                        $sql_update = "UPDATE draft SET draft_legal = ?, catatan_draft = ?, start_date = ?, confirm_fatpsm = ?, slafatpsm_date = ?, confirm_bod = ?, slabod_date = ?, confirm_negovaldoc = ?, slanegovaldoc_date = ? WHERE id = ?";
+                        $stmt_update = $conn->prepare($sql_update);
+                        $stmt_update->bind_param("sssssssssi", $draft_legal, $catatan_draft, $start_date, $confirm_fatpsm, $slafatpsm_date, $confirm_bod, $slabod_date, $confirm_negovaldoc, $slanegovaldoc_date, $id);
+                        $stmt_update->execute();
 
-            if ($stmt_check_hold->num_rows > 0) {
-                // Jika kode_lahan ada di hold_project, update status_hold menjadi 'Done'
-                $status_hold = 'Done';
-                $sql_update_hold = "UPDATE hold_project SET status_hold = ? WHERE kode_lahan = ?";
-                $stmt_update_hold = $conn->prepare($sql_update_hold);
-                $stmt_update_hold->bind_param("ss", $status_hold, $kode_lahan);
-                $stmt_update_hold->execute();
-            }
-            // Komit transaksi
-            $conn->commit();
-            echo "Status berhasil diperbarui.";
+                        if ($stmt_update->affected_rows > 0) {
+                            echo "Status berhasil diperbarui.";
+                        } else {
+                            echo "Gagal memperbarui status.";
+                        }
+                        // Ambil kode_lahan dari tabel re
+                        $sql_get_kode_lahan = "SELECT kode_lahan FROM draft WHERE id = ?";
+                        $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+                        $stmt_get_kode_lahan->bind_param("i", $id);
+                        $stmt_get_kode_lahan->execute();
+                        $stmt_get_kode_lahan->bind_result($kode_lahan);
+                        $stmt_get_kode_lahan->fetch();
+                        $stmt_get_kode_lahan->free_result();
+
+                        // Periksa apakah kode_lahan ada di tabel hold_project
+                        $sql_check_hold = "SELECT kode_lahan FROM hold_project WHERE kode_lahan = ?";
+                        $stmt_check_hold = $conn->prepare($sql_check_hold);
+                        $stmt_check_hold->bind_param("s", $kode_lahan);
+                        $stmt_check_hold->execute();
+                        $stmt_check_hold->store_result();
+
+                        if ($stmt_check_hold->num_rows > 0) {
+                            // Jika kode_lahan ada di hold_project, update status_hold menjadi 'Done'
+                            $status_hold = 'Done';
+                            $sql_update_hold = "UPDATE hold_project SET status_hold = ? WHERE kode_lahan = ?";
+                            $stmt_update_hold = $conn->prepare($sql_update_hold);
+                            $stmt_update_hold->bind_param("ss", $status_hold, $kode_lahan);
+                            $stmt_update_hold->execute();
+                        }
+                        // Komit transaksi
+                        $conn->commit();
+                        echo "Status berhasil diperbarui.";
         } elseif ($draft_legal == 'Pending') {
             
                 // Ambil kode_lahan dari tabel re

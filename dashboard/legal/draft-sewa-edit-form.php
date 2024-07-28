@@ -63,10 +63,10 @@ $conn->close();
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Drafting Akta Sewa</h1>
+                    <h1>Drafting Table Sewa</h1>
                     <ul>
                         <li><a href="href">Edit</a></li>
-                        <li>Drafting Akta Sewa</li>
+                        <li>Drafting Table Sewa</li>
                     </ul>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
@@ -78,7 +78,7 @@ $conn->close();
                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 
                             <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_draf">Upload Akta Sewa</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_draf">Upload Table Sewa</label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_draf[]" type="file" multiple="multiple" />
@@ -91,7 +91,7 @@ $conn->close();
                                         <textarea class="form-control" id="catatan" name="catatan_legal" rows="4" cols="50"><?php echo $row['catatan_legal']; ?></textarea>
                                     </div>
                                 </div>
-                                <div class="form-group row">
+                                <!-- <div class="form-group row">
                                     <label class="col-sm-3 col-form-label" for="jadwal_psm">Penjadwalan PSM</label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="jadwal_psm" name="jadwal_psm" type="date" placeholder="Penjadwalan PSM" 
@@ -99,7 +99,7 @@ $conn->close();
                                             min="<?php echo date('Y-m-d'); ?>" 
                                             max="<?php echo date('Y-m-d', strtotime('+' . $jumlah_hari . ' day')); ?>"/>
                                     </div>
-                                </div>
+                                </div> -->
 
                                 <div class="form-group row">
                                     <div class="col-sm-10">

@@ -11,8 +11,7 @@ $sql = "SELECT d.*,
         FROM draft d
         LEFT JOIN land l ON d.kode_lahan = l.kode_lahan
         LEFT JOIN dokumen_loacd dl ON d.kode_lahan = dl.kode_lahan
-        LEFT JOIN re r ON d.kode_lahan = r.kode_lahan
-        WHERE d.draft_legal = 'Approve'";
+        LEFT JOIN re r ON d.kode_lahan = r.kode_lahan";
 $result = $conn->query($sql);
 
 // Inisialisasi variabel $data dengan array kosong
@@ -84,7 +83,7 @@ $conn->close();
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Datatables Dealing Draft Negosiator</h1>
+                    <h1>Datatables Draft PSM Legal</h1>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
                 <!-- end of row-->
@@ -111,9 +110,8 @@ $conn->close();
                                                 <th>Lampiran Loa CD</th>
                                                 <th>Lampiran VL</th>
                                                 <th>Lampiran VD</th>
-                                                <th>Lampiran Draft</th>
-                                                <th>Lampiran Sign PSM</th>
-                                                <th>Penjadwalan PSM</th>
+                                                <th>Lampiran Draft RE</th>
+                                                <th>Lampiran PSM Legal</th>
                                                 <th>Confirm Legal</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -239,7 +237,6 @@ $conn->close();
                                                     echo '<td></td>';
                                                 }
                                                 ?>   
-                                                <td><?= $row['jadwal_psm'] ?></td>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -266,7 +263,7 @@ $conn->close();
                                                 <td>
                                                     <?php
                                                     // Mendapatkan tanggal sla_date dari kolom data
-                                                    $slaLegalDate = new DateTime($row['jadwal_psm']);
+                                                    $slaLegalDate = new DateTime($row['slapsm_date']);
                                                     
                                                     // Mendapatkan tanggal hari ini
                                                     $today = new DateTime();
@@ -325,7 +322,7 @@ $conn->close();
                                                                 <form id="statusForm" method="post" action="legal/sign-psm-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" id="modalId" value="<?= $row['id']; ?>">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve Sign PSM</label>
+                                                                        <label for="statusSelect">Status Approve Draft PSM </label>
                                                                         <select class="form-control" id="statusSelect" name="confirm_nego">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
@@ -334,7 +331,7 @@ $conn->close();
                                                                         </select>
                                                                     </div>
                                                                     <div class="form-group">
-                                                                        <label for="catatan_psm">Catatan Sign PSM</label>
+                                                                        <label for="catatan_psm">Catatan Draft PSM</label>
                                                                         <input type="text" class="form-control" id="catatan_psm" name="catatan_psm">
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">
@@ -375,9 +372,8 @@ $conn->close();
                                                 <th>Lampiran Loa CD</th>
                                                 <th>Lampiran VL</th>
                                                 <th>Lampiran VD</th>
-                                                <th>Lampiran Draft</th>
-                                                <th>Lampiran Sign PSM</th>
-                                                <th>Penjadwalan PSM</th>
+                                                <th>Lampiran Draft RE</th>
+                                                <th>Lampiran PSM Legal</th>
                                                 <th>Confirm Legal</th>
                                                 <th>SLA</th>
 												<th>Action</th>

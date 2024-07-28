@@ -78,7 +78,9 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Kode DVR</th>
                                                 <th>Web Report</th>
                                                 <th>Akun GIS</th>
-                                                <th>Lamp Dekstop</th>
+                                                <th>Lampiran Dekstop</th>
+                                                <th>Lampiran POS Printer</th>
+                                                <th>Catatan IT Config</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -113,6 +115,29 @@ if ($result && $result->num_rows > 0) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_printer_files = explode(",", $row['lamp_printer']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_printer'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_printer_files as $printer) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $printer . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>
+                                                <td><?= $row['catatan_config'] ?></td>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -174,7 +199,7 @@ if ($result && $result->num_rows > 0) {
                                                 <td>
                                                 <!-- Tombol Edit -->
                                                 <?php if ($row['status_itconfig'] != "Approve"): ?>
-                                                        <a href="it/itconfig-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                        <a href="it/itconfig-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>
                                                     <?php endif; ?>
@@ -242,7 +267,9 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Kode DVR</th>
                                                 <th>Web Report</th>
                                                 <th>Akun GIS</th>
-                                                <th>Lamp Dekstop</th>
+                                                <th>Lampiran Dekstop</th>
+                                                <th>Lampiran POS Printer</th>
+                                                <th>Catatan IT Config</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>

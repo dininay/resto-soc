@@ -113,7 +113,6 @@ $conn->close();
                                                 <th>Lampiran VD</th>
                                                 <th>Lampiran Draft</th>
                                                 <th>Lampiran Sign PSM</th>
-                                                <th>Penjadwalan PSM</th>
                                                 <th>Confirm TAF</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -239,12 +238,11 @@ $conn->close();
                                                     echo '<td></td>';
                                                 }
                                                 ?>   
-                                                <td><?= $row['jadwal_psm'] ?></td>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
-                                                        switch ($row['confirm_fat']) {
+                                                        switch ($row['confirm_fatpsm']) {
                                                             case 'Approve':
                                                                 $badge_color = 'success';
                                                                 break;
@@ -260,13 +258,13 @@ $conn->close();
                                                         }
                                                     ?>
                                                     <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['confirm_fat']; ?>
+                                                        <?php echo $row['confirm_fatpsm']; ?>
                                                     </span>
                                                 </td>
                                                 <td>
                                                     <?php
                                                     // Mendapatkan tanggal sla_date dari kolom data
-                                                    $slaLegalDate = new DateTime($row['jadwal_psm']);
+                                                    $slaLegalDate = new DateTime($row['slafatpsm_date']);
                                                     
                                                     // Mendapatkan tanggal hari ini
                                                     $today = new DateTime();
@@ -275,9 +273,9 @@ $conn->close();
                                                     $diff = $today->diff($slaLegalDate);
                                                     
                                                     // Jika status_approvowner adalah "Approve"
-                                                    if ($row['confirm_fat'] == "Approve") {
+                                                    if ($row['confirm_fatpsm'] == "Approve") {
                                                         echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
-                                                        echo '<p>Status changed to Approved on: ' . $row['fat_date'] . '</p>';
+                                                        echo '<p>Status changed to Approved on: ' . $row['psmfat_date'] . '</p>';
                                                     } else {
                                                         // Menghitung jumlah hari terlambat
                                                         $lateDays = $slaLegalDate->diff($today)->days;
@@ -300,12 +298,12 @@ $conn->close();
                                                 
                                                 <td>
                                                     <!-- Tombol Edit -->
-                                                    <?php if ($row['confirm_fat'] != "Approve"): ?>
+                                                    <?php if ($row['confirm_fatpsm'] != "Approve"): ?>
                                                         <div>
                                                         <!-- <a href="legal/sign-psm-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a> -->
-                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['confirm_fat'] ?>">
+                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['confirm_fatpsm'] ?>">
                                                             <i class="nav-icon i-Book"></i>
                                                         </button>
                                                     </div>
@@ -326,7 +324,7 @@ $conn->close();
                                                                     <input type="hidden" name="id" id="modalId" value="<?= $row['id']; ?>">
                                                                     <div class="form-group">
                                                                         <label for="statusSelect">Status Approve Sign PSM</label>
-                                                                        <select class="form-control" id="statusSelect" name="confirm_fat">
+                                                                        <select class="form-control" id="statusSelect" name="confirm_fatpsm">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
                                                                             <option value="Approve">Approve</option>
@@ -377,7 +375,6 @@ $conn->close();
                                                 <th>Lampiran VD</th>
                                                 <th>Lampiran Draft</th>
                                                 <th>Lampiran Sign PSM</th>
-                                                <th>Penjadwalan PSM</th>
                                                 <th>Confirm TAF</th>
                                                 <th>SLA</th>
 												<th>Action</th>

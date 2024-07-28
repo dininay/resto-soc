@@ -137,6 +137,7 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Lampiran Land</th>
                                                 <th>Status VL</th>
                                                 <th>Lampiran VL</th>
+                                                <th>Note From Legal</th>
                                                 <th>SLA</th>
                                                 <th>Action</th>
                                             </tr>
@@ -233,6 +234,7 @@ if ($result && $result->num_rows > 0) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>       
+                                                <td><?= $row['catatan_vl'] ?></td>
                                                 <td>
                                                     <?php
                                                     // Mendapatkan tanggal sla_date dari kolom data
@@ -318,6 +320,7 @@ if ($result && $result->num_rows > 0) {
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
                                                                             <option value="Approve">Approve</option>
+                                                                            <option value="In Revision">In Revision</option>
                                                                             <option value="Reject">Reject</option>
                                                                         </select>
                                                                     </div>
@@ -360,6 +363,7 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Lampiran Land</th>
                                                 <th>Status VL</th>
                                                 <th>Lampiran VL</th>
+                                                <th>Note From Legal</th>
                                                 <th>SLA</th>
                                                 <th>Action</th>
                                             </tr>

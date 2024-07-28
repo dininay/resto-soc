@@ -81,7 +81,11 @@ if ($result && $result->num_rows > 0) {
                                                 <th>ID Merchant Shopee</th>
                                                 <th>ID Merchant Grab</th>
                                                 <th>Email Resto</th>
+                                                <th>Status Content & Promo</th>
                                                 <th>Lampiran Pendukung Merchant</th>
+                                                <th>Issue</th>
+                                                <th>Note Issue</th>
+                                                <th>Catatan Marketing</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -118,6 +122,7 @@ if ($result && $result->num_rows > 0) {
                                                 <td><?= $row['id_m_shopee'] ?></td>
                                                 <td><?= $row['id_m_grab'] ?></td>
                                                 <td><?= $row['email_resto'] ?></td>
+                                                <td><?= $row['lamp_content'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_merchant_files = explode(",", $row['lamp_merchant']); // Pisahkan nama file menjadi array
@@ -140,6 +145,9 @@ if ($result && $result->num_rows > 0) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>
+                                                <td><?= $row['issue_marketing'] ?></td>
+                                                <td><?= $row['note_issuemarketing'] ?></td>
+                                                <td><?= $row['catatan_marketing'] ?></td>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -201,7 +209,7 @@ if ($result && $result->num_rows > 0) {
                                                 <td>
                                                 <!-- Tombol Edit -->
                                                 <?php if ($row['status_marketing'] != "Approve"): ?>
-                                                        <a href="marketing/marketing-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                        <a href="marketing/marketing-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>
                                                     <?php endif; ?>
@@ -272,7 +280,11 @@ if ($result && $result->num_rows > 0) {
                                                 <th>ID Merchant Shopee</th>
                                                 <th>ID Merchant Grab</th>
                                                 <th>Email Resto</th>
+                                                <th>Status Content & Promo</th>
                                                 <th>Lampiran Pendukung Merchant</th>
+                                                <th>Issue</th>
+                                                <th>Note Issue</th>
+                                                <th>Catatan Marketing</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>

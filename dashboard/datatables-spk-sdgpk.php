@@ -18,7 +18,7 @@ $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, d.lamp_draf, c
             SELECT v1.nama, v1.kode_vendor, v1.lamp_vendor, v1.lamp_profil
             FROM vendor v1
         ) v ON p.nama_vendor = v.kode_vendor
-        WHERE p.status_approvprocurement = 'Approve'";
+        WHERE p.status_approvprocurement = 'Signed'";
 
 $result = $conn->query($sql);
 
@@ -448,7 +448,7 @@ if ($result && $result->num_rows > 0) {
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['status_spk']) {
-                                                            case 'Approve':
+                                                            case 'Signed':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -457,6 +457,9 @@ if ($result && $result->num_rows > 0) {
                                                             case 'In Process':
                                                                 $badge_color = 'warning';
                                                                 break;
+                                                                case 'In Review by TAF':
+                                                                    $badge_color = 'primary';
+                                                                    break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
                                                                 break;
@@ -479,7 +482,7 @@ if ($result && $result->num_rows > 0) {
                                                     $diff = $today->diff($slaLegalDate);
                                                     
                                                     // Jika status_approvowner adalah "Approve"
-                                                    if ($row['status_spk'] == "Approve") {
+                                                    if ($row['status_spk'] == "Signed") {
                                                         echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
                                                         echo '<p>Status changed to Approved on: ' . $row['spk_date'] . '</p>';
                                                     } else {
@@ -503,7 +506,7 @@ if ($result && $result->num_rows > 0) {
                                                 </td>
                                                 <td>
                                                     <!-- Tombol Edit -->
-                                                    <?php if ($row['status_spk'] != "Approve"): ?>
+                                                    <?php if ($row['status_spk'] != "Signed"): ?>
                                                         <div>
                                                         <a href="procurement/spk-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
                                                             <i class="nav-icon i-Pen-2"></i>
@@ -532,7 +535,8 @@ if ($result && $result->num_rows > 0) {
                                                                         <select class="form-control" id="statusSelect" name="status_spk">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
-                                                                            <option value="Approve">Approve</option>
+                                                                            <option value="Signed">Signed</option>
+                                                                            <option value="In review by TAF">In Review by TAF</option>
                                                                         </select>
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">

@@ -7,6 +7,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
     $id = $_POST["id"];
     $status_approvnego = $_POST["status_approvnego"];
     $catatan_nego = $_POST["catatan_nego"];
+    $nego_date = null;
     $issue_detail = isset($_POST["issue_detail"]) ? $_POST["issue_detail"] : null;
     $pic = isset($_POST["pic"]) ? $_POST["pic"] : null;
     $action_plan = isset($_POST["action_plan"]) ? $_POST["action_plan"] : null;
@@ -75,7 +76,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             } else {
                 throw new Exception("Tidak dapat mengambil data SLA dari tabel master_sla.");
             }
-
+            
+            $nego_date = date("Y-m-d H:i:s");
             // Query untuk memperbarui status_approvnego, catatan_nego, dan nego_date pada tabel re
             $sql = "UPDATE re SET status_approvnego = ?, catatan_nego = ?, nego_date = ? WHERE id = ?";
             $stmt = $conn->prepare($sql);
@@ -140,6 +142,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 throw new Exception("Tidak dapat memperbarui status pada tabel re.");
             }
         } elseif ($status_approvnego == 'Pending') {
+            $nego_date = date("Y-m-d H:i:s");
             // Ambil kode_lahan dari tabel re
             $sql_get_kode_lahan = "SELECT kode_lahan FROM re WHERE id = ?";
             $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);

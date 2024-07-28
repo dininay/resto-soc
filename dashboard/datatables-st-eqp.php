@@ -5,13 +5,14 @@ include "../koneksi.php";
 $status_steqp = "";
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, d.lamp_draf, r.*, p.*, r.*,
-d.jadwal_psm, s.lamp_desainplan, c.kode_store
+d.jadwal_psm, s.lamp_desainplan, c.kode_store, e.*
         FROM draft d
         INNER JOIN land l ON d.kode_lahan = l.kode_lahan
         INNER JOIN dokumen_loacd c ON d.kode_lahan = c.kode_lahan
         INNER JOIN sdg_desain s ON d.kode_lahan = s.kode_lahan
         INNER JOIN resto r ON d.kode_lahan = r.kode_lahan
-        INNER JOIN procurement p ON r.kode_lahan = r.kode_lahan
+        INNER JOIN procurement p ON p.kode_lahan = r.kode_lahan
+        INNER JOIN equipment e ON e.kode_lahan = r.kode_lahan
         INNER JOIN vendor v ON p.nama_vendor = v.kode_vendor
         WHERE r.status_kom = 'Approve'
         GROUP BY l.kode_lahan";
@@ -45,11 +46,13 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        .hidden {
-            display: none;
-        }
-    </style>
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
+<style>
+    .hidden {
+        display: none;
+    }
+</style>
 </head>
 
 <body class="text-left">
@@ -553,7 +556,6 @@ if ($result && $result->num_rows > 0) {
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
     
     <script>
     $(document).ready(function(){

@@ -46,11 +46,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         if ($stmt_update->execute() === TRUE) {
             // Jika status_spk diubah menjadi Approve
             if ($status_fat == 'Approve') {
+                $spk_date = date("Y-m-d H:i:s");
+                $status_legalizin = "In Process";
+                $status_gostore = 'In Process';
+
                 // Update status_kom di tabel resto menjadi "In Process"
-                $sql_update_kom = "UPDATE resto SET status_fat = ?, fat_date = ? WHERE id = ?";
+                $sql_update_kom = "UPDATE resto SET status_fat = ?, fat_date = ?, status_spk = 'Signed', spk_date = ?, status_legalizin = ?, status_gostore = ? WHERE id = ?";
                 $stmt_update_kom = $conn->prepare($sql_update_kom);
-                $stmt_update_kom->bind_param("ssi", $status_fat, $fat_date, $id);
+                $stmt_update_kom->bind_param("ssssi", $status_fat, $fat_date, $spk_date, $status_legalizin, $status_gostore, $id);
                 $stmt_update_kom->execute();
+
+                // Query untuk memperbarui submit_legal dan catatan_owner di tabel procurement
+                $sql_update_pending = "UPDATE procurement SET status_approvprocurement = 'Signed',  WHERE id = ?";
+                $stmt_update_pending = $conn->prepare($sql_update_pending);
+                $stmt_update_pending->bind_param("i", $id);
+                $stmt_update_pending->execute();
+                
                 // Periksa apakah kode_lahan ada di tabel hold_project
                 $sql_check_hold = "SELECT kode_lahan FROM hold_project WHERE kode_lahan = (SELECT kode_lahan FROM procurement WHERE id = ?)";
                 $stmt_check_hold = $conn->prepare($sql_check_hold);
@@ -93,6 +104,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 $stmt_hold = $conn->prepare($sql_hold);
                 $stmt_hold->bind_param("sssssss", $kode_lahan, $issue_detail, $pic, $action_plan, $due_date, $status_hold, $kronologi);
                 $stmt_hold->execute();
+
+                // Komit transaksi
+                $conn->commit();
+                echo "Status berhasil diperbarui dan data ditahan.";
+            } elseif ($status_fat == 'In Revision') {
+                // Ambil kode_lahan dari tabel procurement
+                $sql_get_kode_lahan = "SELECT kode_lahan FROM procurement WHERE id = ?";
+                $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+                $stmt_get_kode_lahan->bind_param("i", $id);
+                $stmt_get_kode_lahan->execute();
+                $stmt_get_kode_lahan->bind_result($kode_lahan);
+                $stmt_get_kode_lahan->fetch();
+                $stmt_get_kode_lahan->free_result();
+
+                // Query untuk memperbarui submit_legal dan catatan_owner di tabel procurement
+                $sql_update_pending = "UPDATE procurement SET status_approvprocurement = 'In Revision' WHERE id = ?";
+                $stmt_update_pending = $conn->prepare($sql_update_pending);
+                $stmt_update_pending->bind_param("i", $id);
+                $stmt_update_pending->execute();
+                
+                // Update status_kom di tabel resto menjadi "In Process"
+                $sql_update_kom = "UPDATE resto SET status_fat = ?, fat_date = ?, status_spk = 'In Revision' WHERE id = ?";
+                $stmt_update_kom = $conn->prepare($sql_update_kom);
+                $stmt_update_kom->bind_param("ssi", $status_fat, $fat_date, $id);
+                $stmt_update_kom->execute();
 
                 // Komit transaksi
                 $conn->commit();

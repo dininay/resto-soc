@@ -109,6 +109,22 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="obstacle_kom">Obstacle</label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="obstacle_kom" name="obstacle_kom" onchange="toggleObstacleDetail()">
+                                        <option>Pilih</option>
+                                            <option value="Yes" <?php echo ($row['obstacle_kom'] == 'Yes') ? 'selected' : ''; ?>>Ya</option>
+                                            <option value="No" <?php echo ($row['obstacle_kom'] == 'No') ? 'selected' : ''; ?>>Tidak</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group row" id="note_kom" style="display: none;">
+                                    <label class="col-sm-3 col-form-label" for="note_kom">Catatan</label>
+                                    <div class="col-sm-9">
+                                        <textarea class="form-control" id="note_kom" name="note_kom" rows="4" cols="50"><?php echo $row['note_kom']; ?></textarea>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
                                     <div class="col-sm-9">
                                         <button class="btn btn-primary" type="submit">Simpan</button>
                                     </div>
@@ -304,6 +320,26 @@ if(isset($_GET['id'])) {
             });
         });
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.2/dropzone.min.js"></script><script>
+    function toggleObstacleDetail() {
+        var obstacleSelect = document.getElementById("obstacle");
+        var obstacleDetail = document.getElementById("obstacle-detail");
+        var lampSurvey = document.getElementById("lamp-survey");
+        var noteDetail = document.getElementById("note");
+        if (obstacleSelect.value === "Yes") {
+            obstacleDetail.style.display = "flex";
+            noteDetail.style.display = "flex";
+            lampSurvey.style.display = "flex";
+        } else {
+            obstacleDetail.style.display = "none";
+            noteDetail.style.display = "none";
+            lampSurvey.style.display = "none";
+        }
+    }
+
+    // Panggil fungsi saat halaman dimuat untuk menyesuaikan tampilan berdasarkan nilai awal
+    window.onload = toggleObstacleDetail;
+</script>
 </body>
 
 </html>

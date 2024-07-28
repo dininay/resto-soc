@@ -342,7 +342,7 @@ if ($result && $result->num_rows > 0) {
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['status_approvprocurement']) {
-                                                            case 'Approve':
+                                                            case 'Signed':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -396,7 +396,10 @@ if ($result && $result->num_rows > 0) {
                                                 </td>
                                                 <td>
                                                     <!-- Tombol Edit -->
-                                                    <?php if ($row['status_approvprocurement'] != "Approve"): ?>
+                                                    <?php if ($row['status_approvprocurement'] != "Signed"): ?>
+                                                        <a href="procurement/procurement-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
+                                                            <i class="i-Pen-2"></i>
+                                                        </a>
                                                         <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_approvprocurement'] ?>">
                                                             <i class="nav-icon i-Book"></i>
                                                         </button>
@@ -421,7 +424,8 @@ if ($result && $result->num_rows > 0) {
                                                                         <select class="form-control" id="statusSelect" name="status_approvprocurement" Placeholder="Pilih">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
-                                                                            <option value="Approve">Approve</option>
+                                                                            <option value="Signed">Signed</option>
+                                                                            <option value="In Review by TAF">In review by TAF</option>
                                                                         </select>
                                                                     </div>
                                                                     <div class="form-group">

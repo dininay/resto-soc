@@ -102,8 +102,78 @@ $conn->close();
                                         <input type="text" class="form-control" id="city" name="city" value="<?php echo $city_name; ?>" readonly>
                                     </div>
                                 </div>
-
                                 <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="nama_vendor">Nama Vendor</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="nama_vendor" name="nama" type="text" placeholder="Nama Vendor" value="<?php echo $row['nama_vendor']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="alamat_vendor">Alamat Vendor</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="alamat_vendor" name="alamat" type="text" placeholder="Alamat Vendor" value="<?php echo $row['alamat']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="nohp_vendor">No HP Vendor</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="nohp_vendor" name="nohp" type="text" placeholder="No HP Vendor" value="<?php echo $row['nohp']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="detail_vendor">Detail</label>
+                                    <div class="col-sm-9">
+                                        <textarea class="form-control" id="detail_vendor" name="detail" rows="4" cols="50"><?php echo $row['detail']; ?></textarea>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Lampiran Company Profile Sebelumnya</label>
+                                    <div class="col-sm-9">
+                                        <?php echo $row['lamp_profil']; ?>
+                                    </div>
+                                </div>
+                                <!-- Tambahkan pertanyaan apakah ingin mengganti lampiran -->
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Mau Ganti Lampiran?</label>
+                                    <div class="col-sm-9">
+                                        <input type="radio" name="ganti_lampirancp" value="ya"> Ya
+                                        <input type="radio" name="ganti_lampirancp" value="tidak" checked> Tidak
+                                    </div>
+                                </div>
+                                <!-- Jika pengguna ingin mengganti lampiran, tampilkan input untuk unggah file -->
+                                <div class="form-group row" id="lampiran_barucp" style="display: none;">
+                                    <label class="col-sm-3 col-form-label" for="lamp_profil">Upload Baru</label>
+                                    <div class="col-sm-9">
+                                        <div class="dropzone" id="multple-file-upload">
+                                            <input name="lamp_profil[]" type="file" multiple="multiple" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Lampiran Sebelumnya</label>
+                                    <div class="col-sm-9">
+                                        <?php echo $row['lamp_vendor']; ?>
+                                    </div>
+                                </div>
+                                <!-- Tambahkan pertanyaan apakah ingin mengganti lampiran -->
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Mau Ganti Lampiran?</label>
+                                    <div class="col-sm-9">
+                                        <input type="radio" name="ganti_lampiran" value="ya"> Ya
+                                        <input type="radio" name="ganti_lampiran" value="tidak" checked> Tidak
+                                    </div>
+                                </div>
+                                <!-- Jika pengguna ingin mengganti lampiran, tampilkan input untuk unggah file -->
+                                <div class="form-group row" id="lampiran_baru" style="display: none;">
+                                    <label class="col-sm-3 col-form-label" for="lamp_vendor">Upload Baru</label>
+                                    <div class="col-sm-9">
+                                        <div class="dropzone" id="multple-file-upload">
+                                            <input name="lamp_vendor[]" type="file" multiple="multiple" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- <div class="form-group row">
                                     <label class="col-sm-3 col-form-label" for="nama_vendor">Nama Vendor</label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="nama_vendor" name="nama_vendor">
@@ -119,7 +189,7 @@ $conn->close();
                                             ?>
                                         </select>
                                     </div>
-                                </div>
+                                </div> -->
                                     <!-- <div class="form-group row">
                                         <label class="col-sm-3 col-form-label" for="lamp_profil">Lampiran Company Profile</label>
                                         <div class="col-sm-9">
@@ -314,6 +384,33 @@ $conn->close();
     <script src="../../dist-assets/js/scripts/script.min.js"></script>
     <script src="../../dist-assets/js/scripts/sidebar.compact.script.min.js"></script>
     <script src="../../dist-assets/js/scripts/customizer.script.min.js"></script>
+    <script>
+    // Tambahkan event listener untuk radio button ganti_lampirancp
+    document.querySelectorAll('input[name="ganti_lampirancp"]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            if (this.value === 'ya') {
+                // Jika pilihannya ya, tampilkan input untuk unggah file baru
+                document.getElementById('lampiran_barucp').style.display = 'block';
+            } else {
+                // Jika pilihannya tidak, sembunyikan input untuk unggah file baru
+                document.getElementById('lampiran_barucp').style.display = 'none';
+            }
+        });
+    });
+
+    // Tambahkan event listener untuk radio button ganti_lampiran
+    document.querySelectorAll('input[name="ganti_lampiran"]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            if (this.value === 'ya') {
+                // Jika pilihannya ya, tampilkan input untuk unggah file baru
+                document.getElementById('lampiran_baru').style.display = 'block';
+            } else {
+                // Jika pilihannya tidak, sembunyikan input untuk unggah file baru
+                document.getElementById('lampiran_baru').style.display = 'none';
+            }
+        });
+    });
+</script>
     <script>
     function fetchVendors(cityId) {
         var xhr = new XMLHttpRequest();

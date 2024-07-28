@@ -60,6 +60,7 @@ if ($result_in_preparation->num_rows > 0) {
 // Ambil data dari tabel resto
 $sql = "SELECT 
 resto.*,
+equipment.*,
 land.nama_lahan,
 land.lokasi,
 dokumen_loacd.kode_store,
@@ -133,6 +134,7 @@ socdate_it.akun_gis,
             (CASE WHEN socdate_sdg.no_listrik IS NOT NULL AND socdate_sdg.lamp_listrik IS NOT NULL AND socdate_sdg.lamp_ka IS NOT NULL AND socdate_sdg.lamp_ipal IS NOT NULL AND socdate_sdg.lamp_eqp IS NOT NULL AND socdate_sdg.lamp_ba IS NOT NULL THEN 100 ELSE 0 END) AS sdg
         FROM land
         JOIN resto ON land.kode_lahan = resto.kode_lahan
+        JOIN equipment ON land.kode_lahan = equipment.kode_lahan
         JOIN dokumen_loacd ON land.kode_lahan = dokumen_loacd.kode_lahan
         LEFT JOIN re ON land.kode_lahan = re.kode_lahan
         LEFT JOIN draft ON land.kode_lahan = draft.kode_lahan

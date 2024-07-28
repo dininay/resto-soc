@@ -1,12 +1,13 @@
 <?php
 // Koneksi ke database
 include "../koneksi.php";
+$status_obslegal = "";
 
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT sdg_desain.*, dokumen_loacd.kode_store
  FROM sdg_desain 
  JOIN dokumen_loacd ON sdg_desain.kode_lahan = dokumen_loacd.kode_lahan
- where sdg_desain.status_obssdg = 'Diajukan'
+ where sdg_desain.status_obslegal IN ('In Process', 'Done')
  GROUP BY sdg_desain.kode_lahan";
 $result = $conn->query($sql);
 
@@ -37,6 +38,8 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>   
 <style>
     .hidden {
         display: none;
@@ -222,7 +225,7 @@ if ($result && $result->num_rows > 0) {
                                                 <td>
                                                     <!-- Tombol Edit -->
                                                     <?php if ($row['status_obslegal'] != "Done"): ?>
-                                                            <a href="legal/obstacle-legal-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                            <a href="legal/obstacle-legal-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
                                                             <i class="i-Pen-2"></i>
                                                             </a>
                                                         <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_obslegal'] ?>">
@@ -515,7 +518,6 @@ if ($result && $result->num_rows > 0) {
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
     
     <script>
     $(document).ready(function(){

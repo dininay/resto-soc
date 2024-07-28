@@ -75,6 +75,7 @@ if ($result && $result->num_rows > 0) {
                                             <tr>
                                                 <th>Kode Lahan</th>
                                                 <th>Hand Over Training</th>
+                                                <th>Persen Hand Over Training</th>
                                                 <th>Lampiran Hand Over Training</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
@@ -86,6 +87,7 @@ if ($result && $result->num_rows > 0) {
                                             <tr>
                                                 <td><?= $row['kode_lahan'] ?></td>
                                                 <td><?= $row['hot'] ?></td>
+                                                <td><?= $row['persen_hot'] ?>%</td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_hot_files = explode(",", $row['lamp_hot']); // Pisahkan nama file menjadi array
@@ -235,6 +237,7 @@ if ($result && $result->num_rows > 0) {
                                             <tr>
                                                 <th>Kode Lahan</th>
                                                 <th>Hand Over Training</th>
+                                                <th>Persen Hand Over Training</th>
                                                 <th>Lampiran Hand Over Training</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>

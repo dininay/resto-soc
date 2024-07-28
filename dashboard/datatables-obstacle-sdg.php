@@ -96,9 +96,9 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Lampiran Legal</th>
                                                 <th>Obstacle Legal Date</th>
                                                 <th>Status Legal</th>
-                                                <th>Status Survey Lahan</th>
+                                                <th>Lampiran Survey & Layouting</th>
+												<th>Status Survey & Layouting</th>
                                                 <th>SLA</th>
-												<th>Status Layouting</th>
                                                 <th>Action</th>
                                             </tr>
                                         </thead>
@@ -159,7 +159,7 @@ if ($result && $result->num_rows > 0) {
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['status_obslegal']) {
-                                                            case 'Approve':
+                                                            case 'Done':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -179,31 +179,50 @@ if ($result && $result->num_rows > 0) {
                                                     <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
                                                         <?php echo $row['status_obslegal']; ?>
                                                     </span>
-                                                </td>
+                                                </td> 
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_survey_files = explode(",", $row['lamp_survey']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_survey'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_survey_files as $loacd) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $loacd . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>  
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
-                                                        switch ($row['status_survey']) {
+                                                        switch ($row['status_obssdg']) {
                                                             case 'Done':
                                                                 $badge_color = 'success';
                                                                 break;
-                                                            case 'Pending':
-                                                                $badge_color = 'danger';
-                                                                break;
-                                                            case 'In Process':
-                                                                $badge_color = 'warning';
-                                                                break;
-                                                                case 'Not Obstacle':
-                                                                    $badge_color = 'success';
-                                                                    break;
+                                                                    case 'In Process':
+                                                                        $badge_color = 'warning';
+                                                                        break;
+                                                                        case 'Pending':
+                                                                            $badge_color = 'danger';
+                                                                            break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
                                                                 break;
                                                         }
                                                     ?>
                                                     <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_survey']; ?>
+                                                        <?php echo $row['status_obssdg']; ?>
                                                     </span>
                                                 </td>
                                                 <td>
@@ -219,7 +238,7 @@ if ($result && $result->num_rows > 0) {
                                                     $diff = $today->diff($sla_survey);
                                                     
                                                     // Jika status_approvowner adalah "Approve"
-                                                    if ($row['status_obssdg'] == "Not Obstacle" ) {
+                                                    if ($row['status_obssdg'] == "Done") {
                                                         echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
                                                         echo '<p>Status changed to Approved on: ' . $row['obs_date'] . '</p>';
                                                     } else {
@@ -242,35 +261,9 @@ if ($result && $result->num_rows > 0) {
                                                     ?>
                                                 </td>
                                                 <td>
-                                                    <?php
-                                                        // Tentukan warna badge berdasarkan status approval owner
-                                                        $badge_color = '';
-                                                        switch ($row['status_obssdg']) {
-                                                            case 'Diajukan':
-                                                                $badge_color = 'success';
-                                                                break;
-                                                                case 'Not Obstacle':
-                                                                    $badge_color = 'success';
-                                                                    break;
-                                                                    case 'In Process':
-                                                                        $badge_color = 'warning';
-                                                                        break;
-                                                                        case 'Pending':
-                                                                            $badge_color = 'danger';
-                                                                            break;
-                                                            default:
-                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
-                                                                break;
-                                                        }
-                                                    ?>
-                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_obssdg']; ?>
-                                                    </span>
-                                                </td>
-                                                <td>
                                                 <!-- Tombol Edit -->
                                                         <div>
-                                                            <?php if ($row['status_obssdg'] !== 'Not Obstacle' && $row['status_obssdg'] !== 'Diajukan') : ?>
+                                                            <?php if ($row['status_obssdg'] !== 'Done') : ?>
                                                             <a href="sdg-design/obstacle-land-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
                                                             <i class="i-Pen-2"></i>
                                                             </a>
@@ -297,9 +290,8 @@ if ($result && $result->num_rows > 0) {
                                                                         <label for="statusSelect">Status Layouting</label>
                                                                         <select class="form-control" id="statusSelect" name="status_obssdg">
                                                                             <option value="In Process">In Process</option>
-                                                                            <option value="Not Obstacle">Not Obstacle</option>
-                                                                            <option value="Diajukan">Diajukan</option>
                                                                             <option value="Pending">Pending</option>
+                                                                            <option value="Done">Done</option>
                                                                         </select>
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">
@@ -341,8 +333,8 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Lampiran Legal</th>
                                                 <th>Obstacle Legal Date</th>
                                                 <th>Status Legal</th>
-                                                <th>Status Survey Lahan</th>
-												<th>Status Layouting</th>
+                                                <th>Lampiran Survey & Layouting</th>
+												<th>Status Survey & Layouting</th>
                                                 <th>SLA</th>
                                                 <th>Action</th>
                                             </tr>

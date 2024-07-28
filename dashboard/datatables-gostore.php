@@ -161,9 +161,9 @@ if ($result && $result->num_rows > 0) {
                                                         <a href="owner/gostore-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>
-                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_gostore'] ?>">
+                                                        <!-- <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_gostore'] ?>">
                                                             <i class="nav-icon i-Book"></i>
-                                                        </button>
+                                                        </button> -->
                                                     </div>
 
                                                 <!-- Modal -->

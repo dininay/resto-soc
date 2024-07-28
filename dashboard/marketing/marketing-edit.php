@@ -12,6 +12,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $id_m_shopee = $_POST['id_m_shopee'];
     $id_m_grab = $_POST['id_m_grab'];
     $email_resto = $_POST['email_resto'];
+    $lamp_content = $_POST['lamp_content'];
+    $issue_marketing = isset($_POST["issue_marketing"]) ? $_POST["issue_marketing"] : null;
+    $note_issuemarketing = isset($_POST["note_issuemarketing"]) ? $_POST["note_issuemarketing"] : null;
+    $catatan_marketing = $_POST['catatan_marketing'];
     // Periksa apakah kunci 'lampiran' ada dalam $_FILES
     $lamp_gmaps = "";
 
@@ -62,8 +66,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $lamp_merchant = implode(",", $lamp_merchant_paths);
     }
 
+
     // Update data di database
-    $sql = "UPDATE socdate_marketing SET lamp_gmaps = '$lamp_gmaps', gmaps = '$gmaps', id_m_gojek = '$id_m_gojek', id_m_grab = '$id_m_grab', id_m_shopee = '$id_m_shopee', email_resto = '$email_resto', lamp_merchant = '$lamp_merchant' WHERE id = '$id'";
+    $sql = "UPDATE socdate_marketing SET lamp_gmaps = '$lamp_gmaps', gmaps = '$gmaps', id_m_gojek = '$id_m_gojek', id_m_grab = '$id_m_grab', id_m_shopee = '$id_m_shopee', email_resto = '$email_resto', lamp_merchant = '$lamp_merchant', lamp_content = '$lamp_content' WHERE id = '$id'";
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
         header("Location:" . $base_url . "/datatables-marketing.php");

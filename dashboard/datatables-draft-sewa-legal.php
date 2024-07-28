@@ -67,7 +67,7 @@ $conn->close();
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Data Draft Akta Sewa Legal</h1>
+                    <h1>Data Draft Table Sewa</h1>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
                 <!-- end of row-->
@@ -94,10 +94,12 @@ $conn->close();
                                                 <th>Lampiran Loa CD</th>
                                                 <th>Lampiran VL</th>
                                                 <th>Lampiran VD</th>
+                                                <th>Lampiran PSM Legal</th>
                                                 <th>Lampiran Draft</th>
-                                                <th>Penjadwalan PSM</th>
-                                                <th>Catatan</th>
-                                                <th>Confirm Legal</th>
+                                                <th>Status Legal</th>
+                                                <th>Catatan Legal</th>
+                                                <th>Catatan RE</th>
+                                                <th>Confirm RE</th>
                                                 <th>SLA</th>
 												<th>Action</th>
                                             </tr>
@@ -184,7 +186,29 @@ $conn->close();
                                                     // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
                                                     echo '<td></td>';
                                                 }
-                                                ?>                  
+                                                ?>                     
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_psm_files = explode(",", $row['lamp_signpsm']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_signpsm'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_psm_files as $file) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $file . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>                     
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_loacd_files = explode(",", $row['lamp_draf']); // Pisahkan nama file menjadi array
@@ -207,7 +231,30 @@ $conn->close();
                                                     echo '<td></td>';
                                                 }
                                                 ?>          
-                                                <td><?= $row['jadwal_psm'] ?></td>
+                                                <td>
+                                                    <?php
+                                                        // Tentukan warna badge berdasarkan status approval owner
+                                                        $badge_color = '';
+                                                        switch ($row['confirm_nego']) {
+                                                            case 'Approve':
+                                                                $badge_color = 'success';
+                                                                break;
+                                                            case 'Pending':
+                                                                $badge_color = 'danger';
+                                                                break;
+                                                            case 'In Process':
+                                                                $badge_color = 'warning';
+                                                                break;
+                                                            default:
+                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
+                                                                break;
+                                                        }
+                                                    ?>
+                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
+                                                        <?php echo $row['confirm_nego']; ?>
+                                                    </span>
+                                                </td>
+                                                <td><?= $row['catatan_psm'] ?></td>
                                                 <td><?= $row['catatan_legal'] ?></td>
                                                 <td>
                                                     <?php
@@ -343,10 +390,12 @@ $conn->close();
                                                 <th>Lampiran Loa CD</th>
                                                 <th>Lampiran VL</th>
                                                 <th>Lampiran VD</th>
+                                                <th>Lampiran PSM Legal</th>
                                                 <th>Lampiran Draft</th>
-                                                <th>Penjadwalan PSM</th>
-                                                <th>Catatan</th>
-                                                <th>Confirm Legal</th>
+                                                <th>Status Legal</th>
+                                                <th>Catatan Legal</th>
+                                                <th>Catatan RE</th>
+                                                <th>Confirm RE</th>
                                                 <th>SLA</th>
 												<th>Action</th>
                                             </tr>

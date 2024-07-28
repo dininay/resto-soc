@@ -8,6 +8,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $id = $_POST['id'];
     $kode_lahan = $_POST['kode_lahan'];
     $start_konstruksi = $_POST['start_konstruksi']; // Assuming this value is posted from form
+    $obstacle_kom = $_POST['obstacle_kom']; // Assuming this value is posted from form
+    $note_kom = isset($_POST["note_kom"]) ? $_POST["note_kom"] : null;// Assuming this value is posted from form
     $status_consact = "In Process";
     $lamp_kom = "";
 
@@ -41,9 +43,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Update data di database untuk tabel resto
-    $sql1 = "UPDATE resto SET lamp_kom = ?, start_konstruksi = ? WHERE id = ?";
+    $sql1 = "UPDATE resto SET lamp_kom = ?, start_konstruksi = ?, obstacle_kom = ?, note_kom = ? WHERE id = ?";
     $stmt1 = $conn->prepare($sql1);
-    $stmt1->bind_param("ssi", $lamp_kom, $start_konstruksi, $id);
+    $stmt1->bind_param("ssssi", $lamp_kom, $start_konstruksi, $obstacle_kom, $note_kom, $id);
 
     // Execute both queries
     if ($stmt1->execute()) {

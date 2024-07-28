@@ -71,6 +71,12 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="persenff_2">Persen Fulfillment 2</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="persenff_2" name="persenff_2" type="text" placeholder="Persen Fulfillment 2" value="<?php echo $row['persenff_2']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
                                     <label class="col-sm-3 col-form-label" for="lamp_ff2">Upload Lampiran Hand Over Training</label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >

@@ -67,7 +67,7 @@ if(isset($_GET['id'])) {
                                 <div class="form-group row">
                                     <label class="col-sm-2 col-form-label" for="masa_berlaku">Masa Berlaku</label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="masa_berlaku" name="masa_berlaku" type="text" value="<?php echo $row['masa_berlaku']; ?>" placeholder="Masa Berlaku Sewa (Bulan)" />
+                                        <input class="form-control" id="masa_berlaku" name="masa_berlaku" type="text" value="<?php echo $row['masa_berlaku']; ?>" placeholder="Masa Berlaku Sewa (Tahun)" />
                                     </div>
                                 </div>
                                 <div class="form-group row">

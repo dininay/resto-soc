@@ -63,6 +63,20 @@ if(isset($_GET['id'])) {
                             <form method="post" action="obstacle-land-edit.php" enctype="multipart/form-data">
                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="note_survey">Result Survey</label>
+                                    <div class="col-sm-9">
+                                        <textarea class="form-control" id="note_survey" name="note_survey" rows="4" cols="50"><?php echo $row['note_survey']; ?></textarea>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="lamp_survey">Upload Dokumen Pendukung</label>
+                                    <div class="col-sm-9">
+                                        <div class="dropzone" id="multple-file-upload" >
+                                            <input name="lamp_survey[]" type="file" multiple="multiple" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
                                     <label class="col-sm-3 col-form-label" for="obstacle">Obstacle</label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="obstacle" name="obstacle" onchange="toggleObstacleDetail()">

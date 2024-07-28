@@ -64,11 +64,13 @@ socdate_marketing.*,
 socdate_fat.*,
 sign.*,
 summary_soc.*,
+    dokumen_loacd.kode_store,
             land.kode_lahan AS land_kode_lahan,
             draft.end_date AS draft_end_date
 FROM land
 JOIN resto ON resto.kode_lahan = land.kode_lahan
 JOIN soc_sdg ON soc_sdg.kode_lahan = land.kode_lahan
+JOIN dokumen_loacd ON dokumen_loacd.kode_lahan = land.kode_lahan
 LEFT JOIN sdg_pk ON sdg_pk.kode_lahan = land.kode_lahan
 LEFT JOIN socdate_hr ON socdate_hr.kode_lahan = land.kode_lahan
 LEFT JOIN draft ON draft.kode_lahan = land.kode_lahan
@@ -593,7 +595,7 @@ $departmentDataJSON = json_encode($departmentData);
                                                 <tr>
                                                     <th colspan="1" class="sticky" style="background-color: #6c757d; color: white;">Store</th>
                                                     <?php foreach ($data as $row): ?>
-                                                    <th colspan="9" style="background-color: #6c757d; color: white;"><?= $row['land_kode_lahan'] ?></th>
+                                                    <th colspan="9" style="background-color: #6c757d; color: white;"><?= $row['kode_store'] ?></th>
                                                     <?php endforeach; ?>
                                                 </tr>
                                                 <tr>

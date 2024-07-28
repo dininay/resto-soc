@@ -11,7 +11,7 @@ $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, 
         INNER JOIN dokumen_loacd c ON d.kode_lahan = c.kode_lahan
         INNER JOIN sdg_desain s ON d.kode_lahan = s.kode_lahan
         INNER JOIN resto r ON d.kode_lahan = r.kode_lahan
-        WHERE s.submit_legal IN ('In Process', 'Approve', 'Pending')";
+        WHERE s.submit_legal IN ('In Process', 'Done', 'Pending')";
 $result = $conn->query($sql);
 
 

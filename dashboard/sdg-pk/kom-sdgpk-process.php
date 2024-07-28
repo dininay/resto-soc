@@ -67,6 +67,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                         $row_sla_steqp = $result_sla_steqp->fetch_assoc();
                         $hari_sla_steqp = $row_sla_steqp['sla'];
                         $sla_steqp = date("Y-m-d", strtotime("$start_konstruksi + $hari_sla_steqp days"));
+                        $sla_eqpdev = date("Y-m-d", strtotime("$start_konstruksi + $hari_sla_steqp days"));
+                        $sla_eqpdevprocur = date("Y-m-d", strtotime("$start_konstruksi + $hari_sla_steqp days"));
+                        $sla_eqpsite = date("Y-m-d", strtotime("$start_konstruksi + $hari_sla_steqp days"));
                     } else {
                         $conn->rollback();
                         echo "Error: Data SLA tidak ditemukan untuk divisi ST-EQP.";
@@ -87,13 +90,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                     }
 
                     // Update sla_steqp, sla_stkonstruksi, status_steqp, status_stkonstruksi, status_land, status_gostore di tabel resto
-                    $sql_update_resto = "UPDATE resto SET sla_steqp = ?, sla_stkonstruksi = ?, status_steqp = ?, status_stkonstruksi = ?, status_land = ?, status_gostore = ? WHERE id = ?";
+                    $sql_update_resto = "UPDATE resto SET status_stkonstruksi = ?, status_land = ?, status_gostore = ? WHERE id = ?";
                     $stmt_update_resto = $conn->prepare($sql_update_resto);
                     $status_steqp = "In Process";
                     $status_stkonstruksi = "In Process";
                     $status_land = "In Process";
                     $status_gostore = "In Process";
-                    $stmt_update_resto->bind_param("ssssssi", $sla_steqp, $sla_stkonstruksi, $status_steqp, $status_stkonstruksi, $status_land, $status_gostore, $id);
+                    $stmt_update_resto->bind_param("sssi", $status_stkonstruksi, $status_land, $status_gostore, $id);
+
+                    // Update sla_steqp, sla_stkonstruksi, status_steqp, status_stkonstruksi, status_land, status_gostore di tabel resto
+                    $sql_update_eqp = "INSERT equipment SET (kode_lahan, sla_steqp, sla_stkonstruksi, status_steqp, status_eqpdev, sla_eqpdev, sla_eqpdevprocur, sla_eqpsite) VALUES (?,?,?,?,?)";
+                    $stmt_update_eqp = $conn->prepare($sql_update_eqp);
+                    $status_steqp = "In Process";
+                    $status_eqpdev = "In Process";
+                    $stmt_update_eqp->bind_param("ssssssss", $kode_lahan, $sla_steqp, $sla_stkonstruksi, $status_steqp, $status_eqpdev, $sla_eqpdev, $sla_eqpdevprocur, $sla_eqpsite);
+                    $stmt_update_eqp->execute();
 
                     // Query untuk memasukkan data ke dalam tabel hold_project
                     $sql_summary = "INSERT INTO summary_soc (kode_lahan) VALUES (?)";

@@ -42,6 +42,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
     try {
         if ($status_obssdg == 'Not Obstacle') {
             $start_date = date("Y-m-d H:i:s");
+            $obs_date = date("Y-m-d H:i:s");
         
             // Ambil jumlah hari SLA dari tabel master_sla berdasarkan divisi = Negotiator
             $sql_select_sla_negosiator = "SELECT sla FROM master_sla WHERE divisi = 'Design'";
@@ -130,7 +131,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 echo "Error: " . $e->getMessage();
             }
         } elseif ($status_obssdg == 'Diajukan') {
-            $start_date = date("Y-m-d H:i:s");
+                $obs_date = date("Y-m-d H:i:s");
+                $start_date = date("Y-m-d H:i:s");
+                $confirm_sdgdesain = "In Process";
+                $status_obslegal = "In Process";
                 // Ambil kode_lahan dari tabel sdg_desain
                 $sql_get_kode_lahan = "SELECT kode_lahan FROM sdg_desain WHERE id = ?";
                 $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
@@ -149,17 +153,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 $stmt_get_kode_lahan->fetch();
                 $stmt_get_kode_lahan->free_result();
 
-                // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_$status_obssdg
-                $sql = "UPDATE sdg_desain SET status_obssdg = ?, obs_date = ?, sla_date = ?, confirm_sdgdesain = ?, status_obslegal = ?, sla_obslegal = ? WHERE id = ?";
-                $stmt = $conn->prepare($sql);
-                $stmt->bind_param("sssssi", $status_obssdg, $obs_date, $slavd_date, $confirm_sdgdesain, $status_obslegal, $slaloa_date, $id);
         
+                // Ambil jumlah hari SLA dari tabel master_sla berdasarkan divisi = Negotiator
+                $sql_select_sla_negosiator = "SELECT sla FROM master_sla WHERE divisi = 'Design'";
+                $result_select_sla_negosiator = $conn->query($sql_select_sla_negosiator);
+    
+                if ($result_select_sla_negosiator && $result_select_sla_negosiator->num_rows > 0) {
+                    $row_sla_negosiator = $result_select_sla_negosiator->fetch_assoc();
+                    $sla_negosiator_days = $row_sla_negosiator['sla'];
+    
+                    // Tambahkan jumlah hari SLA Negotiator ke end_date untuk mendapatkan nego_date
+                    $slavd_date = date('Y-m-d H:i:s', strtotime($start_date . ' + ' . $sla_negosiator_days . ' days'));
+                    
+                    // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_$status_obssdg
+                    $sql = "UPDATE sdg_desain SET status_obssdg = ?, obs_date = ?, sla_date = ?, confirm_sdgdesain = ?, status_obslegal = ?, sla_obslegal = ? WHERE id = ?";
+                    $stmt = $conn->prepare($sql);
+                    $stmt->bind_param("ssssssi", $status_obssdg, $obs_date, $slavd_date, $confirm_sdgdesain, $status_obslegal, $slaloa_date, $id);
+                    var_dump($status_obssdg);
+                    var_dump($obs_date);
+                    var_dump($slavd_date);
+                    var_dump($confirm_sdgdesain);
+                    var_dump($status_obslegal);
+                    var_dump($slaloa_date);
+                    
+                } else {
+                    echo "Error: Tidak dapat mengambil data SLA Negotiator dari tabel master_sla.";
+                }
+            
+            // Komit transaksi
+            $conn->commit();
+            echo "Status berhasil diperbarui.";
+            
             // Eksekusi query
             if ($stmt->execute() === TRUE) {
-                echo "<script>
-                        alert('Status berhasil diperbarui.');
-                        window.location.href = window.location.href;
-                     </script>";
+                echo "";
             } else {
                 echo "Error: " . $sql . "<br>" . $conn->error;
             }

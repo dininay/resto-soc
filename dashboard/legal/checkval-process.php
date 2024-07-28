@@ -65,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             }
 
             // Ambil jumlah hari SLA dari tabel master_sla berdasarkan divisi = Negotiator
-            $sql_select_sla_negosiator = "SELECT sla FROM master_sla WHERE divisi = 'Draft-Sewa'";
+            $sql_select_sla_negosiator = "SELECT sla FROM master_sla WHERE divisi = 'Table Sewa'";
             $result_select_sla_negosiator = $conn->query($sql_select_sla_negosiator);
             if (!$result_select_sla_negosiator) {
                 throw new Exception("Error retrieving SLA Negotiator: " . $conn->error);
@@ -86,15 +86,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 if (!$stmt_insert_draft->execute()) {
                     throw new Exception("Error inserting draft: " . $stmt_insert_draft->error);
                 }
-
-                // Masukkan juga perintah untuk mengupdate status_confirm_nego di tabel draft menjadi "In Process"
-                $sql_update_confirm_nego = "UPDATE draft SET confirm_nego = 'In Process' WHERE kode_lahan = ?";
-                $stmt_update_confirm_nego = $conn->prepare($sql_update_confirm_nego);
-                $stmt_update_confirm_nego->bind_param("s", $kode_lahan);
-                if (!$stmt_update_confirm_nego->execute()) {
-                    throw new Exception("Error updating confirm_nego: " . $stmt_update_confirm_nego->error);
+                
+                // Ambil jumlah hari SLA dari tabel master_sla berdasarkan divisi = Negotiator
+                $sql_select_sla_psm = "SELECT sla FROM master_sla WHERE divisi = 'Final PSM'";
+                $result_select_sla_psm = $conn->query($sql_select_sla_psm);
+                if (!$result_select_sla_psm) {
+                    throw new Exception("Error retrieving SLA Negotiator: " . $conn->error);
                 }
+                
+                    if ($result_select_sla_psm->num_rows > 0) {
+                        $row_sla_psm = $result_select_sla_psm->fetch_assoc();
+                        $sla_psm_days = $row_sla_psm['sla'];
 
+                        // Tambahkan jumlah hari SLA Negotiator ke end_date untuk mendapatkan sla_date
+                        $slapsm_date = date('Y-m-d H:i:s', strtotime($end_date . ' + ' . $sla_psm_days . ' days'));
+                        // Masukkan juga perintah untuk mengupdate status_confirm_nego di tabel draft menjadi "In Process"
+                        $sql_update_confirm_nego = "UPDATE draft SET confirm_nego = 'In Process', slapsm_date WHERE kode_lahan = ?";
+                        $stmt_update_confirm_nego = $conn->prepare($sql_update_confirm_nego);
+                        $stmt_update_confirm_nego->bind_param("ss", $slapsm_date, $kode_lahan);
+                        if (!$stmt_update_confirm_nego->execute()) {
+                            throw new Exception("Error updating confirm_nego: " . $stmt_update_confirm_nego->error);
+                        }
+                    } else {
+                        throw new Exception("Error: Tidak dapat mengambil data SLA Negotiator dari tabel master_sla.");
+                    }
             } else {
                 throw new Exception("Error: Tidak dapat mengambil data SLA Negotiator dari tabel master_sla.");
             }
@@ -150,6 +165,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             $stmt_hold = $conn->prepare($sql_hold);
             $stmt_hold->bind_param("sssssss", $kode_lahan, $issue_detail, $pic, $action_plan, $due_date, $status_hold, $kronologi);
             $stmt_hold->execute();
+            
+            // Komit transaksi
+            $conn->commit();
+            echo "Status berhasil diperbarui dan data ditahan.";
+        } elseif ($status_approvlegalvd == 'In Revision') {
+            
+            // Ambil kode_lahan dari tabel re
+            $sql_get_kode_lahan = "SELECT kode_lahan FROM re WHERE id = ?";
+            $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+            $stmt_get_kode_lahan->bind_param("i", $id);
+            $stmt_get_kode_lahan->execute();
+            $stmt_get_kode_lahan->bind_result($kode_lahan);
+            $stmt_get_kode_lahan->fetch();
+            $stmt_get_kode_lahan->free_result();
+
+            // Query untuk memperbarui status_vl, vl_date di tabel re dan memasukkan data ke dalam tabel hold_project
+            $sql_update_re = "UPDATE dokumen_loacd SET status_approvlegalvd = ?, catatan_vd = ?, end_date = ? WHERE id = ?";
+            $stmt_update_re = $conn->prepare($sql_update_re);
+            $stmt_update_re->bind_param("sssi", $status_approvlegalvd, $catatan_vd, $end_date, $id);
+            $stmt_update_re->execute();
             
             // Komit transaksi
             $conn->commit();

@@ -89,7 +89,7 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Catatan</th>
                                                 <th>Masa Berlaku</th>
                                                 <th>Lampiran LOA - CD</th>
-                                                <th>Confirm to Drafting</th>
+                                                <th>Approval VD Legal</th>
                                                 <th>Lampiran VD</th>
                                                 <th>Kode Store</th>
                                                 <th>SLA</th>
@@ -355,7 +355,7 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Catatan</th>
                                                 <th>Masa Berlaku</th>
                                                 <th>Lampiran LOA - CD</th>
-                                                <th>Confirm to Drafting</th>
+                                                <th>Approval VD Legal</th>
                                                 <th>Lampiran VD</th>
                                                 <th>Kode Store</th>
                                                 <th>SLA</th>

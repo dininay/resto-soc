@@ -129,6 +129,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 // Komit transaksi
                 $conn->commit();
                 echo "Status berhasil diperbarui dan data ditahan.";
+            } elseif ($confirm_sdgqs == 'In Design Revision') {
+                // Ambil kode_lahan dari tabel sdg_rab
+                $sql_get_kode_lahan = "SELECT kode_lahan FROM sdg_rab WHERE id = ?";
+                $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+                $stmt_get_kode_lahan->bind_param("i", $id);
+                $stmt_get_kode_lahan->execute();
+                $stmt_get_kode_lahan->bind_result($kode_lahan);
+                $stmt_get_kode_lahan->fetch();
+                $stmt_get_kode_lahan->free_result();
+
+                // Query untuk memperbarui submit_legal dan catatan_owner di tabel sdg_rab
+                $sql_update_pending = "UPDATE sdg_rab SET confirm_sdgqs = ?, catatan_sdgqs = ?, start_date = ? WHERE id = ?";
+                $stmt_update_pending = $conn->prepare($sql_update_pending);
+                $stmt_update_pending->bind_param("sssi", $confirm_sdgqs, $catatan_sdgqs, $start_date, $id);
+                $stmt_update_pending->execute();
+
+                $confirm_sdgdesain = "In Design Revision";
+                // Query untuk memperbarui submit_legal dan catatan_owner di tabel sdg_rab
+                $sql_update_design = "UPDATE sdg_desain SET confirm_sdgdesain = ? WHERE kode_lahan = ?";
+                $stmt_update_design = $conn->prepare($sql_update_design);
+                $stmt_update_design->bind_param("ss", $confirm_sdgdesain, $kode_lahan);
+                $stmt_update_design->execute();
+
+                // Komit transaksi
+                $conn->commit();
+                echo "Status berhasil diperbarui dan data ditahan.";
             } else {
                 // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_$status_obssdg
                 $sql_update_other = "UPDATE sdg_rab SET confirm_sdgqs = ?, catatan_sdgqs = ?, start_date = ? WHERE id = ?";
@@ -149,7 +175,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             echo "Error: " . $sql_update . "<br>" . $conn->error;
         }
         // Redirect ke halaman datatables-approval-owner.php
-        header("Location: ../datatables-validation-rab.php");
+        header("Location: ../datatables-rab.php");
         exit;
     } catch (Exception $e) {
         // Rollback transaksi jika terjadi kesalahan

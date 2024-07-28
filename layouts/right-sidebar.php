@@ -6,7 +6,7 @@ session_start();
 // Periksa apakah pengguna sudah login
 if (!isset($_SESSION['username']) || empty($_SESSION['username'])) {
     // Jika belum login, alihkan ke halaman login
-    header("location: /resto/index.php?pesan=belum_login");
+    header("location: /resto-soc/index.php?pesan=belum_login");
     exit;
 }
 
@@ -54,7 +54,7 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                     <!-- Dashboard -->
                     <?php if ($_SESSION['level'] === "Admin") : ?>
                     <li class="nav-item <?php echo ($current_page == 'index' ||$current_page == 'datatables-update-store' || $current_page == 'datatables-rto' || $current_page == 'datatables-mom'  || $current_page == 'datatables-soc-date-act' || $current_page == 'datatables-soc-date-hold'
-                    || $current_page == 'datatables-soc-date'|| $current_page == 'datatables-update-store-detail') ? 'active' : ''; ?>" data-item="dashboard">
+                    || $current_page == 'datatables-soc-date'|| strpos($current_page, 'datatables-update-store-detail') !== false) ? 'active' : ''; ?>" data-item="dashboard">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Bar-Chart"></i>
                             <span class="nav-text">Dashboard</span>
@@ -64,7 +64,7 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                     <?php endif; ?>
                     <!-- RE Head -->
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "Re") : ?>
-                    <li class="nav-item <?php echo ($current_page == 'datatables-land-sourcing' || $current_page == 'datatables-validasi-lahan' || $current_page == 'datatables-loa-cd' || $current_page == 'datatables-validasi-data'|| $current_page == 'datatables-bussiness-planning'
+                    <li class="nav-item <?php echo ($current_page == 'datatables-land-sourcing' || $current_page == 'datatables-validasi-lahan' || $current_page == 'datatables-draft-sewa-legal'  || $current_page == 'datatables-loa-cd' || $current_page == 'datatables-validasi-data'|| $current_page == 'datatables-bussiness-planning'
                     || $current_page == 'datatables-submit-to-owner') ? 'active' : ''; ?>" data-item="uikits">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Library"></i>
@@ -86,7 +86,7 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
 
                     <!-- Legal Head -->
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "Legal") : ?>
-                    <li class="nav-item <?php echo ($current_page == 'datatables-validasi-lahan-legal' || $current_page == 'datatables-checkval-legal' || $current_page == 'datatables-draft-sewa-legal' || $current_page == 'datatables-sign-psm-legal'|| $current_page == 'datatables-sp-submit-legal'|| $current_page == 'datatables-release-doc-legal' || $current_page == 'datatables-design-legal' || $current_page == 'datatables-valdoc-legal'|| $current_page == 'datatables-validasi-sp' || $current_page == 'datatables-obstacle-legal'|| $current_page == 'datatables-wovl'|| $current_page == 'datatables-wovd'|| $current_page == 'datatables-spk-legal'|| $current_page == 'datatables-mou-parkir'  || $current_page == 'datatables-resto-name') ? 'active' : ''; ?>" data-item="extrakits">
+                    <li class="nav-item <?php echo ($current_page == 'datatables-validasi-lahan-legal' || $current_page == 'datatables-checkval-legal'|| $current_page == 'datatables-sign-psm-legal'|| $current_page == 'datatables-sp-submit-legal'|| $current_page == 'datatables-release-doc-legal' || $current_page == 'datatables-design-legal' || $current_page == 'datatables-valdoc-legal'|| $current_page == 'datatables-validasi-sp' || $current_page == 'datatables-obstacle-legal'|| $current_page == 'datatables-wovl'|| $current_page == 'datatables-wovd'|| $current_page == 'datatables-spk-legal'|| $current_page == 'datatables-mou-parkir'  || $current_page == 'datatables-resto-name') ? 'active' : ''; ?>" data-item="extrakits">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Suitcase"></i>
                             <span class="nav-text">Legal</span>
@@ -135,7 +135,7 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "Procurement") : ?>
                     <li class="nav-item <?php echo ($current_page == 'datatables-checkval-rab-from-sdg' || 
                     $current_page == 'datatables-procurement' || $current_page == 'datatables-vendor' || 
-                    $current_page == 'datatables-tender'|| $current_page == 'datatables-spk-sdgpk') ? 'active' : ''; ?>" data-item="others">
+                    $current_page == 'datatables-tender'|| $current_page == 'datatables-spk-sdgpk'|| $current_page == 'datatables-eqpdev-procur') ? 'active' : ''; ?>" data-item="others">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Double-Tap"></i>
                             <span class="nav-text">Procurement</span>
@@ -146,7 +146,7 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
 
                     <!-- SDG EQP Head -->
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "SDG-EQP") : ?>
-                    <li class="nav-item <?php echo ( $current_page == 'datatables-st-eqp'  || $current_page == 'datatables-sdgpk-eqp-rto'
+                    <li class="nav-item <?php echo ( $current_page == 'datatables-st-eqp'  || $current_page == 'datatables-sdgpk-eqp-rto'  || $current_page == 'datatables-eqp-delivery' || $current_page == 'datatables-eqp-site'
                     ) ? 'active' : ''; ?>" data-item="eqp">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Bell1"></i>
@@ -159,7 +159,7 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                     <!-- SDG PK Head -->
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "SDG-PK") : ?>
                     <li class="nav-item <?php echo ($current_page == 'datatables-kom-sdgpk' || $current_page == 'datatables-monitoring-op'|| $current_page == 'datatables-construction-act-vendor'|| 
-                    $current_page == 'datatables-st-konstruksi'|| $current_page == 'datatables-sdgpk-rto') ? 'active' : ''; ?>" data-item="datatables">
+                    $current_page == 'datatables-st-konstruksi'|| $current_page == 'datatables-sdgpk-rto' || $current_page == 'datatables-sdgpk-issue') ? 'active' : ''; ?>" data-item="datatables">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-File-Horizontal-Text"></i>
                             <span class="nav-text">SDG PK</span>
@@ -239,7 +239,7 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
 
                     <!-- FAT Head -->
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "FAT") : ?>
-                    <li class="nav-item <?php echo ($current_page == 'datatables-fat' || $current_page == 'datatables-spk-fat' || $current_page == 'datatables-sign-psm-fat') ? 'active' : ''; ?>" data-item="fat">
+                    <li class="nav-item <?php echo ($current_page == 'datatables-fat' || $current_page == 'datatables-tender-fat' || $current_page == 'datatables-spk-fat' || $current_page == 'datatables-sign-psm-fat') ? 'active' : ''; ?>" data-item="fat">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Cursor-Click"></i>
                             <span class="nav-text">FAT</span>
@@ -293,13 +293,13 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                         <li class="nav-item <?php echo $current_page == 'datatables-soc-date' ? 'active' : ''; ?>">
                             <a href="datatables-soc-date.php">
                                 <i class="nav-icon i-Width-Window"></i>
-                                <span class="item-name">In Preparation Tracking</span>
+                                <span class="item-name">In Progress Tracking</span>
                             </a>
                         </li>			
                         <li class="nav-item <?php echo $current_page == 'datatables-soc-date-act' ? 'active' : ''; ?>">
                             <a href="datatables-soc-date-act.php">
                                 <i class="nav-icon i-Speach-Bubble-3"></i>
-                                <span class="item-name">In Progress Tracking</span>
+                                <span class="item-name">In Preparation Tracking</span>
                             </a>
                         </li>		
                         <li class="nav-item <?php echo $current_page == 'datatables-soc-date-hold' ? 'active' : ''; ?>">
@@ -335,12 +335,12 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                                 <span class="item-name">Land Sourcing</span>
                             </a>
                         </li>
-                        <li class="nav-item <?php echo $current_page == 'datatables-submit-to-owner' ? 'active' : ''; ?>">
+                        <!-- <li class="nav-item <?php echo $current_page == 'datatables-submit-to-owner' ? 'active' : ''; ?>">
                             <a href="datatables-submit-to-owner.php">
                                 <i class="nav-icon i-Error-404-Window"></i>
                                 <span class="item-name">BoD Approval</span>
                             </a>
-                        </li>					
+                        </li>					 -->
                         <li class="nav-item <?php echo $current_page == 'datatables-validasi-lahan' ? 'active' : ''; ?>">
                             <a href="datatables-validasi-lahan.php">
                                 <i class="nav-icon i-Split-Horizontal-2-Window"></i>
@@ -362,7 +362,7 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                         <li class="nav-item <?php echo $current_page == 'datatables-draft-sewa-legal' ? 'active' : ''; ?>">
                             <a href="datatables-draft-sewa-legal.php">
                                 <i class="nav-icon i-Loading-2"></i>
-                                <span class="item-name">Submit Draft PSM</span>
+                                <span class="item-name">Draft Table Sewa</span>
                             </a>
                         </li>
                     </ul>
@@ -377,19 +377,19 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
 						<li class="nav-item <?php echo $current_page == 'datatables-approval-owner' ? 'active' : ''; ?>">
                             <a href="datatables-approval-owner.php">
                                 <i class="nav-icon i-Checked-User"></i>
-                                <span class="item-name">Bod Approval</span>
+                                <span class="item-name">Bod Approval Land</span>
                             </a>
                         </li>
-                        <!-- <li class="nav-item <?php echo $current_page == 'datatables-doc-confirm' ? 'active' : ''; ?>">
-                            <a href="datatables-doc-confirm.php">
-                                <i class="nav-icon i-Medal-2"></i>
-                                <span class="item-name">Document Confirmation</span>
-                            </a>
-                        </li> -->
                         <li class="nav-item <?php echo $current_page == 'datatables-gostore' ? 'active' : ''; ?>">
                             <a href="datatables-gostore.php">
                                 <i class="nav-icon i-Pen-2"></i>
                                 <span class="item-name">Data GO Store</span>
+                            </a>
+                        </li>
+                        <li class="nav-item <?php echo $current_page == 'datatables-doc-confirm' ? 'active' : ''; ?>">
+                            <a href="datatables-doc-confirm.php">
+                                <i class="nav-icon i-Medal-2"></i>
+                                <span class="item-name">Approval Draft Table Sewa</span>
                             </a>
                         </li>
                     </ul>
@@ -431,30 +431,30 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                                 <span class="item-name">Validasi Doc Legal (VD)</span>
                             </a>
                         </li>
+						<li class="nav-item <?php echo $current_page == 'datatables-sign-psm-legal' ? 'active' : ''; ?>">
+                            <a href="datatables-sign-psm-legal.php">
+                                <i class="nav-icon i-Checked-User"></i>
+                                <span class="item-name">Draft PSM Legal</span>
+                            </a>
+                        </li>
                         <!-- <li class="nav-item <?php echo $current_page == 'datatables-draft-sewa-legal' ? 'active' : ''; ?>">
                             <a href="datatables-draft-sewa-legal.php">
                                 <i class="nav-icon i-Loading-2"></i>
                                 <span class="item-name">PSM Review</span>
                             </a>
                         </li> -->
-						<li class="nav-item <?php echo $current_page == 'datatables-sign-psm-legal' ? 'active' : ''; ?>">
-                            <a href="datatables-sign-psm-legal.php">
-                                <i class="nav-icon i-Checked-User"></i>
-                                <span class="item-name">PSM Review</span>
-                            </a>
-                        </li>
                         <li class="nav-item <?php echo $current_page == 'datatables-design-legal' ? 'active' : ''; ?>">
                             <a href="datatables-design-legal.php">
                                 <i class="nav-icon i-Tag-2"></i>
                                 <span class="item-name">Work Order Obstacle from SDG Design</span>
                             </a>
                         </li>
-                        <li class="nav-item <?php echo $current_page == 'datatables-valdoc-legal' ? 'active' : ''; ?>">
+                        <!-- <li class="nav-item <?php echo $current_page == 'datatables-valdoc-legal' ? 'active' : ''; ?>">
                             <a href="datatables-valdoc-legal.php">
                                 <i class="nav-icon i-Receipt-4"></i>
                                 <span class="item-name">Validasi All Data</span>
                             </a>
-                        </li>
+                        </li> -->
                         <li class="nav-item <?php echo $current_page == 'datatables-sp-submit-legal' ? 'active' : ''; ?>">
                             <a href="datatables-sp-submit-legal.php">
                                 <i class="nav-icon i-Width-Window"></i>
@@ -473,12 +473,12 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                                 <span class="item-name">Obstacle Land from SDG Design</span>
                             </a>
                         </li> -->
-                        <li class="nav-item <?php echo $current_page == 'datatables-spk-legal' ? 'active' : ''; ?>">
+                        <!-- <li class="nav-item <?php echo $current_page == 'datatables-spk-legal' ? 'active' : ''; ?>">
                             <a href="datatables-spk-legal.php">
                                 <i class="nav-icon i-Pen-2"></i>
                                 <span class="item-name">Lampiran Izin Konstruksi</span>
                             </a>
-                        </li>
+                        </li> -->
                         <li class="nav-item <?php echo $current_page == 'datatables-resto-name' ? 'active' : ''; ?>">
                             <a href="datatables-resto-name.php">
                                 <i class="nav-icon i-Split-Vertical"></i>
@@ -506,18 +506,18 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                                 <span class="item-name">Doc Receipt Confirm Owner & Legal Confirm</span>
                             </a>
                         </li>
-                        <li class="nav-item <?php echo $current_page == 'datatables-gostore-nego' ? 'active' : ''; ?>">
+                        <!-- <li class="nav-item <?php echo $current_page == 'datatables-gostore-nego' ? 'active' : ''; ?>">
                             <a href="datatables-gostore-nego.php">
                                 <i class="nav-icon i-Email"></i>
                                 <span class="item-name">Data Go Store</span>
                             </a>
-                        </li>
-                        <!-- <li class="nav-item <?php echo $current_page == 'datatables-validasi-negosiator' ? 'active' : ''; ?>">
+                        </li> -->
+                        <li class="nav-item <?php echo $current_page == 'datatables-validasi-negosiator' ? 'active' : ''; ?>">
                             <a href="datatables-validasi-negosiator.php">
                                 <i class="nav-icon i-Speach-Bubble-3"></i>
-                                <span class="item-name">Validation to SDG Design</span>
+                                <span class="item-name">Sign Final Doc</span>
                             </a>
-                        </li> -->
+                        </li>
                     </ul>
                 </div>
                 <!-- SDG Design -->
@@ -533,16 +533,16 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                                 <span class="item-name">Validation Data Dealing Draft Sewa</span>
                             </a>
                         </li> -->
-						<li class="nav-item <?php echo $current_page == 'datatables-land-survey' ? 'active' : ''; ?>">
+						<!-- <li class="nav-item <?php echo $current_page == 'datatables-land-survey' ? 'active' : ''; ?>">
                             <a href="datatables-land-survey.php">
                                 <i class="nav-icon i-Email"></i>
                                 <span class="item-name">Land Survey</span>
                             </a>
-                        </li>
+                        </li> -->
                         <li class="nav-item <?php echo $current_page == 'datatables-obstacle-sdg' ? 'active' : ''; ?>">
                             <a href="datatables-obstacle-sdg.php">
                                 <i class="nav-icon i-Receipt-4"></i>
-                                <span class="item-name">Layouting</span>
+                                <span class="item-name">Land Survey & Layouting</span>
                             </a>
                         </li>
                         <li class="nav-item <?php echo $current_page == 'datatables-design' ? 'active' : ''; ?>">
@@ -575,15 +575,15 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
 						<li class="nav-item <?php echo $current_page == 'datatables-rab' ? 'active' : ''; ?>">
                             <a href="datatables-rab.php">
                                 <i class="nav-icon i-Checked-User"></i>
-                                <span class="item-name">Release Data Picture From SDG Design</span>
+                                <span class="item-name">RAB Creation</span>
                             </a>
                         </li>
-                        <li class="nav-item <?php echo $current_page == 'datatables-validation-rab' ? 'active' : ''; ?>">
+                        <!-- <li class="nav-item <?php echo $current_page == 'datatables-validation-rab' ? 'active' : ''; ?>">
                             <a href="datatables-validation-rab.php">
                                 <i class="nav-icon i-Medal-2"></i>
                                 <span class="item-name">Validation Data RAB to Procurement</span>
                             </a>
-                        </li>
+                        </li> -->
                     </ul>
                 </div>
                 <!-- Procurement -->
@@ -596,21 +596,21 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                         <li class="nav-item <?php echo $current_page == 'datatables-checkval-rab-from-sdg' ? 'active' : ''; ?>">
                             <a href="datatables-checkval-rab-from-sdg.php">
                                 <i class="nav-icon i-Tag-2"></i>
-                                <span class="item-name">Validation RAB from SDG QS & VD from Legal</span>
+                                <span class="item-name">SPK for RAB Construction</span>
                             </a>
                         </li>
-                        <li class="nav-item <?php echo $current_page == 'datatables-vendor' ? 'active' : ''; ?>">
+                        <!-- <li class="nav-item <?php echo $current_page == 'datatables-vendor' ? 'active' : ''; ?>">
                             <a href="datatables-vendor.php">
                                 <i class="nav-icon i-Width-Window"></i>
                                 <span class="item-name">Data Vendor</span>
                             </a>
-                        </li>
-                        <li class="nav-item <?php echo $current_page == 'datatables-procurement' ? 'active' : ''; ?>">
+                        </li> -->
+                        <!-- <li class="nav-item <?php echo $current_page == 'datatables-procurement' ? 'active' : ''; ?>">
                             <a href="datatables-procurement.php">
                                 <i class="nav-icon i-Pen-2"></i>
                                 <span class="item-name">Data Procurement</span>
                             </a>
-                        </li>
+                        </li> -->
                         <li class="nav-item <?php echo $current_page == 'datatables-tender' ? 'active' : ''; ?>">
                             <a href="datatables-tender.php">
                                 <i class="nav-icon i-Error-404-Window"></i>
@@ -621,6 +621,12 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                             <a href="datatables-spk-sdgpk.php">
                                 <i class="nav-icon i-Receipt-4"></i>
                                 <span class="item-name">SPK, & Check Validation from Legal</span>
+                            </a>
+                        </li>
+                        <li class="nav-item <?php echo $current_page == 'datatables-eqpdev-procur' ? 'active' : ''; ?>">
+                            <a href="datatables-eqpdev-procur.php">
+                                <i class="nav-icon i-Pen-2"></i>
+                                <span class="item-name">Equipment Delivery</span>
                             </a>
                         </li>
                     </ul>
@@ -644,6 +650,18 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                                 <span class="item-name">Equipment Construction Progress</span>
                             </a>
                         </li> -->
+                        <li class="nav-item <?php echo $current_page == 'datatables-eqp-delivery' ? 'active' : ''; ?>">
+                            <a href="datatables-eqp-delivery.php">
+                                <i class="nav-icon i-File-Clipboard-Text--Image"></i>
+                                <span class="item-name">Equipment Delivery</span>
+                            </a>
+                        </li>
+                        <li class="nav-item <?php echo $current_page == 'datatables-eqp-site' ? 'active' : ''; ?>">
+                            <a href="datatables-eqp-site.php">
+                                <i class="nav-icon i-Bell1"></i>
+                                <span class="item-name">Equipment On Site</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
                 <!-- SDG PK -->
@@ -675,6 +693,12 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                             <a href="datatables-st-konstruksi.php">
                                 <i class="nav-icon i-Line-Chart-2"></i>
                                 <span class="item-name">ST Kontraktor</span>
+                            </a>
+                        </li>
+                        <li class="nav-item <?php echo $current_page == 'datatables-sdgpk-issue' ? 'active' : ''; ?>">
+                            <a href="datatables-sdgpk-issue.php">
+                                <i class="nav-icon i-File-Clipboard-Text--Image"></i>
+                                <span class="item-name">Issue List</span>
                             </a>
                         </li>
                         <li class="nav-item <?php echo $current_page == 'datatables-sdgpk-rto' ? 'active' : ''; ?>">
@@ -731,12 +755,12 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                         <p>HR Division</p>
                     </header>
                     <ul class="childNav" data-parent="">
-                        <li class="nav-item <?php echo $current_page == 'datatables-hr-tm' ? 'active' : ''; ?>">
+                        <!-- <li class="nav-item <?php echo $current_page == 'datatables-hr-tm' ? 'active' : ''; ?>">
                             <a href="datatables-hr-tm.php">
                                 <i class="nav-icon i-Tag-2"></i>
                                 <span class="item-name">Data Technical Meeting</span>
                             </a>
-                        </li>
+                        </li> -->
 						<li class="nav-item <?php echo $current_page == 'datatables-hr-fulfillment' ? 'active' : ''; ?>">
                             <a href="datatables-hr-fulfillment.php">
                                 <i class="nav-icon i-Checked-User"></i>
@@ -815,13 +839,13 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                         <li class="nav-item <?php echo $current_page == 'datatables-it-config' ? 'active' : ''; ?>">
                             <a href="datatables-it-config.php">
                                 <i class="nav-icon i-Receipt-4"></i>
-                                <span class="item-name">Config System</span>
+                                <span class="item-name">IT Configuration</span>
                             </a>
                         </li>
                         <li class="nav-item <?php echo $current_page == 'datatables-it' ? 'active' : ''; ?>">
                             <a href="datatables-it.php">
                                 <i class="nav-icon i-Speach-Bubble-3"></i>
-                                <span class="item-name">POS Printer, CCTV, Sound, Internet</span>
+                                <span class="item-name">Hardware Installation</span>
                             </a>
                         </li>
                     </ul>
@@ -836,7 +860,7 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                         <li class="nav-item <?php echo $current_page == 'datatables-marketing' ? 'active' : ''; ?>">
                             <a href="datatables-marketing.php">
                                 <i class="nav-icon i-Error-404-Window"></i>
-                                <span class="item-name">Resto & Merchant</span>
+                                <span class="item-name">Marketing & Online Registration</span>
                             </a>
                         </li>
                     </ul>
@@ -854,16 +878,22 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                                 <span class="item-name">File QRIS & ST</span>
                             </a>
                         </li>
-                        <li class="nav-item <?php echo $current_page == 'datatables-spk-fat' ? 'active' : ''; ?>">
-                            <a href="datatables-spk-fat.php">
-                                <i class="nav-icon i-Line-Chart-2"></i>
-                                <span class="item-name">Data SPK</span>
+                        <!-- <li class="nav-item <?php echo $current_page == 'datatables-tender-fat' ? 'active' : ''; ?>">
+                            <a href="datatables-tender-fat.php">
+                                <i class="nav-icon i-Width-Window"></i>
+                                <span class="item-name">Data Tender</span>
                             </a>
-                        </li>
+                        </li> -->
 						<li class="nav-item <?php echo $current_page == 'datatables-sign-psm-fat' ? 'active' : ''; ?>">
                             <a href="datatables-sign-psm-fat.php">
                                 <i class="nav-icon i-Checked-User"></i>
                                 <span class="item-name">PSM Review</span>
+                            </a>
+                        </li>
+                        <li class="nav-item <?php echo $current_page == 'datatables-spk-fat' ? 'active' : ''; ?>">
+                            <a href="datatables-spk-fat.php">
+                                <i class="nav-icon i-Line-Chart-2"></i>
+                                <span class="item-name">Data SPK</span>
                             </a>
                         </li>
                     </ul>

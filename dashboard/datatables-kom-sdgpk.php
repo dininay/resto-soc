@@ -14,7 +14,7 @@ $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, 
         INNER JOIN resto r ON d.kode_lahan = r.kode_lahan
         INNER JOIN procurement p ON r.kode_lahan = p.kode_lahan
         INNER JOIN vendor v ON p.nama_vendor = v.kode_vendor
-        WHERE r.status_spk = 'Approve'
+        WHERE r.status_spk = 'Signed'
         GROUP BY l.kode_lahan";
 $result = $conn->query($sql);
 
@@ -97,7 +97,6 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Status Procurement</th>
                                                 <th>Lampiran PBG</th>
                                                 <th>Lampiran Permit</th>
-                                                <th>Status Permission Legal</th>
                                                 <th>Status Review FAT</th>
                                                 <th>Nama Vendor</th>
                                                 <th>Lampiran Profil</th>
@@ -189,7 +188,7 @@ if ($result && $result->num_rows > 0) {
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['status_approvprocurement']) {
-                                                            case 'Approve':
+                                                            case 'Signed':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -251,12 +250,12 @@ if ($result && $result->num_rows > 0) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>       
-                                                <td>
+                                                <!-- <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['status_legalizin']) {
-                                                            case 'Approve':
+                                                            case 'Signed':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -273,13 +272,13 @@ if ($result && $result->num_rows > 0) {
                                                     <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
                                                         <?php echo $row['status_legalizin']; ?>
                                                     </span>
-                                                </td>
+                                                </td> -->
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['status_fat']) {
-                                                            case 'Approve':
+                                                            case 'Signed':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -369,7 +368,7 @@ if ($result && $result->num_rows > 0) {
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['status_spk']) {
-                                                            case 'Approve':
+                                                            case 'Signed':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -584,7 +583,6 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Status Procurement</th>
                                                 <th>Lampiran PBG</th>
                                                 <th>Lampiran Permit</th>
-                                                <th>Status Permission Legal</th>
                                                 <th>Status Review FAT</th>
                                                 <th>Nama Vendor</th>
                                                 <th>Lampiran Profil</th>

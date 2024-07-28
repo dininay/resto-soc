@@ -87,10 +87,10 @@ $conn->close();
                                                 <th>Lampiran Land</th>
                                                 <th>Approval BoD</th>
                                                 <th>Catatan BoD</th>
+                                                <th>Approval BoD Date</th>
                                                 <th>Lampiran VL</th>
                                                 <th>Status VL</th>
                                                 <th>VL Date</th>
-                                                <th>Approval BoD Date</th>
                                                 <th>Approval Negotiator</th>
                                                 <th>Catatan Negotiator</th>
                                                 <th>Approved Date</th>
@@ -216,7 +216,7 @@ $conn->close();
                                                     </span>
                                                 </td>
                                                 <td><?= $row['catatan_nego'] ?></td>
-                                                <td><?= $row['end_date'] ?></td>
+                                                <td><?= $row['nego_date'] ?></td>
                                                 <td>
                                                     <?php
                                                     // Mendapatkan tanggal sla_date dari kolom data
@@ -231,7 +231,7 @@ $conn->close();
                                                     // Jika status_approvowner adalah "Approve"
                                                     if ($row['status_approvnego'] == "Approve") {
                                                         echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
-                                                        echo '<p>Status changed to Approved on: ' . $row['end_date'] . '</p>';
+                                                        echo '<p>Status changed to Approved on: ' . $row['nego_date'] . '</p>';
                                                     } else {
                                                         // Menghitung jumlah hari terlambat
                                                         $lateDays = $slaLegalDate->diff($today)->days;
@@ -323,10 +323,10 @@ $conn->close();
                                                 <th>Lampiran Land</th>
                                                 <th>Approval BoD</th>
                                                 <th>Catatan BoD</th>
+                                                <th>Approval BoD Date</th>
                                                 <th>Lampiran VL</th>
                                                 <th>Status VL</th>
                                                 <th>VL Date</th>
-                                                <th>Approval BoD Date</th>
                                                 <th>Approval Negotiator</th>
                                                 <th>Catatan Negotiator</th>
                                                 <th>Approved Date</th>

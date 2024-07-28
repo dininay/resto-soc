@@ -496,7 +496,7 @@ $conn->close();
                                                 <tr>
                                                     <th colspan="1" class="sticky" style="background-color: #6c757d; color: white;">Store</th>
                                                     <?php foreach ($data as $row): ?>
-                                                    <th colspan="7" style="background-color: #6c757d; color: white;"><?= $row['land_kode_lahan'] ?></th>
+                                                    <th colspan="7" style="background-color: #6c757d; color: white;"><?= $row['kode_store'] ?></th>
                                                     <?php endforeach; ?>
                                                 </tr>
                                                 <tr>

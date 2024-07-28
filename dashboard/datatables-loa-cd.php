@@ -1,7 +1,7 @@
 <?php
 // Koneksi ke database
 include "../koneksi.php";
-
+$status_approvloacd = "";
 // Query untuk mengambil data dari tabel land dengan status_approvowner 'Approve'
 $sql = "SELECT dokumen_loacd.*, land.kode_lahan, land.lamp_land, re.lamp_vl, re.status_vl, re.status_approvowner, re.status_approvnego
         FROM dokumen_loacd
@@ -38,6 +38,13 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
+<style>
+    .hidden {
+        display: none;
+    }
+</style>
 </head>
 
 <body class="text-left">
@@ -195,7 +202,7 @@ if ($result && $result->num_rows > 0) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>    
-                                                <td><?= $row['masa_berlaku'] ?> Bulan</td>
+                                                <td><?= $row['masa_berlaku'] ?> Tahun</td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_loacd_files = explode(",", $row['lamp_loacd']); // Pisahkan nama file menjadi array
@@ -255,14 +262,60 @@ if ($result && $result->num_rows > 0) {
                                             </td>
 
                                                 <td>
-                                                    <?php if ($row['status_approvloacd'] != "Approve"): ?>
-                                                        <a href="re/loa-cd-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                        <a href="re/loa-cd-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>
-                                                    <?php endif; ?>
-                                                </td>
-
-                                        <?php endforeach; ?>
+                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_approvloacd'] ?>">
+                                                            <i class="nav-icon i-Book"></i>
+                                                        </button>
+                                                <!-- Modal -->
+                                                <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+                                                    <div class="modal-dialog" role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="editModalLabel">Edit Status</h5>
+                                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <form id="statusForm" method="post" action="re/loa-cd-process.php" enctype="multipart/form-data">
+                                                                    <input type="hidden" name="id" value="<?=$row["id"]?>"  id="modalKodeLahan">
+                                                                    <div class="form-group">
+                                                                        <label for="statusSelect">Status Approve LOA CD</label>
+                                                                        <select class="form-control" id="statusSelect" name="status_approvloacd">
+                                                                            <option value="In Process">In Process</option>
+                                                                            <option value="Pending">Pending</option>
+                                                                            <option value="Approve">Approve</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div id="issueDetailSection" class="hidden">
+                                                                        <div class="form-group">
+                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="pic">PIC</label>
+                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                                                                        </div>
+                                                                    </div>
+                                                                    <button type="submit" class="btn btn-primary">Save changes</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                    </td>
+                                            </tr>
+                                            <?php endforeach; ?>
                                         </tbody>
                                         <tfoot>
                                             <tr>
@@ -497,6 +550,42 @@ if ($result && $result->num_rows > 0) {
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
+    <script>
+    $(document).ready(function(){
+        // Saat tombol edit diklik
+        $('.edit-btn').click(function(){
+            // Ambil data-id dari tombol edit
+            var id = $(this).data('id');
+
+            // Isi nilai input tersembunyi dengan ID yang diambil
+            $('#modalKodeLahan').val(id);
+        });
+    });
+    
+    // Function to toggle the visibility of issue detail section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
+        }
+    }
+
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function () {
+        toggleIssueDetail();
+    });
+</script>
+<?php if ($status_approvloacd == 'Pending') { ?>
+    <script>
+        $(document).ready(function () {
+            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+        });
+    </script>
+<?php } ?>
     <script>
         // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
         function setDelete(element) {

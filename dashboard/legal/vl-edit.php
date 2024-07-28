@@ -36,7 +36,7 @@ $lamp_vl = "";
     $sql = "UPDATE re SET lamp_vl = '$lamp_vl' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
-        header("Location:" . $base_url . "/datatables-wovl.php");
+        header("Location:" . $base_url . "/datatables-validasi-lahan.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

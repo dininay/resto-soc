@@ -1,7 +1,7 @@
 <?php
 // Koneksi ke database
 include "../koneksi.php";
-
+$confirm_sdgdesain = "";
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT 
             sdg_desain.*, 
@@ -45,6 +45,13 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
+    <style>
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 
 <body class="text-left">
@@ -348,7 +355,7 @@ if ($result && $result->num_rows > 0) {
                                                 </td>
                                                 <td>
                                                     <?php if ($row['confirm_sdgdesain'] != "Approve"): ?>
-                                                        <a href="sdg-design/design-edit-form.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning">
+                                                        <a href="sdg-design/design-edit-form.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning mb-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>
                                                     <?php endif; ?>
@@ -649,6 +656,42 @@ if ($result && $result->num_rows > 0) {
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
+    <script>
+    $(document).ready(function(){
+        // Saat tombol edit diklik
+        $('.edit-btn').click(function(){
+            // Ambil data-id dari tombol edit
+            var id = $(this).data('id');
+
+            // Isi nilai input tersembunyi dengan ID yang diambil
+            $('#modalKodeLahan').val(id);
+        });
+    });
+    
+    // Function to toggle the visibility of issue detail section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
+        }
+    }
+
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function () {
+        toggleIssueDetail();
+    });
+</script>
+<?php if ($confirm_sdgdesain == 'Pending') { ?>
+    <script>
+        $(document).ready(function () {
+            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+        });
+    </script>
+<?php } ?>
     <script>
         // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
         function setDelete(element) {
