@@ -129,7 +129,8 @@ if ($result && $result->num_rows > 0) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -137,6 +138,29 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .hidden {
+            display: none;
+        },
+
+        .small-column {
+            max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */
+            overflow: hidden; /* Memotong konten yang meluas */
+            text-overflow: ellipsis; /* Menampilkan elipsis jika konten terlalu panjang */
+            white-space: nowrap; /* Mencegah teks membungkus ke baris baru */
+        }
+
+        th, td {
+                white-space: nowrap;
+            }
+        table.dataTable {
+            border-collapse:  collapse!important;
+        }
+        div.dataTables_wrapper {
+            width: 100%;
+            margin: 0 auto;
+        }
+    </style>
 </head>
 
 <body class="text-left">
@@ -194,6 +218,9 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Progress Week 10</th>
                                                 <th>Progress Week 11</th>
                                                 <th>Progress Week 12</th>
+                                                <th>Progress Week 13</th>
+                                                <th>Progress Week 14</th>
+                                                <th>Progress Week 15</th>
                                                 <th>SLA</th>
 												<th>Action</th>
                                             </tr>
@@ -306,7 +333,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -352,6 +379,9 @@ if ($result && $result->num_rows > 0) {
                                                 <td><?= $row['week_10'] ?></td> 
                                                 <td><?= $row['week_11'] ?></td> 
                                                 <td><?= $row['week_12'] ?></td> 
+                                                <td><?= $row['week_13'] ?></td> 
+                                                <td><?= $row['week_14'] ?></td> 
+                                                <td><?= $row['week_15'] ?></td> 
                                                 
                                                 <td>
                                                     <?php
@@ -367,7 +397,7 @@ if ($result && $result->num_rows > 0) {
                                                     // Jika status_approvowner adalah "Approve"
                                                     if ($row['status_consact'] == "Approve") {
                                                         echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
-                                                        echo '<p>Status changed to Approved on: ' . $row['consact_date'] . '</p>';
+                                                        
                                                     } else {
                                                         // Menghitung jumlah hari terlambat
                                                         $lateDays = $slaLegalDate->diff($today)->days;
@@ -391,7 +421,7 @@ if ($result && $result->num_rows > 0) {
                                                     <!-- Tombol Edit -->
                                                     <?php if ($row['status_consact'] != "Approve"): ?>
                                                         <div>
-                                                        <a href="sdg-pk/monitoring-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
+                                                        <a href="sdg-pk/monitoring-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>
                                                         <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_consact'] ?>">
@@ -456,6 +486,9 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Progress Week 10</th>
                                                 <th>Progress Week 11</th>
                                                 <th>Progress Week 12</th>
+                                                <th>Progress Week 13</th>
+                                                <th>Progress Week 14</th>
+                                                <th>Progress Week 15</th>
                                                 <th>SLA</th>
 												<th>Action</th>
                                             </tr>
@@ -708,6 +741,22 @@ $(document).ready(function() {
     });
 });
 </script>
+    <script>
+        $(document).ready(function() {
+            // Hancurkan DataTable jika sudah ada
+            if ($.fn.DataTable.isDataTable('#zero_configuration_table')) {
+                $('#zero_configuration_table').DataTable().destroy();
+            }
+
+            // Inisialisasi DataTable
+            $('#zero_configuration_table').DataTable({
+                scrollX: true, // Menambahkan scroll horizontal
+                fixedColumns: {
+                    leftColumns: 3 // Jumlah kolom yang ingin di-fix
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

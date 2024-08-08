@@ -7,6 +7,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     // Ambil nilai tgl_berlaku dan penanggungjawab dari formulir
     $id = $_POST['id'];
+    $kode_lahan = $_POST['kode_lahan'];
+    $kode_store = $_POST['kode_store'];
+    
     // Periksa apakah kunci 'lampiran' ada dalam $_FILES
     $lamp_signpsm = "";
 
@@ -32,15 +35,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $lamp_signpsm = implode(",", $lamp_signpsm_paths);
     }
 
-    // Update data di database
-    $sql = "UPDATE draft SET lamp_signpsm = '$lamp_signpsm' WHERE id = '$id'";
+    // Update data di tabel dokumen_loacd
+    $sql_update_dokumen_loacd = "UPDATE dokumen_loacd SET kode_store = ? WHERE kode_lahan = ?";
+    $stmt_update_dokumen_loacd = $conn->prepare($sql_update_dokumen_loacd);
+    $stmt_update_dokumen_loacd->bind_param("ss", $kode_store, $kode_lahan);
 
-    if ($conn->query($sql) === TRUE) {
-        header("Location: " . $base_url . "/datatables-sign-psm-legal.php");
-        exit();
-    } else {
-        echo "Error: " . $sql . "<br>" . $conn->error;
+    if (!$stmt_update_dokumen_loacd->execute()) {
+        echo "Error updating dokumen_loacd: " . $stmt_update_dokumen_loacd->error;
     }
+
+    // Update data di tabel draft
+    $sql_update_draft = "UPDATE draft SET lamp_signpsm = ? WHERE id = ?";
+    $stmt_update_draft = $conn->prepare($sql_update_draft);
+    $stmt_update_draft->bind_param("si", $lamp_signpsm, $id);
+
+    if (!$stmt_update_draft->execute()) {
+        echo "Error updating draft: " . $stmt_update_draft->error;
+    } else {
+        // Redirect to another page after successful update
+        // header("Location: " . $base_url . "/datatables-sign-psm-legal.php");
+        // exit();
+        echo "<script>
+                alert('Data berhasil diperbarui.');
+                window.location.href = window.location.href;
+             </script>";
+    }
+    
+    header("Location: ../datatables-sign-psm-legal.php");
+    exit; // Pastikan tidak ada output lain setelah header redirect
+    // Menutup prepared statements
+    $stmt_update_dokumen_loacd->close();
+    $stmt_update_draft->close();
 }
 
 // Menutup koneksi database

@@ -42,7 +42,7 @@ $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.nama_lahan, r.status_land
         FROM land l
         INNER JOIN resto r ON l.kode_lahan = r.kode_lahan
         INNER JOIN dokumen_loacd dl ON l.kode_lahan = dl.kode_lahan
-        WHERE r.status_spk = 'Approve'";
+        WHERE r.status_kom = 'Approve'";
 $result = $conn->query($sql);
 
 
@@ -65,7 +65,8 @@ if ($result && $result->num_rows > 0) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -133,7 +134,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali

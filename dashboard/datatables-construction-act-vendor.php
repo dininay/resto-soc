@@ -77,7 +77,7 @@ SELECT
     v.lamp_vendor, 
     v.lamp_profil,
     c.kode_store,
-    k.*
+    k.lamp_monitoring
 FROM 
     draft d
 INNER JOIN 
@@ -127,7 +127,8 @@ if ($result && $result->num_rows > 0) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -183,6 +184,7 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Progress Month 1</th>
                                                 <th>Progress Month 2</th>
                                                 <th>Progress Month 3</th>
+                                                <th>Note SDG Konstruksi</th>
                                                 <th>SLA</th>
 												<th>Action</th>
                                             </tr>
@@ -295,7 +297,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -331,6 +333,7 @@ if ($result && $result->num_rows > 0) {
                                                 <td><?= $row['month_1'] ?>%</td>  
                                                 <td><?= $row['month_2'] ?>%</td>  
                                                 <td><?= $row['month_3'] ?>%</td>  
+                                                <td><?= $row['catatan_consact'] ?></td>  
                                                 <td>
                                                     <?php
                                                     // Mendapatkan tanggal sla_date dari kolom data
@@ -345,7 +348,7 @@ if ($result && $result->num_rows > 0) {
                                                     // Jika status_approvowner adalah "Approve"
                                                     if ($row['status_consact'] == "Approve") {
                                                         echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
-                                                        echo '<p>Status changed to Approved on: ' . $row['consact_date'] . '</p>';
+                                                        
                                                     } else {
                                                         // Menghitung jumlah hari terlambat
                                                         $lateDays = $slaLegalDate->diff($today)->days;
@@ -386,15 +389,11 @@ if ($result && $result->num_rows > 0) {
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <form id="statusForm" method="post" action="re/submit-to-owner-process.php">
+                                                                <form id="statusForm" method="post" action="sdg-pk/consact-process.php">
                                                                     <input type="hidden" name="id" id="modalKodeLahan">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve SDG PK</label>
-                                                                        <select class="form-control" id="statusSelect" name="status_consact">
-                                                                            <option value="In Process">In Process</option>
-                                                                            <option value="Pending">Pending</option>
-                                                                            <option value="Approve">Approve</option>
-                                                                        </select>
+                                                                        <label for="catatan_consact">Catatan SDG Construction</label>
+                                                                        <input type="text" class="form-control" id="catatan_consact" name="catatan_consact">
                                                                     </div>
                                                                     <button type="submit" class="btn btn-primary">Save changes</button>
                                                                 </form>
@@ -422,6 +421,7 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Progress Month 1</th>
                                                 <th>Progress Month 2</th>
                                                 <th>Progress Month 3</th>
+                                                <th>Note SDG Konstruksi</th>
                                                 <th>SLA</th>
 												<th>Action</th>
                                             </tr>
@@ -656,7 +656,31 @@ if ($result && $result->num_rows > 0) {
             $('#modalKodeLahan').val(id);
         });
     });
+    
+    // Function to toggle the visibility of issue detail section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
+        }
+    }
+
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function () {
+        toggleIssueDetail();
+    });
     </script>
+    <?php if ($confirm_sdgqs == 'Pending') { ?>
+        <script>
+            $(document).ready(function () {
+                $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+            });
+        </script>
+    <?php } ?>
     <script>
         // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
         function setDelete(element) {
@@ -674,6 +698,22 @@ $(document).ready(function() {
     });
 });
 </script>
+    <script>
+        $(document).ready(function() {
+            // Hancurkan DataTable jika sudah ada
+            if ($.fn.DataTable.isDataTable('#zero_configuration_table')) {
+                $('#zero_configuration_table').DataTable().destroy();
+            }
+
+            // Inisialisasi DataTable
+            $('#zero_configuration_table').DataTable({
+                scrollX: true, // Menambahkan scroll horizontal
+                fixedColumns: {
+                    leftColumns: 3 // Jumlah kolom yang ingin di-fix
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

@@ -10,7 +10,7 @@ if (isset($_GET['kode_lahan'])) {
     $sql = "SELECT 
         summary_soc.*,
         resto.gostore_date,
-        resto.sla_steqp,
+        equipment.sla_steqp,
         land.kode_lahan,
         land.nama_lahan,
         land.lokasi,
@@ -59,12 +59,20 @@ if (isset($_GET['kode_lahan'])) {
         socdate_marketing.email_resto,
         socdate_marketing.lamp_merchant,
         socdate_scm.lamp_sj,
-        socdate_sdg.no_listrik,
-        socdate_sdg.lamp_listrik,
-        socdate_sdg.lamp_ka,
-        socdate_sdg.lamp_ipal,
-        socdate_sdg.lamp_eqp,
-        socdate_sdg.lamp_ba,
+        socdate_sdg.sumber_air,
+        socdate_sdg.kesesuaian_ujilab,
+        socdate_sdg.filter_air,
+        socdate_sdg.lamp_filterair,
+        socdate_sdg.lamp_ujilab,
+        socdate_sdg.debit_airsumur,
+        socdate_sdg.debit_airpdam,
+        socdate_sdg.id_pdam,
+        socdate_sdg.sumber_listrik,
+        socdate_sdg.form_pengajuanlistrik,
+        socdate_sdg.hasil_va,
+        socdate_sdg.id_pln,
+        socdate_sdg.biaya_perkwh,
+        socdate_sdg.lampwo_reqipal,
         sdg_desain.lamp_permit,
         sdg_desain.lamp_pbg,
         dokumen_loacd.kode_store,
@@ -79,6 +87,7 @@ if (isset($_GET['kode_lahan'])) {
         FROM resto
         LEFT JOIN land ON resto.kode_lahan = land.kode_lahan
         LEFT JOIN summary_soc ON resto.kode_lahan = summary_soc.kode_lahan
+        LEFT JOIN equipment ON resto.kode_lahan = equipment.kode_lahan
         LEFT JOIN soc_fat ON summary_soc.kode_lahan = soc_fat.kode_lahan
         LEFT JOIN soc_hrga ON soc_fat.kode_lahan = soc_hrga.kode_lahan
         LEFT JOIN soc_it ON soc_fat.kode_lahan = soc_it.kode_lahan
@@ -115,6 +124,8 @@ if (isset($_GET['kode_lahan'])) {
 } else {
     echo "Parameter kode_lahan tidak ditemukan.";
 }
+$nama_lahan = $row ['nama_lahan'];
+$lokasi = $row ['lokasi'];
 
 $sql_chartteam = "SELECT 
     land.kode_lahan,
@@ -192,6 +203,8 @@ if ($result->num_rows > 0) {
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT 
             land.kode_lahan AS land_kode_lahan,
+            land.nama_lahan,
+            land.lokasi,
             land.*,
             re.*,
             dokumen_loacd.*,
@@ -213,6 +226,7 @@ $sql = "SELECT
             soc_sdg.*,
             summary_soc.*,
             sign.*,
+            equipment.*,
             re.start_date AS re_start_date,
             dokumen_loacd.start_date AS dokumen_loacd_start_date,
             dokumen_loacd.end_date AS dokumen_loacd_end_date,
@@ -226,14 +240,15 @@ $sql = "SELECT
             draft.slalegal_date AS draft_slalegal_date,
             draft.sla_date AS draft_sla_date,
             draft.end_date AS draft_end_date,
-            draft.fat_date AS draft_fat_date,
-            draft.slafat_date AS draft_slafat_date,
+            draft.fatpsm_date AS draft_fat_date,
+            draft.slafatpsm_date AS draft_slafat_date,
             procurement.start_date AS procurement_start_date,
             procurement.sla_date AS procurement_sla_date
         FROM land
         LEFT JOIN re ON re.kode_lahan = land.kode_lahan
         LEFT JOIN dokumen_loacd ON dokumen_loacd.kode_lahan = land.kode_lahan
         LEFT JOIN sdg_desain ON sdg_desain.kode_lahan = land.kode_lahan
+        LEFT JOIN equipment ON equipment.kode_lahan = land.kode_lahan
         LEFT JOIN sdg_rab ON sdg_rab.kode_lahan = land.kode_lahan
         LEFT JOIN draft ON draft.kode_lahan = land.kode_lahan
         LEFT JOIN procurement ON procurement.kode_lahan = land.kode_lahan
@@ -251,7 +266,8 @@ $sql = "SELECT
         LEFT JOIN soc_sdg ON soc_sdg.kode_lahan = land.kode_lahan
         LEFT JOIN summary_soc ON summary_soc.kode_lahan = land.kode_lahan
         LEFT JOIN sign ON sign.kode_lahan = land.kode_lahan
-        WHERE land.kode_lahan = '$kode_lahan'";
+        WHERE land.kode_lahan = '$kode_lahan'
+        GROUP BY land.kode_lahan";
 $result = $conn->query($sql);
 
 
@@ -288,8 +304,8 @@ if ($slacons_result->num_rows > 0) {
 // Fungsi untuk menghitung scoring
 function calculateScoring($start_date, $end_date, $sla) {
     $today = new DateTime();
-    $start_date = $start_date ?: $today->format('Y-m-d');
-    $end_date = $end_date ?: $today->format('Y-m-d');
+    $start_date = $start_date ?: $today->format('d M y');
+    $end_date = $end_date ?: $today->format('d M y');
     $sla_days = $sla ?: 0;
 
     $start_date_obj = new DateTime($start_date);
@@ -649,12 +665,14 @@ $phaseQuery = "SELECT
     sdg_rab.start_date AS qs_start_date,
     procurement.start_date AS procur_start_date,
     resto.*,
+    equipment.*,
     summary_soc.*,
     sdg_pk.consact_date
 FROM land
 JOIN re ON land.kode_lahan = re.kode_lahan
 JOIN dokumen_loacd ON land.kode_lahan = dokumen_loacd.kode_lahan
 JOIN draft ON land.kode_lahan = draft.kode_lahan
+JOIN equipment ON land.kode_lahan = equipment.kode_lahan
 JOIN sdg_desain ON land.kode_lahan = sdg_desain.kode_lahan
 JOIN sdg_rab ON land.kode_lahan = sdg_rab.kode_lahan
 JOIN procurement ON land.kode_lahan = procurement.kode_lahan
@@ -788,16 +806,18 @@ while ($row = $phaseResult->fetch_assoc()) {
 }
 
 // Tentukan tanggal mulai dari data, gunakan tanggal pertama dari data jika ada
-$startDate = isset($dates[0]['status_date']) ? $dates[0]['status_date'] : date('Y-m-d');
+$startDate = isset($dates[0]['status_date']) ? $dates[0]['status_date'] : date('d M y');
 
 // Fungsi untuk menghasilkan tanggal-tanggal untuk timeline
 function generateTimeline($startDate, $days) {
     $timeline = [];
     for ($i = 0; $i < $days; $i++) {
-        $timeline[] = date('Y-m-d', strtotime($startDate . " +$i days"));
+        $timeline[] = date('d M y', strtotime($startDate . " +$i days"));
     }
     return $timeline;
 }
+
+
 
 // Generate timeline untuk 180 hari ke depan
 $timeline = generateTimeline($startDate, 180);
@@ -812,6 +832,7 @@ $conn->close();
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -989,6 +1010,41 @@ $conn->close();
                     </div>
                 </div> -->
                 <div class="row justify-content-center">
+                                <div class="col-lg-4 col-md-6 col-sm-6">
+                                    <div class="card card-icon-bg card-icon-bg-primary o-hidden mb-4">
+                                        <div class="card-body">
+                                            <i class="i-Add-User mr-3"></i>
+                                            <h5 class="text-muted mt-2 mb-2">Inventory Code</h5>
+                                            <div class="content">
+                                                <p class="text-primary text-24 line-height-1 mb-2"><?php echo $kode_lahan; ?></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 col-md-6 col-sm-6">
+                                    <div class="card card-icon-bg card-icon-bg-primary o-hidden mb-4">
+                                        <div class="card-body">
+                                            <i class="i-Add-User mr-3"></i>
+                                            <h5 class="text-muted mt-2 mb-2">Nama Lahan</h5>
+                                            <div class="content">
+                                                <p class="text-primary text-24 line-height-1 mb-2"><?php echo $nama_lahan; ?></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 col-md-6 col-sm-6">
+                                    <div class="card card-icon-bg card-icon-bg-primary o-hidden mb-4">
+                                        <div class="card-body">
+                                            <i class="i-Add-User mr-3"></i>
+                                            <h5 class="text-muted mt-2 mb-2">Lokasi</h5>
+                                            <div class="content">
+                                                <p class="text-primary text-24 line-height-1 mb-2"><?php echo $lokasi; ?></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                <div class="row justify-content-center">
                     <div class="col-lg-8 col-md-12">
                         <div class="card mb-4">
                             <div class="card-body">
@@ -1103,19 +1159,19 @@ $conn->close();
                                                 <?php foreach ($data as $row): ?>
                                                 <?php
                                                 // Mendefinisikan variabel untuk SLA
-                                                $sla_re_date = !empty($row['status_date']) ? date('d F y', strtotime($row['status_date'] . ' +' . ($master_sla['RE'] ?? 0) . ' days')) : '';
+                                                $sla_re_date = !empty($row['status_date']) ? date('d M y', strtotime($row['status_date'] . ' +' . ($master_sla['RE'] ?? 0) . ' days')) : '';
                                                 
                                                 ?>
-                                                <td><?= date('d F y', strtotime($row['status_date'])) ?></td>
+                                                <td><?= date('d M y', strtotime($row['status_date'])) ?></td>
                                                 <td><?= $sla_re_date ?></td>
                                                 <td><?= $master_sla['RE'] ?? 'N/A' ?></td>
-                                                <td><?= isset($row['status_date']) && !empty($row['status_date']) ? date('d F y', strtotime($row['status_date'])) : '0' ?></td>
-                                                <td><?= isset($row['re_date']) && !empty($row['re_date']) ? date('d F y', strtotime($row['re_date'])) : '0' ?></td>
+                                                <td><?= isset($row['status_date']) && !empty($row['status_date']) ? date('d M y', strtotime($row['status_date'])) : '0' ?></td>
+                                                <td><?= isset($row['re_date']) && !empty($row['re_date']) ? date('d M y', strtotime($row['re_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['status_date'], $row['re_date'], $master_sla['RE']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);    
-                                                $display_scoring = $scoring < -200 ? '-200%++' : $scoring . '%';         
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';         
                                                 ?>
                                                 <td><?= $display_scoring ?></td>
                                                 <td>
@@ -1131,20 +1187,20 @@ $conn->close();
                                                 <td class="sticky" style="background-color: white;">BoD</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php       
-                                                    $sla_re_date = !empty($row['status_date']) ? date('d F y', strtotime($row['status_date'] . ' +' . ($master_sla['RE'] ?? 0) . ' days')) : '';
+                                                    $sla_re_date = !empty($row['status_date']) ? date('d M y', strtotime($row['status_date'] . ' +' . ($master_sla['RE'] ?? 0) . ' days')) : '';
                                                                                        
-                                                    $sla_bod_date = $sla_re_date != 'N/A' ? date('d F y', strtotime($sla_re_date . ' +' . ($master_sla['Owner Surveyor'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_bod_date = $sla_re_date != 'N/A' ? date('d M y', strtotime($sla_re_date . ' +' . ($master_sla['Owner Surveyor'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_re_date ?></td>
                                                 <td><?= $sla_bod_date ?></td>
                                                 <td><?= $master_sla['Owner Surveyor'] ?? 'N/A' ?></td>
-                                                <td><?= isset($row['re_date']) && !empty($row['re_date']) ? date('d F y', strtotime($row['re_date'])) : '0' ?></td>
-                                                <td><?= isset($row['re_start_date']) && !empty($row['re_start_date']) ? date('d F y', strtotime($row['re_start_date'])) : '0' ?></td>
+                                                <td><?= isset($row['re_date']) && !empty($row['re_date']) ? date('d M y', strtotime($row['re_date'])) : '0' ?></td>
+                                                <td><?= isset($row['re_start_date']) && !empty($row['re_start_date']) ? date('d M y', strtotime($row['re_start_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['re_date'], $row['re_start_date'], $master_sla['Owner Surveyor']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);  
-                                                $display_scoring = $scoring < -200 ? '-200%++' : $scoring . '%';                   
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                   
                                                 ?>
                                                 <td><?= $display_scoring ?></td>
                                                 <td>
@@ -1159,18 +1215,18 @@ $conn->close();
                                                 <td class="sticky" style="background-color: white;">Legal</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_legal_date = $sla_bod_date != 'N/A' ? date('d F y', strtotime($sla_bod_date . ' +' . ($master_sla['Legal'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_legal_date = $sla_bod_date != 'N/A' ? date('d M y', strtotime($sla_bod_date . ' +' . ($master_sla['Legal'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_bod_date ?></td>
                                                 <td><?= $sla_legal_date?></td>
                                                 <td><?= $master_sla['VL'] ?? 'N/A' ?></td>
-                                                <td><?= isset($row['re_start_date']) && !empty($row['re_start_date']) ? date('d F y', strtotime($row['re_start_date'])) : '0' ?></td>
-                                                <td><?= isset($row['vl_date']) && !empty($row['vl_date']) ? date('d F y', strtotime($row['vl_date'])) : '0' ?></td>
+                                                <td><?= isset($row['re_start_date']) && !empty($row['re_start_date']) ? date('d M y', strtotime($row['re_start_date'])) : '0' ?></td>
+                                                <td><?= isset($row['vl_date']) && !empty($row['vl_date']) ? date('d M y', strtotime($row['vl_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['re_start_date'], $row['vl_date'], $master_sla['VL']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);     
-                                                $display_scoring = $scoring < -200 ? '-200%++' : $scoring . '%';                  
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                  
                                                 ?>
                                                 <td><?= $display_scoring ?></td>
                                                 <td>
@@ -1185,18 +1241,18 @@ $conn->close();
                                                 <td class="sticky" style="background-color: white;">Owner</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_nego_date = $sla_legal_date != 'N/A' ? date('d F y', strtotime($sla_legal_date . ' +' . ($master_sla['Negosiator'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_nego_date = $sla_legal_date != 'N/A' ? date('d M y', strtotime($sla_legal_date . ' +' . ($master_sla['Negosiator'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_legal_date?></td>
                                                 <td><?= $sla_nego_date?></td>
                                                 <td><?= $master_sla['Negosiator'] ?? 'N/A' ?></td>
-                                                <td><?= isset($row['end_date']) && !empty($row['end_date']) ? date('d F y', strtotime($row['end_date'])) : '0' ?></td>
-                                                <td><?= isset($row['nego_date']) && !empty($row['nego_date']) ? date('d F y', strtotime($row['nego_date'])) : '0' ?></td>
+                                                <td><?= isset($row['end_date']) && !empty($row['end_date']) ? date('d M y', strtotime($row['end_date'])) : '0' ?></td>
+                                                <td><?= isset($row['nego_date']) && !empty($row['nego_date']) ? date('d M y', strtotime($row['nego_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['end_date'], $row['nego_date'], $master_sla['Negosiator']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);           
-                                                $display_scoring = $scoring < -200 ? '-200%++' : $scoring . '%';  
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';  
                                                 ?>
                                                 <td><?= $display_scoring ?></td>
                                                 <td>
@@ -1211,18 +1267,18 @@ $conn->close();
                                                 <td class="sticky" style="background-color: white;">RE</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_loa_date = $sla_nego_date != 'N/A' ? date('d F y', strtotime($sla_nego_date . ' +' . ($master_sla['LOA-CD'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_loa_date = $sla_nego_date != 'N/A' ? date('d M y', strtotime($sla_nego_date . ' +' . ($master_sla['LOA-CD'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_nego_date ?></td>
                                                 <td><?= $sla_loa_date?></td>
                                                 <td><?= $master_sla['LOA-CD'] ?? 'N/A' ?></td>
-                                                <td><?= isset($row['nego_date']) && !empty($row['nego_date']) ? date('d F y', strtotime($row['nego_date'])) : '0' ?></td>
-                                                <td><?= isset($row['dokumen_loacd_start_date']) && !empty($row['dokumen_loacd_start_date']) ? date('d F y', strtotime($row['dokumen_loacd_start_date'])) : '0' ?></td>
+                                                <td><?= isset($row['nego_date']) && !empty($row['nego_date']) ? date('d M y', strtotime($row['nego_date'])) : '0' ?></td>
+                                                <td><?= isset($row['dokumen_loacd_start_date']) && !empty($row['dokumen_loacd_start_date']) ? date('d M y', strtotime($row['dokumen_loacd_start_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['nego_date'], $row['dokumen_loacd_start_date'], $master_sla['LOA-CD']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);                 
-                                                $display_scoring = $scoring < -200 ? '-200%++' : $scoring . '%';       
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';       
                                                 ?>
                                                 <td><?= $display_scoring ?></td>
                                                 <td>
@@ -1237,18 +1293,18 @@ $conn->close();
                                                 <td class="sticky" style="background-color: white;">Legal</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_vd_date = $sla_loa_date != 'N/A' ? date('d F y', strtotime($sla_loa_date . ' +' . ($master_sla['VD'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_vd_date = $sla_loa_date != 'N/A' ? date('d M y', strtotime($sla_loa_date . ' +' . ($master_sla['VD'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_loa_date ?></td>
                                                 <td><?= $sla_vd_date?></td>
                                                 <td><?= $master_sla['VD'] ?? 'N/A' ?></td>
-                                                <td><?= isset($row['vl_date']) && !empty($row['vl_date']) ? date('d F y', strtotime($row['vl_date'])) : '0' ?></td>
-                                                <td><?= isset($row['dokumen_loacd_end_date']) && !empty($row['dokumen_loacd_end_date']) ? date('d F y', strtotime($row['dokumen_loacd_end_date'])) : '0' ?></td>
+                                                <td><?= isset($row['vl_date']) && !empty($row['vl_date']) ? date('d M y', strtotime($row['vl_date'])) : '0' ?></td>
+                                                <td><?= isset($row['dokumen_loacd_end_date']) && !empty($row['dokumen_loacd_end_date']) ? date('d M y', strtotime($row['dokumen_loacd_end_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['vl_date'], $row['dokumen_loacd_end_date'], $master_sla['VD']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);       
-                                                $display_scoring = $scoring < -200 ? '-200%++' : $scoring . '%';                     
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                     
                                                 ?>
                                                 <td><?= $display_scoring ?></td>
                                                 <td>
@@ -1264,18 +1320,18 @@ $conn->close();
                                                 <td rowspan="4" style="background-color: #b6c7aa; color: white;">SDG-DED</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_survey_date = $sla_nego_date != 'N/A' ? date('d F y', strtotime($sla_nego_date . ' +' . ($master_sla['Land Survey'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_survey_date = $sla_nego_date != 'N/A' ? date('d M y', strtotime($sla_nego_date . ' +' . ($master_sla['Land Survey'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_nego_date ?></td>
                                                 <td><?= $sla_survey_date?></td>
                                                 <td><?= $master_sla['Land Survey'] ?? 'N/A' ?></td>
-                                                <td><?= isset($row['nego_date']) && !empty($row['nego_date']) ? date('d F y', strtotime($row['nego_date'])) : '0' ?></td>
-                                                <td><?= isset($row['survey_date']) && !empty($row['survey_date']) ? date('d F y', strtotime($row['survey_date'])) : '0' ?></td>
+                                                <td><?= isset($row['nego_date']) && !empty($row['nego_date']) ? date('d M y', strtotime($row['nego_date'])) : '0' ?></td>
+                                                <td><?= isset($row['survey_date']) && !empty($row['survey_date']) ? date('d M y', strtotime($row['survey_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['nego_date'], $row['survey_date'], $master_sla['Land Survey']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);    
-                                                $display_scoring = $scoring < -200 ? '-200%++' : $scoring . '%';                      
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                      
                                                 ?>
                                                 <td><?= $display_scoring ?></td>
                                                 <td>
@@ -1289,18 +1345,18 @@ $conn->close();
                                                 <td class="sticky" style="background-color: #b6c7aa; color: white;">Setting Layout</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_layout_date = $sla_survey_date != 'N/A' ? date('d F y', strtotime($sla_survey_date . ' +' . ($master_sla['Layouting'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_layout_date = $sla_survey_date != 'N/A' ? date('d M y', strtotime($sla_survey_date . ' +' . ($master_sla['Layouting'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_survey_date ?></td>
                                                 <td><?= $sla_layout_date?></td>
                                                 <td><?= $master_sla['Layouting'] ?? 'N/A' ?></td>
-                                                <td><?= isset($row['survey_date']) && !empty($row['survey_date']) ? date('d F y', strtotime($row['survey_date'])) : '0' ?></td>
-                                                <td><?= isset($row['layout_date']) && !empty($row['layout_date']) ? date('d F y', strtotime($row['layout_date'])) : '0' ?></td>
+                                                <td><?= isset($row['survey_date']) && !empty($row['survey_date']) ? date('d M y', strtotime($row['survey_date'])) : '0' ?></td>
+                                                <td><?= isset($row['layout_date']) && !empty($row['layout_date']) ? date('d M y', strtotime($row['layout_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['survey_date'], $row['layout_date'], $master_sla['Layouting']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);          
-                                                $display_scoring = $scoring < -200 ? '-200%++' : $scoring . '%';                  
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                  
                                                 ?>
                                                 <td><?= $display_scoring ?></td>
                                                 <td>
@@ -1314,18 +1370,18 @@ $conn->close();
                                                 <td class="sticky" style="background-color: #b6c7aa; color: white;">Design Urugan</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_sdgded_date = $sla_layout_date != 'N/A' ? date('d F y', strtotime($sla_layout_date . ' +' . ($master_sla['Design'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_sdgded_date = $sla_layout_date != 'N/A' ? date('d M y', strtotime($sla_layout_date . ' +' . ($master_sla['Design'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td rowspan="2"><?= $sla_layout_date ?></td>
                                                 <td rowspan="2"><?= $sla_sdgded_date?></td>
                                                 <td rowspan="2"><?= $master_sla['Design'] ?? 'N/A' ?></td>
-                                                <td><?= isset($row['layout_date']) && !empty($row['layout_date']) ? date('d F y', strtotime($row['layout_date'])) : '0' ?></td>
-                                                <td><?= isset($row['sdg_desain_start_date']) && !empty($row['sdg_desain_start_date']) ? date('d F y', strtotime($row['sdg_desain_start_date'])) : '0' ?></td>
+                                                <td><?= isset($row['layout_date']) && !empty($row['layout_date']) ? date('d M y', strtotime($row['layout_date'])) : '0' ?></td>
+                                                <td><?= isset($row['sdg_desain_start_date']) && !empty($row['sdg_desain_start_date']) ? date('d M y', strtotime($row['sdg_desain_start_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['layout_date'], $row['sdg_desain_start_date'], $master_sla['Design']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);            
-                                                $display_scoring = $scoring < -200 ? '-200%++' : $scoring . '%';                     
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                     
                                                 ?>
                                                 <td><?= $display_scoring ?></td>
                                                 <td rowspan="2">
@@ -1344,19 +1400,19 @@ $conn->close();
                                                 <td rowspan="2" class="sticky" style="background-color: white;">SDG-QS</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_rab_date = $sla_sdgded_date != 'N/A' ? date('d F y', strtotime($sla_sdgded_date . ' +' . ($master_sla['QS'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_rab_date = $sla_sdgded_date != 'N/A' ? date('d M y', strtotime($sla_sdgded_date . ' +' . ($master_sla['QS'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td rowspan="2" style="background-color: white"><?= $sla_sdgded_date ?></td>
                                                 <td rowspan="2" style="background-color: white"><?= $sla_rab_date?></td>
                                                 <td rowspan="2" style="background-color: white"><?= $master_sla['QS'] ?? 'N/A' ?></td>
-                                                <td rowspan="2" style="background-color: white"><?= isset($row['sdg_desain_start_date']) && !empty($row['sdg_desain_start_date']) ? date('d F y', strtotime($row['sdg_desain_start_date'])) : '0' ?></td>
-                                                <td rowspan="2" style="background-color: white"><?= isset($row['sdg_qs_start_date']) && !empty($row['sdg_qs_start_date']) ? date('d F y', strtotime($row['sdg_qs_start_date'])) : '0' ?></td>
+                                                <td rowspan="2" style="background-color: white"><?= isset($row['sdg_desain_start_date']) && !empty($row['sdg_desain_start_date']) ? date('d M y', strtotime($row['sdg_desain_start_date'])) : '0' ?></td>
+                                                <td rowspan="2" style="background-color: white"><?= isset($row['sdg_qs_start_date']) && !empty($row['sdg_qs_start_date']) ? date('d M y', strtotime($row['sdg_qs_start_date'])) : '0' ?></td>
                                                 
                                                 <?php 
                                                 $scoring = calculateScoring($row['sdg_desain_start_date'], $row['sdg_qs_start_date'], $master_sla['QS']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);                        
-                                                $display_scoring = $scoring < -200 ? '-200%++' : $scoring . '%';                   
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                   
                                                 ?>
                                                 <td><?= $display_scoring ?></td>
                                                 <td rowspan="2" style="background-color: white">
@@ -1375,18 +1431,18 @@ $conn->close();
                                                 <td class="sticky" style="background-color: #b6c7aa; color: white;">Legal</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_draft_date = $sla_vd_date != 'N/A' ? date('d F y', strtotime($sla_vd_date . ' +' . ($master_sla['Draft-Sewa'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_draft_date = $sla_vd_date != 'N/A' ? date('d M y', strtotime($sla_vd_date . ' +' . ($master_sla['Draft-Sewa'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_vd_date ?></td>
                                                 <td><?= $sla_draft_date?></td>
                                                 <td><?= $master_sla['Draft-Sewa'] ?? 'N/A' ?></td>
-                                                <td><?= isset($row['dokumen_loacd_end_date']) && !empty($row['dokumen_loacd_end_date']) ? date('d F y', strtotime($row['dokumen_loacd_end_date'])) : '0' ?></td>
-                                                <td><?= isset($row['draft_start_date']) && !empty($row['draft_start_date']) ? date('d F y', strtotime($row['draft_start_date'])) : '0' ?></td>
+                                                <td><?= isset($row['dokumen_loacd_end_date']) && !empty($row['dokumen_loacd_end_date']) ? date('d M y', strtotime($row['dokumen_loacd_end_date'])) : '0' ?></td>
+                                                <td><?= isset($row['draft_start_date']) && !empty($row['draft_start_date']) ? date('d M y', strtotime($row['draft_start_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['dokumen_loacd_end_date'], $row['draft_start_date'], $master_sla['Draft-Sewa']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);                         
-                                                $display_scoring = $scoring < -200 ? '-200%++' : $scoring . '%';               
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';               
                                                 ?>
                                                 <td><?= $display_scoring ?></td>
                                                 <td>
@@ -1401,18 +1457,18 @@ $conn->close();
                                                 <td class="sticky" style="background-color: #b6c7aa; color: white;">TAF</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_fat_date = $sla_draft_date != 'N/A' ? date('d F y', strtotime($sla_draft_date . ' +' . ($master_sla['FAT-Sewa'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_fat_date = $sla_draft_date != 'N/A' ? date('d M y', strtotime($sla_draft_date . ' +' . ($master_sla['FAT-Sewa'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_draft_date ?></td>
                                                 <td><?= $sla_fat_date?></td>
                                                 <td><?= $master_sla['FAT-Sewa'] ?? 'N/A' ?></td>
-                                                <td><?= isset($row['draft_start_date']) && !empty($row['draft_start_date']) ? date('d F y', strtotime($row['draft_start_date'])) : '0' ?></td>
-                                                <td><?= isset($row['draft_fat_date']) && !empty($row['draft_fat_date']) ? date('d F y', strtotime($row['draft_fat_date'])) : '0' ?></td>
+                                                <td><?= isset($row['draft_start_date']) && !empty($row['draft_start_date']) ? date('d M y', strtotime($row['draft_start_date'])) : '0' ?></td>
+                                                <td><?= isset($row['draft_fat_date']) && !empty($row['draft_fat_date']) ? date('d M y', strtotime($row['draft_fat_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['draft_start_date'], $row['draft_fat_date'], $master_sla['FAT-Sewa']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);                         
-                                                $display_scoring = $scoring < -200 ? '-200%++' : $scoring . '%';                  
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                  
                                                 ?>
                                                 <td><?= $display_scoring ?></td>
                                                 <td>
@@ -1427,18 +1483,18 @@ $conn->close();
                                                 <td class="sticky" style="background-color: #b6c7aa; color: white;">RE</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_psm_date = $sla_fat_date != 'N/A' ? date('d F y', strtotime($sla_fat_date . ' +' . ($master_sla['TTD-Sewa'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_psm_date = $sla_fat_date != 'N/A' ? date('d M y', strtotime($sla_fat_date . ' +' . ($master_sla['TTD-Sewa'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_fat_date ?></td>
                                                 <td><?= $sla_psm_date?></td>
                                                 <td><?= $master_sla['TTD-Sewa'] ?? 'N/A' ?></td>
-                                                <td><?= isset($row['draft_start_date']) && !empty($row['draft_start_date']) ? date('d F y', strtotime($row['draft_start_date'])) : '0' ?></td>
-                                                <td><?= isset($row['draft_end_date']) && !empty($row['draft_end_date']) ? date('d F y', strtotime($row['draft_end_date'])) : '0' ?></td>
+                                                <td><?= isset($row['draft_start_date']) && !empty($row['draft_start_date']) ? date('d M y', strtotime($row['draft_start_date'])) : '0' ?></td>
+                                                <td><?= isset($row['draft_end_date']) && !empty($row['draft_end_date']) ? date('d M y', strtotime($row['draft_end_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['draft_start_date'], $row['draft_end_date'], $master_sla['TTD-Sewa']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);                    
-                                                $display_scoring = $scoring < -200 ? '-200%++' : $scoring . '%';                     
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                     
                                                 ?>
                                                 <td><?= $display_scoring ?></td>
                                                 <td>
@@ -1454,18 +1510,18 @@ $conn->close();
                                                 <td class="sticky">Legal</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_permit_date = $sla_psm_date != 'N/A' ? date('d F y', strtotime($sla_psm_date . ' +' . ($master_sla['Legal'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_permit_date = $sla_psm_date != 'N/A' ? date('d M y', strtotime($sla_psm_date . ' +' . ($master_sla['Legal'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_psm_date ?></td>
                                                 <td><?= $sla_permit_date?></td>
                                                 <td><?= $master_sla['Legal'] ?? 'N/A' ?></td>
-                                                <td><?= isset($row['sdg_desain_start_date']) && !empty($row['sdg_desain_start_date']) ? date('d F y', strtotime($row['sdg_desain_start_date'])) : '0' ?></td>
-                                                <td><?= isset($row['sdg_desain_submit_date']) && !empty($row['sdg_desain_submit_date']) ? date('d F y', strtotime($row['sdg_desain_submit_date'])) : '0' ?></td>
+                                                <td><?= isset($row['sdg_desain_start_date']) && !empty($row['sdg_desain_start_date']) ? date('d M y', strtotime($row['sdg_desain_start_date'])) : '0' ?></td>
+                                                <td><?= isset($row['sdg_desain_submit_date']) && !empty($row['sdg_desain_submit_date']) ? date('d M y', strtotime($row['sdg_desain_submit_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['sdg_desain_start_date'], $row['sdg_desain_submit_date'], $master_sla['Legal']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);          
-                                                $display_scoring = $scoring < -200 ? '-200%++' : $scoring . '%';                  
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                  
                                                 ?>
                                                 <td><?= $display_scoring ?></td>
                                                 <td>
@@ -1481,18 +1537,18 @@ $conn->close();
                                                 <td class="sticky" rowspan="2" style="background-color: #b6c7aa; color: white;">Procurement</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_tender_date = $sla_rab_date != 'N/A' ? date('d F y', strtotime($sla_rab_date . ' +' . ($master_sla['Tender'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_tender_date = $sla_rab_date != 'N/A' ? date('d M y', strtotime($sla_rab_date . ' +' . ($master_sla['Tender'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td rowspan="2"><?= $sla_rab_date ?></td>
                                                 <td rowspan="2"><?= $sla_tender_date?></td>
                                                 <td rowspan="2"><?= $master_sla['Tender'] ?? 'N/A' ?></td>
-                                                <td><?= isset($row['sdg_desain_start_date']) && !empty($row['sdg_desain_start_date']) ? date('d F y', strtotime($row['sdg_desain_start_date'])) : '0' ?></td>
-                                                <td><?= isset($row['procurement_start_date']) && !empty($row['procurement_start_date']) ? date('d F y', strtotime($row['procurement_start_date'])) : '0' ?></td>
+                                                <td><?= isset($row['sdg_desain_start_date']) && !empty($row['sdg_desain_start_date']) ? date('d M y', strtotime($row['sdg_desain_start_date'])) : '0' ?></td>
+                                                <td><?= isset($row['procurement_start_date']) && !empty($row['procurement_start_date']) ? date('d M y', strtotime($row['procurement_start_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['sdg_desain_start_date'], $row['procurement_start_date'], $master_sla['Tender']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);        
-                                                $display_scoring = $scoring < -200 ? '-200%++' : $scoring . '%';                         
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                         
                                                 ?>
                                                 <td><?= $display_scoring ?></td>
                                                 <td rowspan="2">
@@ -1511,18 +1567,18 @@ $conn->close();
                                                 <td class="sticky" rowspan="2" style="background-color: white">Procurement</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_spk_date = $sla_tender_date != 'N/A' ? date('d F y', strtotime($sla_tender_date . ' +' . ($master_sla['SPK'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_spk_date = $sla_tender_date != 'N/A' ? date('d M y', strtotime($sla_tender_date . ' +' . ($master_sla['SPK'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td rowspan="2" style="background-color: white"><?= $sla_tender_date ?></td>
                                                 <td rowspan="2" style="background-color: white"><?= $sla_spk_date?></td>
                                                 <td rowspan="2" style="background-color: white"><?= $master_sla['SPK'] ?? 'N/A' ?></td>
-                                                <td><?= isset($row['sdg_desain_start_date']) && !empty($row['sdg_desain_start_date']) ? date('d F y', strtotime($row['sdg_desain_start_date'])) : '0' ?></td>
-                                                <td><?= isset($row['spk_date']) && !empty($row['spk_date']) ? date('d F y', strtotime($row['spk_date'])) : '0' ?></td>
+                                                <td><?= isset($row['sdg_desain_start_date']) && !empty($row['sdg_desain_start_date']) ? date('d M y', strtotime($row['sdg_desain_start_date'])) : '0' ?></td>
+                                                <td><?= isset($row['spk_date']) && !empty($row['spk_date']) ? date('d M y', strtotime($row['spk_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['procurement_start_date'], $row['spk_date'], $master_sla['SPK']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);                       
-                                                $display_scoring = $scoring < -200 ? '-200%++' : $scoring . '%';                     
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                     
                                                 ?>
                                                 <td><?= $display_scoring ?></td>
                                                 <td rowspan="2" style="background-color: white">
@@ -1541,18 +1597,18 @@ $conn->close();
                                                 <td class="sticky" style="background-color: #b6c7aa; color: white;">TAF</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_spkfat_date = $sla_spk_date != 'N/A' ? date('Y-m-d', strtotime($sla_spk_date . ' +' . ($master_sla['SPK-FAT'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_spkfat_date = $sla_spk_date != 'N/A' ? date('d M y', strtotime($sla_spk_date . ' +' . ($master_sla['SPK-FAT'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_spk_date ?></td>
                                                 <td><?= $sla_spkfat_date?></td>
                                                 <td><?= $master_sla['SPK-FAT'] ?? 'N/A' ?></td>
-                                                <td><?= isset($row['spk_date']) && !empty($row['spk_date']) ? date('d F y', strtotime($row['spk_date'])) : '0' ?></td>
-                                                <td><?= isset($row['fat_date']) && !empty($row['fat_date']) ? date('d F y', strtotime($row['fat_date'])) : '0' ?></td>
+                                                <td><?= isset($row['spk_date']) && !empty($row['spk_date']) ? date('d M y', strtotime($row['spk_date'])) : '0' ?></td>
+                                                <td><?= isset($row['fat_date']) && !empty($row['fat_date']) ? date('d M y', strtotime($row['fat_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['spk_date'], $row['fat_date'], $master_sla['SPK-FAT']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);                     
-                                                $display_scoring = $scoring < -200 ? '-200%++' : $scoring . '%';                      
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                      
                                                 ?>
                                                 <td><?= $display_scoring ?></td>
                                                 <td>
@@ -1568,18 +1624,18 @@ $conn->close();
                                                 <td class="sticky">SDG-Project</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_kom_date = $sla_spk_date != 'N/A' ? date('d F y', strtotime($sla_spk_date . ' +' . ($master_sla['KOM'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_kom_date = $sla_spk_date != 'N/A' ? date('d M y', strtotime($sla_spk_date . ' +' . ($master_sla['KOM'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_spk_date ?></td>
                                                 <td><?= $sla_kom_date?></td>
                                                 <td><?= $master_sla['KOM'] ?? 'N/A' ?></td>
-                                                <td><?= isset($row['fat_date']) && !empty($row['fat_date']) ? date('d F y', strtotime($row['fat_date'])) : '0' ?></td>
-                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d F y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= isset($row['fat_date']) && !empty($row['fat_date']) ? date('d M y', strtotime($row['fat_date'])) : '0' ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['fat_date'], $row['kom_date'], $master_sla['KOM']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);        
-                                                $display_scoring = $scoring < -200 ? '-200%++' : $scoring . '%';                      
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                      
                                                 ?>
                                                 <td><?= $display_scoring ?></td>
                                                 <td>
@@ -1595,18 +1651,18 @@ $conn->close();
                                                 <td class="sticky" style="background-color: #b6c7aa; color: white;">HR</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_ff_date = $sla_kom_date != 'N/A' ? date('d F y', strtotime($sla_kom_date . ' +' . ($master_slacons['hrga_tm'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_ff_date = $sla_kom_date != 'N/A' ? date('d M y', strtotime($sla_kom_date . ' +' . ($master_slacons['hrga_tm'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_kom_date ?></td>
                                                 <td><?= $sla_ff_date?></td>
                                                 <td><?= $master_slacons['hrga_tm'] ?? 'N/A' ?></td>
-                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d F y', strtotime($row['kom_date'])) : '0' ?></td>
-                                                <td><?= isset($row['ff3_date']) && !empty($row['ff3_date']) ? date('d F y', strtotime($row['ff3_date'])) : '0' ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= isset($row['ff3_date']) && !empty($row['ff3_date']) ? date('d M y', strtotime($row['ff3_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['kom_date'], $row['ff3_date'], $master_slacons['hrga_tm']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);        
-                                                $display_scoring = $scoring < -200 ? '-200%++' : $scoring . '%';                        
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                        
                                                 ?>
                                                 <td><?= $display_scoring ?></td>
                                                 <td>
@@ -1622,18 +1678,18 @@ $conn->close();
                                                 <td class="sticky" style="background-color: white">HR</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_ff_date = $sla_kom_date != 'N/A' ? date('d F y', strtotime($sla_kom_date . ' +' . ($master_slacons['hrga_tm'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_ff_date = $sla_kom_date != 'N/A' ? date('d M y', strtotime($sla_kom_date . ' +' . ($master_slacons['hrga_tm'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_kom_date ?></td>
                                                 <td><?= $sla_ff_date?></td>
                                                 <td><?= $master_slacons['hrga_tm'] ?? 'N/A' ?></td>
-                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d F y', strtotime($row['kom_date'])) : '0' ?></td>
-                                                <td><?= isset($row['ff3_date']) && !empty($row['ff3_date']) ? date('d F y', strtotime($row['ff3_date'])) : '0' ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= isset($row['ff3_date']) && !empty($row['ff3_date']) ? date('d M y', strtotime($row['ff3_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['kom_date'], $row['ff3_date'], $master_slacons['hrga_tm']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);      
-                                                $display_scoring = $scoring < -200 ? '-200%++' : $scoring . '%';                   
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                   
                                                 ?>
                                                 <td><?= $display_scoring ?></td>
                                                 <td>
@@ -1649,7 +1705,7 @@ $conn->close();
                                                 <td class="sticky" style="background-color: white"></td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_ff_date = $sla_kom_date != 'N/A' ? date('d F y', strtotime($sla_kom_date . ' +' . ($master_slacons['hrga_tm'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_ff_date = $sla_kom_date != 'N/A' ? date('d M y', strtotime($sla_kom_date . ' +' . ($master_slacons['hrga_tm'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <?php
                                                 $good_totals = [];
@@ -1718,14 +1774,14 @@ $conn->close();
                                                 <?php foreach ($data as $row): ?>
                                                 <?php
                                                 // Mendefinisikan variabel untuk SLA
-                                                $sla_cons_date = !empty($row['start_konstruksi']) ? date('Y-m-d', strtotime($row['start_konstruksi'] . ' +' . ($master_sla['Konstruksi'] ?? 0) . ' days')) : '';
+                                                $sla_cons_date = !empty($row['start_konstruksi']) ? date('d M y', strtotime($row['start_konstruksi'] . ' +' . ($master_sla['Konstruksi'] ?? 0) . ' days')) : '';
                                                 $cons = $row['month_1'] + $row['month_2'] + $row['month_3'];
                                                 $deviasi_cons = $cons - 100;
                                                 ?>
-                                                <td><?= $row['start_konstruksi'] ?></td>
+                                                <td><?= isset($row['start_konstruksi']) && !empty($row['start_konstruksi']) ? date('d M y', strtotime($row['start_konstruksi'])) : '0' ?></td>
                                                 <td><?= $sla_cons_date ?></td>
                                                 <td><?= $master_sla['Konstruksi'] ?? 'N/A' ?></td>
-                                                <td><?= $row['start_konstruksi'] ?></td>
+                                                <td><?= isset($row['start_konstruksi']) && !empty($row['start_konstruksi']) ? date('d M y', strtotime($row['start_konstruksi'])) : '0' ?></td>
                                                 <td><?= $cons ?>%</td>
                                                 <td><?= $deviasi_cons ?>%</td>
                                                 <td><?= $row['stkonstruksi_date'] ?></td>
@@ -1747,19 +1803,19 @@ $conn->close();
                                                 <td rowspan="3"  class="sticky" style="background-color: #b6c7aa; color: white;">SDG-Equipment</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php 
-                                                        $start_steqp_date = !empty($row['gostore_date']) ? date('Y-m-d', strtotime($row['gostore_date'] . ' -' . 11 . ' days')) : '';
+                                                        $start_steqp_date = !empty($row['gostore_date']) ? date('d M y', strtotime($row['gostore_date'] . ' -' . 11 . ' days')) : '';
                                                         // Menghitung sla_steqp_date berdasarkan start_steqp_date ditambah 2 hari
-                                                        $sla_steqp_date = !empty($start_steqp_date) ? date('Y-m-d', strtotime($start_steqp_date . ' +' . 2 . ' days')) : '';
+                                                        $sla_steqp_date = !empty($start_steqp_date) ? date('d M y', strtotime($start_steqp_date . ' +' . 2 . ' days')) : '';
                                                         $steqp = !empty($row['lamp_steqp']) ? 100 : 0; 
                                                         $dev_steqp = $steqp - 100 ;
                                                     ?>
                                                 <td><?= $start_steqp_date ?></td>
                                                 <td><?= $sla_steqp_date ?></td>
                                                 <td>2</td>
-                                                <td><?= $row['steqp_date'] ?></td>
+                                                <td><?= isset($row['steqp_date']) && !empty($row['steqp_date']) ? date('d M y', strtotime($row['steqp_date'])) : '' ?></td>
                                                 <td><?= $steqp ?>%</td>
                                                 <td><?= $dev_steqp?>%</td>
-                                                <td><?= $row['steqp_date'] ?></td>
+                                                <td><?= isset($row['steqp_date']) && !empty($row['steqp_date']) ? date('d M y', strtotime($row['steqp_date'])) : '' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_steqp);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1776,17 +1832,17 @@ $conn->close();
                                                 <td  class="sticky" style="background-color: #b6c7aa; color: white;">Pemasangan Pylon Sign/Totem</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                           
-                                                    $start_pylon_date = !empty($row['gostore_date']) ? date('Y-m-d', strtotime($row['gostore_date'] . ' -' . 21 . ' days')) : '';
-                                                    $sla_pylon_date = !empty($start_pylon_date) ? date('Y-m-d', strtotime($start_pylon_date . ' +' . 1 . ' days')) : '';
+                                                    $start_pylon_date = !empty($row['gostore_date']) ? date('d M y', strtotime($row['gostore_date'] . ' -' . 21 . ' days')) : '';
+                                                    $sla_pylon_date = !empty($start_pylon_date) ? date('d M y', strtotime($start_pylon_date . ' +' . 1 . ' days')) : '';
                                                     $bangunan_mural = $row['bangunan_mural']-100;
                                                     ?>
                                                 <td><?= $start_pylon_date ?></td>
                                                 <td><?= $sla_pylon_date?></td>
                                                 <td>1</td>
-                                                <td><?= $row['steqp_date'] ?></td>
+                                                <td><?= isset($row['steqp_date']) && !empty($row['steqp_date']) ? date('d M y', strtotime($row['steqp_date'])) : '0' ?></td>
                                                 <td><?= $row['bangunan_mural'] ?>%</td>
                                                 <td><?= $bangunan_mural ?>%</td>
-                                                <td><?= $row['steqp_date'] ?></td>
+                                                <td><?= isset($row['steqp_date']) && !empty($row['steqp_date']) ? date('d M y', strtotime($row['steqp_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($bangunan_mural);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1803,8 +1859,8 @@ $conn->close();
                                                 <td  class="sticky" style="background-color: #b6c7aa; color: white;">Fulfillment Equipment</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                           
-                                                    $start_ffeqp_date = !empty($row['gostore_date']) ? date('Y-m-d', strtotime($row['gostore_date'] . ' -' . 4 . ' days')) : '';
-                                                    $sla_ffeqp_date = !empty($start_ffeqp_date) ? date('Y-m-d', strtotime($start_ffeqp_date . ' +' . 1 . ' days')) : '';
+                                                    $start_ffeqp_date = !empty($row['gostore_date']) ? date('d M y', strtotime($row['gostore_date'] . ' -' . 4 . ' days')) : '';
+                                                    $sla_ffeqp_date = !empty($start_ffeqp_date) ? date('d M y', strtotime($start_ffeqp_date . ' +' . 1 . ' days')) : '';
                                                     // Menghitung hasil penjumlahan dari beberapa kolom
                                                     $total = ($row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) /5;
                                                     $scoring = ($row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) / 5 - 100;
@@ -1812,10 +1868,10 @@ $conn->close();
                                                 <td><?= $start_ffeqp_date ?></td>
                                                 <td><?= $sla_ffeqp_date?></td>
                                                 <td>1</td>
-                                                <td><?= $row['steqp_date'] ?></td>
+                                                <td><?= isset($row['steqp_date']) && !empty($row['steqp_date']) ? date('d M y', strtotime($row['steqp_date'])) : '0' ?></td>
                                                 <td><?= $total ?>%</td>
                                                 <td><?= $scoring ?>%</td>
-                                                <td><?= $row['steqp_date'] ?></td>
+                                                <td><?= isset($row['steqp_date']) && !empty($row['steqp_date']) ? date('d M y', strtotime($row['steqp_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1834,19 +1890,19 @@ $conn->close();
                                                 <td rowspan="4"  class="sticky" style="background-color: #b6c7aa; color: white;">HRGA</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php 
-                                                        $start_tm_date = !empty($row['gostore_date']) ? date('Y-m-d', strtotime($row['gostore_date'] . ' -' . ($master_slacons['hrga_tm'] ?? 0) . ' days')) : '';
+                                                        $start_tm_date = !empty($row['gostore_date']) ? date('d M y', strtotime($row['gostore_date'] . ' -' . ($master_slacons['hrga_tm'] ?? 0) . ' days')) : '';
                                                         // Menghitung sla_tm_date berdasarkan start_tm_date ditambah 2 hari
-                                                        $sla_tm_date = !empty($row['draft_end_date']) ? date('Y-m-d', strtotime($row['draft_end_date'] . ' +' . $master_slacons['hrga_tm'] . ' days')) : '';
+                                                        $sla_tm_date = !empty($row['draft_end_date']) ? date('d M y', strtotime($row['draft_end_date'] . ' +' . $master_slacons['hrga_tm'] . ' days')) : '';
                                                         $tm = !empty($row['lamp_tm']) ? 100 : 0; 
                                                         $dev_tm = $tm - 100 ;
                                                     ?>
-                                                <td><?= $row['draft_end_date'] ?></td>
+                                                <td><?= isset($row['draft_end_date']) && !empty($row['draft_end_date']) ? date('d M y', strtotime($row['draft_end_date'])) : '0' ?></td>
                                                 <td><?= $sla_tm_date ?></td>
                                                 <td><?= $master_slacons['hrga_tm']?></td>
-                                                <td><?= $row['draft_end_date'] ?></td>
+                                                <td><?= isset($row['draft_end_date']) && !empty($row['draft_end_date']) ? date('d M y', strtotime($row['draft_end_date'])) : '0' ?></td>
                                                 <td><?= $tm ?>%</td>
                                                 <td><?= $dev_tm?>%</td>
-                                                <td><?= $row['tm_date'] ?></td>
+                                                <td><?= isset($row['tm_date']) && !empty($row['tm_date']) ? date('d M y', strtotime($row['tm_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_tm);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1863,7 +1919,7 @@ $conn->close();
                                                 <td  class="sticky" style="background-color: #b6c7aa; color: white;">Crew Batch 1</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $sla_ff1_date = !empty($row['kom_date'] ) ? date('Y-m-d', strtotime($row['kom_date']  . ' +' . $master_slacons['hrga_ff1'] . ' days')) : '';
+                                                    $sla_ff1_date = !empty($row['kom_date'] ) ? date('d M y', strtotime($row['kom_date']  . ' +' . $master_slacons['hrga_ff1'] . ' days')) : '';
                                                     // $ff1 = !empty($row['lamp_ff1']) ? 100 : 0; 
                                                     $ff1 = isset($row['ff_1']) ? $row['ff_1'] : 0;
                                                     $dev_ff1 = 0; // default jika tidak ada nilai yang valid
@@ -1871,13 +1927,13 @@ $conn->close();
                                                         $dev_ff1 = (int)$row['ff_1'] - 100;
                                                     }
                                                     ?>
-                                                <td><?= $row['kom_date'] ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $sla_ff1_date?></td>
                                                 <td><?= $master_slacons['hrga_ff1'] ?></td>
-                                                <td><?= $row['kom_date'] ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $ff1 ?>%</td>
                                                 <td><?= $dev_ff1 ?>%</td>
-                                                <td><?= $row['ff1_date'] ?></td>
+                                                <td><?= isset($row['ff1_date']) && !empty($row['ff1_date']) ? date('d M y', strtotime($row['ff1_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_ff1);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1894,8 +1950,8 @@ $conn->close();
                                                 <td  class="sticky" style="background-color: #b6c7aa; color: white;">Crew Batch 2</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $start_ff2_date = !empty($row['kom_date'] ) ? date('Y-m-d', strtotime($row['kom_date']  . ' +' . $master_slacons['hrga_ff2'] . ' days')) : '';
-                                                    $sla_ff2_date = !empty($row['kom_date'] ) ? date('Y-m-d', strtotime($row['kom_date']  . ' +' . $master_slacons['hrga_ff2'] . ' days')) : '';
+                                                    $start_ff2_date = !empty($row['kom_date'] ) ? date('d M y', strtotime($row['kom_date']  . ' +' . $master_slacons['hrga_ff2'] . ' days')) : '';
+                                                    $sla_ff2_date = !empty($row['kom_date'] ) ? date('d M y', strtotime($row['kom_date']  . ' +' . $master_slacons['hrga_ff2'] . ' days')) : '';
                                                     // $ff2 = !empty($row['lamp_ff2']) ? 100 : 0; 
                                                     $ff2 = isset($row['ff_2']) ? $row['ff_2'] : 0;
                                                     $dev_ff2 = 0; // default jika tidak ada nilai yang valid
@@ -1903,13 +1959,13 @@ $conn->close();
                                                         $dev_ff2 = (int)$row['ff_2'] - 100;
                                                     }
                                                     ?>
-                                                <td><?= $row['kom_date'] ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $sla_ff2_date?></td>
                                                 <td><?= $master_slacons['hrga_ff2'] ?></td>
-                                                <td><?= $row['kom_date'] ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $ff2 ?>%</td>
                                                 <td><?= $dev_ff2 ?>%</td>
-                                                <td><?= $row['ff2_date'] ?></td>
+                                                <td><?= isset($row['ff2_date']) && !empty($row['ff2_date']) ? date('d M y', strtotime($row['ff2_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_ff2);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1926,8 +1982,8 @@ $conn->close();
                                                 <td  class="sticky" style="background-color: #b6c7aa; color: white;">Crew Batch 3</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $start_ff3_date = !empty($row['kom_date'] ) ? date('Y-m-d', strtotime($row['kom_date']  . ' +' . $master_slacons['hrga_ff1'] . ' days')) : '';
-                                                    $sla_ff3_date = !empty($row['kom_date'] ) ? date('Y-m-d', strtotime($row['kom_date']  . ' +' . $master_slacons['hrga_ff1'] . ' days')) : '';
+                                                    $start_ff3_date = !empty($row['kom_date'] ) ? date('d M y', strtotime($row['kom_date']  . ' +' . $master_slacons['hrga_ff1'] . ' days')) : '';
+                                                    $sla_ff3_date = !empty($row['kom_date'] ) ? date('d M y', strtotime($row['kom_date']  . ' +' . $master_slacons['hrga_ff1'] . ' days')) : '';
                                                     // $ff3 = !empty($row['lamp_ff3']) ? 100 : 0; 
                                                     $ff3 = isset($row['ff_3']) ? $row['ff_3'] : 0;
                                                     $dev_ff3 = 0; // default jika tidak ada nilai yang valid
@@ -1935,13 +1991,13 @@ $conn->close();
                                                         $dev_ff3 = (int)$row['ff_3'] - 100;
                                                     }
                                                     ?>
-                                                <td><?= $row['kom_date'] ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $sla_ff3_date?></td>
                                                 <td><?= $master_slacons['hrga_ff3'] ?></td>
-                                                <td><?= $row['kom_date'] ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $ff3 ?>%</td>
                                                 <td><?= $dev_ff3 ?>%</td>
-                                                <td><?= $row['ff3_date'] ?></td>
+                                                <td><?= isset($row['ff3_date']) && !empty($row['ff3_date']) ? date('d M y', strtotime($row['ff3_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_ff3);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1960,7 +2016,7 @@ $conn->close();
                                                 <td rowspan="3"  class="sticky" style="background-color: #b6c7aa; color: white;">Academy</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $sla_kpt1_date = !empty($row['kom_date'] ) ? date('Y-m-d', strtotime($row['kom_date']  . ' +' . $master_slacons['kpt1'] . ' days')) : '';
+                                                    $sla_kpt1_date = !empty($row['kom_date'] ) ? date('d M y', strtotime($row['kom_date']  . ' +' . $master_slacons['kpt1'] . ' days')) : '';
                                                     // $ff1 = !empty($row['lamp_ff1']) ? 100 : 0; 
                                                     $kpt1 = isset($row['kpt_1']) ? $row['kpt_1'] : 0;
                                                     $dev_kpt1 = 0; // default jika tidak ada nilai yang valid
@@ -1968,13 +2024,13 @@ $conn->close();
                                                         $dev_kpt1 = (int)$row['kpt_1'] - 100;
                                                     }
                                                     ?>
-                                                <td><?= $row['kom_date'] ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $sla_kpt1_date?></td>
                                                 <td><?= $master_slacons['kpt1'] ?></td>
-                                                <td><?= $row['kom_date'] ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $kpt1 ?>%</td>
                                                 <td><?= $dev_kpt1 ?>%</td>
-                                                <td><?= $row['kpt_date1'] ?></td>
+                                                <td><?= isset($row['kpt_date1']) && !empty($row['kpt_date1']) ? date('d M y', strtotime($row['kpt_date1'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_kpt1);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1991,8 +2047,8 @@ $conn->close();
                                                 <td  class="sticky" style="background-color: #b6c7aa; color: white;">Training Batch 2</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $start_kpt2_date = !empty($row['kom_date'] ) ? date('Y-m-d', strtotime($row['kom_date']  . ' +' . $master_slacons['kpt2'] . ' days')) : '';
-                                                    $sla_kpt2_date = !empty($row['kom_date'] ) ? date('Y-m-d', strtotime($row['kom_date']  . ' +' . $master_slacons['kpt2'] . ' days')) : '';
+                                                    $start_kpt2_date = !empty($row['kom_date'] ) ? date('d M y', strtotime($row['kom_date']  . ' +' . $master_slacons['kpt2'] . ' days')) : '';
+                                                    $sla_kpt2_date = !empty($row['kom_date'] ) ? date('d M y', strtotime($row['kom_date']  . ' +' . $master_slacons['kpt2'] . ' days')) : '';
                                                     // $kpt2 = !empty($row['lamp_kpt2']) ? 100 : 0; 
                                                     $kpt2 = isset($row['kpt_2']) ? $row['kpt_2'] : 0;
                                                     $dev_kpt2 = 0; // default jika tidak ada nilai yang valid
@@ -2000,13 +2056,13 @@ $conn->close();
                                                         $dev_kpt2 = (int)$row['kpt_2'] - 100;
                                                     }
                                                     ?>
-                                                <td><?= $row['kom_date'] ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $sla_kpt2_date?></td>
                                                 <td><?= $master_slacons['kpt2'] ?></td>
-                                                <td><?= $row['kom_date'] ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $kpt2 ?>%</td>
                                                 <td><?= $dev_kpt2 ?>%</td>
-                                                <td><?= $row['kpt_date2'] ?></td>
+                                                <td><?= isset($row['kpt_date2']) && !empty($row['kpt_date2']) ? date('d M y', strtotime($row['kpt_date2'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_kpt2);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -2023,8 +2079,8 @@ $conn->close();
                                                 <td  class="sticky" style="background-color: #b6c7aa; color: white;">Training Batch 3</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $start_kpt3_date = !empty($row['kom_date'] ) ? date('Y-m-d', strtotime($row['kom_date']  . ' +' . $master_slacons['kpt1'] . ' days')) : '';
-                                                    $sla_kpt3_date = !empty($row['kom_date'] ) ? date('Y-m-d', strtotime($row['kom_date']  . ' +' . $master_slacons['kpt1'] . ' days')) : '';
+                                                    $start_kpt3_date = !empty($row['kom_date'] ) ? date('d M y', strtotime($row['kom_date']  . ' +' . $master_slacons['kpt1'] . ' days')) : '';
+                                                    $sla_kpt3_date = !empty($row['kom_date'] ) ? date('d M y', strtotime($row['kom_date']  . ' +' . $master_slacons['kpt1'] . ' days')) : '';
                                                     // $kpt3 = !empty($row['lamp_kpt3']) ? 100 : 0; 
                                                     $kpt3 = isset($row['kpt_3']) ? $row['kpt_3'] : 0;
                                                     $dev_kpt3 = 0; // default jika tidak ada nilai yang valid
@@ -2032,13 +2088,13 @@ $conn->close();
                                                         $dev_kpt3 = (int)$row['kpt_3'] - 100;
                                                     }
                                                     ?>
-                                                <td><?= $row['kom_date'] ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $sla_kpt3_date?></td>
                                                 <td><?= $master_slacons['kpt3'] ?></td>
-                                                <td><?= $row['kom_date'] ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $kpt3 ?>%</td>
                                                 <td><?= $dev_kpt3 ?>%</td>
-                                                <td><?= $row['kpt_date3'] ?></td>
+                                                <td><?= isset($row['kpt_date3']) && !empty($row['kpt_date3']) ? date('d M y', strtotime($row['kpt_date3'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_kpt3);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -2057,7 +2113,7 @@ $conn->close();
                                                 <td rowspan="3"  class="sticky" style="background-color: #b6c7aa; color: white;">SCM</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $sla_scm_date = !empty($row['kom_date'] ) ? date('Y-m-d', strtotime($row['kom_date']  . ' +' . $master_slacons['scm'] . ' days')) : '';
+                                                    $sla_scm_date = !empty($row['kom_date'] ) ? date('d M y', strtotime($row['kom_date']  . ' +' . $master_slacons['scm'] . ' days')) : '';
                                                     // $ff1 = !empty($row['lamp_ff1']) ? 100 : 0; 
                                                     $scm = isset($row['lamp_sj']) ? 100 : 0;
                                                     $dev_scm = 0; // default jika tidak ada nilai yang valid
@@ -2065,13 +2121,13 @@ $conn->close();
                                                         $dev_scm = (int)$row['lamp_sj'] - 100;
                                                     }
                                                     ?>
-                                                <td><?= $row['kom_date'] ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $sla_scm_date?></td>
                                                 <td><?= $master_slacons['scm'] ?></td>
-                                                <td><?= $row['kom_date'] ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $scm ?>%</td>
                                                 <td><?= $dev_scm ?>%</td>
-                                                <td><?= $row['sj_date'] ?></td>
+                                                <td><?= isset($row['sj_date']) && !empty($row['sj_date']) ? date('d M y', strtotime($row['sj_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_scm);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -2088,7 +2144,7 @@ $conn->close();
                                                 <td  class="sticky" style="background-color: #b6c7aa; color: white;">Dry Stock</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $sla_scm_date = !empty($row['kom_date'] ) ? date('Y-m-d', strtotime($row['kom_date']  . ' +' . $master_slacons['scm'] . ' days')) : '';
+                                                    $sla_scm_date = !empty($row['kom_date'] ) ? date('d M y', strtotime($row['kom_date']  . ' +' . $master_slacons['scm'] . ' days')) : '';
                                                     // $ff1 = !empty($row['lamp_ff1']) ? 100 : 0; 
                                                     $scm = isset($row['lamp_sj']) ? 100 : 0;
                                                     $dev_scm = 0; // default jika tidak ada nilai yang valid
@@ -2096,13 +2152,13 @@ $conn->close();
                                                         $dev_scm = (int)$row['lamp_sj'] - 100;
                                                     }
                                                     ?>
-                                                <td><?= $row['kom_date'] ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $sla_scm_date?></td>
                                                 <td><?= $master_slacons['scm'] ?></td>
-                                                <td><?= $row['kom_date'] ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $scm ?>%</td>
                                                 <td><?= $dev_scm ?>%</td>
-                                                <td><?= $row['sj_date'] ?></td>
+                                                <td><?= isset($row['sj_date']) && !empty($row['sj_date']) ? date('d M y', strtotime($row['sj_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_scm);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -2119,7 +2175,7 @@ $conn->close();
                                                 <td  class="sticky" style="background-color: #b6c7aa; color: white;">Frozen Stock</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $sla_scm_date = !empty($row['kom_date'] ) ? date('Y-m-d', strtotime($row['kom_date']  . ' +' . $master_slacons['scm'] . ' days')) : '';
+                                                    $sla_scm_date = !empty($row['kom_date'] ) ? date('d M y', strtotime($row['kom_date']  . ' +' . $master_slacons['scm'] . ' days')) : '';
                                                     // $ff1 = !empty($row['lamp_ff1']) ? 100 : 0; 
                                                     $scm = isset($row['lamp_sj']) ? 100 : 0;
                                                     $dev_scm = 0; // default jika tidak ada nilai yang valid
@@ -2127,13 +2183,13 @@ $conn->close();
                                                         $dev_scm = (int)$row['lamp_sj'] - 100;
                                                     }
                                                     ?>
-                                                <td><?= $row['kom_date'] ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $sla_scm_date?></td>
                                                 <td><?= $master_slacons['scm'] ?></td>
-                                                <td><?= $row['kom_date'] ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $scm ?>%</td>
                                                 <td><?= $dev_scm ?>%</td>
-                                                <td><?= $row['sj_date'] ?></td>
+                                                <td><?= isset($row['sj_date']) && !empty($row['sj_date']) ? date('d M y', strtotime($row['sj_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_scm);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -2152,9 +2208,9 @@ $conn->close();
                                                 <td rowspan="5"  class="sticky" style="background-color: #b6c7aa; color: white;">IT</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $sla_it_date = !empty($row['gostore_date']) ? date('Y-m-d', strtotime($row['gostore_date']  . ' -' . 2 . ' days')) : '';
-                                                    $start_it_date = !empty($sla_it_date) ? date('Y-m-d', strtotime($sla_it_date  . ' -' . 1 . ' days')) : '';
-                                                    $start_act_it_date = !empty($row['gostore_date']) ? date('Y-m-d', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
+                                                    $sla_it_date = !empty($row['gostore_date']) ? date('d M y', strtotime($row['gostore_date']  . ' -' . 2 . ' days')) : '';
+                                                    $start_it_date = !empty($sla_it_date) ? date('d M y', strtotime($sla_it_date  . ' -' . 1 . ' days')) : '';
+                                                    $start_act_it_date = !empty($row['gostore_date']) ? date('d M y', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
                                                     // $ff1 = !empty($row['lamp_ff1']) ? 100 : 0; 
                                                     $it = isset($row['lamp_config']) ? 100 : 0;
                                                     $dev_it = 0; // default jika tidak ada nilai yang valid
@@ -2168,7 +2224,7 @@ $conn->close();
                                                 <td><?= $start_act_it_date ?></td>
                                                 <td><?= $it ?>%</td>
                                                 <td><?= $dev_it ?>%</td>
-                                                <td><?= $row['it_date'] ?></td>
+                                                <td><?= isset($row['it_date']) && !empty($row['it_date']) ? date('d M y', strtotime($row['it_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_it);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -2185,9 +2241,9 @@ $conn->close();
                                                 <td  class="sticky" style="background-color: #b6c7aa; color: white;">Instalasi POS & Kitchen Print Out</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $sla_it_date = !empty($row['gostore_date']) ? date('Y-m-d', strtotime($row['gostore_date']  . ' -' . 2 . ' days')) : '';
-                                                    $start_it_date = !empty($sla_it_date) ? date('Y-m-d', strtotime($sla_it_date  . ' -' . 1 . ' days')) : '';
-                                                    $start_act_it_date = !empty($row['gostore_date']) ? date('Y-m-d', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
+                                                    $sla_it_date = !empty($row['gostore_date']) ? date('d M y', strtotime($row['gostore_date']  . ' -' . 2 . ' days')) : '';
+                                                    $start_it_date = !empty($sla_it_date) ? date('d M y', strtotime($sla_it_date  . ' -' . 1 . ' days')) : '';
+                                                    $start_act_it_date = !empty($row['gostore_date']) ? date('d M y', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
                                                     // $ff1 = !empty($row['lamp_ff1']) ? 100 : 0; 
                                                     $it = isset($row['lamp_printer']) ? 100 : 0;
                                                     $dev_it = 0; // default jika tidak ada nilai yang valid
@@ -2201,7 +2257,7 @@ $conn->close();
                                                 <td><?= $start_act_it_date ?></td>
                                                 <td><?= $it ?>%</td>
                                                 <td><?= $dev_it ?>%</td>
-                                                <td><?= $row['it_date'] ?></td>
+                                                <td><?= isset($row['it_date']) && !empty($row['it_date']) ? date('d M y', strtotime($row['it_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_it);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -2218,9 +2274,9 @@ $conn->close();
                                                 <td  class="sticky" style="background-color: #b6c7aa; color: white;">Testing POS & Kitchen Print Out</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $sla_it_date = !empty($row['gostore_date']) ? date('Y-m-d', strtotime($row['gostore_date']  . ' -' . 2 . ' days')) : '';
-                                                    $start_it_date = !empty($sla_it_date) ? date('Y-m-d', strtotime($sla_it_date  . ' -' . 1 . ' days')) : '';
-                                                    $start_act_it_date = !empty($row['gostore_date']) ? date('Y-m-d', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
+                                                    $sla_it_date = !empty($row['gostore_date']) ? date('d M y', strtotime($row['gostore_date']  . ' -' . 2 . ' days')) : '';
+                                                    $start_it_date = !empty($sla_it_date) ? date('d M y', strtotime($sla_it_date  . ' -' . 1 . ' days')) : '';
+                                                    $start_act_it_date = !empty($row['gostore_date']) ? date('d M y', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
                                                     // $ff1 = !empty($row['lamp_ff1']) ? 100 : 0; 
                                                     $it = isset($row['lamp_printer']) ? 100 : 0;
                                                     $dev_it = 0; // default jika tidak ada nilai yang valid
@@ -2234,7 +2290,7 @@ $conn->close();
                                                 <td><?= $start_act_it_date ?></td>
                                                 <td><?= $it ?>%</td>
                                                 <td><?= $dev_it ?>%</td>
-                                                <td><?= $row['it_date'] ?></td>
+                                                <td><?= isset($row['it_date']) && !empty($row['it_date']) ? date('d M y', strtotime($row['it_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_it);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -2251,9 +2307,9 @@ $conn->close();
                                                 <td  class="sticky" style="background-color: #b6c7aa; color: white;">CCTV, Sound</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $sla_it_date = !empty($row['gostore_date']) ? date('Y-m-d', strtotime($row['gostore_date']  . ' -' . 2 . ' days')) : '';
-                                                    $start_it_date = !empty($sla_it_date) ? date('Y-m-d', strtotime($sla_it_date  . ' -' . 1 . ' days')) : '';
-                                                    $start_act_it_date = !empty($row['gostore_date']) ? date('Y-m-d', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
+                                                    $sla_it_date = !empty($row['gostore_date']) ? date('d M y', strtotime($row['gostore_date']  . ' -' . 2 . ' days')) : '';
+                                                    $start_it_date = !empty($sla_it_date) ? date('d M y', strtotime($sla_it_date  . ' -' . 1 . ' days')) : '';
+                                                    $start_act_it_date = !empty($row['gostore_date']) ? date('d M y', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
                                                     // $ff1 = !empty($row['lamp_ff1']) ? 100 : 0; 
                                                     $it = isset($row['lamp_cctv']) ? 100 : 0;
                                                     $dev_it = 0; // default jika tidak ada nilai yang valid
@@ -2267,7 +2323,7 @@ $conn->close();
                                                 <td><?= $start_act_it_date ?></td>
                                                 <td><?= $it ?>%</td>
                                                 <td><?= $dev_it ?>%</td>
-                                                <td><?= $row['it_date'] ?></td>
+                                                <td><?= isset($row['it_date']) && !empty($row['it_date']) ? date('d M y', strtotime($row['it_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_it);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -2284,9 +2340,9 @@ $conn->close();
                                                 <td  class="sticky" style="background-color: #b6c7aa; color: white;">Internet Customer, Manager & Kasir</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $sla_it_date = !empty($row['gostore_date']) ? date('Y-m-d', strtotime($row['gostore_date']  . ' -' . 2 . ' days')) : '';
-                                                    $start_it_date = !empty($sla_it_date) ? date('Y-m-d', strtotime($sla_it_date  . ' -' . 1 . ' days')) : '';
-                                                    $start_act_it_date = !empty($row['gostore_date']) ? date('Y-m-d', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
+                                                    $sla_it_date = !empty($row['gostore_date']) ? date('d M y', strtotime($row['gostore_date']  . ' -' . 2 . ' days')) : '';
+                                                    $start_it_date = !empty($sla_it_date) ? date('d M y', strtotime($sla_it_date  . ' -' . 1 . ' days')) : '';
+                                                    $start_act_it_date = !empty($row['gostore_date']) ? date('d M y', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
                                                     // $ff1 = !empty($row['lamp_ff1']) ? 100 : 0; 
                                                     $it = isset($row['lamp_internet']) ? 100 : 0;
                                                     $dev_it = 0; // default jika tidak ada nilai yang valid
@@ -2300,7 +2356,7 @@ $conn->close();
                                                 <td><?= $start_act_it_date ?></td>
                                                 <td><?= $it ?>%</td>
                                                 <td><?= $dev_it ?>%</td>
-                                                <td><?= $row['it_date'] ?></td>
+                                                <td><?= isset($row['it_date']) && !empty($row['it_date']) ? date('d M y', strtotime($row['it_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_it);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -2319,8 +2375,8 @@ $conn->close();
                                                 <td rowspan="3"  class="sticky" style="background-color: #b6c7aa; color: white;">Marketing</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $start_marketing_date = !empty($row['gostore_date'] ) ? date('Y-m-d', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
-                                                    $sla_marketing_date = !empty($start_marketing_date ) ? date('Y-m-d', strtotime($start_marketing_date  . ' +' . 1 . ' days')) : '';
+                                                    $start_marketing_date = !empty($row['gostore_date'] ) ? date('d M y', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
+                                                    $sla_marketing_date = !empty($start_marketing_date ) ? date('d M y', strtotime($start_marketing_date  . ' +' . 1 . ' days')) : '';
                                                     // $ff1 = !empty($row['lamp_ff1']) ? 100 : 0; 
                                                     $marketing = isset($row['lamp_merchant']) ? 100 : 0;
                                                     $dev_marketing = 0; // default jika tidak ada nilai yang valid
@@ -2334,7 +2390,7 @@ $conn->close();
                                                 <td><?= $start_marketing_date ?></td>
                                                 <td><?= $marketing ?>%</td>
                                                 <td><?= $dev_marketing ?>%</td>
-                                                <td><?= $row['merchant_date'] ?></td>
+                                                <td><?= isset($row['merchant_date']) && !empty($row['merchant_date']) ? date('d M y', strtotime($row['merchant_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_marketing);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -2351,8 +2407,8 @@ $conn->close();
                                                 <td  class="sticky" style="background-color: #b6c7aa; color: white;">Content</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $start_marketing_date = !empty($row['gostore_date'] ) ? date('Y-m-d', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
-                                                    $sla_marketing_date = !empty($start_marketing_date ) ? date('Y-m-d', strtotime($start_marketing_date  . ' +' . 1 . ' days')) : '';
+                                                    $start_marketing_date = !empty($row['gostore_date'] ) ? date('d M y', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
+                                                    $sla_marketing_date = !empty($start_marketing_date ) ? date('d M y', strtotime($start_marketing_date  . ' +' . 1 . ' days')) : '';
                                                     // $ff1 = !empty($row['lamp_ff1']) ? 100 : 0; 
                                                     $marketing = isset($row['lamp_merchant']) ? 100 : 0;
                                                     $dev_marketing = 0; // default jika tidak ada nilai yang valid
@@ -2366,7 +2422,7 @@ $conn->close();
                                                 <td><?= $start_marketing_date ?></td>
                                                 <td><?= $marketing ?>%</td>
                                                 <td><?= $dev_marketing ?>%</td>
-                                                <td><?= $row['merchant_date'] ?></td>
+                                                <td><?= isset($row['merchant_date']) && !empty($row['merchant_date']) ? date('d M y', strtotime($row['merchant_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_marketing);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -2383,8 +2439,8 @@ $conn->close();
                                                 <td  class="sticky" style="background-color: #b6c7aa; color: white;">Promo</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $start_marketing_date = !empty($row['gostore_date'] ) ? date('Y-m-d', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
-                                                    $sla_marketing_date = !empty($start_marketing_date ) ? date('Y-m-d', strtotime($start_marketing_date  . ' +' . 1 . ' days')) : '';
+                                                    $start_marketing_date = !empty($row['gostore_date'] ) ? date('d M y', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
+                                                    $sla_marketing_date = !empty($start_marketing_date ) ? date('d M y', strtotime($start_marketing_date  . ' +' . 1 . ' days')) : '';
                                                     // $ff1 = !empty($row['lamp_ff1']) ? 100 : 0; 
                                                     $marketing = isset($row['lamp_merchant']) ? 100 : 0;
                                                     $dev_marketing = 0; // default jika tidak ada nilai yang valid
@@ -2398,7 +2454,7 @@ $conn->close();
                                                 <td><?= $start_marketing_date ?></td>
                                                 <td><?= $marketing ?>%</td>
                                                 <td><?= $dev_marketing ?>%</td>
-                                                <td><?= $row['merchant_date'] ?></td>
+                                                <td><?= isset($row['merchant_date']) && !empty($row['merchant_date']) ? date('d M y', strtotime($row['merchant_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_marketing);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -2417,8 +2473,8 @@ $conn->close();
                                                 <td rowspan="2"  class="sticky" style="background-color: #b6c7aa; color: white;">TAF</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $start_taf_date = !empty($row['gostore_date'] ) ? date('Y-m-d', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
-                                                    $sla_taf_date = !empty($start_taf_date ) ? date('Y-m-d', strtotime($start_taf_date  . ' +' . 1 . ' days')) : '';
+                                                    $start_taf_date = !empty($row['gostore_date'] ) ? date('d M y', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
+                                                    $sla_taf_date = !empty($start_taf_date ) ? date('d M y', strtotime($start_taf_date  . ' +' . 1 . ' days')) : '';
                                                     // $ff1 = !empty($row['lamp_ff1']) ? 100 : 0; 
                                                     $taf = isset($row['lamp_qris']) ? 100 : 0;
                                                     $dev_taf = 0; // default jika tidak ada nilai yang valid
@@ -2432,7 +2488,7 @@ $conn->close();
                                                 <td><?= $start_taf_date ?></td>
                                                 <td><?= $taf ?>%</td>
                                                 <td><?= $dev_taf ?>%</td>
-                                                <td><?= $row['merchant_date'] ?></td>
+                                                <td><?= isset($row['merchant_date']) && !empty($row['merchant_date']) ? date('d M y', strtotime($row['merchant_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_taf);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -2449,8 +2505,8 @@ $conn->close();
                                                 <td  class="sticky" style="background-color: #b6c7aa; color: white;">ATM / Rek</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $start_taf_date = !empty($row['gostore_date'] ) ? date('Y-m-d', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
-                                                    $sla_taf_date = !empty($start_taf_date ) ? date('Y-m-d', strtotime($start_taf_date  . ' +' . 1 . ' days')) : '';
+                                                    $start_taf_date = !empty($row['gostore_date'] ) ? date('d M y', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
+                                                    $sla_taf_date = !empty($start_taf_date ) ? date('d M y', strtotime($start_taf_date  . ' +' . 1 . ' days')) : '';
                                                     // $ff1 = !empty($row['lamp_ff1']) ? 100 : 0; 
                                                     $taf = isset($row['lamp_qris']) ? 100 : 0;
                                                     $dev_taf = 0; // default jika tidak ada nilai yang valid
@@ -2464,7 +2520,7 @@ $conn->close();
                                                 <td><?= $start_taf_date ?></td>
                                                 <td><?= $taf ?>%</td>
                                                 <td><?= $dev_taf ?>%</td>
-                                                <td><?= $row['merchant_date'] ?></td>
+                                                <td><?= isset($row['merchant_date']) && !empty($row['merchant_date']) ? date('d M y', strtotime($row['merchant_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_taf);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -2483,8 +2539,8 @@ $conn->close();
                                                 <td rowspan="1"  class="sticky" style="background-color: #b6c7aa; color: white;">SDG-Project</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $start_ho_date = !empty($row['gostore_date'] ) ? date('Y-m-d', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
-                                                    $sla_ho_date = !empty($start_ho_date ) ? date('Y-m-d', strtotime($start_ho_date  . ' +' . 1 . ' days')) : '';
+                                                    $start_ho_date = !empty($row['gostore_date'] ) ? date('d M y', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
+                                                    $sla_ho_date = !empty($start_ho_date ) ? date('d M y', strtotime($start_ho_date  . ' +' . 1 . ' days')) : '';
                                                     // $ff1 = !empty($row['lamp_ff1']) ? 100 : 0; 
                                                     $ho = isset($row['lamp_qris']) ? 100 : 0;
                                                     $dev_ho = 0; // default jika tidak ada nilai yang valid
@@ -2498,7 +2554,7 @@ $conn->close();
                                                 <td><?= $start_ho_date ?></td>
                                                 <td><?= $ho ?>%</td>
                                                 <td><?= $dev_ho ?>%</td>
-                                                <td><?= $row['soc_date'] ?></td>
+                                                <td><?= isset($row['soc_date']) && !empty($row['soc_date']) ? date('d M y', strtotime($row['soc_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_ho);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -2517,8 +2573,8 @@ $conn->close();
                                                 <td rowspan="1"  class="sticky" style="background-color: #b6c7aa; color: white;">Ops</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $start_rto_date = !empty($row['gostore_date'] ) ? date('Y-m-d', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
-                                                    $sla_rto_date = !empty($start_rto_date ) ? date('Y-m-d', strtotime($start_rto_date  . ' +' . 1 . ' days')) : '';
+                                                    $start_rto_date = !empty($row['gostore_date'] ) ? date('d M y', strtotime($row['gostore_date']  . ' -' . 3 . ' days')) : '';
+                                                    $sla_rto_date = !empty($start_rto_date ) ? date('d M y', strtotime($start_rto_date  . ' +' . 1 . ' days')) : '';
                                                     // $ff1 = !empty($row['lamp_ff1']) ? 100 : 0; 
                                                     $rto = isset($row['lamp_qris']) ? 100 : 0;
                                                     $dev_rto = 0; // default jika tidak ada nilai yang valid
@@ -2532,7 +2588,7 @@ $conn->close();
                                                 <td><?= $start_rto_date ?></td>
                                                 <td><?= $rto ?>%</td>
                                                 <td><?= $dev_rto ?>%</td>
-                                                <td><?= $row['rto_act'] ?></td>
+                                                <td><?= isset($row['rto_act']) && !empty($row['rto_act']) ? date('d M y', strtotime($row['rto_act'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_rto);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -2551,8 +2607,8 @@ $conn->close();
                                                 <td rowspan="1"  class="sticky" style="background-color: #b6c7aa; color: white;">Ops</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php    
-                                                    $start_go_date = !empty($row['gostore_date'] ) ? date('Y-m-d', strtotime($row['gostore_date']  . ' -' . 2 . ' days')) : '';
-                                                    $sla_go_date = !empty($start_go_date ) ? date('Y-m-d', strtotime($start_go_date  . ' +' . 2 . ' days')) : '';
+                                                    $start_go_date = !empty($row['gostore_date'] ) ? date('d M y', strtotime($row['gostore_date']  . ' -' . 2 . ' days')) : '';
+                                                    $sla_go_date = !empty($start_go_date ) ? date('d M y', strtotime($start_go_date  . ' +' . 2 . ' days')) : '';
                                                     // $ff1 = !empty($row['lamp_ff1']) ? 100 : 0; 
                                                     $go = isset($row['lamp_qris']) ? 100 : 0;
                                                     $dev_go = 0; // default jika tidak ada nilai yang valid
@@ -2566,7 +2622,7 @@ $conn->close();
                                                 <td><?= $start_go_date ?></td>
                                                 <td><?= $go ?>%</td>
                                                 <td><?= $dev_go ?>%</td>
-                                                <td><?= $row['go_fix'] ?></td>
+                                                <td><?= isset($row['go_fix']) && !empty($row['go_fix']) ? date('d M y', strtotime($row['go_fix'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_go);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -2585,7 +2641,7 @@ $conn->close();
                                                 <td class="sticky" style="background-color: white"></td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_ff_date = $sla_kom_date != 'N/A' ? date('Y-m-d', strtotime($sla_kom_date . ' +' . ($master_slacons['hrga_tm'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_ff_date = $sla_kom_date != 'N/A' ? date('d M y', strtotime($sla_kom_date . ' +' . ($master_slacons['hrga_tm'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <?php
                                                 $goodTotals = [];

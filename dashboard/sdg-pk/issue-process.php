@@ -17,7 +17,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             $defect_date = date("Y-m-d H:i:s");
 
             // Query untuk memperbarui status status_defect di tabel draft
-            $sql_update = "UPDATE issue SET status_defect = ?, defect_date = ?WHERE id = ?";
+            $sql_update = "UPDATE issue SET status_defect = ?, defect_date = ? WHERE id = ?";
             $stmt_update = $conn->prepare($sql_update);
             $stmt_update->bind_param("ssi", $status_defect, $defect_date, $id);
             $stmt_update->execute();

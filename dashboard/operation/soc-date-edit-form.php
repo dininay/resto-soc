@@ -75,6 +75,7 @@ if(isset($_GET['kode_lahan'])) {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="../../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />

@@ -39,6 +39,7 @@ if(isset($_GET['id'])) {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -73,7 +74,7 @@ if(isset($_GET['id'])) {
                             <div class="card-body">
                             <form method="post" action="spk-edit.php" enctype="multipart/form-data">
                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
-                            <div class="form-group row">
+                            <!-- <div class="form-group row">
                                 <label class="col-sm-3 col-form-label" for="jadwal_kickoff">Jadwal Kick Off Meeting</label>
                                 <div class="col-sm-9">
                                     <input class="form-control" id="jadwal_kickoff" name="sla_kom" type="date" placeholder="Jadwal Kick Off Meeting"
@@ -81,26 +82,12 @@ if(isset($_GET['id'])) {
                                         max="<?php echo date('Y-m-d', strtotime('+3 days')); ?>"
                                         value="<?php echo $row['sla_kom']; ?>"/>
                                 </div>
-                            </div>
+                            </div> -->
 
+                                
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label">Lampiran Sebelumnya</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_spk">Upload Lampiran SPK</label>
                                     <div class="col-sm-9">
-                                        <?php echo $row['lamp_spk']; ?>
-                                    </div>
-                                </div>
-                                <!-- Tambahkan pertanyaan apakah ingin mengganti lampiran -->
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label">Mau Ganti Lampiran?</label>
-                                    <div class="col-sm-9">
-                                        <input type="radio" name="ganti_lampiran" value="ya"> Ya
-                                        <input type="radio" name="ganti_lampiran" value="tidak" checked> Tidak
-                                    </div>
-                                </div>
-                                <!-- Jika pengguna ingin mengganti lampiran, tampilkan input untuk unggah file -->
-                                <div class="form-group row" id="lampiran_baru" style="display: none;">
-                                    <label class="col-sm-2 col-form-label" for="lamp_spk">Upload Baru</label>
-                                    <div class="col-sm-10">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_spk[]" type="file" multiple="multiple" />
                                         </div>

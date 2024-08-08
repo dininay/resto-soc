@@ -6,7 +6,6 @@ include "../../koneksi.php";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     // Ambil nilai tgl_berlaku dan penanggungjawab dari formulir
-    $masa_berlaku = $_POST['masa_berlaku'];
     $catatan = $_POST['catatan'];
     $id = $_POST['id'];
 
@@ -57,7 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // }
 
     // Update data di database
-    $sql = "UPDATE dokumen_loacd SET masa_berlaku = '$masa_berlaku', lamp_loacd = '$lamp_loacd', catatan = '$catatan' WHERE id = '$id'";
+    $sql = "UPDATE dokumen_loacd SET  lamp_loacd = '$lamp_loacd', catatan = '$catatan' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
         header("Location: " . $base_url . "/datatables-loa-cd.php");

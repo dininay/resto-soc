@@ -9,7 +9,12 @@ if(isset($_GET['id'])) {
     $id = $_GET['id'];
 
     // Query untuk mendapatkan data resep berdasarkan ID
-    $result = $conn->query("SELECT * from resto where id = $id");
+    $result = $conn->query("SELECT 
+    equipment.*,
+    resto.submit_gis
+    from equipment 
+    JOIN resto ON equipment.kode_lahan = resto.kode_lahan
+    where equipment.id = $id");
 
     // Periksa apakah data ditemukan
     if ($result->num_rows > 0) {
@@ -39,6 +44,7 @@ if(isset($_GET['id'])) {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -89,52 +95,24 @@ if(isset($_GET['id'])) {
                                         </select>
                                     </div>
                                 </div>
-                            <div class="form-group row">
-    <label class="col-sm-3 col-form-label">Lampiran ST Equipment</label>
-    <div class="col-sm-9">
-        <?php echo $row['lamp_steqp']; ?>
-    </div>
-</div>
-<!-- Tambahkan pertanyaan apakah ingin mengganti lampiran -->
-<div class="form-group row">
-    <label class="col-sm-3 col-form-label">Mau Ganti Lampiran?</label>
-    <div class="col-sm-9">
-        <input type="radio" name="ganti_lampirancp" value="ya"> Ya
-        <input type="radio" name="ganti_lampirancp" value="tidak" checked> Tidak
-    </div>
-</div>
-<!-- Jika pengguna ingin mengganti lampiran, tampilkan input untuk unggah file -->
-<div class="form-group row" id="lampiran_barucp" style="display: none;">
-    <label class="col-sm-3 col-form-label" for="lamp_steqp">Upload Baru</label>
-    <div class="col-sm-9">
-        <div class="dropzone" id="multple-file-upload">
-            <input name="lamp_steqp[]" type="file" multiple="multiple" />
-        </div>
-    </div>
-</div>
-<div class="form-group row">
-    <label class="col-sm-3 col-form-label">Lampiran Berita Acara Sebelumnya</label>
-    <div class="col-sm-9">
-        <?php echo $row['lamp_basteqp']; ?>
-    </div>
-</div>
-<!-- Tambahkan pertanyaan apakah ingin mengganti lampiran -->
-<div class="form-group row">
-    <label class="col-sm-3 col-form-label">Mau Ganti Lampiran?</label>
-    <div class="col-sm-9">
-        <input type="radio" name="ganti_lampiran" value="ya"> Ya
-        <input type="radio" name="ganti_lampiran" value="tidak" checked> Tidak
-    </div>
-</div>
-<!-- Jika pengguna ingin mengganti lampiran, tampilkan input untuk unggah file -->
-<div class="form-group row" id="lampiran_baru" style="display: none;">
-    <label class="col-sm-3 col-form-label" for="lamp_ba">Upload Baru</label>
-    <div class="col-sm-9">
-        <div class="dropzone" id="multple-file-upload">
-            <input name="lamp_basteqp[]" type="file" multiple="multiple" />
-        </div>
-    </div>
-</div>
+                            
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="lamp_steqp">Upload Lampiran ST Equipment</label>
+                                    <div class="col-sm-9">
+                                        <div class="dropzone" id="multple-file-upload" >
+                                            <input name="lamp_steqp[]" type="file" multiple="multiple" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="lamp_basteqp">Upload Lampiran BA</label>
+                                    <div class="col-sm-9">
+                                        <div class="dropzone" id="multple-file-upload" >
+                                            <input name="lamp_basteqp[]" type="file" multiple="multiple" />
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="form-group row">
                                     <div class="col-sm-9">
                                         <button class="btn btn-primary" type="submit">Simpan</button>

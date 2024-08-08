@@ -8,42 +8,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $id = $_POST['id'];
     $kode_lahan = $_POST['kode_lahan'];
     $tanggal_retensi = $_POST['tanggal_retensi'];
-    $status_defect = $_POST['status_defect'];
     $lamp_badefect = "";
 
-    // Menggabungkan nama file baru dengan nama file sebelumnya, jika ada
-    if (isset($_FILES['lamp_badefect']) && $_FILES['lamp_badefect']['error'][0] != UPLOAD_ERR_NO_FILE) {
-        $existing_files = isset($_POST['existing_files']) ? explode(", ", $_POST['existing_files']) : array(); // Ambil nama file sebelumnya
-        $new_files = array();
+    if(isset($_FILES["lamp_badefect"])) {
+        $lamp_badefect_paths = array();
 
-        // Simpan file-file baru yang diunggah
-        foreach ($_FILES['lamp_badefect']['name'] as $key => $filename) {
+        // Loop through each file
+        foreach($_FILES['lamp_badefect']['name'] as $key => $filename) {
+            $file_tmp = $_FILES['lamp_badefect']['tmp_name'][$key];
+            $file_name = $_FILES['lamp_badefect']['name'][$key];
             $target_dir = "../uploads/";
-            $target_file = $target_dir . basename($filename);
+            $target_file = $target_dir . basename($file_name);
 
-            // Buat direktori jika belum ada
-            if (!is_dir($target_dir)) {
-                mkdir($target_dir, 0777, true);
-            }
-
-            if (move_uploaded_file($_FILES['lamp_badefect']['tmp_name'][$key], $target_file)) {
-                $new_files[] = $filename;
+            // Attempt to move the uploaded file to the target directory
+            if (move_uploaded_file($file_tmp, $target_file)) {
+                $lamp_badefect_paths[] = $file_name;
             } else {
-                echo "Failed to upload file: " . $_FILES['lamp_badefect']['name'][$key] . "<br>";
+                echo "Gagal mengunggah file " . $file_name . "<br>";
             }
         }
 
-        // Gabungkan file-file baru dengan file-file sebelumnya
-        $lamp_badefect = implode(", ", array_merge($existing_files, $new_files));
-    } else {
-        // Jika tidak ada file baru diunggah, gunakan file yang sudah ada
-        $lamp_badefect = isset($_POST['existing_files']) ? $_POST['existing_files'] : "";
+        // Join all file paths into a comma-separated string
+        $lamp_badefect = implode(",", $lamp_badefect_paths);
     }
 
     // Update data di database untuk tabel resto
-    $sql1 = "UPDATE issue SET lamp_badefect = ?, tanggal_retensi = ?, status_defect = ? WHERE id = ?";
+    $sql1 = "UPDATE issue SET lamp_badefect = ?, tanggal_retensi = ? WHERE id = ?";
     $stmt1 = $conn->prepare($sql1);
-    $stmt1->bind_param("sssi", $lamp_badefect, $tanggal_retensi, $status_defect, $id);
+    $stmt1->bind_param("ssi", $lamp_badefect, $tanggal_retensi, $id);
 
     // Execute both queries
     if ($stmt1->execute()) {
@@ -55,7 +47,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Close statements
     $stmt1->close();
-    $stmt2->close();
 }
 
 // Menutup koneksi database

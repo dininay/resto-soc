@@ -30,6 +30,7 @@ if(isset($_GET['id'])) {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -51,10 +52,10 @@ if(isset($_GET['id'])) {
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Technical Meeting</h1>
+                    <h1>Data QC</h1>
                     <ul>
                         <li><a href="href">Edit</a></li>
-                        <li>Technical Meeting</li>
+                        <li>Data QC</li>
                     </ul>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
@@ -65,13 +66,13 @@ if(isset($_GET['id'])) {
                             <form method="post" action="hr-tm-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="tm">Technical Meeting</label>
+                                    <label class="col-sm-3 col-form-label" for="tm">Data QC</label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="tm" name="tm" type="text" placeholder="Technical Meeting" value="<?php echo $row['tm']; ?>"/>
+                                        <input class="form-control" id="tm" name="tm" type="text" placeholder="Data QS" value="<?php echo $row['tm']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_tm">Upload Lampiran Technical Meeting</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_tm">Upload Lampiran QC</label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_tm[]" type="file" multiple="multiple" />

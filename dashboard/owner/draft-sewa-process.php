@@ -41,9 +41,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         if ($confirm_bod == 'Approve') {
             $bod_date = date("Y-m-d H:i:s");
             // Query untuk memperbarui status confirm_bod di tabel draft
-            $sql_update = "UPDATE draft SET confirm_bod = ?, catatan_bod = ?, bod_date = ? WHERE id = ?";
+            $sql_update = "UPDATE draft SET confirm_bod = ?, catatan_bod = ?, bod_date = ?, confirm_negovaldoc = ? WHERE id = ?";
             $stmt_update = $conn->prepare($sql_update);
-            $stmt_update->bind_param("sssi", $confirm_bod, $catatan_bod, $bod_date, $id);
+            $stmt_update->bind_param("ssssi", $confirm_bod, $catatan_bod, $bod_date, $confirm_negovaldoc, $id);
             $stmt_update->execute();
 
             if ($stmt_update->affected_rows > 0) {
@@ -155,9 +155,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 }
             } else {
                 // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_vl di tabel re
-                $sql = "UPDATE draft SET confirm_bod = ?, catatan_bod = ? WHERE id = ?";
+                $sql = "UPDATE draft SET confirm_bod = ?, catatan_bod = ?, confirm_negovaldoc = ? WHERE id = ?";
                 $stmt = $conn->prepare($sql);
-                $stmt->bind_param("ssi", $confirm_bod, $catatan_bod, $id);
+                $stmt->bind_param("sssi", $confirm_bod, $catatan_bod, $confirm_negovaldoc, $id);
                 $stmt->execute();
     
                 // Check if update was successful

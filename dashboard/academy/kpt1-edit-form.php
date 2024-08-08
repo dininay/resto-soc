@@ -30,6 +30,7 @@ if(isset($_GET['id'])) {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -51,10 +52,10 @@ if(isset($_GET['id'])) {
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Ketepatan Periode Training 1</h1>
+                    <h1>Completion Training Rate 1</h1>
                     <ul>
                         <li><a href="href">Edit</a></li>
-                        <li>Ketepatan Periode Training 1</li>
+                        <li>Completion Training Rate 1</li>
                     </ul>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
@@ -65,9 +66,15 @@ if(isset($_GET['id'])) {
                             <form method="post" action="kpt1-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="kpt_1">Ketepatan Periode Training 1</label>
+                                    <label class="col-sm-3 col-form-label" for="crew_needed1">Crew Needed</label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="kpt_1" name="kpt_1" type="text" placeholder="Ketepatan Periode Training 1" value="<?php echo $row['kpt_1']; ?>"/>
+                                        <input class="form-control" id="crew_needed1" name="crew_needed1" type="number" placeholder="Crew Needed Batch 1" value="<?php echo $row['crew_needed1']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="crew_act1">Actual Crew</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="crew_act1" name="crew_act1" type="number" placeholder="Crew Actual Batch 1" value="<?php echo $row['crew_act1']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">

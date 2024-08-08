@@ -7,11 +7,14 @@ $sql = "SELECT
 resto.kode_lahan,
 land.nama_lahan,
 dokumen_loacd.kode_store,
-issue.*
+issue.*,
+resto.rto_date
 FROM resto
 JOIN issue on resto.kode_lahan = issue.kode_lahan
 JOIN land on resto.kode_lahan = land.kode_lahan
-JOIN dokumen_loacd on resto.kode_lahan = dokumen_loacd.kode_lahan";
+JOIN dokumen_loacd on resto.kode_lahan = dokumen_loacd.kode_lahan
+JOIN socdate_sdg on resto.kode_lahan = socdate_sdg.kode_lahan
+GROUP BY land.kode_lahan";
 $result = $conn->query($sql);
 
 // Inisialisasi variabel $data dengan array kosong
@@ -24,6 +27,67 @@ if ($result && $result->num_rows > 0) {
         $data[] = $row;
     }
 }
+
+
+$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'Konstruksi'";
+$sla_result = $conn->query($sla_query);
+
+$sla_value = 0; // Default SLA value
+
+if ($sla_result->num_rows > 0) {
+    $row = $sla_result->fetch_assoc();
+    $sla_value = $row['sla'];
+} else {
+    echo "No SLA value found for 'Owner Surveyor'";
+}
+
+function calculateScoring($start_date, $end_date, $sla) {
+    $today = new DateTime();
+    $start_date = $start_date ?: $today->format('Y-m-d');
+    $end_date = $end_date ?: $today->format('Y-m-d');
+    $sla_days = $sla ?: 0;
+
+    $start_date_obj = new DateTime($start_date);
+    $end_date_obj = new DateTime($end_date);
+
+    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
+
+    if ($sla_days != 0) {
+        if ($date_diff > $sla_days) {
+            $scoring = -((($date_diff - $sla_days) / $sla_days) * 100);
+        } else {
+            $scoring = ((($sla_days - $date_diff) / $sla_days) * 100);
+        }
+    } else {
+        $scoring = 0;
+    }
+
+    return round($scoring, 2);
+}
+// Fungsi untuk menentukan remarks berdasarkan scoring
+function getRemarks($scoring) {
+    if ($scoring >= 0) {
+        return "good";
+    } elseif ($scoring >= -30) {
+        return "poor";
+    } else {
+        return "bad";
+    }
+}
+
+// Fungsi untuk menentukan warna badge berdasarkan remarks
+function getBadgeColor($remarks) {
+    switch ($remarks) {
+        case 'good':
+            return 'success'; // Hijau
+        case 'poor':
+            return 'warning'; // Kuning
+        case 'bad':
+            return 'danger'; // Merah
+        default:
+            return 'secondary'; // Default jika remarks tidak dikenali
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -33,7 +97,8 @@ if ($result && $result->num_rows > 0) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -81,6 +146,7 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Tanggal Retensi</th>
                                                 <th>Lampiran BA</th>
                                                 <th>Status</th>
+                                                <th>SLA</th>
 												<th>Action</th>
                                             </tr>
                                         </thead>
@@ -90,7 +156,19 @@ if ($result && $result->num_rows > 0) {
                                             <td><?= $row['kode_lahan'] ?></td>
                                             <td><?= $row['kode_store'] ?></td>
                                             <td><?= $row['nama_lahan'] ?></td>
-                                            <td><?= $row['tanggal_retensi'] ?></td>
+                                            <td>
+                                                <?php if (!empty($row['tanggal_retensi'])): ?>
+                                                    <?php
+                                                    $date = new DateTime($row['tanggal_retensi']);
+                                                    $formattedDate = $date->format('d M y');
+                                                    ?>
+                                                    <?= $formattedDate ?>
+                                                <?php else: ?>
+                                                    <!-- Jika kosong, tampilkan pesan atau biarkan kosong -->
+                                                    <!-- Misalnya, <span>-</span> atau <span>Not Available</span> -->
+                                                    <!-- <span>Not Available</span> -->
+                                                <?php endif; ?>
+                                            </td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $file_files = explode(",", $row['lamp_badefect']); // Pisahkan nama lamp_badefect menjadi array
@@ -125,7 +203,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status_defect tidak dikenali
@@ -135,7 +213,57 @@ if ($result && $result->num_rows > 0) {
                                                     <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
                                                         <?php echo $row['status_defect']; ?>
                                                     </span>
-                                                </td>                                                
+                                                </td>       
+                                                <td>
+                                                    <?php
+                                                    // Mendapatkan tanggal sla_date dari kolom data
+                                                    $slaLegalDate = new DateTime($row['rto_date']);
+                                                    
+                                                    // Mendapatkan tanggal hari ini
+                                                    $today = new DateTime();
+                                                    
+                                                    // Menghitung selisih hari antara rto_date dan hari ini
+                                                    $diff = $today->diff($slaLegalDate);
+                                                    
+                                                    // Menghitung scoring
+                                                    $scoring = calculateScoring($row['defect_date'], $row['rto_date'], $sla_value); // Make sure $sla_value is set correctly
+                                                    $remarks = getRemarks($scoring);
+
+                                                    if ($row['status_defect'] == "Done") {
+                                                        // Menentukan label berdasarkan remarks
+                                                        $status_label = '';
+                                                        switch ($remarks) {
+                                                            case 'good':
+                                                                $status_label = 'Done Good';
+                                                                break;
+                                                            case 'poor':
+                                                                $status_label = 'Done Poor';
+                                                                break;
+                                                            case 'bad':
+                                                                $status_label = 'Done Bad';
+                                                                break;
+                                                        }
+
+                                                        echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
+                                                    } else {
+                                                        // Menghitung jumlah hari terlambat
+                                                        $lateDays = $slaLegalDate->diff($today)->days;
+                                                        
+                                                        // Jika terlambat
+                                                        if ($today > $slaLegalDate) {
+                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+                                                        } else {
+                                                            // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
+                                                            if ($diff) {
+                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
+                                                            } else {
+                                                                // Tampilkan peringatan "H + X"
+                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
+                                                            }
+                                                        }
+                                                    }
+                                                    ?>
+                                                </td>                                         
                                                 <td>
                                                 <?php if ($row['status_defect'] != "Approve"): ?>
                                                     <div>
@@ -188,6 +316,7 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Tanggal Retensi</th>
                                                 <th>Lampiran BA</th>
                                                 <th>Status</th>
+                                                <th>SLA</th>
 												<th>Action</th>
                                             </tr>
                                         </tfoot>

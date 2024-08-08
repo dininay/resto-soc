@@ -50,6 +50,10 @@ if ($result_filter_approve_kom->num_rows > 0) {
 
 // Jumlah total store yang tidak memiliki kode_lahan dengan status_kom = 'Approve'
 $total_existing_store_without_approve_kom = $total_existing_store - $total_approve_kom;
+
+// Tangani input form untuk memfilter data
+$filtered_kode_lahan = isset($_POST['kode_lahan']) ? $_POST['kode_lahan'] : '';
+
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT 
             land.kode_lahan AS land_kode_lahan,
@@ -75,19 +79,20 @@ $sql = "SELECT
             draft.slalegal_date AS draft_slalegal_date,
             draft.sla_date AS draft_sla_date,
             draft.end_date AS draft_end_date,
-            draft.fat_date AS draft_fat_date,
-            draft.slafat_date AS draft_slafat_date,
+            draft.fatpsm_date AS draft_fat_date,
+            draft.slafatpsm_date AS draft_slafat_date,
             procurement.start_date AS procurement_start_date,
             procurement.sla_date AS procurement_sla_date
         FROM land
-        LEFT JOIN re ON re.kode_lahan = land.kode_lahan
-        LEFT JOIN dokumen_loacd ON dokumen_loacd.kode_lahan = land.kode_lahan
-        LEFT JOIN sdg_desain ON sdg_desain.kode_lahan = land.kode_lahan
-        LEFT JOIN sdg_rab ON sdg_rab.kode_lahan = land.kode_lahan
-        LEFT JOIN draft ON draft.kode_lahan = land.kode_lahan
-        LEFT JOIN procurement ON procurement.kode_lahan = land.kode_lahan
-        LEFT JOIN resto ON resto.kode_lahan = land.kode_lahan
-        LEFT JOIN socdate_hr ON socdate_hr.kode_lahan = land.kode_lahan";
+        INNER JOIN re ON re.kode_lahan = land.kode_lahan
+        INNER JOIN dokumen_loacd ON dokumen_loacd.kode_lahan = land.kode_lahan
+        INNER JOIN sdg_desain ON sdg_desain.kode_lahan = land.kode_lahan
+        INNER JOIN sdg_rab ON sdg_rab.kode_lahan = land.kode_lahan
+        INNER JOIN draft ON draft.kode_lahan = land.kode_lahan
+        INNER JOIN procurement ON procurement.kode_lahan = land.kode_lahan
+        INNER JOIN resto ON resto.kode_lahan = land.kode_lahan
+        INNER JOIN socdate_hr ON socdate_hr.kode_lahan = land.kode_lahan
+        GROUP BY land.kode_lahan";
 $result = $conn->query($sql);
 
 $total_remarks = [];
@@ -405,15 +410,27 @@ $conn->close();
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/datatables.min.css" rel="stylesheet"  />
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.4/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/fixedcolumns/4.1.0/css/fixedColumns.dataTables.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        table.dataTable {
+            border-collapse: collapse!important;
+        }
+        
+    </style>
+    
     <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+
 </head>
 
 <body class="text-left">
@@ -479,7 +496,7 @@ $conn->close();
                                     <div class="col-lg-12 col-md-12">
                                         <div class="card mb-4">
                                             <div class="card-body">
-                                                <div class="card-title">Department Performance</div>
+                                                <div class="card-title">Department Tracking</div>
                                                 <div id="teamChart" style="height: 300px;"></div>
                                             </div>
                                         </div>
@@ -487,20 +504,20 @@ $conn->close();
                                 </div>
 
 							  <div class="table-responsive">
-                                <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
+                                    <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                                 <tr>
-                                                    <th rowspan="4" class="sticky" style="background-color: #6c757d; color: white;">Proses Phase</th>
-                                                    <th rowspan="4" class="sticky" style="background-color: #6c757d; color: white;">Activities</th>
+                                                    <th rowspan="4" class="sticky-col" style="background-color: #6c757d; color: white;">Proses Phase</th>
+                                                    <th rowspan="4" class="sticky-col" style="background-color: #6c757d; color: white;">Activities</th>
                                                 </tr>
                                                 <tr>
-                                                    <th colspan="1" class="sticky" style="background-color: #6c757d; color: white;">Store</th>
+                                                    <th colspan="1" class="sticky-col" style="background-color: #6c757d; color: white;">Store</th>
                                                     <?php foreach ($data as $row): ?>
                                                     <th colspan="7" style="background-color: #6c757d; color: white;"><?= $row['kode_store'] ?></th>
                                                     <?php endforeach; ?>
                                                 </tr>
                                                 <tr>
-                                                    <th colspan="1" rowspan="3" class="sticky" style="background-color: #6c757d; color: white;">PIC</th>
+                                                    <th colspan="1" rowspan="3" class="sticky-col" style="background-color: #6c757d; color: white;">PIC</th>
                                                 <?php foreach ($data as $row): ?>
                                                 <th colspan="2" style="background-color: #6c757d; color: white;">Plan</th>
                                                 <th rowspan="3" style="background-color: #6c757d; color: white;">SLA (d)</th>
@@ -526,19 +543,21 @@ $conn->close();
                                                 <?php foreach ($data as $row): ?>
                                                 <?php
                                                 // Mendefinisikan variabel untuk SLA
-                                                $sla_re_date = !empty($row['status_date']) ? date('Y-m-d', strtotime($row['status_date'] . ' +' . ($master_sla['RE'] ?? 0) . ' days')) : '';
+                                                $sla_re_date = !empty($row['status_date']) ? date('d M y', strtotime($row['status_date'] . ' +' . ($master_sla['RE'] ?? 0) . ' days')) : '';
+                                                
                                                 ?>
-                                                <td><?= $row['status_date'] ?></td>
+                                                <td><?= date('d M y', strtotime($row['status_date'])) ?></td>
                                                 <td><?= $sla_re_date ?></td>
                                                 <td><?= $master_sla['RE'] ?? 'N/A' ?></td>
-                                                <td><?= $row['status_date'] ?></td>
-                                                <td><?= $row['re_date'] ?></td>
+                                                <td><?= isset($row['status_date']) && !empty($row['status_date']) ? date('d M y', strtotime($row['status_date'])) : '0' ?></td>
+                                                <td><?= isset($row['re_date']) && !empty($row['re_date']) ? date('d M y', strtotime($row['re_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['status_date'], $row['re_date'], $master_sla['RE']);
                                                 $remarks = getRemarks($scoring);
-                                                $badge_color = getBadgeColor($remarks);                        
+                                                $badge_color = getBadgeColor($remarks);    
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';         
                                                 ?>
-                                                <td><?= $scoring ?>%</td>
+                                                <td><?= $display_scoring ?></td>
                                                 <td>
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $remarks ?>
@@ -552,21 +571,22 @@ $conn->close();
                                                 <td class="sticky" style="background-color: white;">BoD</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php       
-                                                    $sla_re_date = !empty($row['status_date']) ? date('Y-m-d', strtotime($row['status_date'] . ' +' . ($master_sla['RE'] ?? 0) . ' days')) : '';
+                                                    $sla_re_date = !empty($row['status_date']) ? date('d M y', strtotime($row['status_date'] . ' +' . ($master_sla['RE'] ?? 0) . ' days')) : '';
                                                                                        
-                                                    $sla_bod_date = $sla_re_date != 'N/A' ? date('Y-m-d', strtotime($sla_re_date . ' +' . ($master_sla['Owner Surveyor'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_bod_date = $sla_re_date != 'N/A' ? date('d M y', strtotime($sla_re_date . ' +' . ($master_sla['Owner Surveyor'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_re_date ?></td>
                                                 <td><?= $sla_bod_date ?></td>
                                                 <td><?= $master_sla['Owner Surveyor'] ?? 'N/A' ?></td>
-                                                <td><?= $row['re_date'] ?></td>
-                                                <td><?= $row['re_start_date'] ?></td>
+                                                <td><?= isset($row['re_date']) && !empty($row['re_date']) ? date('d M y', strtotime($row['re_date'])) : '0' ?></td>
+                                                <td><?= isset($row['re_start_date']) && !empty($row['re_start_date']) ? date('d M y', strtotime($row['re_start_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['re_date'], $row['re_start_date'], $master_sla['Owner Surveyor']);
                                                 $remarks = getRemarks($scoring);
-                                                $badge_color = getBadgeColor($remarks);                        
+                                                $badge_color = getBadgeColor($remarks);  
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                   
                                                 ?>
-                                                <td><?= $scoring ?>%</td>
+                                                <td><?= $display_scoring ?></td>
                                                 <td>
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $remarks ?>
@@ -579,19 +599,20 @@ $conn->close();
                                                 <td class="sticky" style="background-color: white;">Legal</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_legal_date = $sla_bod_date != 'N/A' ? date('Y-m-d', strtotime($sla_bod_date . ' +' . ($master_sla['Legal'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_legal_date = $sla_bod_date != 'N/A' ? date('d M y', strtotime($sla_bod_date . ' +' . ($master_sla['Legal'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_bod_date ?></td>
                                                 <td><?= $sla_legal_date?></td>
                                                 <td><?= $master_sla['VL'] ?? 'N/A' ?></td>
-                                                <td><?= $row['re_start_date'] ?></td>
-                                                <td><?= $row['vl_date'] ?></td>
+                                                <td><?= isset($row['re_start_date']) && !empty($row['re_start_date']) ? date('d M y', strtotime($row['re_start_date'])) : '0' ?></td>
+                                                <td><?= isset($row['vl_date']) && !empty($row['vl_date']) ? date('d M y', strtotime($row['vl_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['re_start_date'], $row['vl_date'], $master_sla['VL']);
                                                 $remarks = getRemarks($scoring);
-                                                $badge_color = getBadgeColor($remarks);                        
+                                                $badge_color = getBadgeColor($remarks);     
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                  
                                                 ?>
-                                                <td><?= $scoring ?>%</td>
+                                                <td><?= $display_scoring ?></td>
                                                 <td>
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $remarks ?>
@@ -604,19 +625,20 @@ $conn->close();
                                                 <td class="sticky" style="background-color: white;">Owner</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_nego_date = $sla_legal_date != 'N/A' ? date('Y-m-d', strtotime($sla_legal_date . ' +' . ($master_sla['Negosiator'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_nego_date = $sla_legal_date != 'N/A' ? date('d M y', strtotime($sla_legal_date . ' +' . ($master_sla['Negosiator'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_legal_date?></td>
                                                 <td><?= $sla_nego_date?></td>
                                                 <td><?= $master_sla['Negosiator'] ?? 'N/A' ?></td>
-                                                <td><?= $row['end_date'] ?></td>
-                                                <td><?= $row['nego_date'] ?></td>
+                                                <td><?= isset($row['end_date']) && !empty($row['end_date']) ? date('d M y', strtotime($row['end_date'])) : '0' ?></td>
+                                                <td><?= isset($row['nego_date']) && !empty($row['nego_date']) ? date('d M y', strtotime($row['nego_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['end_date'], $row['nego_date'], $master_sla['Negosiator']);
                                                 $remarks = getRemarks($scoring);
-                                                $badge_color = getBadgeColor($remarks);                        
+                                                $badge_color = getBadgeColor($remarks);           
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';  
                                                 ?>
-                                                <td><?= $scoring ?>%</td>
+                                                <td><?= $display_scoring ?></td>
                                                 <td>
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $remarks ?>
@@ -629,19 +651,20 @@ $conn->close();
                                                 <td class="sticky" style="background-color: white;">RE</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_loa_date = $sla_nego_date != 'N/A' ? date('Y-m-d', strtotime($sla_nego_date . ' +' . ($master_sla['LOA-CD'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_loa_date = $sla_nego_date != 'N/A' ? date('d M y', strtotime($sla_nego_date . ' +' . ($master_sla['LOA-CD'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_nego_date ?></td>
                                                 <td><?= $sla_loa_date?></td>
                                                 <td><?= $master_sla['LOA-CD'] ?? 'N/A' ?></td>
-                                                <td><?= $row['nego_date'] ?></td>
-                                                <td><?= $row['dokumen_loacd_start_date'] ?></td>
+                                                <td><?= isset($row['nego_date']) && !empty($row['nego_date']) ? date('d M y', strtotime($row['nego_date'])) : '0' ?></td>
+                                                <td><?= isset($row['dokumen_loacd_start_date']) && !empty($row['dokumen_loacd_start_date']) ? date('d M y', strtotime($row['dokumen_loacd_start_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['nego_date'], $row['dokumen_loacd_start_date'], $master_sla['LOA-CD']);
                                                 $remarks = getRemarks($scoring);
-                                                $badge_color = getBadgeColor($remarks);                        
+                                                $badge_color = getBadgeColor($remarks);                 
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';       
                                                 ?>
-                                                <td><?= $scoring ?>%</td>
+                                                <td><?= $display_scoring ?></td>
                                                 <td>
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $remarks ?>
@@ -654,19 +677,20 @@ $conn->close();
                                                 <td class="sticky" style="background-color: white;">Legal</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_vd_date = $sla_loa_date != 'N/A' ? date('Y-m-d', strtotime($sla_loa_date . ' +' . ($master_sla['VD'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_vd_date = $sla_loa_date != 'N/A' ? date('d M y', strtotime($sla_loa_date . ' +' . ($master_sla['VD'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_loa_date ?></td>
                                                 <td><?= $sla_vd_date?></td>
                                                 <td><?= $master_sla['VD'] ?? 'N/A' ?></td>
-                                                <td><?= $row['vl_date'] ?></td>
-                                                <td><?= $row['dokumen_loacd_end_date'] ?></td>
+                                                <td><?= isset($row['vl_date']) && !empty($row['vl_date']) ? date('d M y', strtotime($row['vl_date'])) : '0' ?></td>
+                                                <td><?= isset($row['dokumen_loacd_end_date']) && !empty($row['dokumen_loacd_end_date']) ? date('d M y', strtotime($row['dokumen_loacd_end_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['vl_date'], $row['dokumen_loacd_end_date'], $master_sla['VD']);
                                                 $remarks = getRemarks($scoring);
-                                                $badge_color = getBadgeColor($remarks);                        
+                                                $badge_color = getBadgeColor($remarks);       
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                     
                                                 ?>
-                                                <td><?= $scoring ?>%</td>
+                                                <td><?= $display_scoring ?></td>
                                                 <td>
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $remarks ?>
@@ -680,19 +704,20 @@ $conn->close();
                                                 <td rowspan="4" style="background-color: #b6c7aa; color: white;">SDG-DED</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_survey_date = $sla_nego_date != 'N/A' ? date('Y-m-d', strtotime($sla_nego_date . ' +' . ($master_sla['Land Survey'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_survey_date = $sla_nego_date != 'N/A' ? date('d M y', strtotime($sla_nego_date . ' +' . ($master_sla['Land Survey'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_nego_date ?></td>
                                                 <td><?= $sla_survey_date?></td>
                                                 <td><?= $master_sla['Land Survey'] ?? 'N/A' ?></td>
-                                                <td><?= $row['nego_date'] ?></td>
-                                                <td><?= $row['survey_date'] ?></td>
+                                                <td><?= isset($row['nego_date']) && !empty($row['nego_date']) ? date('d M y', strtotime($row['nego_date'])) : '0' ?></td>
+                                                <td><?= isset($row['survey_date']) && !empty($row['survey_date']) ? date('d M y', strtotime($row['survey_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['nego_date'], $row['survey_date'], $master_sla['Land Survey']);
                                                 $remarks = getRemarks($scoring);
-                                                $badge_color = getBadgeColor($remarks);                        
+                                                $badge_color = getBadgeColor($remarks);    
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                      
                                                 ?>
-                                                <td><?= $scoring ?>%</td>
+                                                <td><?= $display_scoring ?></td>
                                                 <td>
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $remarks ?>
@@ -704,19 +729,20 @@ $conn->close();
                                                 <td class="sticky" style="background-color: #b6c7aa; color: white;">Setting Layout</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_layout_date = $sla_survey_date != 'N/A' ? date('Y-m-d', strtotime($sla_survey_date . ' +' . ($master_sla['Layouting'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_layout_date = $sla_survey_date != 'N/A' ? date('d M y', strtotime($sla_survey_date . ' +' . ($master_sla['Layouting'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_survey_date ?></td>
                                                 <td><?= $sla_layout_date?></td>
                                                 <td><?= $master_sla['Layouting'] ?? 'N/A' ?></td>
-                                                <td><?= $row['survey_date'] ?></td>
-                                                <td><?= $row['layout_date'] ?></td>
+                                                <td><?= isset($row['survey_date']) && !empty($row['survey_date']) ? date('d M y', strtotime($row['survey_date'])) : '0' ?></td>
+                                                <td><?= isset($row['layout_date']) && !empty($row['layout_date']) ? date('d M y', strtotime($row['layout_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['survey_date'], $row['layout_date'], $master_sla['Layouting']);
                                                 $remarks = getRemarks($scoring);
-                                                $badge_color = getBadgeColor($remarks);                        
+                                                $badge_color = getBadgeColor($remarks);          
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                  
                                                 ?>
-                                                <td><?= $scoring ?>%</td>
+                                                <td><?= $display_scoring ?></td>
                                                 <td>
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $remarks ?>
@@ -728,19 +754,20 @@ $conn->close();
                                                 <td class="sticky" style="background-color: #b6c7aa; color: white;">Design Urugan</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_sdgded_date = $sla_layout_date != 'N/A' ? date('Y-m-d', strtotime($sla_layout_date . ' +' . ($master_sla['Design'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_sdgded_date = $sla_layout_date != 'N/A' ? date('d M y', strtotime($sla_layout_date . ' +' . ($master_sla['Design'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td rowspan="2"><?= $sla_layout_date ?></td>
                                                 <td rowspan="2"><?= $sla_sdgded_date?></td>
                                                 <td rowspan="2"><?= $master_sla['Design'] ?? 'N/A' ?></td>
-                                                <td rowspan="2"><?= $row['layout_date'] ?></td>
-                                                <td rowspan="2"><?= $row['sdg_desain_start_date'] ?></td>
+                                                <td><?= isset($row['layout_date']) && !empty($row['layout_date']) ? date('d M y', strtotime($row['layout_date'])) : '0' ?></td>
+                                                <td><?= isset($row['sdg_desain_start_date']) && !empty($row['sdg_desain_start_date']) ? date('d M y', strtotime($row['sdg_desain_start_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['layout_date'], $row['sdg_desain_start_date'], $master_sla['Design']);
                                                 $remarks = getRemarks($scoring);
-                                                $badge_color = getBadgeColor($remarks);                        
+                                                $badge_color = getBadgeColor($remarks);            
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                     
                                                 ?>
-                                                <td rowspan="2"><?= $scoring ?>%</td>
+                                                <td><?= $display_scoring ?></td>
                                                 <td rowspan="2">
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $remarks ?>
@@ -757,19 +784,21 @@ $conn->close();
                                                 <td rowspan="2" class="sticky" style="background-color: white;">SDG-QS</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_rab_date = $sla_sdgded_date != 'N/A' ? date('Y-m-d', strtotime($sla_sdgded_date . ' +' . ($master_sla['QS'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_rab_date = $sla_sdgded_date != 'N/A' ? date('d M y', strtotime($sla_sdgded_date . ' +' . ($master_sla['QS'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td rowspan="2" style="background-color: white"><?= $sla_sdgded_date ?></td>
                                                 <td rowspan="2" style="background-color: white"><?= $sla_rab_date?></td>
                                                 <td rowspan="2" style="background-color: white"><?= $master_sla['QS'] ?? 'N/A' ?></td>
-                                                <td rowspan="2" style="background-color: white"><?= $row['sdg_desain_start_date'] ?></td>
-                                                <td rowspan="2" style="background-color: white"><?= $row['sdg_qs_start_date'] ?></td>
+                                                <td rowspan="2" style="background-color: white"><?= isset($row['sdg_desain_start_date']) && !empty($row['sdg_desain_start_date']) ? date('d M y', strtotime($row['sdg_desain_start_date'])) : '0' ?></td>
+                                                <td rowspan="2" style="background-color: white"><?= isset($row['sdg_qs_start_date']) && !empty($row['sdg_qs_start_date']) ? date('d M y', strtotime($row['sdg_qs_start_date'])) : '0' ?></td>
+                                                
                                                 <?php 
                                                 $scoring = calculateScoring($row['sdg_desain_start_date'], $row['sdg_qs_start_date'], $master_sla['QS']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);                        
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                   
                                                 ?>
-                                                <td rowspan="2" style="background-color: white"><?= $scoring ?>%</td>
+                                                <td><?= $display_scoring ?></td>
                                                 <td rowspan="2" style="background-color: white">
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $remarks ?>
@@ -786,19 +815,20 @@ $conn->close();
                                                 <td class="sticky" style="background-color: #b6c7aa; color: white;">Legal</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_draft_date = $sla_vd_date != 'N/A' ? date('Y-m-d', strtotime($sla_vd_date . ' +' . ($master_sla['Draft-Sewa'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_draft_date = $sla_vd_date != 'N/A' ? date('d M y', strtotime($sla_vd_date . ' +' . ($master_sla['Draft-Sewa'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_vd_date ?></td>
                                                 <td><?= $sla_draft_date?></td>
                                                 <td><?= $master_sla['Draft-Sewa'] ?? 'N/A' ?></td>
-                                                <td><?= $row['dokumen_loacd_end_date'] ?></td>
-                                                <td><?= $row['draft_start_date'] ?></td>
+                                                <td><?= isset($row['dokumen_loacd_end_date']) && !empty($row['dokumen_loacd_end_date']) ? date('d M y', strtotime($row['dokumen_loacd_end_date'])) : '0' ?></td>
+                                                <td><?= isset($row['draft_start_date']) && !empty($row['draft_start_date']) ? date('d M y', strtotime($row['draft_start_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['dokumen_loacd_end_date'], $row['draft_start_date'], $master_sla['Draft-Sewa']);
                                                 $remarks = getRemarks($scoring);
-                                                $badge_color = getBadgeColor($remarks);                        
+                                                $badge_color = getBadgeColor($remarks);                         
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';               
                                                 ?>
-                                                <td><?= $scoring ?>%</td>
+                                                <td><?= $display_scoring ?></td>
                                                 <td>
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $remarks ?>
@@ -811,19 +841,20 @@ $conn->close();
                                                 <td class="sticky" style="background-color: #b6c7aa; color: white;">TAF</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_fat_date = $sla_draft_date != 'N/A' ? date('Y-m-d', strtotime($sla_draft_date . ' +' . ($master_sla['FAT-Sewa'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_fat_date = $sla_draft_date != 'N/A' ? date('d M y', strtotime($sla_draft_date . ' +' . ($master_sla['FAT-Sewa'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_draft_date ?></td>
                                                 <td><?= $sla_fat_date?></td>
                                                 <td><?= $master_sla['FAT-Sewa'] ?? 'N/A' ?></td>
-                                                <td><?= $row['draft_start_date'] ?></td>
-                                                <td><?= $row['draft_fat_date'] ?></td>
+                                                <td><?= isset($row['draft_start_date']) && !empty($row['draft_start_date']) ? date('d M y', strtotime($row['draft_start_date'])) : '0' ?></td>
+                                                <td><?= isset($row['draft_fat_date']) && !empty($row['draft_fat_date']) ? date('d M y', strtotime($row['draft_fat_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['draft_start_date'], $row['draft_fat_date'], $master_sla['FAT-Sewa']);
                                                 $remarks = getRemarks($scoring);
-                                                $badge_color = getBadgeColor($remarks);                        
+                                                $badge_color = getBadgeColor($remarks);                         
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                  
                                                 ?>
-                                                <td><?= $scoring ?>%</td>
+                                                <td><?= $display_scoring ?></td>
                                                 <td>
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $remarks ?>
@@ -836,19 +867,20 @@ $conn->close();
                                                 <td class="sticky" style="background-color: #b6c7aa; color: white;">RE</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_psm_date = $sla_fat_date != 'N/A' ? date('Y-m-d', strtotime($sla_fat_date . ' +' . ($master_sla['TTD-Sewa'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_psm_date = $sla_fat_date != 'N/A' ? date('d M y', strtotime($sla_fat_date . ' +' . ($master_sla['TTD-Sewa'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_fat_date ?></td>
                                                 <td><?= $sla_psm_date?></td>
                                                 <td><?= $master_sla['TTD-Sewa'] ?? 'N/A' ?></td>
-                                                <td><?= $row['draft_start_date'] ?></td>
-                                                <td><?= $row['draft_end_date'] ?></td>
+                                                <td><?= isset($row['draft_start_date']) && !empty($row['draft_start_date']) ? date('d M y', strtotime($row['draft_start_date'])) : '0' ?></td>
+                                                <td><?= isset($row['draft_end_date']) && !empty($row['draft_end_date']) ? date('d M y', strtotime($row['draft_end_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['draft_start_date'], $row['draft_end_date'], $master_sla['TTD-Sewa']);
                                                 $remarks = getRemarks($scoring);
-                                                $badge_color = getBadgeColor($remarks);                        
+                                                $badge_color = getBadgeColor($remarks);                    
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                     
                                                 ?>
-                                                <td><?= $scoring ?>%</td>
+                                                <td><?= $display_scoring ?></td>
                                                 <td>
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $remarks ?>
@@ -862,19 +894,20 @@ $conn->close();
                                                 <td class="sticky">Legal</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_permit_date = $sla_psm_date != 'N/A' ? date('Y-m-d', strtotime($sla_psm_date . ' +' . ($master_sla['Legal'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_permit_date = $sla_psm_date != 'N/A' ? date('d M y', strtotime($sla_psm_date . ' +' . ($master_sla['Legal'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_psm_date ?></td>
                                                 <td><?= $sla_permit_date?></td>
                                                 <td><?= $master_sla['Legal'] ?? 'N/A' ?></td>
-                                                <td><?= $row['sdg_desain_start_date'] ?></td>
-                                                <td><?= $row['sdg_desain_submit_date'] ?></td>
+                                                <td><?= isset($row['sdg_desain_start_date']) && !empty($row['sdg_desain_start_date']) ? date('d M y', strtotime($row['sdg_desain_start_date'])) : '0' ?></td>
+                                                <td><?= isset($row['sdg_desain_submit_date']) && !empty($row['sdg_desain_submit_date']) ? date('d M y', strtotime($row['sdg_desain_submit_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['sdg_desain_start_date'], $row['sdg_desain_submit_date'], $master_sla['Legal']);
                                                 $remarks = getRemarks($scoring);
-                                                $badge_color = getBadgeColor($remarks);                        
+                                                $badge_color = getBadgeColor($remarks);          
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                  
                                                 ?>
-                                                <td><?= $scoring ?>%</td>
+                                                <td><?= $display_scoring ?></td>
                                                 <td>
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $remarks ?>
@@ -888,19 +921,20 @@ $conn->close();
                                                 <td class="sticky" rowspan="2" style="background-color: #b6c7aa; color: white;">Procurement</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_tender_date = $sla_rab_date != 'N/A' ? date('Y-m-d', strtotime($sla_rab_date . ' +' . ($master_sla['Tender'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_tender_date = $sla_rab_date != 'N/A' ? date('d M y', strtotime($sla_rab_date . ' +' . ($master_sla['Tender'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td rowspan="2"><?= $sla_rab_date ?></td>
                                                 <td rowspan="2"><?= $sla_tender_date?></td>
                                                 <td rowspan="2"><?= $master_sla['Tender'] ?? 'N/A' ?></td>
-                                                <td rowspan="2"><?= $row['sdg_desain_start_date'] ?></td>
-                                                <td rowspan="2"><?= $row['procurement_start_date'] ?></td>
+                                                <td><?= isset($row['sdg_desain_start_date']) && !empty($row['sdg_desain_start_date']) ? date('d M y', strtotime($row['sdg_desain_start_date'])) : '0' ?></td>
+                                                <td><?= isset($row['procurement_start_date']) && !empty($row['procurement_start_date']) ? date('d M y', strtotime($row['procurement_start_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['sdg_desain_start_date'], $row['procurement_start_date'], $master_sla['Tender']);
                                                 $remarks = getRemarks($scoring);
-                                                $badge_color = getBadgeColor($remarks);                        
+                                                $badge_color = getBadgeColor($remarks);        
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                         
                                                 ?>
-                                                <td rowspan="2"><?= $scoring ?>%</td>
+                                                <td><?= $display_scoring ?></td>
                                                 <td rowspan="2">
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $remarks ?>
@@ -917,19 +951,20 @@ $conn->close();
                                                 <td class="sticky" rowspan="2" style="background-color: white">Procurement</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_spk_date = $sla_tender_date != 'N/A' ? date('Y-m-d', strtotime($sla_tender_date . ' +' . ($master_sla['SPK'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_spk_date = $sla_tender_date != 'N/A' ? date('d M y', strtotime($sla_tender_date . ' +' . ($master_sla['SPK'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td rowspan="2" style="background-color: white"><?= $sla_tender_date ?></td>
                                                 <td rowspan="2" style="background-color: white"><?= $sla_spk_date?></td>
                                                 <td rowspan="2" style="background-color: white"><?= $master_sla['SPK'] ?? 'N/A' ?></td>
-                                                <td rowspan="2" style="background-color: white"><?= $row['procurement_start_date'] ?></td>
-                                                <td rowspan="2" style="background-color: white"><?= $row['spk_date'] ?></td>
+                                                <td><?= isset($row['sdg_desain_start_date']) && !empty($row['sdg_desain_start_date']) ? date('d M y', strtotime($row['sdg_desain_start_date'])) : '0' ?></td>
+                                                <td><?= isset($row['spk_date']) && !empty($row['spk_date']) ? date('d M y', strtotime($row['spk_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['procurement_start_date'], $row['spk_date'], $master_sla['SPK']);
                                                 $remarks = getRemarks($scoring);
-                                                $badge_color = getBadgeColor($remarks);                        
+                                                $badge_color = getBadgeColor($remarks);                       
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                     
                                                 ?>
-                                                <td rowspan="2" style="background-color: white"><?= $scoring ?>%</td>
+                                                <td><?= $display_scoring ?></td>
                                                 <td rowspan="2" style="background-color: white">
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $remarks ?>
@@ -946,19 +981,20 @@ $conn->close();
                                                 <td class="sticky" style="background-color: #b6c7aa; color: white;">TAF</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_spkfat_date = $sla_spk_date != 'N/A' ? date('Y-m-d', strtotime($sla_spk_date . ' +' . ($master_sla['SPK-FAT'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_spkfat_date = $sla_spk_date != 'N/A' ? date('d M y', strtotime($sla_spk_date . ' +' . ($master_sla['SPK-FAT'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_spk_date ?></td>
                                                 <td><?= $sla_spkfat_date?></td>
                                                 <td><?= $master_sla['SPK-FAT'] ?? 'N/A' ?></td>
-                                                <td><?= $row['spk_date'] ?></td>
-                                                <td><?= $row['fat_date'] ?></td>
+                                                <td><?= isset($row['spk_date']) && !empty($row['spk_date']) ? date('d M y', strtotime($row['spk_date'])) : '0' ?></td>
+                                                <td><?= isset($row['fat_date']) && !empty($row['fat_date']) ? date('d M y', strtotime($row['fat_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['spk_date'], $row['fat_date'], $master_sla['SPK-FAT']);
                                                 $remarks = getRemarks($scoring);
-                                                $badge_color = getBadgeColor($remarks);                        
+                                                $badge_color = getBadgeColor($remarks);                     
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                      
                                                 ?>
-                                                <td><?= $scoring ?>%</td>
+                                                <td><?= $display_scoring ?></td>
                                                 <td>
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $remarks ?>
@@ -972,19 +1008,20 @@ $conn->close();
                                                 <td class="sticky">SDG-Project</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_kom_date = $sla_spk_date != 'N/A' ? date('Y-m-d', strtotime($sla_spk_date . ' +' . ($master_sla['KOM'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_kom_date = $sla_spk_date != 'N/A' ? date('d M y', strtotime($sla_spk_date . ' +' . ($master_sla['KOM'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_spk_date ?></td>
                                                 <td><?= $sla_kom_date?></td>
                                                 <td><?= $master_sla['KOM'] ?? 'N/A' ?></td>
-                                                <td><?= $row['fat_date'] ?></td>
-                                                <td><?= $row['kom_date'] ?></td>
+                                                <td><?= isset($row['fat_date']) && !empty($row['fat_date']) ? date('d M y', strtotime($row['fat_date'])) : '0' ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['fat_date'], $row['kom_date'], $master_sla['KOM']);
                                                 $remarks = getRemarks($scoring);
-                                                $badge_color = getBadgeColor($remarks);                        
+                                                $badge_color = getBadgeColor($remarks);        
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                      
                                                 ?>
-                                                <td><?= $scoring ?>%</td>
+                                                <td><?= $display_scoring ?></td>
                                                 <td>
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $remarks ?>
@@ -998,19 +1035,20 @@ $conn->close();
                                                 <td class="sticky" style="background-color: #b6c7aa; color: white;">HR</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_ff_date = $sla_kom_date != 'N/A' ? date('Y-m-d', strtotime($sla_kom_date . ' +' . ($master_slacons['hrga_tm'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_ff_date = $sla_kom_date != 'N/A' ? date('d M y', strtotime($sla_kom_date . ' +' . ($master_slacons['hrga_tm'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_kom_date ?></td>
                                                 <td><?= $sla_ff_date?></td>
                                                 <td><?= $master_slacons['hrga_tm'] ?? 'N/A' ?></td>
-                                                <td><?= $row['kom_date'] ?></td>
-                                                <td><?= $row['ff3_date'] ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= isset($row['ff3_date']) && !empty($row['ff3_date']) ? date('d M y', strtotime($row['ff3_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['kom_date'], $row['ff3_date'], $master_slacons['hrga_tm']);
                                                 $remarks = getRemarks($scoring);
-                                                $badge_color = getBadgeColor($remarks);                        
+                                                $badge_color = getBadgeColor($remarks);        
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                        
                                                 ?>
-                                                <td><?= $scoring ?>%</td>
+                                                <td><?= $display_scoring ?></td>
                                                 <td>
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $remarks ?>
@@ -1024,19 +1062,20 @@ $conn->close();
                                                 <td class="sticky" style="background-color: white">HR</td>
                                                 <?php foreach ($data as $row): ?>
                                                     <?php                                              
-                                                    $sla_ff_date = $sla_kom_date != 'N/A' ? date('Y-m-d', strtotime($sla_kom_date . ' +' . ($master_slacons['hrga_tm'] ?? 0) . ' days')) : 'N/A';
+                                                    $sla_ff_date = $sla_kom_date != 'N/A' ? date('d M y', strtotime($sla_kom_date . ' +' . ($master_slacons['hrga_tm'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
                                                 <td><?= $sla_kom_date ?></td>
                                                 <td><?= $sla_ff_date?></td>
                                                 <td><?= $master_slacons['hrga_tm'] ?? 'N/A' ?></td>
-                                                <td><?= $row['kom_date'] ?></td>
-                                                <td><?= $row['ff3_date'] ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= isset($row['ff3_date']) && !empty($row['ff3_date']) ? date('d M y', strtotime($row['ff3_date'])) : '0' ?></td>
                                                 <?php 
                                                 $scoring = calculateScoring($row['kom_date'], $row['ff3_date'], $master_slacons['hrga_tm']);
                                                 $remarks = getRemarks($scoring);
-                                                $badge_color = getBadgeColor($remarks);                        
+                                                $badge_color = getBadgeColor($remarks);      
+                                                $display_scoring = $scoring < -200 ? '-200%++' : round($scoring) . '%';                   
                                                 ?>
-                                                <td><?= $scoring ?>%</td>
+                                                <td><?= $display_scoring ?></td>
                                                 <td>
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $remarks ?>
@@ -1513,7 +1552,19 @@ $(document).ready(function() {
             });
         }
     </script>
-    
+    <script>
+    $(document).ready(function() {
+        if (!$.fn.dataTable.isDataTable('#zero_configuration_table')) {
+            $('#zero_configuration_table').DataTable({
+                scrollX: true,
+                fixedColumns: {
+                    leftColumns: 3 // Adjust this number to the number of columns you want to freeze
+                }
+            });
+        }
+    });
+    </script>
+
 </body>
 
 </html>

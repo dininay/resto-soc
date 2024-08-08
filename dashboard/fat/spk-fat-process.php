@@ -6,6 +6,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
     $id = $_POST["id"];
     $status_fat = $_POST["status_fat"];
     $fat_date = date("Y-m-d H:i:s");
+    $lamp_signedtaf = null;
+
+    // Periksa apakah file lamp_signedtaf ada dalam $_FILES
+    if (isset($_FILES["lamp_signedtaf"])) {
+        $lamp_signedtaf_paths = array();
+        foreach ($_FILES['lamp_signedtaf']['name'] as $key => $filename) {
+            $file_tmp = $_FILES['lamp_signedtaf']['tmp_name'][$key];
+            $target_dir = "../uploads/";
+            $target_file = $target_dir . basename($filename);
+
+            // Attempt to move the uploaded file to the target directory
+            if (move_uploaded_file($file_tmp, $target_file)) {
+                $lamp_signedtaf_paths[] = $filename;
+            } else {
+                echo "Gagal mengunggah file " . $filename . "<br>";
+            }
+        }
+
+        // Join all file paths into a comma-separated string
+        $lamp_signedtaf = implode(",", $lamp_signedtaf_paths);
+    }
     $issue_detail = isset($_POST["issue_detail"]) ? $_POST["issue_detail"] : null;
     $pic = isset($_POST["pic"]) ? $_POST["pic"] : null;
     $action_plan = isset($_POST["action_plan"]) ? $_POST["action_plan"] : null;
@@ -45,19 +66,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         // Eksekusi query update
         if ($stmt_update->execute() === TRUE) {
             // Jika status_spk diubah menjadi Approve
-            if ($status_fat == 'Approve') {
+            if ($status_fat == 'Signed') {
                 $spk_date = date("Y-m-d H:i:s");
                 $status_legalizin = "In Process";
                 $status_gostore = 'In Process';
 
                 // Update status_kom di tabel resto menjadi "In Process"
-                $sql_update_kom = "UPDATE resto SET status_fat = ?, fat_date = ?, status_spk = 'Signed', spk_date = ?, status_legalizin = ?, status_gostore = ? WHERE id = ?";
+                $sql_update_kom = "UPDATE resto SET status_schedule = 'In Process', lamp_signedtaf = ?, status_fat = ?, fat_date = ?, status_spk = 'Signed', spk_date = ?, status_legalizin = ?, status_gostore = ? WHERE id = ?";
                 $stmt_update_kom = $conn->prepare($sql_update_kom);
-                $stmt_update_kom->bind_param("ssssi", $status_fat, $fat_date, $spk_date, $status_legalizin, $status_gostore, $id);
+                $stmt_update_kom->bind_param("ssssssi", $lamp_signedtaf, $status_fat, $fat_date, $spk_date, $status_legalizin, $status_gostore, $id);
                 $stmt_update_kom->execute();
 
                 // Query untuk memperbarui submit_legal dan catatan_owner di tabel procurement
-                $sql_update_pending = "UPDATE procurement SET status_approvprocurement = 'Signed',  WHERE id = ?";
+                $sql_update_pending = "UPDATE procurement SET status_approvprocurement = 'Signed' WHERE id = ?";
                 $stmt_update_pending = $conn->prepare($sql_update_pending);
                 $stmt_update_pending->bind_param("i", $id);
                 $stmt_update_pending->execute();
@@ -158,7 +179,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             $conn->rollback();
             echo "Error: " . $stmt_update->error;
         }
-        // Redirect ke halaman datatables-checkval-legal.php
+        // Redirect ke halaman datatables-spk-fat.php
         header("Location: ../datatables-spk-fat.php");
         exit; // Pastikan tidak ada output lain setelah header redirect
     } catch (Exception $e) {

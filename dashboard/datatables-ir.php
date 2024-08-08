@@ -3,7 +3,7 @@
 include "../koneksi.php";
 $status_ir= "";
 // Query untuk mengambil data dari tabel land
-$sql = "SELECT * from socdate_ir";
+$sql = "SELECT socdate_ir.*, summary_soc.jam_ops from socdate_ir LEFT JOIN summary_soc ON summary_soc.kode_lahan = socdate_ir.kode_lahan";
 $result = $conn->query($sql);
 
 
@@ -26,7 +26,8 @@ if ($result && $result->num_rows > 0) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -76,6 +77,7 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Kode Lahan</th>
                                                 <th>Lampiran RAB Cleaning Service</th>
                                                 <th>Lampiran RAB Security</th>
+                                                <th>Jam Operasional</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -129,19 +131,20 @@ if ($result && $result->num_rows > 0) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>
+                                                <td><?= $row['jam_ops'] ?></td>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['status_ir']) {
-                                                            case 'Approve':
+                                                            case 'Done':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -164,9 +167,9 @@ if ($result && $result->num_rows > 0) {
                                                     $diff = $today->diff($slaDate);
                                                     
                                                     // Jika status_approvowner adalah "Approve"
-                                                    if ($row['status_ir'] == "Approve") {
+                                                    if ($row['status_ir'] == "Done") {
                                                         echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
-                                                        echo '<p>Status changed to Approved on: ' . $row['ir_date'] . '</p>';
+                                                        
                                                     } else {
                                                         // Menghitung jumlah hari terlambat
                                                         $lateDays = $slaDate->diff($today)->days;
@@ -188,16 +191,16 @@ if ($result && $result->num_rows > 0) {
                                                 </td>
                                                 
                                                 <td>
-                                                <!-- Tombol Edit -->
-                                                <?php if ($row['status_ir'] != "Approve"): ?>
+                                                    <!-- Tombol Edit -->
+                                                    <?php if ($row['status_ir'] != "Done"): ?>
+                                                        
                                                         <a href="ir/ir-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>
-                                                    <?php endif; ?>
-                                                    <?php if ($row['status_ir'] != "Approve"): ?>
-                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_ir'] ?>">
-                                                            <i class="nav-icon i-Book"></i>
-                                                        </button>
+                                                            <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_ir'] ?>">
+                                                                <i class="nav-icon i-Book"></i>
+                                                            </button>
+                                                        
                                                     <?php endif; ?>
                                                 </td>
                                                 <!-- Modal -->
@@ -214,11 +217,11 @@ if ($result && $result->num_rows > 0) {
                                                                 <form id="statusForm" method="post" action="ir/ir-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" value=<?= $row['id'] ?> id="modalKodeLahan">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve IR</label>
+                                                                        <label for="statusSelect">Status IR</label>
                                                                         <select class="form-control" id="statusSelect" name="status_ir" Placeholder="Pilih">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
-                                                                            <option value="Approve">Approve</option>
+                                                                            <option value="Done">Done</option>
                                                                         </select>
                                                                     </div>
                                                                     <div class="form-group">
@@ -232,7 +235,24 @@ if ($result && $result->num_rows > 0) {
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="pic">PIC</label>
-                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                            <select class="form-control" id="pic" name="pic">
+                                                                                <option value="">Pilih PIC</option>
+                                                                                <option value="Legal">Legal</option>
+                                                                                <option value="Marketing">Marketing</option>
+                                                                                <option value="Landlord">Landlord</option>
+                                                                                <option value="Scm">SCM</option>
+                                                                                <option value="Sdg-project">SDG Project</option>
+                                                                                <option value="Sdg-design">SDG Design</option>
+                                                                                <option value="Sdg-equipment">SDG Equipment</option>
+                                                                                <option value="Sdg-qs">SDG QS</option>
+                                                                                <option value="Operations">Operations</option>
+                                                                                <option value="Procurement">Procurement</option>
+                                                                                <option value="Taf">TAF</option>
+                                                                                <option value="HR">HR</option>
+                                                                                <option value="Academy">Academy</option>
+                                                                                <option value="Negotiator">Negotiator</option>
+                                                                                <option value="Others">Others</option>
+                                                                            </select>
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="action_plan">Action Plan</label>
@@ -257,6 +277,7 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Kode Lahan</th>
                                                 <th>Lampiran QRIS</th>
                                                 <th>Lampiran Serah Terima</th>
+                                                <th>Jam Operasional</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>

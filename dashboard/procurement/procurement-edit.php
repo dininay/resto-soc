@@ -14,72 +14,119 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $id = $_POST['id'];
 
     // Inisialisasi variabel untuk lampiran
-    $lamp_profil = "";
+        // Periksa apakah kunci 'lampiran' ada dalam $_FILES
+        $lamp_profil = "";
+
+        if(isset($_FILES["lamp_profil"])) {
+            $lamp_profil_paths = array();
+    
+            // Loop through each file
+            foreach($_FILES['lamp_profil']['name'] as $key => $filename) {
+                $file_tmp = $_FILES['lamp_profil']['tmp_name'][$key];
+                $file_name = $_FILES['lamp_profil']['name'][$key];
+                $target_dir = "../uploads/";
+                $target_file = $target_dir . basename($file_name);
+    
+                // Attempt to move the uploaded file to the target directory
+                if (move_uploaded_file($file_tmp, $target_file)) {
+                    $lamp_profil_paths[] = $file_name;
+                } else {
+                    echo "Gagal mengunggah file " . $file_name . "<br>";
+                }
+            }
+    
+            // Join all file paths into a comma-separated string
+            $lamp_profil = implode(",", $lamp_profil_paths);
+        }
+
+            // Periksa apakah kunci 'lampiran' ada dalam $_FILES
     $lamp_vendor = "";
+
+    if(isset($_FILES["lamp_vendor"])) {
+        $lamp_vendor_paths = array();
+
+        // Loop through each file
+        foreach($_FILES['lamp_vendor']['name'] as $key => $filename) {
+            $file_tmp = $_FILES['lamp_vendor']['tmp_name'][$key];
+            $file_name = $_FILES['lamp_vendor']['name'][$key];
+            $target_dir = "../uploads/";
+            $target_file = $target_dir . basename($file_name);
+
+            // Attempt to move the uploaded file to the target directory
+            if (move_uploaded_file($file_tmp, $target_file)) {
+                $lamp_vendor_paths[] = $file_name;
+            } else {
+                echo "Gagal mengunggah file " . $file_name . "<br>";
+            }
+        }
+
+        // Join all file paths into a comma-separated string
+        $lamp_vendor = implode(",", $lamp_vendor_paths);
+    }
 
     // Menggabungkan file-file baru dengan file-file sebelumnya, jika ada
     // Proses file yang diunggah untuk lampiran profil
-    if (isset($_POST['ganti_lampirancp']) && $_POST['ganti_lampirancp'] === 'ya') {
-        $new_files_profil = array();
+    // if (isset($_POST['ganti_lampirancp']) && $_POST['ganti_lampirancp'] === 'ya') {
+    //     $new_files_profil = array();
 
-        // Simpan file-file baru yang diunggah
-        if (isset($_FILES['lamp_profil']) && $_FILES['lamp_profil']['error'][0] != UPLOAD_ERR_NO_FILE) {
-            foreach ($_FILES['lamp_profil']['name'] as $key => $filename) {
-                $target_dir = "uploads/";
-                $target_file = $target_dir . basename($filename);
+    //     // Simpan file-file baru yang diunggah
+    //     if (isset($_FILES['lamp_profil']) && $_FILES['lamp_profil']['error'][0] != UPLOAD_ERR_NO_FILE) {
+    //         foreach ($_FILES['lamp_profil']['name'] as $key => $filename) {
+    //             $target_dir = "uploads/";
+    //             $target_file = $target_dir . basename($filename);
 
-                // Buat direktori jika belum ada
-                if (!is_dir($target_dir)) {
-                    mkdir($target_dir, 0777, true);
-                }
+    //             // Buat direktori jika belum ada
+    //             if (!is_dir($target_dir)) {
+    //                 mkdir($target_dir, 0777, true);
+    //             }
 
-                if (move_uploaded_file($_FILES['lamp_profil']['tmp_name'][$key], $target_file)) {
-                    $new_files_profil[] = $filename;
-                } else {
-                    echo "Failed to upload file: " . $_FILES['lamp_profil']['name'][$key] . "<br>";
-                }
-            }
-        }
+    //             if (move_uploaded_file($_FILES['lamp_profil']['tmp_name'][$key], $target_file)) {
+    //                 $new_files_profil[] = $filename;
+    //             } else {
+    //                 echo "Failed to upload file: " . $_FILES['lamp_profil']['name'][$key] . "<br>";
+    //             }
+    //         }
+    //     }
 
-        // Gabungkan file-file baru dengan file-file sebelumnya untuk lampiran profil
-        $existing_files_profil = isset($_POST['existing_files_profil']) ? explode(", ", $_POST['existing_files_profil']) : array();
-        $lamp_profil = implode(", ", array_merge($existing_files_profil, $new_files_profil));
-    } else {
-        // Jika tidak ada perubahan pada lampiran profil, gunakan yang sudah ada
-        $lamp_profil = isset($_POST['existing_files_profil']) ? $_POST['existing_files_profil'] : "";
-    }
+    //     // Gabungkan file-file baru dengan file-file sebelumnya untuk lampiran profil
+    //     $existing_files_profil = isset($_POST['existing_files_profil']) ? explode(", ", $_POST['existing_files_profil']) : array();
+    //     $lamp_profil = implode(", ", array_merge($existing_files_profil, $new_files_profil));
+    // } else {
+    //     // Jika tidak ada perubahan pada lampiran profil, gunakan yang sudah ada
+    //     $lamp_profil = isset($_POST['existing_files_profil']) ? $_POST['existing_files_profil'] : "";
+    // }
 
     // Menggabungkan file-file baru dengan file-file sebelumnya, jika ada
     // Proses file yang diunggah untuk lampiran vendor
-    if (isset($_POST['ganti_lampiran']) && $_POST['ganti_lampiran'] === 'ya') {
-        $new_files_vendor = array();
+    // if (isset($_POST['ganti_lampiran']) && $_POST['ganti_lampiran'] === 'ya') {
+    //     $new_files_vendor = array();
 
-        // Simpan file-file baru yang diunggah
-        if (isset($_FILES['lamp_vendor']) && $_FILES['lamp_vendor']['error'][0] != UPLOAD_ERR_NO_FILE) {
-            foreach ($_FILES['lamp_vendor']['name'] as $key => $filename) {
-                $target_dir = "uploads/";
-                $target_file = $target_dir . basename($filename);
+    //     // Simpan file-file baru yang diunggah
+    //     if (isset($_FILES['lamp_vendor']) && $_FILES['lamp_vendor']['error'][0] != UPLOAD_ERR_NO_FILE) {
+    //         foreach ($_FILES['lamp_vendor']['name'] as $key => $filename) {
+    //             $target_dir = "uploads/";
+    //             $target_file = $target_dir . basename($filename);
 
-                // Buat direktori jika belum ada
-                if (!is_dir($target_dir)) {
-                    mkdir($target_dir, 0777, true);
-                }
+    //             // Buat direktori jika belum ada
+    //             if (!is_dir($target_dir)) {
+    //                 mkdir($target_dir, 0777, true);
+    //             }
 
-                if (move_uploaded_file($_FILES['lamp_vendor']['tmp_name'][$key], $target_file)) {
-                    $new_files_vendor[] = $filename;
-                } else {
-                    echo "Failed to upload file: " . $_FILES['lamp_vendor']['name'][$key] . "<br>";
-                }
-            }
-        }
+    //             if (move_uploaded_file($_FILES['lamp_vendor']['tmp_name'][$key], $target_file)) {
+    //                 $new_files_vendor[] = $filename;
+    //             } else {
+    //                 echo "Failed to upload file: " . $_FILES['lamp_vendor']['name'][$key] . "<br>";
+    //             }
+    //         }
+    //     }
 
-        // Gabungkan file-file baru dengan file-file sebelumnya untuk lampiran vendor
-        $existing_files_vendor = isset($_POST['existing_files_vendor']) ? explode(", ", $_POST['existing_files_vendor']) : array();
-        $lamp_vendor = implode(", ", array_merge($existing_files_vendor, $new_files_vendor));
-    } else {
-        // Jika tidak ada perubahan pada lampiran vendor, gunakan yang sudah ada
-        $lamp_vendor = isset($_POST['existing_files_vendor']) ? $_POST['existing_files_vendor'] : "";
-    }
+    //     // Gabungkan file-file baru dengan file-file sebelumnya untuk lampiran vendor
+    //     $existing_files_vendor = isset($_POST['existing_files_vendor']) ? explode(", ", $_POST['existing_files_vendor']) : array();
+    //     $lamp_vendor = implode(", ", array_merge($existing_files_vendor, $new_files_vendor));
+    // } else {
+    //     // Jika tidak ada perubahan pada lampiran vendor, gunakan yang sudah ada
+    //     $lamp_vendor = isset($_POST['existing_files_vendor']) ? $_POST['existing_files_vendor'] : "";
+    // }
 
 
     // Periksa apakah kunci 'lampiran' ada dalam $_FILES

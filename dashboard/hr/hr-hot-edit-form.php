@@ -30,6 +30,7 @@ if(isset($_GET['id'])) {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -64,18 +65,6 @@ if(isset($_GET['id'])) {
                             <div class="card-body">
                             <form method="post" action="hr-hot-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="hot">Hand Over Training</label>
-                                    <div class="col-sm-9">
-                                        <input class="form-control" id="hot" name="hot" type="text" placeholder="Hand Over Training" value="<?php echo $row['hot']; ?>"/>
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="persen_hot">Persen Hand Over Training</label>
-                                    <div class="col-sm-9">
-                                        <input class="form-control" id="persen_hot" name="persen_hot" type="text" placeholder="Persen Fulfillment 3" value="<?php echo $row['persen_hot']; ?>"/>
-                                    </div>
-                                </div>
                                 <div class="form-group row">
                                     <label class="col-sm-3 col-form-label" for="lamp_hot">Upload Lampiran Hand Over Training</label>
                                     <div class="col-sm-9">

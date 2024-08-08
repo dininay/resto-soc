@@ -230,7 +230,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             echo "Error: " . $sql . "<br>" . $conn->error;
         }
         // Redirect ke halaman datatables-approval-owner.php
-// header("Location: ../datatables-formval-release-design.php");
+header("Location: ../datatables-land-sourcing.php");
 exit;
 
     } catch (Exception $e) {

@@ -28,6 +28,7 @@ if(isset($_GET['id'])) {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -63,50 +64,50 @@ if(isset($_GET['id'])) {
                             <form method="post" action="land-sourcing-edit.php" enctype="multipart/form-data">
                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label" for="kode_lokasi">Inventory Code</label>
-                                    <div class="col-sm-10">
+                                    <label class="col-sm-3 col-form-label" for="kode_lokasi">Inventory Code</label>
+                                    <div class="col-sm-9">
                                         <input class="form-control" id="kode_lokasi" name="kode_lahan" type="text" value="<?php echo $row['kode_lahan']; ?>" placeholder="Penanggungjawab" readonly/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label" for="nama_lokasi">Nama Lahan</label>
-                                    <div class="col-sm-10">
-                                        <input class="form-control" id="nama_lokasi" name="nama_lahan" type="text" value="<?php echo $row['nama_lahan']; ?>" placeholder="Nama Lokasi" />
+                                    <label class="col-sm-3 col-form-label" for="nama_lokasi">Nama Lahan</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="nama_lokasi" name="nama_lahan" type="text" value="<?php echo $row['nama_lahan']; ?>" placeholder="Example : Malang Sukun" />
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label" for="lokasi">Lokasi</label>
-                                    <div class="col-sm-10">
-                                        <input class="form-control" id="lokasi" name="lokasi" type="text" value="<?php echo $row['lokasi']; ?>" placeholder="Lokasi" />
+                                    <label class="col-sm-3 col-form-label" for="lokasi">Lokasi</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="lokasi" name="lokasi" type="text" value="<?php echo $row['lokasi']; ?>" placeholder="Example : Jl. Raya S.Supriadi Kec.Sukun Kota Malang Jawa Timur, No. XX Kode Pos : XXXXX" />
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label" for="nama_pemilik">Nama Pemilik</label>
-                                    <div class="col-sm-10">
-                                        <input class="form-control" id="nama_pemilik" name="nama_pemilik" value="<?php echo $row['nama_pemilik']; ?>" type="text" placeholder="Nama Pemilik" />
+                                    <label class="col-sm-3 col-form-label" for="nama_pemilik">Nama Pemilik</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="nama_pemilik" name="nama_pemilik" value="<?php echo $row['nama_pemilik']; ?>" type="text" placeholder="Example : Pak Abadi" />
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label" for="alamat_pemilik">Alamat Pemilik</label>
-                                    <div class="col-sm-10">
-                                        <input class="form-control" id="alamat_pemilik" name="alamat_pemilik" value="<?php echo $row['alamat_pemilik']; ?>" type="text" placeholder="Alamat Pemilik" />
+                                    <label class="col-sm-3 col-form-label" for="alamat_pemilik">Alamat Pemilik</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="alamat_pemilik" name="alamat_pemilik" value="<?php echo $row['alamat_pemilik']; ?>" type="text" placeholder="Example : Jl. Raya S.Supriadi Kec.Sukun Kota Malang Jawa Timur, No. XX Kode Pos : XXXXX" />
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label" for="no_telepon">No Telepon</label>
-                                    <div class="col-sm-10">
-                                        <input class="form-control" id="no_telepon" name="no_tlp" type="text" value="<?php echo $row['no_tlp']; ?>" placeholder="No Telepon" />
+                                    <label class="col-sm-3 col-form-label" for="no_telepon">No Telepon</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="no_telepon" name="no_tlp" type="number" value="<?php echo $row['no_tlp']; ?>" placeholder="Example : 08XXXXXXXXXX" maxlength="13" oninput="validatePhoneNumber(this)"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label" for="luas_area">Luas Area</label>
-                                    <div class="col-sm-10">
-                                        <input class="form-control" id="luas_area" name="luas_area" type="text" value="<?php echo $row['luas_area']; ?>" placeholder="Luas Area" />
+                                    <label class="col-sm-3 col-form-label" for="luas_area">Luas Area (m3)</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="luas_area" name="luas_area" type="text" value="<?php echo $row['luas_area']; ?>" placeholder="Example : 10000" />
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label">Lampiran Sebelumnya</label>
-                                    <div class="col-sm-10">
+                                    <label class="col-sm-3 col-form-label">Lampiran Sebelumnya</label>
+                                    <div class="col-sm-9">
                                         <?php echo $row['lamp_land']; ?>
                                     </div>
                                 </div>
@@ -120,33 +121,45 @@ if(isset($_GET['id'])) {
                                 </div> -->
                                 <!-- Jika pengguna ingin mengganti lampiran, tampilkan input untuk unggah file -->
                                 <div class="form-group row" id="lampiran_baru">
-                                    <label class="col-sm-2 col-form-label" for="lamp_land">Upload Baru</label>
-                                    <div class="col-sm-10">
+                                    <label class="col-sm-3 col-form-label" for="lamp_land">Upload Baru</label>
+                                    <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_land[]" type="file" multiple="multiple" />
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label" for="maps">Link Maps</label>
-                                    <div class="col-sm-10">
-                                        <input class="form-control" id="maps" name="maps" type="text" value="<?php echo $row['maps']; ?>" placeholder="Link Maps" />
+                                    <label class="col-sm-3 col-form-label" for="maps">Link Maps</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="maps" name="maps" type="text" value="<?php echo $row['maps']; ?>" placeholder="Example : https://google.com/maps/......." />
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label" for="latitude">Latitude</label>
-                                    <div class="col-sm-10">
-                                        <input class="form-control" id="latitude" name="latitude" type="text" value="<?php echo $row['latitude']; ?>" placeholder="Latitude" />
+                                    <label class="col-sm-3 col-form-label" for="latitude">Latitude</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="latitude" name="latitude" type="text" value="<?php echo $row['latitude']; ?>" placeholder="-X.XXXXXXX" step="0.0000001" min="-9" max="9" title="Format: -X.XXXXXXX" oninput="validateLatitude(this)"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label" for="longitude">Longitude</label>
-                                    <div class="col-sm-10">
-                                        <input class="form-control" id="longitude" name="longitude" type="text" value="<?php echo $row['longitude']; ?>" placeholder="Longitude" />
+                                    <label class="col-sm-3 col-form-label" for="longitude">Longitude</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="longitude" name="longitude" type="text" value="<?php echo $row['longitude']; ?>" placeholder="XXX.XXXXXX" pattern="^-?\d{1,3}\.\d{1,6}$" title="Format: XXX.XXXXXX" oninput="validateLongitude(this)" required />
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <div class="col-sm-10">
+                                    <label class="col-sm-3 col-form-label" for="harga_sewa">Harga Sewa</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="harga_sewa" name="harga_sewa" type="text" value="<?php echo $row['harga_sewa']; ?>" placeholder="Masukkan angka saja" oninput="formatRupiah(this)"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="mintahun_sewa">Minimum Tahun Sewa</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="mintahun_sewa" name="mintahun_sewa" type="text" value="<?php echo $row['mintahun_sewa']; ?>" placeholder="Example : 5" />
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-sm-9">
                                         <button class="btn btn-primary" type="submit">Simpan</button>
                                     </div>
                                 </div>
@@ -327,6 +340,42 @@ if(isset($_GET['id'])) {
     <script src="../../dist-assets/js/scripts/script.min.js"></script>
     <script src="../../dist-assets/js/scripts/sidebar.compact.script.min.js"></script>
     <script src="../../dist-assets/js/scripts/customizer.script.min.js"></script>
+    <script>
+    function validatePhoneNumber(input) {
+        if (input.value.length > 13) {
+            input.value = input.value.slice(0, 13);
+        }
+    }
+    </script>
+
+<script>
+function validateLatitude(input) {
+    // Regex pattern for latitude format -X.XXXXXXX
+    const pattern = /^-?\d{1,2}\.\d{1,7}$/;
+
+    // If the input value doesn't match the pattern, set custom validity message
+    if (!pattern.test(input.value)) {
+        input.setCustomValidity("Invalid format. Use -X.XXXXXXX with maximum 7 digits after the decimal.");
+    } else {
+        input.setCustomValidity("");
+    }
+}
+</script>
+
+<script>
+function validateLongitude(input) {
+    // Regex pattern for longitude format XXX.XXXXXX
+    const pattern = /^-?\d{1,3}\.\d{1,6}$/;
+
+    // If the input value doesn't match the pattern, set custom validity message
+    if (!pattern.test(input.value)) {
+        input.setCustomValidity("Invalid format. Use XXX.XXXXXX with a maximum of 6 digits after the decimal point.");
+    } else {
+        input.setCustomValidity("");
+    }
+}
+</script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.2/dropzone.min.js"></script>
     
     <script>
@@ -342,6 +391,23 @@ if(isset($_GET['id'])) {
                 }
             });
         });
+    </script>
+    <script>
+        function formatRupiah(input) {
+            let value = input.value.replace(/[^,\d]/g, '').toString();
+            let split = value.split(',');
+            let sisa = split[0].length % 3;
+            let rupiah = split[0].substr(0, sisa);
+            let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if (ribuan) {
+                let separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+
+            rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+            input.value = 'Rp. ' + rupiah;
+        }
     </script>
 <!-- <script>
     // Inisialisasi Dropzone

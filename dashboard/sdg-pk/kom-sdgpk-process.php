@@ -41,7 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
     try {
         $start_konstruksi = date("Y-m-d H:i:s");
 
-        if ($status_kom == 'Approve') {
+        if ($status_kom == 'Done') {
             // Query untuk memperbarui status_kom dan kom_date di tabel resto
             $sql_update = "UPDATE resto SET status_kom = ?, kom_date = ? WHERE id = ?";
             $stmt_update = $conn->prepare($sql_update);
@@ -90,27 +90,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                     }
 
                     // Update sla_steqp, sla_stkonstruksi, status_steqp, status_stkonstruksi, status_land, status_gostore di tabel resto
-                    $sql_update_resto = "UPDATE resto SET status_stkonstruksi = ?, status_land = ?, status_gostore = ? WHERE id = ?";
+                    $sql_update_resto = "UPDATE resto SET status_stkonstruksi = ?, sla_stkonstruksi = ?, status_land = ?, status_gostore = ? WHERE id = ?";
                     $stmt_update_resto = $conn->prepare($sql_update_resto);
-                    $status_steqp = "In Process";
                     $status_stkonstruksi = "In Process";
                     $status_land = "In Process";
                     $status_gostore = "In Process";
-                    $stmt_update_resto->bind_param("sssi", $status_stkonstruksi, $status_land, $status_gostore, $id);
+                    $stmt_update_resto->bind_param("ssssi", $status_stkonstruksi, $sla_stkonstruksi, $status_land, $status_gostore, $id);
 
-                    // Update sla_steqp, sla_stkonstruksi, status_steqp, status_stkonstruksi, status_land, status_gostore di tabel resto
-                    $sql_update_eqp = "INSERT equipment SET (kode_lahan, sla_steqp, sla_stkonstruksi, status_steqp, status_eqpdev, sla_eqpdev, sla_eqpdevprocur, sla_eqpsite) VALUES (?,?,?,?,?)";
-                    $stmt_update_eqp = $conn->prepare($sql_update_eqp);
-                    $status_steqp = "In Process";
-                    $status_eqpdev = "In Process";
-                    $stmt_update_eqp->bind_param("ssssssss", $kode_lahan, $sla_steqp, $sla_stkonstruksi, $status_steqp, $status_eqpdev, $sla_eqpdev, $sla_eqpdevprocur, $sla_eqpsite);
-                    $stmt_update_eqp->execute();
+                    // Execute update for resto
+                    if ($stmt_update_resto->execute() === TRUE) {
+                        // Insert into equipment table
+                        $sql_update_eqp = "INSERT INTO equipment (kode_lahan, sla_steqp, status_steqp, status_eqpdev, sla_eqpdev, sla_eqpdevprocur, sla_eqpsite) VALUES (?,?,?,?,?,?,?)";
+                        $stmt_update_eqp = $conn->prepare($sql_update_eqp);
+                        $status_steqp = "In Process";
+                        $status_eqpdev = "In Process";
+                        $stmt_update_eqp->bind_param("sssssss", $kode_lahan, $sla_steqp, $status_steqp, $status_eqpdev, $sla_eqpdev, $sla_eqpdevprocur, $sla_eqpsite);
+                        $stmt_update_eqp->execute();
 
-                    // Query untuk memasukkan data ke dalam tabel hold_project
-                    $sql_summary = "INSERT INTO summary_soc (kode_lahan) VALUES (?)";
-                    $stmt_summary = $conn->prepare($sql_summary);
-                    $stmt_summary->bind_param("s", $kode_lahan);
-                    $stmt_summary->execute();
+                        // Insert into summary_soc table
+                        $sql_summary = "INSERT INTO summary_soc (kode_lahan) VALUES (?)";
+                        $stmt_summary = $conn->prepare($sql_summary);
+                        $stmt_summary->bind_param("s", $kode_lahan);
+                        $stmt_summary->execute();
+                    }
 
                     // Eksekusi query update
                     if ($stmt_summary->execute() === TRUE) {
@@ -253,7 +255,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                                                                                         // Eksekusi query insert socdate_scm
                                                                                         if ($stmt_insert_socdate_marketing->execute() === TRUE) {
                                                                                             // Hitung sla_sdg sebagai start_konstruksi ditambah dengan SLA SDG
-                                                                                            $sql_sla_sdg = "SELECT sla FROM master_slacons WHERE divisi = 'sdg'";
+                                                                                            $sql_sla_sdg = "SELECT sla FROM master_slacons WHERE divisi = 'mep'";
                                                                                             $result_sla_sdg = $conn->query($sql_sla_sdg);
                                                                                             if ($result_sla_sdg->num_rows > 0) {
                                                                                                 $row_sla_sdg = $result_sla_sdg->fetch_assoc();
@@ -262,10 +264,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                                                                                                 $sla_sdg = date("Y-m-d", strtotime("$gostore_date - $sla_sdg_days days"));
 
                                                                                                 // Insert data ke tabel socdate_sdg
-                                                                                                $sql_insert_socdate_sdg = "INSERT INTO socdate_sdg (kode_lahan, status_sdg, sla_sdg) VALUES (?, ?, ?)";
+                                                                                                $sql_insert_socdate_sdg = "INSERT INTO socdate_sdg (kode_lahan, status_sdgsumber, status_sdglistrik, status_sdgipal, sla_mep) VALUES (?, ?, ?, ?, ?)";
                                                                                                 $stmt_insert_socdate_sdg = $conn->prepare($sql_insert_socdate_sdg);
-                                                                                                $status_sdg = "In Process";
-                                                                                                $stmt_insert_socdate_sdg->bind_param("sss", $kode_lahan, $status_sdg, $sla_sdg);
+                                                                                                $status_sdgsumber = "In Process";
+                                                                                                $status_sdglistrik = "In Process";
+                                                                                                $status_sdgipal = "In Process";
+                                                                                                $stmt_insert_socdate_sdg->bind_param("sssss", $kode_lahan, $status_sdgsumber, $status_sdglistrik, $status_sdgipal, $sla_sdg);
 
                                                                                                 // Eksekusi query insert socdate_scm
                                                                                                 if ($stmt_insert_socdate_sdg->execute() === TRUE) {
@@ -316,31 +320,41 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                                                                                                                         $sla_ff3 = date("Y-m-d", strtotime("$gostore_date - $sla_ff3_days days"));
                                                                                                                         $status_ff3 = "In Process";
 
-                                                                                                                        // Hitung sla_permit berdasarkan divisi legal_permit
-                                                                                                                        $sql_sla_tm = "SELECT sla FROM master_slacons WHERE divisi = 'hrga_tm'";
-                                                                                                                        $result_sla_tm = $conn->query($sql_sla_tm);
-                                                                                                                        if ($result_sla_tm->num_rows > 0) {
-                                                                                                                            $row_sla_tm = $result_sla_tm->fetch_assoc();
-                                                                                                                            $hari_sla_tm = $row_sla_tm['sla'];
-                                                                                                                            $sla_tm_days = $hari_sla_rto + $hari_sla_tm;
-                                                                                                                            $sla_tm = date("Y-m-d", strtotime("$gostore_date - $sla_tm_days days"));
-                                                                                                                            $status_tm = "In Process";
+                                                                                                                        // // Hitung sla_permit berdasarkan divisi legal_permit
+                                                                                                                        // $sql_sla_tm = "SELECT sla FROM master_slacons WHERE divisi = 'hrga_tm'";
+                                                                                                                        // $result_sla_tm = $conn->query($sql_sla_tm);
+                                                                                                                        // if ($result_sla_tm->num_rows > 0) {
+                                                                                                                        //     $row_sla_tm = $result_sla_tm->fetch_assoc();
+                                                                                                                        //     $hari_sla_tm = $row_sla_tm['sla'];
+                                                                                                                        //     $sla_tm_days = $hari_sla_rto + $hari_sla_tm;
+                                                                                                                        //     $sla_tm = date("Y-m-d", strtotime("$gostore_date - $sla_tm_days days"));
+                                                                                                                        //     $status_tm = "In Process";
 
-                                                                                                                            // Hitung sla_permit berdasarkan divisi legal_permit
-                                                                                                                            $sql_sla_hot = "SELECT sla FROM master_slacons WHERE divisi = 'hot'";
-                                                                                                                            $result_sla_hot = $conn->query($sql_sla_hot);
-                                                                                                                            if ($result_sla_hot->num_rows > 0) {
-                                                                                                                                $row_sla_hot = $result_sla_hot->fetch_assoc();
-                                                                                                                                $hari_sla_hot = $row_sla_hot['sla'];
-                                                                                                                                $sla_hot_days = $hari_sla_rto + $hari_sla_hot;
-                                                                                                                                $sla_hot = date("Y-m-d", strtotime("$gostore_date - $sla_hot_days days"));
-                                                                                                                                $status_hot = "In Process";
+                                                                                                                        //     // Hitung sla_permit berdasarkan divisi legal_permit
+                                                                                                                        //     $sql_sla_fl = "SELECT sla FROM master_slacons WHERE divisi = 'hrga_fl'";
+                                                                                                                        //     $result_sla_fl = $conn->query($sql_sla_fl);
+                                                                                                                        //     if ($result_sla_fl->num_rows > 0) {
+                                                                                                                        //         $row_sla_fl = $result_sla_fl->fetch_assoc();
+                                                                                                                        //         $hari_sla_fl = $row_sla_fl['sla'];
+                                                                                                                        //         $sla_fl_days = $hari_sla_rto + $hari_sla_fl;
+                                                                                                                        //         $sla_fl = date("Y-m-d", strtotime("$gostore_date - $sla_fl_days days"));
+                                                                                                                        //         $status_fl = "In Process";
 
-                                                                                                //                                     // Insert data ke tabel socdate_legal
-                                                                                                                                    $sql_insert_socdate_hr = "INSERT INTO socdate_hr (kode_lahan, status_ff1, status_ff2, status_ff3, status_tm, status_hot, sla_ff1, sla_ff2, sla_ff3, sla_tm, sla_hot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-                                                                                                                                    $stmt_insert_socdate_hr = $conn->prepare($sql_insert_socdate_hr);
-                                                                                                                                    $stmt_insert_socdate_hr->bind_param("sssssssssss", $kode_lahan, $status_ff1, $status_ff2, $status_ff3, $status_tm, $status_hot, $sla_ff1, $sla_ff2, $sla_ff3, $sla_tm, $sla_hot);
-                                                                                                                                    
+                                                                                                                                // Hitung sla_permit berdasarkan divisi legal_permit
+                                                                                                                                $sql_sla_hot = "SELECT sla FROM master_slacons WHERE divisi = 'hot'";
+                                                                                                                                $result_sla_hot = $conn->query($sql_sla_hot);
+                                                                                                                                if ($result_sla_hot->num_rows > 0) {
+                                                                                                                                    $row_sla_hot = $result_sla_hot->fetch_assoc();
+                                                                                                                                    $hari_sla_hot = $row_sla_hot['sla'];
+                                                                                                                                    $sla_hot_days = $hari_sla_rto + $hari_sla_hot;
+                                                                                                                                    $sla_hot = date("Y-m-d", strtotime("$gostore_date - $sla_hot_days days"));
+                                                                                                                                    $status_hot = "In Process";
+
+                                                                                                                                        // Insert data ke tabel socdate_legal
+                                                                                                                                        $sql_insert_socdate_hr = "UPDATE socdate_hr SET status_ff1 = ?, status_ff2 = ?, status_ff3 = ?, status_hot = ?, sla_ff1 = ?, sla_ff2 = ?, sla_ff3 = ?, sla_hot = ? WHERE kode_lahan = ?";
+                                                                                                                                        $stmt_insert_socdate_hr = $conn->prepare($sql_insert_socdate_hr);
+                                                                                                                                        $stmt_insert_socdate_hr->bind_param("sssssssss", $status_ff1, $status_ff2, $status_ff3, $status_hot, $sla_ff1, $sla_ff2, $sla_ff3, $sla_hot, $kode_lahan);
+                                                                                                                                        
                                                                                                                                         // Eksekusi query insert socdate_itconfig
                                                                                                                                         if ($stmt_insert_socdate_hr->execute() === TRUE) {
                                                                                                                                             // Hitung sla_legal, status_legal, sla_permit, status_permit berdasarkan divisi legal dan legal_permit
@@ -373,42 +387,47 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                                                                                                                                                         $sla_kpt3 = date("Y-m-d", strtotime("$gostore_date - $sla_kpt3_days days"));
                                                                                                                                                         $status_kpt3 = "In Process";
 
-                                                                                                                //                                     // Insert data ke tabel socdate_legal
+                                                                                                                                                     
+                                                                                                                                                        // Insert data ke tabel socdate_legal
                                                                                                                                                         $sql_insert_socdate_academy = "INSERT INTO socdate_academy (kode_lahan, status_kpt1, status_kpt2, status_kpt3, sla_kpt1, sla_kpt2, sla_kpt3) VALUES (?, ?, ?, ?, ?, ?, ?)";
                                                                                                                                                         $stmt_insert_socdate_academy = $conn->prepare($sql_insert_socdate_academy);
                                                                                                                                                         $stmt_insert_socdate_academy->bind_param("sssssss", $kode_lahan, $status_kpt1, $status_kpt2, $status_kpt3, $sla_kpt1, $sla_kpt2, $sla_kpt3);
                                                                                                                                                         
                                                                                                                                                         if ($stmt_insert_socdate_academy->execute() === TRUE) {
-                                                                                                                                                    $conn->commit();
-                                                                                                                                                    echo "Status dan data berhasil diperbarui.";
+                                                                                                                                                        $conn->commit();
+                                                                                                                                                        echo "Status dan data berhasil diperbarui.";
+                                                                                                                                                        } else {
+                                                                                                                                                            $conn->rollback();
+                                                                                                                                                            echo "Error: " . "$stmt_insert_socdate_academy->error";
+                                                                                                                                                        }
+                                                                                                                                                    } else {
+                                                                                                                                                        $conn->rollback();
+                                                                                                                                                        echo "Error: Data SLA tidak ditemukan untuk divisi kpt3.";
+                                                                                                                                                    }
                                                                                                                                                 } else {
                                                                                                                                                     $conn->rollback();
-                                                                                                                                                    echo "Error: " . "$stmt_insert_socdate_academy->error";
+                                                                                                                                                    echo "Error: Data SLA tidak ditemukan untuk divisi kpt2.";
                                                                                                                                                 }
                                                                                                                                             } else {
                                                                                                                                                 $conn->rollback();
-                                                                                                                                                echo "Error: Data SLA tidak ditemukan untuk divisi kpt3.";
+                                                                                                                                                echo "Error: Data SLA tidak ditemukan untuk divisi kpt1.";
                                                                                                                                             }
                                                                                                                                         } else {
                                                                                                                                             $conn->rollback();
-                                                                                                                                            echo "Error: Data SLA tidak ditemukan untuk divisi kpt2.";
+                                                                                                                                            echo "Error: " . "$stmt_insert_socdate_hr->error";
                                                                                                                                         }
-                                                                                                                                    } else {
-                                                                                                                                        $conn->rollback();
-                                                                                                                                        echo "Error: Data SLA tidak ditemukan untuk divisi kpt1.";
-                                                                                                                                    }
                                                                                                                                 } else {
                                                                                                                                     $conn->rollback();
-                                                                                                                                    echo "Error: " . "$stmt_insert_socdate_hr->error";
+                                                                                                                                    echo "Error: Data SLA tidak ditemukan untuk divisi hot.";
                                                                                                                                 }
-                                                                                                                            } else {
-                                                                                                                                $conn->rollback();
-                                                                                                                                echo "Error: Data SLA tidak ditemukan untuk divisi hot.";
-                                                                                                                            }
-                                                                                                                        } else {
-                                                                                                                            $conn->rollback();
-                                                                                                                            echo "Error: Data SLA tidak ditemukan untuk divisi tm.";
-                                                                                                                        }
+                                                                                                                            // } else {
+                                                                                                                            //     $conn->rollback();
+                                                                                                                            //     echo "Error: Data SLA tidak ditemukan untuk divisi fl.";
+                                                                                                                            // }
+                                                                                                                            // } else {
+                                                                                                                            //     $conn->rollback();
+                                                                                                                            //     echo "Error: Data SLA tidak ditemukan untuk divisi tm.";
+                                                                                                                            // }
                                                                                                                     } else {
                                                                                                                         $conn->rollback();
                                                                                                                         echo "Error: Data SLA tidak ditemukan untuk divisi ff3.";
@@ -421,30 +440,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                                                                                                                 $conn->rollback();
                                                                                                                 echo "Error: Data SLA tidak ditemukan untuk divisi ff1.";
                                                                                                             }
+                                                                                                        } else {
+                                                                                                            $conn->rollback();
+                                                                                                            echo "Error: " . $stmt_insert_socdate_ir->error;
+                                                                                                        }
+                                                                                                    } else {
+                                                                                                        $conn->rollback();
+                                                                                                        echo "Error: Data SLA tidak ditemukan untuk divisi ir.";
+                                                                                                    }
                                                                                                 } else {
                                                                                                     $conn->rollback();
-                                                                                                    echo "Error: " . $stmt_insert_socdate_ir->error;
+                                                                                                    echo "Error: " . $stmt_insert_socdate_sdg->error;
                                                                                                 }
                                                                                             } else {
                                                                                                 $conn->rollback();
-                                                                                                echo "Error: Data SLA tidak ditemukan untuk divisi ir.";
+                                                                                                echo "Error: Data SLA tidak ditemukan untuk divisi SDG.";
                                                                                             }
                                                                                         } else {
                                                                                             $conn->rollback();
-                                                                                            echo "Error: " . $stmt_insert_socdate_sdg->error;
+                                                                                            echo "Error: " . $stmt_insert_socdate_marketing->error;
                                                                                         }
                                                                                     } else {
                                                                                         $conn->rollback();
-                                                                                        echo "Error: Data SLA tidak ditemukan untuk divisi SDG.";
+                                                                                        echo "Error: Data SLA tidak ditemukan untuk divisi Marketing.";
                                                                                     }
-                                                                                } else {
-                                                                                    $conn->rollback();
-                                                                                    echo "Error: " . $stmt_insert_socdate_marketing->error;
-                                                                                }
-                                                                            } else {
-                                                                                $conn->rollback();
-                                                                                echo "Error: Data SLA tidak ditemukan untuk divisi Marketing.";
-                                                                            }
                                                                                 } else {
                                                                                     $conn->rollback();
                                                                                     echo "Error: " . $stmt_insert_socdate_scm->error;
@@ -465,76 +484,77 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                                                                     $conn->rollback();
                                                                     echo "Error: Data SLA tidak ditemukan untuk divisi Legal.";
                                                                 }
-                                                            } else {
-                                                                $conn->rollback();
-                                                                echo "Error: " . $stmt_insert_socdate_it->error;
-                                                            }
                                                         } else {
                                                             $conn->rollback();
-                                                            echo "Error: Data SLA tidak ditemukan untuk divisi IT Config.";
+                                                            echo "Error: " . $stmt_insert_socdate_it->error;
                                                         }
                                                     } else {
                                                         $conn->rollback();
-                                                        echo "Error: Data SLA tidak ditemukan untuk divisi IT.";
+                                                        echo "Error: Data SLA tidak ditemukan untuk divisi IT Config.";
                                                     }
+                                                } else {
+                                                    $conn->rollback();
+                                                    echo "Error: Data SLA tidak ditemukan untuk divisi IT.";
+                                                }
+                                                } else {
+                                                    $conn->rollback();
+                                                    echo "Error: " . $stmt_insert_socdate_fat->error;
+                                                }
                                             } else {
                                                 $conn->rollback();
-                                                echo "Error: " . $stmt_insert_socdate_fat->error;
+                                                echo "Error: Data SLA tidak ditemukan untuk divisi FAT.";
                                             }
                                         } else {
                                             $conn->rollback();
-                                            echo "Error: Data SLA tidak ditemukan untuk divisi FAT.";
+                                            echo "Error: Data SLA tidak ditemukan untuk divisi RTO.";
                                         }
                                     } else {
                                         $conn->rollback();
-                                        echo "Error: Data SLA tidak ditemukan untuk divisi RTO.";
+                                        echo "Error: " . $stmt_insert_konstruksi->error;
                                     }
                                 } else {
                                     $conn->rollback();
-                                    echo "Error: " . $stmt_insert_konstruksi->error;
+                                    echo "Error: " . $stmt_insert_sdg_pk->error;
                                 }
                             } else {
                                 $conn->rollback();
-                                echo "Error: " . $stmt_insert_sdg_pk->error;
+                                echo "Error: Data SLA tidak ditemukan untuk divisi Konstruksi.";
                             }
                         } else {
                             $conn->rollback();
-                            echo "Error: Data SLA tidak ditemukan untuk divisi Konstruksi.";
+                            echo "Error: " . $stmt_summary->error;
                         }
                     } else {
                         $conn->rollback();
-                        echo "Error: " . $stmt_summary->error;
+                        echo "Error: Kode lahan tidak ditemukan untuk id $id.";
                     }
+                    
+                    // Periksa apakah kode_lahan ada di tabel hold_project
+                    $sql_check_hold = "SELECT kode_lahan FROM hold_project WHERE kode_lahan = (SELECT kode_lahan FROM procurement WHERE id = ?)";
+                    $stmt_check_hold = $conn->prepare($sql_check_hold);
+                    $stmt_check_hold->bind_param("i", $id);
+                    $stmt_check_hold->execute();
+                    $stmt_check_hold->store_result();
+
+                    if ($stmt_check_hold->num_rows > 0) {
+                        // Jika kode_lahan ada di hold_project, update status_hold menjadi 'Done'
+                        $status_hold = 'Done';
+                        $sql_update_hold = "UPDATE hold_project SET status_hold = ? WHERE kode_lahan = (SELECT kode_lahan FROM procurement WHERE id = ?)";
+                        $stmt_update_hold = $conn->prepare($sql_update_hold);
+                        $stmt_update_hold->bind_param("si", $status_hold, $id);
+                        $stmt_update_hold->execute();
+                    }
+
+                    // Komit transaksi
+                    $conn->commit();
+                    echo "Status berhasil diperbarui.";
                 } else {
+                    // Rollback jika query update gagal
                     $conn->rollback();
-                    echo "Error: Kode lahan tidak ditemukan untuk id $id.";
+                    echo "Error: " . $stmt_update->error;
                 }
+            
 
-                // Periksa apakah kode_lahan ada di tabel hold_project
-                $sql_check_hold = "SELECT kode_lahan FROM hold_project WHERE kode_lahan = (SELECT kode_lahan FROM procurement WHERE id = ?)";
-                $stmt_check_hold = $conn->prepare($sql_check_hold);
-                $stmt_check_hold->bind_param("i", $id);
-                $stmt_check_hold->execute();
-                $stmt_check_hold->store_result();
-
-                if ($stmt_check_hold->num_rows > 0) {
-                    // Jika kode_lahan ada di hold_project, update status_hold menjadi 'Done'
-                    $status_hold = 'Done';
-                    $sql_update_hold = "UPDATE hold_project SET status_hold = ? WHERE kode_lahan = (SELECT kode_lahan FROM procurement WHERE id = ?)";
-                    $stmt_update_hold = $conn->prepare($sql_update_hold);
-                    $stmt_update_hold->bind_param("si", $status_hold, $id);
-                    $stmt_update_hold->execute();
-                }
-
-                // Komit transaksi
-                $conn->commit();
-                echo "Status berhasil diperbarui.";
-                
-            } else {
-                // Rollback jika query update gagal
-                $conn->rollback();
-                echo "Error: " . $stmt_update->error;
-            }
         } elseif ($status_kom == 'Pending') {
             // Ambil kode_lahan dari tabel procurement
             $sql_get_kode_lahan = "SELECT kode_lahan FROM procurement WHERE id = ?";
@@ -592,8 +612,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 echo "Error: " . $stmt_update_other->error;
             }
         }
-        header("Location: ../datatables-kom-sdgpk.php");
-        exit; // Pastikan tidak ada output lain setelah header redirect
+        // header("Location: ../datatables-kom-sdgpk.php");
+        // exit; // Pastikan tidak ada output lain setelah header redirect
     } catch (Exception $e) {
         $conn->rollback();
         echo "Error: " . $e->getMessage();

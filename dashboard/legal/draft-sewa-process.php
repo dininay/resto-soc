@@ -38,7 +38,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
 
     try {
         // Jika status_approvlegalvd diubah menjadi Approve
-        if ($draft_legal == 'Approve') {
+        if ($draft_legal == 'Done') {
             $start_date = date("Y-m-d H:i:s");
             $confirm_fatpsm = "In Process";
             $confirm_bod = "In Process";

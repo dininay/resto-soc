@@ -3,10 +3,12 @@
 include "../../koneksi.php";
 
 // Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["status_approvnego"]) && isset($_POST["catatan_nego"])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["status_approvnego"]) && isset($_POST["catatan_nego"]) && isset($_POST["deal_sewa"]) && isset($_POST["masa_berlaku"])) {
     $id = $_POST["id"];
     $status_approvnego = $_POST["status_approvnego"];
     $catatan_nego = $_POST["catatan_nego"];
+    $deal_sewa = $_POST["deal_sewa"];
+    $masa_berlaku = $_POST["masa_berlaku"];
     $nego_date = null;
     $issue_detail = isset($_POST["issue_detail"]) ? $_POST["issue_detail"] : null;
     $pic = isset($_POST["pic"]) ? $_POST["pic"] : null;
@@ -104,10 +106,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 $confirm_layout = "In Process";
 
                 // Insert data ke tabel dokumen_loacd
-                $sql_dokumen = "INSERT INTO dokumen_loacd (kode_lahan, status_approvloacd, slaloa_date) 
-                                VALUES (?, ?, ?)";
+                $sql_dokumen = "INSERT INTO dokumen_loacd (kode_lahan, status_approvloacd, slaloa_date, masa_berlaku, deal_sewa) 
+                                VALUES (?, ?, ?, ?, ?)";
                 $stmt_dokumen = $conn->prepare($sql_dokumen);
-                $stmt_dokumen->bind_param("sss", $updated_row['kode_lahan'], $status_approvloacd, $sla_date);
+                $stmt_dokumen->bind_param("sssss", $updated_row['kode_lahan'], $status_approvloacd, $sla_date, $masa_berlaku, $deal_sewa);
                 $stmt_dokumen->execute();
 
                 // Insert data ke tabel sdg_desain

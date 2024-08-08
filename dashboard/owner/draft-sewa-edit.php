@@ -7,8 +7,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     // Ambil nilai tgl_berlaku dan penanggungjawab dari formulir
     $id = $_POST['id'];
-// Periksa apakah kunci 'lampiran' ada dalam $_FILES
-$lamp_bod = "";
+    // Periksa apakah kunci 'lampiran' ada dalam $_FILES
+    $lamp_bod = "";
 
     if(isset($_FILES["lamp_bod"])) {
         $lamp_bod_paths = array();

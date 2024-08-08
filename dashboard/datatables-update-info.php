@@ -62,7 +62,7 @@ t.lamp_draf, t.draft_legal, t.jadwal_psm, t.valdoc_legal, t.lamp_signpsm, t.conf
 c.status_obssdg, c.obstacle, c.lamp_legal, c.status_obslegal, k.all_progress, 
 b.jumlah, b.lamp_rab, b.confirm_sdgqs, v.nama, p.nama_vendor, v.lamp_profil, v.lamp_vendor, p.status_approvprocurement, 
 r.lamp_spk, r.sla_kom, r.status_spk, r.gostore_date, r.lamp_kom, r.start_konstruksi, r.status_kom,
-r.lamp_steqp, r.lamp_basteqp, r.status_steqp, r.lamp_stkonstruksi, r.status_stkonstruksi
+q.lamp_steqp, q.lamp_basteqp, q.status_steqp, r.lamp_stkonstruksi, r.status_stkonstruksi
 FROM land l
 LEFT JOIN sdg_desain s ON l.kode_lahan = s.kode_lahan
 LEFT JOIN draft t ON s.kode_lahan = t.kode_lahan
@@ -74,6 +74,7 @@ LEFT JOIN procurement p ON e.kode_lahan = p.kode_lahan
 LEFT JOIN vendor v ON p.nama_vendor = v.kode_vendor
 LEFT JOIN resto r ON e.kode_lahan = r.kode_lahan
 LEFT JOIN sdg_pk k ON e.kode_lahan = k.kode_lahan
+LEFT JOIN equipment q ON e.kode_lahan = q.kode_lahan
 ";
 $result = $conn->query($sql);
 
@@ -95,7 +96,8 @@ if ($result && $result->num_rows > 0) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -142,7 +144,7 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Alamat Lokasi</th>
                                                 <th>Lampiran Land</th>
                                                 <th>Approval RE</th>
-                                                <th>Approval Owner</th>
+                                                <th>Approval BoD</th>
                                                 <th>Catatan Owner</th>
                                                 <th>Approval Legal</th>
                                                 <th>Catatan Legal</th>
@@ -224,7 +226,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -247,7 +249,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -271,7 +273,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -295,7 +297,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -342,7 +344,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -388,7 +390,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -434,7 +436,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -480,7 +482,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -514,7 +516,19 @@ if ($result && $result->num_rows > 0) {
                                                 }
                                                 ?>          
                                                 </td>
-                                                <td><?= $row['jadwal_psm'] ?></td>
+                                                <td>
+                                                    <?php if (!empty($row['jadwal_psm'])): ?>
+                                                        <?php
+                                                        $date = new DateTime($row['jadwal_psm']);
+                                                        $formattedDate = $date->format('d M y');
+                                                        ?>
+                                                        <?= $formattedDate ?>
+                                                    <?php else: ?>
+                                                        <!-- Jika kosong, tampilkan pesan atau biarkan kosong -->
+                                                        <!-- Misalnya, <span>-</span> atau <span>Not Available</span> -->
+                                                        <!-- <span>Not Available</span> -->
+                                                    <?php endif; ?>
+                                                </td>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -527,7 +541,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -573,7 +587,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -596,7 +610,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -619,7 +633,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -642,7 +656,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -689,7 +703,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -736,7 +750,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -806,7 +820,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -840,7 +854,19 @@ if ($result && $result->num_rows > 0) {
                                                 }
                                                 ?>          
                                                 </td>
-                                                <td><?= $row['sla_kom'] ?></td>
+                                                <td>
+                                                    <?php if (!empty($row['sla_kom'])): ?>
+                                                        <?php
+                                                        $date = new DateTime($row['sla_kom']);
+                                                        $formattedDate = $date->format('d M y');
+                                                        ?>
+                                                        <?= $formattedDate ?>
+                                                    <?php else: ?>
+                                                        <!-- Jika kosong, tampilkan pesan atau biarkan kosong -->
+                                                        <!-- Misalnya, <span>-</span> atau <span>Not Available</span> -->
+                                                        <!-- <span>Not Available</span> -->
+                                                    <?php endif; ?>
+                                                </td>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -853,7 +879,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -864,7 +890,19 @@ if ($result && $result->num_rows > 0) {
                                                         <?php echo $row['status_spk']; ?>
                                                     </span>
                                                 </td>
-                                                <td><?= $row['gostore_date'] ?></td>
+                                                <td>
+                                                    <?php if (!empty($row['gostore_date'])): ?>
+                                                        <?php
+                                                        $date = new DateTime($row['gostore_date']);
+                                                        $formattedDate = $date->format('d M y');
+                                                        ?>
+                                                        <?= $formattedDate ?>
+                                                    <?php else: ?>
+                                                        <!-- Jika kosong, tampilkan pesan atau biarkan kosong -->
+                                                        <!-- Misalnya, <span>-</span> atau <span>Not Available</span> -->
+                                                        <!-- <span>Not Available</span> -->
+                                                    <?php endif; ?>
+                                                </td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_kom_files = explode(",", $row['lamp_kom']); // Pisahkan nama file menjadi array
@@ -901,7 +939,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -971,7 +1009,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -1017,7 +1055,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -1039,7 +1077,7 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Alamat Lokasi</th>
                                                 <th>Lampiran Land</th>
                                                 <th>Approval RE</th>
-                                                <th>Approval Owner</th>
+                                                <th>Approval BoD</th>
                                                 <th>Catatan Owner</th>
                                                 <th>Approval Legal</th>
                                                 <th>Catatan Legal</th>
@@ -1321,6 +1359,22 @@ $(document).ready(function() {
             var id = element.id;
             document.getElementById('delete').value = id;
         }
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Hancurkan DataTable jika sudah ada
+            if ($.fn.DataTable.isDataTable('#zero_configuration_table')) {
+                $('#zero_configuration_table').DataTable().destroy();
+            }
+
+            // Inisialisasi DataTable
+            $('#zero_configuration_table').DataTable({
+                scrollX: true, // Menambahkan scroll horizontal
+                fixedColumns: {
+                    leftColumns: 3 // Jumlah kolom yang ingin di-fix
+                }
+            });
+        });
     </script>
 </body>
 

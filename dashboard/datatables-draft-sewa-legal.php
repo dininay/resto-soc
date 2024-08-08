@@ -26,8 +26,69 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
+$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'Table Sewa'";
+$sla_result = $conn->query($sla_query);
+
+$sla_value = 0; // Default SLA value
+
+if ($sla_result->num_rows > 0) {
+    $row = $sla_result->fetch_assoc();
+    $sla_value = $row['sla'];
+} else {
+    echo "No SLA value found for 'Owner Surveyor'";
+}
+
+function calculateScoring($start_date, $end_date, $sla) {
+    $today = new DateTime();
+    $start_date = $start_date ?: $today->format('Y-m-d');
+    $end_date = $end_date ?: $today->format('Y-m-d');
+    $sla_days = $sla ?: 0;
+
+    $start_date_obj = new DateTime($start_date);
+    $end_date_obj = new DateTime($end_date);
+
+    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
+
+    if ($sla_days != 0) {
+        if ($date_diff > $sla_days) {
+            $scoring = -((($date_diff - $sla_days) / $sla_days) * 100);
+        } else {
+            $scoring = ((($sla_days - $date_diff) / $sla_days) * 100);
+        }
+    } else {
+        $scoring = 0;
+    }
+
+    return round($scoring, 2);
+}
+// Fungsi untuk menentukan remarks berdasarkan scoring
+function getRemarks($scoring) {
+    if ($scoring >= 0) {
+        return "good";
+    } elseif ($scoring >= -30) {
+        return "poor";
+    } else {
+        return "bad";
+    }
+}
+
+// Fungsi untuk menentukan warna badge berdasarkan remarks
+function getBadgeColor($remarks) {
+    switch ($remarks) {
+        case 'good':
+            return 'success'; // Hijau
+        case 'poor':
+            return 'warning'; // Kuning
+        case 'bad':
+            return 'danger'; // Merah
+        default:
+            return 'secondary'; // Default jika remarks tidak dikenali
+    }
+}
+
 // Tutup koneksi
 $conn->close();
+
 ?>
 
 <!DOCTYPE html>
@@ -37,7 +98,8 @@ $conn->close();
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -48,10 +110,24 @@ $conn->close();
     <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
 <style>
-    .hidden {
-        display: none;
-    }
-</style>
+        .hidden {
+            display: none;
+        },
+
+        .small-column {
+            max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */
+            overflow: hidden; /* Memotong konten yang meluas */
+            text-overflow: ellipsis; /* Menampilkan elipsis jika konten terlalu panjang */
+            white-space: nowrap; /* Mencegah teks membungkus ke baris baru */
+        }
+
+        th, td {
+                white-space: nowrap;
+            }
+        table.dataTable {
+            border-collapse:  collapse!important;
+        }
+    </style>
 </head>
 
 <body class="text-left">
@@ -243,7 +319,7 @@ $conn->close();
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -261,14 +337,14 @@ $conn->close();
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['draft_legal']) {
-                                                            case 'Approve':
+                                                            case 'Done':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -290,10 +366,26 @@ $conn->close();
                                                     // Menghitung selisih hari antara sla_date dan hari ini
                                                     $diff = $today->diff($slaLegalDate);
                                                     
-                                                    // Jika status_approvowner adalah "Approve"
+                                                    // Menghitung scoring
+                                                    $scoring = calculateScoring($row['start_date'], $row['slalegal_date'], $sla_value); // Make sure $sla_value is set correctly
+                                                    $remarks = getRemarks($scoring);
+
                                                     if ($row['draft_legal'] == "Approve") {
-                                                        echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
-                                                        echo '<p>Status changed to Approved on: ' . $row['start_date'] . '</p>';
+                                                        // Menentukan label berdasarkan remarks
+                                                        $status_label = '';
+                                                        switch ($remarks) {
+                                                            case 'good':
+                                                                $status_label = 'Done Good';
+                                                                break;
+                                                            case 'poor':
+                                                                $status_label = 'Done Poor';
+                                                                break;
+                                                            case 'bad':
+                                                                $status_label = 'Done Bad';
+                                                                break;
+                                                        }
+
+                                                        echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
                                                         // Menghitung jumlah hari terlambat
                                                         $lateDays = $slaLegalDate->diff($today)->days;
@@ -315,9 +407,9 @@ $conn->close();
                                                 </td>
                                                 <td>
                                                     <!-- Tombol Edit -->
-                                                    <?php if ($row['draft_legal'] != "Approve"): ?>
+                                                    <?php if ($row['draft_legal'] != "Done"): ?>
                                                         <div>
-                                                        <a href="legal/draft-sewa-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
+                                                        <a href="legal/draft-sewa-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>
                                                         <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['draft_legal'] ?>">
@@ -340,11 +432,11 @@ $conn->close();
                                                                 <form id="statusForm" method="post" action="legal/draft-sewa-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" id="modalId" value="<?= $row['id']; ?>">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve Draft</label>
+                                                                        <label for="statusSelect">Status Draft Table</label>
                                                                         <select class="form-control" id="statusSelect" name="draft_legal">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
-                                                                            <option value="Approve">Approve</option>
+                                                                            <option value="Done">Done</option>
                                                                             <option value="Reject">Reject</option>
                                                                         </select>
                                                                     </div>
@@ -359,7 +451,24 @@ $conn->close();
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="pic">PIC</label>
-                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                            <select class="form-control" id="pic" name="pic">
+                                                                                <option value="">Pilih PIC</option>
+                                                                                <option value="Legal">Legal</option>
+                                                                                <option value="Marketing">Marketing</option>
+                                                                                <option value="Landlord">Landlord</option>
+                                                                                <option value="Scm">SCM</option>
+                                                                                <option value="Sdg-project">SDG Project</option>
+                                                                                <option value="Sdg-design">SDG Design</option>
+                                                                                <option value="Sdg-equipment">SDG Equipment</option>
+                                                                                <option value="Sdg-qs">SDG QS</option>
+                                                                                <option value="Operations">Operations</option>
+                                                                                <option value="Procurement">Procurement</option>
+                                                                                <option value="Taf">TAF</option>
+                                                                                <option value="HR">HR</option>
+                                                                                <option value="Academy">Academy</option>
+                                                                                <option value="Negotiator">Negotiator</option>
+                                                                                <option value="Others">Others</option>
+                                                                            </select>
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="action_plan">Action Plan</label>
@@ -631,32 +740,28 @@ $conn->close();
             // Isi nilai input tersembunyi dengan ID yang diambil
             $('#modalId').val(id);
         });
-    });
-    
-    // Function to toggle the visibility of issue detail section
-    function toggleIssueDetail() {
-        var statusSelect = document.getElementById("statusSelect");
-        var issueDetailSection = document.getElementById("issueDetailSection");
 
-        if (statusSelect.value === "Pending") {
-            issueDetailSection.style.display = "block";
-        } else {
-            issueDetailSection.style.display = "none";
+        // Function to toggle the visibility of issue detail section
+        function toggleIssueDetail() {
+            var statusSelect = document.getElementById("statusSelect");
+            var issueDetailSection = document.getElementById("issueDetailSection");
+
+            if (statusSelect.value === "Pending") {
+                issueDetailSection.style.display = "block";
+            } else {
+                issueDetailSection.style.display = "none";
+            }
         }
-    }
 
-    // Event listener for statusSelect change
-    $('#statusSelect').on('change', function () {
+        // Event listener for statusSelect change
+        $('#statusSelect').on('change', function () {
+            toggleIssueDetail();
+        });
+
+        // Toggle issue detail section based on the initial value of statusSelect
         toggleIssueDetail();
     });
 </script>
-<?php if ($draft_legal == 'Pending') { ?>
-    <script>
-        $(document).ready(function () {
-            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
-        });
-    </script>
-<?php } ?>
     // <script>
     //     // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
     //     function setDelete(element) {
@@ -674,6 +779,22 @@ $(document).ready(function() {
     });
 });
 </script>
+    <script>
+        $(document).ready(function() {
+            // Hancurkan DataTable jika sudah ada
+            if ($.fn.DataTable.isDataTable('#zero_configuration_table')) {
+                $('#zero_configuration_table').DataTable().destroy();
+            }
+
+            // Inisialisasi DataTable
+            $('#zero_configuration_table').DataTable({
+                scrollX: true, // Menambahkan scroll horizontal
+                fixedColumns: {
+                    leftColumns: 3 // Jumlah kolom yang ingin di-fix
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

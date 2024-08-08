@@ -39,7 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
 
     try {
         // Jika status_approvlegalvd diubah menjadi Approve
-        if ($status_itconfig == 'Approve') {
+        if ($status_itconfig == 'Done') {
             $config_date = date("Y-m-d H:i:s");
 
             // Query untuk memperbarui status status_itconfig di tabel draft

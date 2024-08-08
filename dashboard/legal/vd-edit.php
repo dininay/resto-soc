@@ -7,7 +7,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     // Ambil nilai tgl_berlaku dan penanggungjawab dari formulir
     $id = $_POST['id'];
-    $kode_store = $_POST['kode_store'];
+    // $kode_store = $_POST['kode_store'];
 // Periksa apakah kunci 'lampiran' ada dalam $_FILES
 $lamp_vd = "";
 
@@ -34,10 +34,10 @@ $lamp_vd = "";
     }
 
     // Update data di database
-    $sql = "UPDATE dokumen_loacd SET kode_store='$kode_store', lamp_vd = '$lamp_vd' WHERE id = '$id'";
+    $sql = "UPDATE dokumen_loacd SET lamp_vd = '$lamp_vd' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
-        header("Location: " . $base_url . "/datatables-checkval-legal.php");
+        header("Location: " . $base_url . "/datatables-validasi-data.php");
         exit();
     } else {
         echo "Error: " . $sql . "<br>" . $conn->error;

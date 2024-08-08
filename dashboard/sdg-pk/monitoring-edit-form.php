@@ -42,6 +42,7 @@ if(isset($_GET['id'])) {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -137,6 +138,36 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="week_11">Week 11</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="week_11" name="week_11" type="number" step="0.01" placeholder="Progress Wee" value="<?php echo $row['week_11']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="week_12">Week 12</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="week_12" name="week_12" type="number" step="0.01" placeholder="Progress Wee" value="<?php echo $row['week_12']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="week_13">Week 13</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="week_13" name="week_13" type="number" step="0.01" placeholder="Progress Wee" value="<?php echo $row['week_13']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="week_14">Week 14</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="week_14" name="week_14" type="number" step="0.01" placeholder="Progress Wee" value="<?php echo $row['week_14']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="week_15">Week 15</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="week_15" name="week_15" type="number" step="0.01" placeholder="Progress Wee" value="<?php echo $row['week_15']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
                                     <label class="col-sm-3 col-form-label">Lampiran Sebelumnya</label>
                                     <div class="col-sm-9">
                                         <?php echo $row['lamp_monitoring']; ?>
@@ -144,15 +175,15 @@ if(isset($_GET['id'])) {
                                     <input type="hidden" name="existing_files" value="<?php echo $row['lamp_monitoring']; ?>">
                                 </div>
                                 <!-- Tambahkan pertanyaan apakah ingin mengganti lampiran -->
-                                <div class="form-group row">
+                                <!-- <div class="form-group row">
                                     <label class="col-sm-3 col-form-label">Mau Tambah Lampiran?</label>
                                     <div class="col-sm-9">
                                         <input type="radio" name="tambah_lampiran" value="ya"> Ya
                                         <input type="radio" name="tambah_lampiran" value="tidak" checked> Tidak
                                     </div>
-                                </div>
+                                </div> -->
                                 <!-- Jika pengguna ingin mengganti lampiran, tampilkan input untuk unggah file -->
-                                <div class="form-group row" id="lampiran_baru" style="display: none;">
+                                <div class="form-group row" id="lampiran_baru">
                                     <label class="col-sm-3 col-form-label" for="lamp_monitoring">Upload Baru</label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >

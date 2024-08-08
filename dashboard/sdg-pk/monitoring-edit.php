@@ -17,6 +17,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $week_10 = floatval($_POST['week_10']);
     $week_11 = floatval($_POST['week_11']);
     $week_12 = floatval($_POST['week_12']);
+    $week_13 = floatval($_POST['week_13']);
+    $week_14 = floatval($_POST['week_14']);
+    $week_15 = floatval($_POST['week_15']);
 
     $lamp_monitoring = "";
 
@@ -48,15 +51,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Update data di tabel konstruksi
-    $sql = "UPDATE konstruksi SET week_1 = ?, week_2 = ?, week_3 = ?, week_4 = ?, week_5 = ?, week_6 = ?, week_7 = ?, week_8 = ?, week_9 = ?, week_10 = ?, week_11 = ?, week_12 = ?, lamp_monitoring = ? WHERE kode_lahan = ?";
+    $sql = "UPDATE konstruksi SET week_1 = ?, week_2 = ?, week_3 = ?, week_4 = ?, week_5 = ?, week_6 = ?, week_7 = ?, week_8 = ?, week_9 = ?, week_10 = ?, week_11 = ?, week_12 = ?, week_13 = ?, week_14 = ?, week_15 = ?, lamp_monitoring = ? WHERE kode_lahan = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ddddddddddddss", $week_1, $week_2, $week_3, $week_4, $week_5, $week_6, $week_7, $week_8, $week_9, $week_10, $week_11, $week_12, $lamp_monitoring, $kode_lahan);
+    $stmt->bind_param("ddddddddsssddddss", $week_1, $week_2, $week_3, $week_4, $week_5, $week_6, $week_7, $week_8, $week_9, $week_10, $week_11, $week_12, $week_13, $week_14, $week_15, $lamp_monitoring, $kode_lahan);
 
     if ($stmt->execute()) {
         // Update tabel sdg_pk berdasarkan kode_lahan
-        $month_1 = $week_1 + $week_2 + $week_3 + $week_4;
-        $month_2 = $week_5 + $week_6 + $week_7 + $week_8;
-        $month_3 = $week_9 + $week_10 + $week_11 + $week_12;
+        $month_1 = $week_1 + $week_2 + $week_3 + $week_4 + $week_5;
+        $month_2 = $week_6 + $week_7 + $week_8 + $week_9 + $week_10;
+        $month_3 = $week_11 + $week_12 + $week_13 + $week_14 + $week_15;
 
         $sql_update_sdg_pk = "UPDATE sdg_pk SET month_1 = ?, month_2 = ?, month_3 = ? WHERE kode_lahan = ?";
         $stmt_update = $conn->prepare($sql_update_sdg_pk);

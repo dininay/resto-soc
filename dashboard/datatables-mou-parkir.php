@@ -19,6 +19,65 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
+$sla_query = "SELECT sla FROM master_slacons WHERE divisi = 'legal'";
+$sla_result = $conn->query($sla_query);
+
+$sla_value = 0; // Default SLA value
+
+if ($sla_result->num_rows > 0) {
+    $row = $sla_result->fetch_assoc();
+    $sla_value = $row['sla'];
+} else {
+    echo "No SLA value found for 'Owner Surveyor'";
+}
+
+function calculateScoring($start_date, $end_date, $sla) {
+    $today = new DateTime();
+    $start_date = $start_date ?: $today->format('Y-m-d');
+    $end_date = $end_date ?: $today->format('Y-m-d');
+    $sla_days = $sla ?: 0;
+
+    $start_date_obj = new DateTime($start_date);
+    $end_date_obj = new DateTime($end_date);
+
+    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
+
+    if ($sla_days != 0) {
+        if ($date_diff > $sla_days) {
+            $scoring = -((($date_diff - $sla_days) / $sla_days) * 100);
+        } else {
+            $scoring = ((($sla_days - $date_diff) / $sla_days) * 100);
+        }
+    } else {
+        $scoring = 0;
+    }
+
+    return round($scoring, 2);
+}
+// Fungsi untuk menentukan remarks berdasarkan scoring
+function getRemarks($scoring) {
+    if ($scoring >= 0) {
+        return "good";
+    } elseif ($scoring >= -30) {
+        return "poor";
+    } else {
+        return "bad";
+    }
+}
+
+// Fungsi untuk menentukan warna badge berdasarkan remarks
+function getBadgeColor($remarks) {
+    switch ($remarks) {
+        case 'good':
+            return 'success'; // Hijau
+        case 'poor':
+            return 'warning'; // Kuning
+        case 'bad':
+            return 'danger'; // Merah
+        default:
+            return 'secondary'; // Default jika remarks tidak dikenali
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="">
@@ -27,7 +86,8 @@ if ($result && $result->num_rows > 0) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -121,7 +181,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -135,24 +195,40 @@ if ($result && $result->num_rows > 0) {
                                                 <td>
                                                     <?php
                                                     // Mendapatkan tanggal sla_date dari kolom data
-                                                    $slaDate = new DateTime($row['sla_legal']);
+                                                    $slaLegalDate = new DateTime($row['sla_legal']);
                                                     
                                                     // Mendapatkan tanggal hari ini
                                                     $today = new DateTime();
                                                     
                                                     // Menghitung selisih hari antara sla_date dan hari ini
-                                                    $diff = $today->diff($slaDate);
+                                                    $diff = $today->diff($slaLegalDate);
                                                     
-                                                    // Jika status_approvowner adalah "Approve"
+                                                    // Menghitung scoring
+                                                    $scoring = calculateScoring($row['sampahparkir_date'], $row['sla_legal'], $sla_value); // Make sure $sla_value is set correctly
+                                                    $remarks = getRemarks($scoring);
+
                                                     if ($row['status_legal'] == "Approve") {
-                                                        echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
-                                                        echo '<p>Status changed to Approved on: ' . $row['sampahparkir_date'] . '</p>';
+                                                        // Menentukan label berdasarkan remarks
+                                                        $status_label = '';
+                                                        switch ($remarks) {
+                                                            case 'good':
+                                                                $status_label = 'Done Good';
+                                                                break;
+                                                            case 'poor':
+                                                                $status_label = 'Done Poor';
+                                                                break;
+                                                            case 'bad':
+                                                                $status_label = 'Done Bad';
+                                                                break;
+                                                        }
+
+                                                        echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
                                                         // Menghitung jumlah hari terlambat
-                                                        $lateDays = $slaDate->diff($today)->days;
+                                                        $lateDays = $slaLegalDate->diff($today)->days;
                                                         
                                                         // Jika terlambat
-                                                        if ($today > $slaDate) {
+                                                        if ($today > $slaLegalDate) {
                                                             echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
                                                         } else {
                                                             // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
@@ -169,12 +245,10 @@ if ($result && $result->num_rows > 0) {
                                                 
                                                 <td>
                                                 <!-- Tombol Edit -->
-                                                <?php if ($row['status_legal'] != "Approve"): ?>
+                                                <?php if ($row['status_legal'] != "Done"): ?>
                                                         <a href="legal/mouparkir-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>
-                                                    <?php endif; ?>
-                                                    <?php if ($row['status_legal'] != "Approve"): ?>
                                                         <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_legal'] ?>">
                                                             <i class="nav-icon i-Book"></i>
                                                         </button>
@@ -198,7 +272,7 @@ if ($result && $result->num_rows > 0) {
                                                                         <select class="form-control" id="statusSelect" name="status_legal" Placeholder="Pilih">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
-                                                                            <option value="Approve">Approve</option>
+                                                                            <option value="Done">Done</option>
                                                                         </select>
                                                                     </div>
                                                                     <div class="form-group">
@@ -212,7 +286,24 @@ if ($result && $result->num_rows > 0) {
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="pic">PIC</label>
-                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                            <select class="form-control" id="pic" name="pic">
+                                                                                <option value="">Pilih PIC</option>
+                                                                                <option value="Legal">Legal</option>
+                                                                                <option value="Marketing">Marketing</option>
+                                                                                <option value="Landlord">Landlord</option>
+                                                                                <option value="Scm">SCM</option>
+                                                                                <option value="Sdg-project">SDG Project</option>
+                                                                                <option value="Sdg-design">SDG Design</option>
+                                                                                <option value="Sdg-equipment">SDG Equipment</option>
+                                                                                <option value="Sdg-qs">SDG QS</option>
+                                                                                <option value="Operations">Operations</option>
+                                                                                <option value="Procurement">Procurement</option>
+                                                                                <option value="Taf">TAF</option>
+                                                                                <option value="HR">HR</option>
+                                                                                <option value="Academy">Academy</option>
+                                                                                <option value="Negotiator">Negotiator</option>
+                                                                                <option value="Others">Others</option>
+                                                                            </select>
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="action_plan">Action Plan</label>

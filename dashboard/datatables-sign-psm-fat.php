@@ -2,7 +2,7 @@
 // Koneksi ke database
 include "../koneksi.php";
 
-$confirm_nego = "";
+$confirm_fatpsm = "";
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT d.*, 
                l.nama_lahan, l.lokasi, l.lamp_land,
@@ -43,6 +43,65 @@ if ($result && $result->num_rows > 0) {
 // }
 
 
+$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'Review PSM TAF'";
+$sla_result = $conn->query($sla_query);
+
+$sla_value = 0; // Default SLA value
+
+if ($sla_result->num_rows > 0) {
+    $row = $sla_result->fetch_assoc();
+    $sla_value = $row['sla'];
+} else {
+    echo "No SLA value found for 'Owner Surveyor'";
+}
+
+function calculateScoring($start_date, $end_date, $sla) {
+    $today = new DateTime();
+    $start_date = $start_date ?: $today->format('Y-m-d');
+    $end_date = $end_date ?: $today->format('Y-m-d');
+    $sla_days = $sla ?: 0;
+
+    $start_date_obj = new DateTime($start_date);
+    $end_date_obj = new DateTime($end_date);
+
+    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
+
+    if ($sla_days != 0) {
+        if ($date_diff > $sla_days) {
+            $scoring = -((($date_diff - $sla_days) / $sla_days) * 100);
+        } else {
+            $scoring = ((($sla_days - $date_diff) / $sla_days) * 100);
+        }
+    } else {
+        $scoring = 0;
+    }
+
+    return round($scoring, 2);
+}
+// Fungsi untuk menentukan remarks berdasarkan scoring
+function getRemarks($scoring) {
+    if ($scoring >= 0) {
+        return "good";
+    } elseif ($scoring >= -30) {
+        return "poor";
+    } else {
+        return "bad";
+    }
+}
+
+// Fungsi untuk menentukan warna badge berdasarkan remarks
+function getBadgeColor($remarks) {
+    switch ($remarks) {
+        case 'good':
+            return 'success'; // Hijau
+        case 'poor':
+            return 'warning'; // Kuning
+        case 'bad':
+            return 'danger'; // Merah
+        default:
+            return 'secondary'; // Default jika remarks tidak dikenali
+    }
+}
 
 // Tutup koneksi database
 $conn->close();
@@ -54,7 +113,8 @@ $conn->close();
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -65,10 +125,24 @@ $conn->close();
     <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
 <style>
-    .hidden {
-        display: none;
-    }
-</style>
+        .hidden {
+            display: none;
+        },
+
+        .small-column {
+            max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */
+            overflow: hidden; /* Memotong konten yang meluas */
+            text-overflow: ellipsis; /* Menampilkan elipsis jika konten terlalu panjang */
+            white-space: nowrap; /* Mencegah teks membungkus ke baris baru */
+        }
+
+        th, td {
+                white-space: nowrap;
+            }
+        table.dataTable {
+            border-collapse:  collapse!important;
+        }
+    </style>
 </head>
 
 <body class="text-left">
@@ -113,6 +187,7 @@ $conn->close();
                                                 <th>Lampiran VD</th>
                                                 <th>Lampiran Draft</th>
                                                 <th>Lampiran Sign PSM</th>
+                                                <th>Tgl Release PSM</th>
                                                 <th>Confirm TAF</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -238,6 +313,16 @@ $conn->close();
                                                     echo '<td></td>';
                                                 }
                                                 ?>   
+                                                <?php
+                                                // Pastikan $row['fatpsm_date'] sudah didefinisikan dan memeriksa apakah nilai tidak kosong
+                                                if (!empty($row['psmfat_date'])) {
+                                                    $date = new DateTime($row['psmfat_date']);
+                                                    $formattedDate = $date->format('d M y');
+                                                } else {
+                                                    $formattedDate = ''; // Menampilkan string kosong jika tanggal kosong
+                                                }
+                                                ?>
+                                                <td><?= $formattedDate ?></td>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -250,7 +335,7 @@ $conn->close();
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -269,27 +354,48 @@ $conn->close();
                                                     // Mendapatkan tanggal hari ini
                                                     $today = new DateTime();
                                                     
-                                                    // Menghitung selisih hari antara sla_date dan hari ini
-                                                    $diff = $today->diff($slaLegalDate);
-                                                    
-                                                    // Jika status_approvowner adalah "Approve"
-                                                    if ($row['confirm_fatpsm'] == "Approve") {
-                                                        echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
-                                                        echo '<p>Status changed to Approved on: ' . $row['psmfat_date'] . '</p>';
+                                                    // Mengecek apakah hari ini adalah hari Sabtu atau Minggu
+                                                    if ($today->format('N') == 6 || $today->format('N') == 7) { // N = 6 is Saturday, N = 7 is Sunday
+                                                        echo '<button type="button" class="btn btn-sm btn-info" disabled>Sedang Libur</button>';
                                                     } else {
-                                                        // Menghitung jumlah hari terlambat
-                                                        $lateDays = $slaLegalDate->diff($today)->days;
+                                                        // Menghitung selisih hari antara slafatpsm_date dan hari ini
+                                                        $diff = $today->diff($slaLegalDate);
                                                         
-                                                        // Jika terlambat
-                                                        if ($today > $slaLegalDate) {
-                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+                                                        // Menghitung scoring
+                                                        $scoring = calculateScoring($row['fatpsm_date'], $row['slafatpsm_date'], $sla_value); // Make sure $sla_value is set correctly
+                                                        $remarks = getRemarks($scoring);
+
+                                                        if ($row['confirm_fatpsm'] == "Approve") {
+                                                            // Menentukan label berdasarkan remarks
+                                                            $status_label = '';
+                                                            switch ($remarks) {
+                                                                case 'good':
+                                                                    $status_label = 'Done Good';
+                                                                    break;
+                                                                case 'poor':
+                                                                    $status_label = 'Done Poor';
+                                                                    break;
+                                                                case 'bad':
+                                                                    $status_label = 'Done Bad';
+                                                                    break;
+                                                            }
+
+                                                            echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                         } else {
-                                                            // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
-                                                            if ($diff) {
-                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
+                                                            // Menghitung jumlah hari terlambat
+                                                            $lateDays = $slaLegalDate->diff($today)->days;
+                                                            
+                                                            // Jika terlambat
+                                                            if ($today > $slaLegalDate) {
+                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
                                                             } else {
-                                                                // Tampilkan peringatan "H + X"
-                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
+                                                                // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
+                                                                if ($diff->days > 0) {
+                                                                    echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
+                                                                } else {
+                                                                    // Tampilkan peringatan "H + X"
+                                                                    echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
+                                                                }
                                                             }
                                                         }
                                                     }
@@ -298,7 +404,6 @@ $conn->close();
                                                 
                                                 <td>
                                                     <!-- Tombol Edit -->
-                                                    <?php if ($row['confirm_fatpsm'] != "Approve"): ?>
                                                         <div>
                                                         <!-- <a href="legal/sign-psm-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
                                                             <i class="nav-icon i-Pen-2"></i>
@@ -307,7 +412,6 @@ $conn->close();
                                                             <i class="nav-icon i-Book"></i>
                                                         </button>
                                                     </div>
-                                                    <?php endif; ?>
 
                                                 <!-- Modal -->
                                                 <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
@@ -322,13 +426,13 @@ $conn->close();
                                                             <div class="modal-body">
                                                                 <form id="statusForm" method="post" action="fat/sign-psm-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" id="modalId" value="<?= $row['id']; ?>">
+                                                                    <input type="hidden" name="kode_lahan" value="<?= $row['kode_lahan']; ?>">
                                                                     <div class="form-group">
                                                                         <label for="statusSelect">Status Approve Sign PSM</label>
                                                                         <select class="form-control" id="statusSelect" name="confirm_fatpsm">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
                                                                             <option value="Approve">Approve</option>
-                                                                            <option value="Reject">Reject</option>
                                                                         </select>
                                                                     </div>
                                                                     <div class="form-group">
@@ -342,7 +446,24 @@ $conn->close();
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="pic">PIC</label>
-                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                            <select class="form-control" id="pic" name="pic">
+                                                                                <option value="">Pilih PIC</option>
+                                                                                <option value="Legal">Legal</option>
+                                                                                <option value="Marketing">Marketing</option>
+                                                                                <option value="Landlord">Landlord</option>
+                                                                                <option value="Scm">SCM</option>
+                                                                                <option value="Sdg-project">SDG Project</option>
+                                                                                <option value="Sdg-design">SDG Design</option>
+                                                                                <option value="Sdg-equipment">SDG Equipment</option>
+                                                                                <option value="Sdg-qs">SDG QS</option>
+                                                                                <option value="Operations">Operations</option>
+                                                                                <option value="Procurement">Procurement</option>
+                                                                                <option value="Taf">TAF</option>
+                                                                                <option value="HR">HR</option>
+                                                                                <option value="Academy">Academy</option>
+                                                                                <option value="Negotiator">Negotiator</option>
+                                                                                <option value="Others">Others</option>
+                                                                            </select>
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="action_plan">Action Plan</label>
@@ -375,6 +496,7 @@ $conn->close();
                                                 <th>Lampiran VD</th>
                                                 <th>Lampiran Draft</th>
                                                 <th>Lampiran Sign PSM</th>
+                                                <th>Tgl Release PSM</th>
                                                 <th>Confirm TAF</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -671,26 +793,29 @@ $conn->close();
             // Isi nilai input tersembunyi dengan ID yang diambil
             $('#modalId').val(id);
         });
-    });
-    
-    // Function to toggle the visibility of issue detail section
-    function toggleIssueDetail() {
-        var statusSelect = document.getElementById("statusSelect");
-        var issueDetailSection = document.getElementById("issueDetailSection");
 
-        if (statusSelect.value === "Pending") {
-            issueDetailSection.style.display = "block";
-        } else {
-            issueDetailSection.style.display = "none";
+        // Function to toggle the visibility of issue detail section
+        function toggleIssueDetail() {
+            var statusSelect = document.getElementById("statusSelect");
+            var issueDetailSection = document.getElementById("issueDetailSection");
+
+            if (statusSelect.value === "Pending") {
+                issueDetailSection.style.display = "block";
+            } else {
+                issueDetailSection.style.display = "none";
+            }
         }
-    }
 
-    // Event listener for statusSelect change
-    $('#statusSelect').on('change', function () {
+        // Event listener for statusSelect change
+        $('#statusSelect').on('change', function () {
+            toggleIssueDetail();
+        });
+
+        // Toggle issue detail section based on the initial value of statusSelect
         toggleIssueDetail();
     });
 </script>
-<?php if ($confirm_nego == 'Pending') { ?>
+<?php if ($confirm_fatpsm == 'Pending') { ?>
     <script>
         $(document).ready(function () {
             $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
@@ -770,6 +895,22 @@ $(document).ready(function() {
     }
 </script>
 
+<script>
+        $(document).ready(function() {
+            // Hancurkan DataTable jika sudah ada
+            if ($.fn.DataTable.isDataTable('#zero_configuration_table')) {
+                $('#zero_configuration_table').DataTable().destroy();
+            }
+
+            // Inisialisasi DataTable
+            $('#zero_configuration_table').DataTable({
+                scrollX: true, // Menambahkan scroll horizontal
+                fixedColumns: {
+                    leftColumns: 3 // Jumlah kolom yang ingin di-fix
+                }
+            });
+        });
+    </script>
 
 </body>
 

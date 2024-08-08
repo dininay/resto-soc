@@ -8,7 +8,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
     $status_hot = $_POST["status_hot"];
     $catatan_hot = $_POST["catatan_hot"];
     $hot_date = null;
+    $hot_paths = array();
+    if(isset($_FILES["hot"])) {
+        foreach($_FILES['hot']['name'] as $key => $filename) {
+            $file_tmp = $_FILES['hot']['tmp_name'][$key];
+            $target_dir = "../uploads/";
+            $target_file = $target_dir . basename($filename);
 
+            // Attempt to move the uploaded file to the target directory
+            if (move_uploaded_file($file_tmp, $target_dir . $target_file)) {
+                $hot_paths[] = $filename;
+            } else {
+                echo "Gagal mengunggah file " . $filename . "<br>";
+            }
+        }
+
+        // Join all file paths into a comma-separated string
+        $hot = implode(",", $hot_paths);
+    } else {
+        $hot = null; // Set kronologi to null if no files were uploaded
+    }
+    
     $issue_detail = isset($_POST["issue_detail"]) ? $_POST["issue_detail"] : null;
     $pic = isset($_POST["pic"]) ? $_POST["pic"] : null;
     $action_plan = isset($_POST["action_plan"]) ? $_POST["action_plan"] : null;
@@ -39,13 +59,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
 
     try {
         // Jika status_approvlegalvd diubah menjadi Approve
-        if ($status_hot == 'Approve') {
+        if ($status_hot == 'Done') {
             $hot_date = date("Y-m-d H:i:s");
 
             // Query untuk memperbarui status status_hot di tabel draft
-            $sql_update = "UPDATE socdate_hr SET status_hot = ?, hot_date = ?, catatan_hot = ? WHERE id = ?";
+            $sql_update = "UPDATE socdate_hr SET status_hot = ?, hot_date = ?, catatan_hot = ?, hot = ? WHERE id = ?";
             $stmt_update = $conn->prepare($sql_update);
-            $stmt_update->bind_param("sssi", $status_hot, $hot_date, $catatan_hot, $id);
+            $stmt_update->bind_param("ssssi", $status_hot, $hot_date, $catatan_hot, $hot, $id);
             $stmt_update->execute();
 
             if ($stmt_update->affected_rows > 0) {

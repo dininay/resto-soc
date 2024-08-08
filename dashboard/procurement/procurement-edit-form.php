@@ -56,6 +56,7 @@ $conn->close();
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -105,7 +106,7 @@ $conn->close();
                                 <div class="form-group row">
                                     <label class="col-sm-3 col-form-label" for="nama_vendor">Nama Vendor</label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="nama_vendor" name="nama" type="text" placeholder="Nama Vendor" value="<?php echo $row['nama_vendor']; ?>"/>
+                                        <input class="form-control" id="nama_vendor" name="nama_vendor" type="text" placeholder="Nama Vendor" value="<?php echo $row['nama_vendor']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -117,7 +118,7 @@ $conn->close();
                                 <div class="form-group row">
                                     <label class="col-sm-3 col-form-label" for="nohp_vendor">No HP Vendor</label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="nohp_vendor" name="nohp" type="text" placeholder="No HP Vendor" value="<?php echo $row['nohp']; ?>"/>
+                                        <input class="form-control" id="nohp_vendor" name="nohp" type="number" placeholder="No HP Vendor" value="<?php echo $row['nohp']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -127,51 +128,67 @@ $conn->close();
                                     </div>
                                 </div>
                                 <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="lamp_profil">Upload Lampiran Company Profile</label>
+                                    <div class="col-sm-9">
+                                        <div class="dropzone" id="multple-file-upload" >
+                                            <input name="lamp_profil[]" type="file" multiple="multiple" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="lamp_vendor">Upload Lampiran Pendukung</label>
+                                    <div class="col-sm-9">
+                                        <div class="dropzone" id="multple-file-upload" >
+                                            <input name="lamp_vendor[]" type="file" multiple="multiple" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- <div class="form-group row">
                                     <label class="col-sm-3 col-form-label">Lampiran Company Profile Sebelumnya</label>
                                     <div class="col-sm-9">
                                         <?php echo $row['lamp_profil']; ?>
                                     </div>
-                                </div>
+                                </div> -->
                                 <!-- Tambahkan pertanyaan apakah ingin mengganti lampiran -->
-                                <div class="form-group row">
+                                <!-- <div class="form-group row">
                                     <label class="col-sm-3 col-form-label">Mau Ganti Lampiran?</label>
                                     <div class="col-sm-9">
                                         <input type="radio" name="ganti_lampirancp" value="ya"> Ya
                                         <input type="radio" name="ganti_lampirancp" value="tidak" checked> Tidak
                                     </div>
-                                </div>
+                                </div> -->
                                 <!-- Jika pengguna ingin mengganti lampiran, tampilkan input untuk unggah file -->
-                                <div class="form-group row" id="lampiran_barucp" style="display: none;">
+                                <!-- <div class="form-group row" id="lampiran_barucp" style="display: none;">
                                     <label class="col-sm-3 col-form-label" for="lamp_profil">Upload Baru</label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload">
                                             <input name="lamp_profil[]" type="file" multiple="multiple" />
                                         </div>
                                     </div>
-                                </div>
-                                <div class="form-group row">
+                                </div> -->
+                                <!-- <div class="form-group row">
                                     <label class="col-sm-3 col-form-label">Lampiran Sebelumnya</label>
                                     <div class="col-sm-9">
                                         <?php echo $row['lamp_vendor']; ?>
                                     </div>
-                                </div>
+                                </div> -->
                                 <!-- Tambahkan pertanyaan apakah ingin mengganti lampiran -->
-                                <div class="form-group row">
+                                <!-- <div class="form-group row">
                                     <label class="col-sm-3 col-form-label">Mau Ganti Lampiran?</label>
                                     <div class="col-sm-9">
                                         <input type="radio" name="ganti_lampiran" value="ya"> Ya
                                         <input type="radio" name="ganti_lampiran" value="tidak" checked> Tidak
                                     </div>
-                                </div>
+                                </div> -->
                                 <!-- Jika pengguna ingin mengganti lampiran, tampilkan input untuk unggah file -->
-                                <div class="form-group row" id="lampiran_baru" style="display: none;">
+                                <!-- <div class="form-group row" id="lampiran_baru" style="display: none;">
                                     <label class="col-sm-3 col-form-label" for="lamp_vendor">Upload Baru</label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload">
                                             <input name="lamp_vendor[]" type="file" multiple="multiple" />
                                         </div>
                                     </div>
-                                </div>
+                                </div> -->
 
                                 <!-- <div class="form-group row">
                                     <label class="col-sm-3 col-form-label" for="nama_vendor">Nama Vendor</label>

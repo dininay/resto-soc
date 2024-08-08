@@ -5,7 +5,7 @@ include "../koneksi.php";
 $sql = "SELECT 
         summary_soc.*,
         resto.gostore_date,
-        resto.sla_steqp,
+        equipment.sla_steqp,
         land.kode_lahan,
         land.nama_lahan,
         land.lokasi,
@@ -54,40 +54,49 @@ $sql = "SELECT
         socdate_marketing.email_resto,
         socdate_marketing.lamp_merchant,
         socdate_scm.lamp_sj,
-        socdate_sdg.no_listrik,
-        socdate_sdg.lamp_listrik,
-        socdate_sdg.lamp_ka,
-        socdate_sdg.lamp_ipal,
-        socdate_sdg.lamp_eqp,
-        socdate_sdg.lamp_ba,
+        socdate_sdg.sumber_air,
+        socdate_sdg.kesesuaian_ujilab,
+        socdate_sdg.filter_air,
+        socdate_sdg.lamp_filterair,
+        socdate_sdg.lamp_ujilab,
+        socdate_sdg.debit_airsumur,
+        socdate_sdg.debit_airpdam,
+        socdate_sdg.id_pdam,
+        socdate_sdg.sumber_listrik,
+        socdate_sdg.form_pengajuanlistrik,
+        socdate_sdg.hasil_va,
+        socdate_sdg.id_pln,
+        socdate_sdg.biaya_perkwh,
+        socdate_sdg.lampwo_reqipal,
         sdg_desain.lamp_permit,
         sdg_desain.lamp_pbg,
         dokumen_loacd.kode_store
         FROM resto
-         LEFT JOIN land ON resto.kode_lahan = land.kode_lahan
-         LEFT JOIN summary_soc ON resto.kode_lahan = summary_soc.kode_lahan
-         LEFT JOIN soc_fat ON summary_soc.kode_lahan = soc_fat.kode_lahan
-         LEFT JOIN soc_hrga ON soc_fat.kode_lahan = soc_hrga.kode_lahan
-         LEFT JOIN soc_it ON soc_fat.kode_lahan = soc_it.kode_lahan
-         LEFT JOIN soc_legal ON soc_fat.kode_lahan = soc_legal.kode_lahan
-         LEFT JOIN soc_marketing ON soc_fat.kode_lahan = soc_marketing.kode_lahan
-         LEFT JOIN soc_rto ON soc_fat.kode_lahan = soc_rto.kode_lahan
-         LEFT JOIN soc_sdg ON soc_fat.kode_lahan = soc_sdg.kode_lahan
-         LEFT JOIN note_ba ON soc_fat.kode_lahan = note_ba.kode_lahan
-         LEFT JOIN note_legal ON soc_fat.kode_lahan = note_legal.kode_lahan
-         LEFT JOIN doc_legal ON note_legal.kode_lahan = doc_legal.kode_lahan
-         LEFT JOIN sign ON soc_fat.kode_lahan = sign.kode_lahan
-         LEFT JOIN socdate_academy ON land.kode_lahan = socdate_academy.kode_lahan
-         LEFT JOIN socdate_fat ON land.kode_lahan = socdate_fat.kode_lahan
-         LEFT JOIN socdate_hr ON land.kode_lahan = socdate_hr.kode_lahan
-         LEFT JOIN socdate_ir ON land.kode_lahan = socdate_ir.kode_lahan
-         LEFT JOIN socdate_it ON land.kode_lahan = socdate_it.kode_lahan
-         LEFT JOIN socdate_marketing ON land.kode_lahan = socdate_marketing.kode_lahan
-         LEFT JOIN socdate_legal ON land.kode_lahan = socdate_legal.kode_lahan
-         LEFT JOIN socdate_scm ON land.kode_lahan = socdate_scm.kode_lahan
-         LEFT JOIN socdate_sdg ON land.kode_lahan = socdate_sdg.kode_lahan
-         LEFT JOIN dokumen_loacd ON land.kode_lahan = dokumen_loacd.kode_lahan
-         LEFT JOIN sdg_desain ON land.kode_lahan = sdg_desain.kode_lahan
+         JOIN land ON resto.kode_lahan = land.kode_lahan
+         JOIN summary_soc ON resto.kode_lahan = summary_soc.kode_lahan
+         JOIN equipment ON resto.kode_lahan = equipment.kode_lahan
+         JOIN soc_fat ON summary_soc.kode_lahan = soc_fat.kode_lahan
+         JOIN soc_hrga ON soc_fat.kode_lahan = soc_hrga.kode_lahan
+         JOIN soc_it ON soc_fat.kode_lahan = soc_it.kode_lahan
+         JOIN soc_legal ON soc_fat.kode_lahan = soc_legal.kode_lahan
+         JOIN soc_marketing ON soc_fat.kode_lahan = soc_marketing.kode_lahan
+         JOIN soc_rto ON soc_fat.kode_lahan = soc_rto.kode_lahan
+         JOIN soc_sdg ON soc_fat.kode_lahan = soc_sdg.kode_lahan
+         JOIN note_ba ON soc_fat.kode_lahan = note_ba.kode_lahan
+         JOIN note_legal ON soc_fat.kode_lahan = note_legal.kode_lahan
+         JOIN doc_legal ON note_legal.kode_lahan = doc_legal.kode_lahan
+         JOIN sign ON soc_fat.kode_lahan = sign.kode_lahan
+         JOIN socdate_academy ON land.kode_lahan = socdate_academy.kode_lahan
+         JOIN socdate_fat ON land.kode_lahan = socdate_fat.kode_lahan
+         JOIN socdate_hr ON land.kode_lahan = socdate_hr.kode_lahan
+         JOIN socdate_ir ON land.kode_lahan = socdate_ir.kode_lahan
+         JOIN socdate_it ON land.kode_lahan = socdate_it.kode_lahan
+         JOIN socdate_marketing ON land.kode_lahan = socdate_marketing.kode_lahan
+         JOIN socdate_legal ON land.kode_lahan = socdate_legal.kode_lahan
+         JOIN socdate_scm ON land.kode_lahan = socdate_scm.kode_lahan
+         JOIN socdate_sdg ON land.kode_lahan = socdate_sdg.kode_lahan
+         JOIN dokumen_loacd ON land.kode_lahan = dokumen_loacd.kode_lahan
+         JOIN sdg_desain ON land.kode_lahan = sdg_desain.kode_lahan
          GROUP BY summary_soc.kode_lahan";
 $result = $conn->query($sql);
 
@@ -165,6 +174,7 @@ $conn->close();
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -250,7 +260,17 @@ $conn->close();
                                                         <th scope="row"><?php echo $no++; ?></th>
                                                         <td><?php echo $row ['kode_store']?></td>
                                                         <td><?php echo $row ['nama_lahan']?></td>
-                                                        <td><?php echo $row ['maps']?></td>
+                                                        <td class="small-column">
+                                                            <?php if (!empty($row['maps'])): ?>
+                                                                <a href="<?= htmlspecialchars($row['maps']) ?>" target="_blank" title="View Map">
+                                                                    <i class="fas fa-map-marker-alt"></i> <!-- Ikon peta Font Awesome -->
+                                                                </a>
+                                                            <?php else: ?>
+                                                                <!-- Jika data kosong, Anda bisa menampilkan pesan atau membiarkannya kosong -->
+                                                                <!-- Misalnya, menampilkan pesan "No link" atau membiarkannya kosong -->
+                                                                <!-- <span>No link</span> -->
+                                                            <?php endif; ?>
+                                                        </td>
                                                         <td><?php echo $row ['gostore_date']?></td>
                                                         
                                                         <td>
@@ -281,10 +301,23 @@ $conn->close();
 
                                                                 $scm = (( !is_null($row['lamp_sj']) ? 100 : 0 ));
 
-                                                                $sdg = (( !is_null($row['no_listrik']) ? 100 : 0 ) + ( !is_null($row['lamp_listrik']) ? 100 : 0 ) + ( !is_null($row['lamp_ka']) ? 100 : 0 ) + ( !is_null($row['lamp_ipal']) ? 100 : 0 ) + ( !is_null($row['lamp_eqp']) ? 100 : 0 ) + ( !is_null($row['lamp_ba']) ? 100 : 0 )) / 6;
+                                                                $sdg = (
+                                                                    (!is_null($row['sumber_air']) ? 100 : 0) +
+                                                                    (!is_null($row['kesesuaian_ujilab']) ? 100 : 0) +
+                                                                    (!is_null($row['filter_air']) ? 100 : 0) +
+                                                                    (!is_null($row['debit_airsumur']) ? 100 : 0) +
+                                                                    (!is_null($row['debit_airpdam']) ? 100 : 0) +
+                                                                    (!is_null($row['id_pdam']) ? 100 : 0) +
+                                                                    (!is_null($row['sumber_listrik']) ? 100 : 0) +
+                                                                    (!is_null($row['form_pengajuanlistrik']) ? 100 : 0) +
+                                                                    (!is_null($row['hasil_va']) ? 100 : 0) +
+                                                                    (!is_null($row['id_pln']) ? 100 : 0) +
+                                                                    (!is_null($row['biaya_perkwh']) ? 100 : 0) +
+                                                                    (!is_null($row['lampwo_reqipal']) ? 100 : 0)
+                                                                ) / 12;
 
                                                                 $total = ($fat + $academy + $hr + $ir + $it + $legal + $marketing + $scm + $sdg) / 9;
-                                                                $fix = number_format($total, 2);
+                                                                $fix = round($total, 2);
                                                                 echo $fix; 
                                                             ?>%
                                                         </td>

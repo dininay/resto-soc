@@ -39,6 +39,7 @@ if(isset($_GET['id'])) {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -86,22 +87,7 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label">Lampiran Sebelumnya</label>
-                                    <div class="col-sm-9">
-                                        <?php echo $row['lamp_kom']; ?>
-                                    </div>
-                                </div>
-                                <!-- Tambahkan pertanyaan apakah ingin mengganti lampiran -->
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label">Mau Ganti Lampiran?</label>
-                                    <div class="col-sm-9">
-                                        <input type="radio" name="ganti_lampiran" value="ya"> Ya
-                                        <input type="radio" name="ganti_lampiran" value="tidak" checked> Tidak
-                                    </div>
-                                </div>
-                                <!-- Jika pengguna ingin mengganti lampiran, tampilkan input untuk unggah file -->
-                                <div class="form-group row" id="lampiran_baru" style="display: none;">
-                                    <label class="col-sm-3 col-form-label" for="lamp_kom">Upload Baru</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_kom">Upload Lampiran SPK</label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_kom[]" type="file" multiple="multiple" />
@@ -122,6 +108,14 @@ if(isset($_GET['id'])) {
                                     <label class="col-sm-3 col-form-label" for="note_kom">Catatan</label>
                                     <div class="col-sm-9">
                                         <textarea class="form-control" id="note_kom" name="note_kom" rows="4" cols="50"><?php echo $row['note_kom']; ?></textarea>
+                                    </div>
+                                </div>
+                                <div class="form-group row" id="lamp_obskom" style="display: none;">
+                                    <label class="col-sm-3 col-form-label" for="lamp_obskom">Upload Lampiran Pendukung Obstacle</label>
+                                    <div class="col-sm-9">
+                                        <div class="dropzone" id="multple-file-upload" >
+                                            <input name="lamp_obskom[]" type="file" multiple="multiple" />
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -322,18 +316,15 @@ if(isset($_GET['id'])) {
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.2/dropzone.min.js"></script><script>
     function toggleObstacleDetail() {
-        var obstacleSelect = document.getElementById("obstacle");
-        var obstacleDetail = document.getElementById("obstacle-detail");
-        var lampSurvey = document.getElementById("lamp-survey");
-        var noteDetail = document.getElementById("note");
+        var obstacleSelect = document.getElementById("obstacle_kom");
+        var noteDetail = document.getElementById("note_kom");
+        var lampDetail = document.getElementById("lamp_obskom");
         if (obstacleSelect.value === "Yes") {
-            obstacleDetail.style.display = "flex";
             noteDetail.style.display = "flex";
-            lampSurvey.style.display = "flex";
+            lampDetail.style.display = "flex";
         } else {
-            obstacleDetail.style.display = "none";
             noteDetail.style.display = "none";
-            lampSurvey.style.display = "none";
+            lampDetail.style.display = "none";
         }
     }
 

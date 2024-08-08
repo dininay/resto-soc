@@ -5,8 +5,9 @@ $status_spk = "";
 
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, d.lamp_draf, c.lamp_loacd, p.status_approvprocurement, 
-        d.jadwal_psm, s.lamp_desainplan, p.nama_vendor, v.kode_vendor, v.lamp_vendor, v.lamp_profil, r.*, v.nama, c.kode_store,
-        c.lamp_vd, q.lamp_rab, c.status_approvlegalvd, s.lamp_pbg, s.lamp_permit, s.submit_legal, d.valdoc_legal
+        d.jadwal_psm, s.lamp_desainplan, p.nama_vendor, p.lamp_vendor, p.lamp_profil, r.*, c.kode_store, p.lamp_spkrabcons,
+        c.lamp_vd, q.lamp_rab, c.status_approvlegalvd, s.lamp_pbg, s.lamp_permit, s.submit_legal, d.valdoc_legal, p.alamat,
+        sd.lamp_spkwofilterair, sd.lamp_spkwoipal, s.lamp_spkwo
         FROM draft d
         INNER JOIN land l ON d.kode_lahan = l.kode_lahan
         INNER JOIN dokumen_loacd c ON d.kode_lahan = c.kode_lahan
@@ -14,11 +15,9 @@ $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, d.lamp_draf, c
         INNER JOIN resto r ON d.kode_lahan = r.kode_lahan
         INNER JOIN procurement p ON r.kode_lahan = p.kode_lahan
         INNER JOIN sdg_rab q ON r.kode_lahan = q.kode_lahan
-        LEFT JOIN (
-            SELECT v1.nama, v1.kode_vendor, v1.lamp_vendor, v1.lamp_profil
-            FROM vendor v1
-        ) v ON p.nama_vendor = v.kode_vendor
-        WHERE p.status_approvprocurement = 'Signed'";
+        INNER JOIN socdate_sdg sd ON r.kode_lahan = sd.kode_lahan
+        WHERE p.status_approvprocurement = 'Done'
+        GROUP BY l.kode_lahan";
 
 $result = $conn->query($sql);
 
@@ -34,6 +33,65 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
+$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'SPK'";
+$sla_result = $conn->query($sla_query);
+
+$sla_value = 0; // Default SLA value
+
+if ($sla_result->num_rows > 0) {
+    $row = $sla_result->fetch_assoc();
+    $sla_value = $row['sla'];
+} else {
+    echo "No SLA value found for 'Owner Surveyor'";
+}
+
+function calculateScoring($start_date, $end_date, $sla) {
+    $today = new DateTime();
+    $start_date = $start_date ?: $today->format('Y-m-d');
+    $end_date = $end_date ?: $today->format('Y-m-d');
+    $sla_days = $sla ?: 0;
+
+    $start_date_obj = new DateTime($start_date);
+    $end_date_obj = new DateTime($end_date);
+
+    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
+
+    if ($sla_days != 0) {
+        if ($date_diff > $sla_days) {
+            $scoring = -((($date_diff - $sla_days) / $sla_days) * 100);
+        } else {
+            $scoring = ((($sla_days - $date_diff) / $sla_days) * 100);
+        }
+    } else {
+        $scoring = 0;
+    }
+
+    return round($scoring, 2);
+}
+// Fungsi untuk menentukan remarks berdasarkan scoring
+function getRemarks($scoring) {
+    if ($scoring >= 0) {
+        return "good";
+    } elseif ($scoring >= -30) {
+        return "poor";
+    } else {
+        return "bad";
+    }
+}
+
+// Fungsi untuk menentukan warna badge berdasarkan remarks
+function getBadgeColor($remarks) {
+    switch ($remarks) {
+        case 'good':
+            return 'success'; // Hijau
+        case 'poor':
+            return 'warning'; // Kuning
+        case 'bad':
+            return 'danger'; // Merah
+        default:
+            return 'secondary'; // Default jika remarks tidak dikenali
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="">
@@ -42,7 +100,8 @@ if ($result && $result->num_rows > 0) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -53,10 +112,24 @@ if ($result && $result->num_rows > 0) {
     <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
 <style>
-    .hidden {
-        display: none;
-    }
-</style>
+        .hidden {
+            display: none;
+        },
+
+        .small-column {
+            max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */
+            overflow: hidden; /* Memotong konten yang meluas */
+            text-overflow: ellipsis; /* Menampilkan elipsis jika konten terlalu panjang */
+            white-space: nowrap; /* Mencegah teks membungkus ke baris baru */
+        }
+
+        th, td {
+                white-space: nowrap;
+            }
+        table.dataTable {
+            border-collapse:  collapse!important;
+        }
+    </style>
 </head>
 
 <body class="text-left">
@@ -95,25 +168,12 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
-                                                <th>Lampiran Lahan</th>
-                                                <th>Lampiran LOA CD</th>
-                                                <th>Lampiran Draft</th>
-                                                <th>Lampiran Desain</th>
-                                                <th>Lampiran RAB</th>
-                                                <th>Status VD</th>
-                                                <th>Lampiran VD</th>
-                                                <th>Status Validasi Document Legal</th>
-                                                <th>Status Procurement</th>
-                                                <th>Lampiran PBG</th>
-                                                <th>Lampiran Permit Lain-Lain</th>
-                                                <th>Status Permit Legal</th>
-                                                <th>Kode Vendor</th>
                                                 <th>Nama Vendor</th>
-                                                <th>Lampiran Profil</th>
-                                                <th>Lampiran Vendor</th>
-                                                <th>Lampiran SPK</th>
+                                                <th>Lampiran SPK Design</th>
+                                                <th>Lampiran SPK RAB Construction</th>
+                                                <th>Lampiran SPK Filter Air</th>
+                                                <th>Lampiran SPK IPAL</th>
                                                 <th>Status SPK</th>
-                                                <th>Jadwal Kick Off Meeting</th>
                                                 <th>SLA</th>
 												<th>Action</th>
                                             </tr>
@@ -125,269 +185,18 @@ if ($result && $result->num_rows > 0) {
                                                 <td><?= $row['kode_store'] ?></td>
                                                 <td><?= $row['nama_lahan'] ?></td>
                                                 <td><?= $row['lokasi'] ?></td>
+                                                <td><?= $row['nama_vendor'] ?></td>    
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_land_files = explode(",", $row['lamp_land']); // Pisahkan nama file menjadi array
-                                                ?>
-
-                                                <td>
-                                                    <ul style="list-style-type: none; padding: 0; margin: 0;">
-                                                        <?php foreach ($lamp_land_files as $land): ?>
-                                                            <li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/<?= $land ?>" target="_blank">
-                                                                    <i class="fas fa-file-pdf nav-icon"></i>
-                                                                </a>
-                                                            </li>
-                                                        <?php endforeach; ?>
-                                                    </ul>
-                                                </td>
-                                                <?php
-                                                // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_loacd_files = explode(",", $row['lamp_loacd']); // Pisahkan nama file menjadi array
-                                                ?>
-
-                                                <td>
-                                                    <ul style="list-style-type: none; padding: 0; margin: 0;">
-                                                        <?php foreach ($lamp_loacd_files as $loacd): ?>
-                                                            <li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/<?= $loacd ?>" target="_blank">
-                                                                    <i class="fas fa-file-pdf nav-icon"></i>
-                                                                </a>
-                                                            </li>
-                                                        <?php endforeach; ?>
-                                                    </ul>
-                                                </td>
-                                                <?php
-                                                // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_draf_files = explode(",", $row['lamp_draf']); // Pisahkan nama file menjadi array
-                                                ?>
-
-                                                <td>
-                                                    <ul style="list-style-type: none; padding: 0; margin: 0;">
-                                                        <?php foreach ($lamp_loacd_files as $loacd): ?>
-                                                            <li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/<?= $loacd ?>" target="_blank">
-                                                                    <i class="fas fa-file-pdf nav-icon"></i>
-                                                                </a>
-                                                            </li>
-                                                        <?php endforeach; ?>
-                                                    </ul>
-                                                </td>
-                                                <?php
-                                                // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_desainplan_files = explode(",", $row['lamp_desainplan']); // Pisahkan nama file menjadi array
+                                                $lamp_spkwo_files = explode(",", $row['lamp_spkwo']); // Pisahkan nama file menjadi array
                                                 // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_desainplan'])) {
+                                                if (!empty($row['lamp_spkwo'])) {
                                                     echo '<td>
                                                             <ul style="list-style-type: none; padding: 0; margin: 0;">';
                                                     // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_desainplan_files as $desainplan) {
+                                                    foreach ($lamp_spkwo_files as $splegal) {
                                                         echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $desainplan . '" target="_blank">
-                                                                    <i class="fas fa-file-pdf nav-icon"></i>
-                                                                </a>
-                                                            </li>';
-                                                    }
-                                                    echo '</ul>
-                                                        </td>';
-                                                } else {
-                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
-                                                    echo '<td></td>';
-                                                }
-                                                ?>
-                                                <?php
-                                                // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_rab_files = explode(",", $row['lamp_rab']); // Pisahkan nama file menjadi array
-                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_rab'])) {
-                                                    echo '<td>
-                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
-                                                    // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_rab_files as $rab) {
-                                                        echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $rab . '" target="_blank">
-                                                                    <i class="fas fa-file-pdf nav-icon"></i>
-                                                                </a>
-                                                            </li>';
-                                                    }
-                                                    echo '</ul>
-                                                        </td>';
-                                                } else {
-                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
-                                                    echo '<td></td>';
-                                                }
-                                                ?>
-                                                <td>
-                                                    <?php
-                                                        // Tentukan warna badge berdasarkan status approval owner
-                                                        $badge_color = '';
-                                                        switch ($row['status_approvlegalvd']) {
-                                                            case 'Approve':
-                                                                $badge_color = 'success';
-                                                                break;
-                                                            case 'Pending':
-                                                                $badge_color = 'danger';
-                                                                break;
-                                                            case 'In Process':
-                                                                $badge_color = 'warning';
-                                                                break;
-                                                            default:
-                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
-                                                                break;
-                                                        }
-                                                    ?>
-                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_approvlegalvd']; ?>
-                                                    </span>
-                                                </td>
-                                                <?php
-                                                // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_vd_files = explode(",", $row['lamp_vd']); // Pisahkan nama file menjadi array
-                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_vd'])) {
-                                                    echo '<td>
-                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
-                                                    // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_vd_files as $vd) {
-                                                        echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $vd . '" target="_blank">
-                                                                    <i class="fas fa-file-pdf nav-icon"></i>
-                                                                </a>
-                                                            </li>';
-                                                    }
-                                                    echo '</ul>
-                                                        </td>';
-                                                } else {
-                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
-                                                    echo '<td></td>';
-                                                }
-                                                ?>
-                                                <td>
-                                                    <?php
-                                                        // Tentukan warna badge berdasarkan status approval owner
-                                                        $badge_color = '';
-                                                        switch ($row['valdoc_legal']) {
-                                                            case 'Approve':
-                                                                $badge_color = 'success';
-                                                                break;
-                                                            case 'Pending':
-                                                                $badge_color = 'danger';
-                                                                break;
-                                                            case 'In Process':
-                                                                $badge_color = 'warning';
-                                                                break;
-                                                            default:
-                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
-                                                                break;
-                                                        }
-                                                    ?>
-                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['valdoc_legal']; ?>
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <?php
-                                                        // Tentukan warna badge berdasarkan status approval owner
-                                                        $badge_color = '';
-                                                        switch ($row['status_approvprocurement']) {
-                                                            case 'Approve':
-                                                                $badge_color = 'success';
-                                                                break;
-                                                            case 'Pending':
-                                                                $badge_color = 'danger';
-                                                                break;
-                                                            case 'In Process':
-                                                                $badge_color = 'warning';
-                                                                break;
-                                                            default:
-                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
-                                                                break;
-                                                        }
-                                                    ?>
-                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_approvprocurement']; ?>
-                                                    </span>
-                                                </td>
-                                                <?php
-                                                // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_pbg_files = explode(",", $row['lamp_pbg']); // Pisahkan nama file menjadi array
-                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_pbg'])) {
-                                                    echo '<td>
-                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
-                                                    // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_pbg_files as $lamp_pbg) {
-                                                        echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $lamp_pbg . '" target="_blank">
-                                                                    <i class="fas fa-file-pdf nav-icon"></i>
-                                                                </a>
-                                                            </li>';
-                                                    }
-                                                    echo '</ul>
-                                                        </td>';
-                                                } else {
-                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
-                                                    echo '<td></td>';
-                                                }
-                                                ?>       
-                                                <?php
-                                                // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_permit_files = explode(",", $row['lamp_permit']); // Pisahkan nama file menjadi array
-                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_permit'])) {
-                                                    echo '<td>
-                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
-                                                    // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_permit_files as $lamp_permit) {
-                                                        echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $lamp_permit . '" target="_blank">
-                                                                    <i class="fas fa-file-pdf nav-icon"></i>
-                                                                </a>
-                                                            </li>';
-                                                    }
-                                                    echo '</ul>
-                                                        </td>';
-                                                } else {
-                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
-                                                    echo '<td></td>';
-                                                }
-                                                ?>       
-                                                <td>
-                                                    <?php
-                                                        // Tentukan warna badge berdasarkan status approval owner
-                                                        $badge_color = '';
-                                                        switch ($row['submit_legal']) {
-                                                            case 'Approve':
-                                                                $badge_color = 'success';
-                                                                break;
-                                                            case 'Pending':
-                                                                $badge_color = 'danger';
-                                                                break;
-                                                            case 'In Process':
-                                                                $badge_color = 'warning';
-                                                                break;
-                                                            default:
-                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
-                                                                break;
-                                                        }
-                                                    ?>
-                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['submit_legal']; ?>
-                                                    </span>
-                                                </td>
-                                                <td><?= $row['nama_vendor'] ?></td>  
-                                                <td><?= $row['nama'] ?></td>  
-                                                <?php
-                                                // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_profil_files = explode(",", $row['lamp_profil']); // Pisahkan nama file menjadi array
-                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_profil'])) {
-                                                    echo '<td>
-                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
-                                                    // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_profil_files as $profil) {
-                                                        echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $profil . '" target="_blank">
+                                                                <a href="uploads/' . $splegal . '" target="_blank">
                                                                     <i class="fas fa-file-pdf nav-icon"></i>
                                                                 </a>
                                                             </li>';
@@ -401,13 +210,13 @@ if ($result && $result->num_rows > 0) {
                                                 ?>  
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_splegal_files = explode(",", $row['lamp_vendor']); // Pisahkan nama file menjadi array
+                                                $lamp_spkrabcons_files = explode(",", $row['lamp_spkrabcons']); // Pisahkan nama file menjadi array
                                                 // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_vendor'])) {
+                                                if (!empty($row['lamp_spkrabcons'])) {
                                                     echo '<td>
                                                             <ul style="list-style-type: none; padding: 0; margin: 0;">';
                                                     // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_splegal_files as $splegal) {
+                                                    foreach ($lamp_spkrabcons_files as $splegal) {
                                                         echo '<li style="display: inline-block; margin-right: 5px;">
                                                                 <a href="uploads/' . $splegal . '" target="_blank">
                                                                     <i class="fas fa-file-pdf nav-icon"></i>
@@ -423,13 +232,13 @@ if ($result && $result->num_rows > 0) {
                                                 ?>    
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_spk_files = explode(",", $row['lamp_spk']); // Pisahkan nama file menjadi array
+                                                $lamp_spkwofilterair_files = explode(",", $row['lamp_spkwofilterair']); // Pisahkan nama file menjadi array
                                                 // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_spk'])) {
+                                                if (!empty($row['lamp_spkwofilterair'])) {
                                                     echo '<td>
                                                             <ul style="list-style-type: none; padding: 0; margin: 0;">';
                                                     // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_spk_files as $splegal) {
+                                                    foreach ($lamp_spkwofilterair_files as $splegal) {
                                                         echo '<li style="display: inline-block; margin-right: 5px;">
                                                                 <a href="uploads/' . $splegal . '" target="_blank">
                                                                     <i class="fas fa-file-pdf nav-icon"></i>
@@ -442,7 +251,29 @@ if ($result && $result->num_rows > 0) {
                                                     // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
                                                     echo '<td></td>';
                                                 }
-                                                ?>       
+                                                ?>   
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_spkwoipal_files = explode(",", $row['lamp_spkwoipal']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_spkwoipal'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_spkwoipal_files as $splegal) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $splegal . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>    
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -455,7 +286,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                                 case 'In Review by TAF':
                                                                     $badge_color = 'primary';
@@ -469,7 +300,11 @@ if ($result && $result->num_rows > 0) {
                                                         <?php echo $row['status_spk']; ?>
                                                     </span>
                                                 </td>
-                                                <td><?= $row['sla_kom'] ?></td>
+                                                <!-- <?php
+                                                $date = new DateTime($row['sla_kom']);
+                                                $formattedDate = $date->format('d M y');
+                                                ?>
+                                                <td><?= $formattedDate ?></td> -->
                                                 <td>
                                                     <?php
                                                     // Mendapatkan tanggal sla_date dari kolom data
@@ -478,13 +313,29 @@ if ($result && $result->num_rows > 0) {
                                                     // Mendapatkan tanggal hari ini
                                                     $today = new DateTime();
                                                     
-                                                    // Menghitung selisih hari antara sla_date dan hari ini
+                                                    // Menghitung selisih hari antara sla_spk dan hari ini
                                                     $diff = $today->diff($slaLegalDate);
                                                     
-                                                    // Jika status_approvowner adalah "Approve"
+                                                    // Menghitung scoring
+                                                    $scoring = calculateScoring($row['start_date'], $row['sla_spk'], $sla_value); // Make sure $sla_value is set correctly
+                                                    $remarks = getRemarks($scoring);
+
                                                     if ($row['status_spk'] == "Signed") {
-                                                        echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
-                                                        echo '<p>Status changed to Approved on: ' . $row['spk_date'] . '</p>';
+                                                        // Menentukan label berdasarkan remarks
+                                                        $status_label = '';
+                                                        switch ($remarks) {
+                                                            case 'good':
+                                                                $status_label = 'Done Good';
+                                                                break;
+                                                            case 'poor':
+                                                                $status_label = 'Done Poor';
+                                                                break;
+                                                            case 'bad':
+                                                                $status_label = 'Done Bad';
+                                                                break;
+                                                        }
+
+                                                        echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
                                                         // Menghitung jumlah hari terlambat
                                                         $lateDays = $slaLegalDate->diff($today)->days;
@@ -508,9 +359,9 @@ if ($result && $result->num_rows > 0) {
                                                     <!-- Tombol Edit -->
                                                     <?php if ($row['status_spk'] != "Signed"): ?>
                                                         <div>
-                                                        <a href="procurement/spk-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
+                                                        <!-- <a href="procurement/spk-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
                                                             <i class="nav-icon i-Pen-2"></i>
-                                                        </a>
+                                                        </a> -->
                                                         <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_spk'] ?>">
                                                             <i class="nav-icon i-Book"></i>
                                                         </button>
@@ -535,8 +386,7 @@ if ($result && $result->num_rows > 0) {
                                                                         <select class="form-control" id="statusSelect" name="status_spk">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
-                                                                            <option value="Signed">Signed</option>
-                                                                            <option value="In review by TAF">In Review by TAF</option>
+                                                                            <option value="In Review by TAF">In Review by TAF</option>
                                                                         </select>
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">
@@ -546,7 +396,24 @@ if ($result && $result->num_rows > 0) {
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="pic">PIC</label>
-                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                            <select class="form-control" id="pic" name="pic">
+                                                                                <option value="">Pilih PIC</option>
+                                                                                <option value="Legal">Legal</option>
+                                                                                <option value="Marketing">Marketing</option>
+                                                                                <option value="Landlord">Landlord</option>
+                                                                                <option value="Scm">SCM</option>
+                                                                                <option value="Sdg-project">SDG Project</option>
+                                                                                <option value="Sdg-design">SDG Design</option>
+                                                                                <option value="Sdg-equipment">SDG Equipment</option>
+                                                                                <option value="Sdg-qs">SDG QS</option>
+                                                                                <option value="Operations">Operations</option>
+                                                                                <option value="Procurement">Procurement</option>
+                                                                                <option value="Taf">TAF</option>
+                                                                                <option value="HR">HR</option>
+                                                                                <option value="Academy">Academy</option>
+                                                                                <option value="Negotiator">Negotiator</option>
+                                                                                <option value="Others">Others</option>
+                                                                            </select>
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="action_plan">Action Plan</label>
@@ -572,25 +439,12 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
-                                                <th>Lampiran Lahan</th>
-                                                <th>Lampiran LOA CD</th>
-                                                <th>Lampiran Draft</th>
-                                                <th>Lampiran Desain</th>
-                                                <th>Lampiran RAB</th>
-                                                <th>Status VD</th>
-                                                <th>Lampiran VD</th>
-                                                <th>Status Validasi Document Legal</th>
-                                                <th>Status Procurement</th>
-                                                <th>Lampiran PBG</th>
-                                                <th>Lampiran Permit Lain-Lain</th>
-                                                <th>Status Permit Legal</th>
-                                                <th>Kode Vendor</th>
                                                 <th>Nama Vendor</th>
-                                                <th>Lampiran Profil</th>
-                                                <th>Lampiran Vendor</th>
-                                                <th>Lampiran SPK</th>
+                                                <th>Lampiran SPK Design</th>
+                                                <th>Lampiran SPK RAB Construction</th>
+                                                <th>Lampiran SPK Filter Air</th>
+                                                <th>Lampiran SPK IPAL</th>
                                                 <th>Status SPK</th>
-                                                <th>Jadwal Kick Off Meeting</th>
                                                 <th>SLA</th>
 												<th>Action</th>
                                             </tr>
@@ -868,6 +722,22 @@ $(document).ready(function() {
     });
 });
 </script>
+    <script>
+        $(document).ready(function() {
+            // Hancurkan DataTable jika sudah ada
+            if ($.fn.DataTable.isDataTable('#zero_configuration_table')) {
+                $('#zero_configuration_table').DataTable().destroy();
+            }
+
+            // Inisialisasi DataTable
+            $('#zero_configuration_table').DataTable({
+                scrollX: true, // Menambahkan scroll horizontal
+                fixedColumns: {
+                    leftColumns: 3 // Jumlah kolom yang ingin di-fix
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

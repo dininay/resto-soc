@@ -3,24 +3,26 @@
 include "../../koneksi.php";
 
 // Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["confirm_fat"]) && isset($_POST["catatan_psmfat"])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["kode_lahan"]) && isset($_POST["confirm_fatpsm"]) && isset($_POST["catatan_psmfat"])) {
     $id = $_POST["id"];
-    $confirm_fat = $_POST["confirm_fat"];
+    $kode_lahan = $_POST["kode_lahan"];
+    $confirm_fatpsm = $_POST["confirm_fatpsm"];
     $catatan_psmfat = $_POST["catatan_psmfat"];
     $psmfat_date = null;
     $issue_detail = isset($_POST["issue_detail"]) ? $_POST["issue_detail"] : null;
     $pic = isset($_POST["pic"]) ? $_POST["pic"] : null;
     $action_plan = isset($_POST["action_plan"]) ? $_POST["action_plan"] : null;
+    
     // Periksa apakah file kronologi ada dalam $_FILES
     $kronologi_paths = array();
-    if(isset($_FILES["kronologi"])) {
-        foreach($_FILES['kronologi']['name'] as $key => $filename) {
+    if (isset($_FILES["kronologi"])) {
+        foreach ($_FILES['kronologi']['name'] as $key => $filename) {
             $file_tmp = $_FILES['kronologi']['tmp_name'][$key];
             $target_dir = "../uploads/";
             $target_file = $target_dir . basename($filename);
 
             // Attempt to move the uploaded file to the target directory
-            if (move_uploaded_file($file_tmp, $target_dir . $target_file)) {
+            if (move_uploaded_file($file_tmp, $target_file)) {
                 $kronologi_paths[] = $filename;
             } else {
                 echo "Gagal mengunggah file " . $filename . "<br>";
@@ -35,31 +37,62 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
 
     // Mulai transaksi
     $conn->begin_transaction();
-        
+    
     try {
-        // Jika status_approvlegalvd diubah menjadi Approve
-        if ($confirm_fat == 'Approve') {
+        // Ambil psmfat_date dan start_konstruksi dari tabel draft
+        $sql_get_dates = "SELECT psmfat_date FROM draft WHERE id = ?";
+        $stmt_get_dates = $conn->prepare($sql_get_dates);
+        $stmt_get_dates->bind_param("i", $id);
+        $stmt_get_dates->execute();
+        $stmt_get_dates->bind_result($existing_psmfat_date);
+        $stmt_get_dates->fetch();
+        $stmt_get_dates->close();
+
+        $sql_get_resto = "SELECT start_konstruksi FROM resto WHERE kode_lahan = ?";
+        $stmt_get_resto = $conn->prepare($sql_get_resto);
+        $stmt_get_resto->bind_param("s", $kode_lahan);
+        $stmt_get_resto->execute();
+        $stmt_get_resto->bind_result($existing_start_konstruksi);
+        $stmt_get_resto->fetch();
+        $stmt_get_resto->close();
+
+        // Tentukan nilai start_konstruksi
+        if ($confirm_fatpsm == 'Approve') {
             $psmfat_date = date("Y-m-d H:i:s");
+            $new_start_konstruksi = $psmfat_date;
 
-            // Query untuk memperbarui status confirm_fat di tabel draft
-            $sql_update = "UPDATE draft SET confirm_fat = ?, catatan_psmfat = ?, psmfat_date = ? WHERE id = ?";
+            // Periksa dan sesuaikan start_konstruksi
+            if ($existing_psmfat_date > $existing_start_konstruksi) {
+                $new_start_konstruksi = date('Y-m-d H:i:s', strtotime($psmfat_date . ' +1 day'));
+            } else {
+                $new_start_konstruksi = $existing_start_konstruksi;
+            }
+            var_dump($psmfat_date);
+            // Query untuk memperbarui status confirm_fatpsm di tabel draft
+            $sql_update = "UPDATE draft SET confirm_fatpsm = ?, catatan_psmfat = ?, psmfat_date = ? WHERE id = ?";
             $stmt_update = $conn->prepare($sql_update);
-            $stmt_update->bind_param("sssi", $confirm_fat, $catatan_psmfat, $psmfat_date, $id);
+            $stmt_update->bind_param("sssi", $confirm_fatpsm, $catatan_psmfat, $psmfat_date, $id);
             $stmt_update->execute();
+            // Query untuk memperbarui status confirm_fatpsm di tabel draft
+            $sql_resto = "UPDATE resto SET start_konstruksi = ? WHERE kode_lahan = ?";
+            $stmt_resto = $conn->prepare($sql_resto);
+            $stmt_resto->bind_param("ss", $new_start_konstruksi, $id);
+            $stmt_resto->execute();
 
-            if ($stmt_update->affected_rows > 0) {
+            if ($stmt_resto->affected_rows > 0) {
                 echo "Status berhasil diperbarui.";
             } else {
                 echo "Gagal memperbarui status.";
             }
-            // Ambil kode_lahan dari tabel re
+
+            // Ambil kode_lahan dari tabel draft
             $sql_get_kode_lahan = "SELECT kode_lahan FROM draft WHERE id = ?";
             $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
             $stmt_get_kode_lahan->bind_param("i", $id);
             $stmt_get_kode_lahan->execute();
             $stmt_get_kode_lahan->bind_result($kode_lahan);
             $stmt_get_kode_lahan->fetch();
-            $stmt_get_kode_lahan->free_result();
+            $stmt_get_kode_lahan->close();
 
             // Periksa apakah kode_lahan ada di tabel hold_project
             $sql_check_hold = "SELECT kode_lahan FROM hold_project WHERE kode_lahan = ?";
@@ -79,57 +112,56 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             // Komit transaksi
             $conn->commit();
             echo "Status berhasil diperbarui.";
-        } elseif ($confirm_fat == 'Pending') {
+        } elseif ($confirm_fatpsm == 'Pending') {
+            // Ambil kode_lahan dari tabel draft
+            $sql_get_kode_lahan = "SELECT kode_lahan FROM draft WHERE id = ?";
+            $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+            $stmt_get_kode_lahan->bind_param("i", $id);
+            $stmt_get_kode_lahan->execute();
+            $stmt_get_kode_lahan->bind_result($kode_lahan);
+            $stmt_get_kode_lahan->fetch();
+            $stmt_get_kode_lahan->close();
+
+            // Query untuk memperbarui confirm_fatpsm, psmfat_date di tabel draft dan memasukkan data ke dalam tabel hold_project
+            $sql_update_re = "UPDATE draft SET confirm_fatpsm = ?, catatan_psmfat = ?, psmfat_date = ? WHERE id = ?";
+            $stmt_update_re = $conn->prepare($sql_update_re);
+            $stmt_update_re->bind_param("sssi", $confirm_fatpsm, $catatan_psmfat, $psmfat_date, $id);
+            $stmt_update_re->execute();
+
+            $status_hold = "In Process";
+            $due_date = date("Y-m-d H:i:s");
+
+            // Query untuk memasukkan data ke dalam tabel hold_project
+            $sql_hold = "INSERT INTO hold_project (kode_lahan, issue_detail, pic, action_plan, due_date, status_hold, kronologi) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            $stmt_hold = $conn->prepare($sql_hold);
+            $stmt_hold->bind_param("sssssss", $kode_lahan, $issue_detail, $pic, $action_plan, $due_date, $status_hold, $kronologi);
+            $stmt_hold->execute();
             
-                // Ambil kode_lahan dari tabel re
-                $sql_get_kode_lahan = "SELECT kode_lahan FROM draft WHERE id = ?";
-                $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
-                $stmt_get_kode_lahan->bind_param("i", $id);
-                $stmt_get_kode_lahan->execute();
-                $stmt_get_kode_lahan->bind_result($kode_lahan);
-                $stmt_get_kode_lahan->fetch();
-                $stmt_get_kode_lahan->free_result();
-    
-                // Query untuk memperbarui confirm_fat, vl_date di tabel re dan memasukkan data ke dalam tabel hold_project
-                $sql_update_re = "UPDATE draft SET confirm_fat = ?, catatan_psmfat = ?, psmfat_date = ? WHERE id = ?";
-                $stmt_update_re = $conn->prepare($sql_update_re);
-                $stmt_update_re->bind_param("sssi", $confirm_fat, $catatan_psmfat, $psmfat_date, $id);
-                $stmt_update_re->execute();
-    
-                $status_hold = "In Process";
-                $due_date = date("Y-m-d H:i:s");
-    
-                // Query untuk memasukkan data ke dalam tabel hold_project
-                $sql_hold = "INSERT INTO hold_project (kode_lahan, issue_detail, pic, action_plan, due_date, status_hold, kronologi) VALUES (?, ?, ?, ?, ?, ?, ?)";
-                $stmt_hold = $conn->prepare($sql_hold);
-                $stmt_hold->bind_param("sssssss", $kode_lahan, $issue_detail, $pic, $action_plan, $due_date, $status_hold, $kronologi);
-                $stmt_hold->execute();
-                
-                // Komit transaksi
-                $conn->commit();
-                echo "Status berhasil diperbarui dan data ditahan.";
+            // Komit transaksi
+            $conn->commit();
+            echo "Status berhasil diperbarui dan data ditahan.";
+        } else {
+            // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_vl di tabel draft
+            $sql = "UPDATE draft SET confirm_fatpsm = ?, catatan_psmfat = ? WHERE id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ssi", $confirm_fatpsm, $catatan_psmfat, $id);
+            $stmt->execute();
+
+            // Check if update was successful
+            if ($stmt->affected_rows > 0) {
+                echo "<script>
+                        alert('Status berhasil diperbarui.');
+                        window.location.href = window.location.href;
+                     </script>";
             } else {
-                // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_vl di tabel re
-                $sql = "UPDATE draft SET confirm_fat = ?, catatan_psmfat = ? WHERE id = ?";
-                $stmt = $conn->prepare($sql);
-                $stmt->bind_param("ssi", $confirm_fat, $catatan_psmfat, $id);
-                $stmt->execute();
-    
-                // Check if update was successful
-                if ($stmt->affected_rows > 0) {
-                    echo "<script>
-                            alert('Status berhasil diperbarui.');
-                            window.location.href = window.location.href;
-                         </script>";
-                } else {
-                    echo "Error: Gagal memperbarui status. Tidak ada perubahan dilakukan.";
-                }
+                echo "Error: Gagal memperbarui status. Tidak ada perubahan dilakukan.";
             }
+        }
 
         // Komit transaksi
         $conn->commit();
-        // Redirect ke halaman datatables-checkval-legal.php
-        header("Location: ../datatables-sign-psm-legal.php");
+        // Redirect ke halaman datatables-sign-psm-fat.php
+        header("Location: ../datatables-sign-psm-fat.php");
         exit; // Pastikan tidak ada output lain setelah header redirect
     } catch (Exception $e) {
         // Rollback transaksi jika terjadi kesalahan
@@ -137,3 +169,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         echo "Error: " . $e->getMessage();
     }
 }
+?>

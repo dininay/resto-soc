@@ -43,7 +43,7 @@ $sql = "SELECT r.*, d.nama_lahan, d.lokasi, dl.kode_store
         FROM land d
         INNER JOIN resto r ON d.kode_lahan = r.kode_lahan
         INNER JOIN dokumen_loacd dl ON d.kode_lahan = dl.kode_lahan
-        WHERE status_spk IN ('In Process', 'Approve')";
+        WHERE status_kom IN ('In Process', 'Approve')";
 $result = $conn->query($sql);
 
 
@@ -66,7 +66,8 @@ if ($result && $result->num_rows > 0) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -112,10 +113,10 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Kode Store</th>
                                                 <th>Nama Store</th>
                                                 <th>Alamat Lokasi</th>
-                                                <th>Status BoD</th>
                                                 <th>End Date SPK</th>
                                                 <th>Jadwal Kick Off Meeting</th>
                                                 <th>Target GO Store</th>
+                                                <th>Target RTO</th>
                                                 <th>Last Updated by</th>
 												<th>Action</th>
                                             </tr>
@@ -127,32 +128,54 @@ if ($result && $result->num_rows > 0) {
                                                 <td><?= $row['kode_store'] ?></td>
                                                 <td><?= $row['nama_lahan'] ?></td>
                                                 <td><?= $row['lokasi'] ?></td>
-                                                <td>
-                                                    <?php
-                                                        // Tentukan warna badge berdasarkan status approval owner
-                                                        $badge_color = '';
-                                                        switch ($row['status_gostore']) {
-                                                            case 'Approve':
-                                                                $badge_color = 'success';
-                                                                break;
-                                                            case 'Pending':
-                                                                $badge_color = 'danger';
-                                                                break;
-                                                            case 'In Process':
-                                                                $badge_color = 'warning';
-                                                                break;
-                                                            default:
-                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
-                                                                break;
-                                                        }
-                                                    ?>
-                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_gostore']; ?>
-                                                    </span>
-                                                </td>
-                                                <td><?= $row['spk_date'] ?></td>
-                                                <td><?= $row['sla_kom'] ?></td>
-                                                <td><?= $row['gostore_date'] ?></td>
+                                                <?php
+                                                // Periksa apakah $row['start_konstruksi'] ada dan tidak kosong
+                                                if (!empty($row['spk_date'])) {
+                                                    // Format tanggal jika data ada
+                                                    $date = new DateTime($row['spk_date']);
+                                                    $formattedDate = $date->format('d M y');
+                                                } else {
+                                                    // Jika data kosong, beri nilai kosong pada $formattedDate
+                                                    $formattedDate = '';
+                                                }
+                                                ?>
+                                                <td><?= $formattedDate ?></td>
+                                                <?php
+                                                // Periksa apakah $row['start_konstruksi'] ada dan tidak kosong
+                                                if (!empty($row['sla_kom'])) {
+                                                    // Format tanggal jika data ada
+                                                    $date = new DateTime($row['sla_kom']);
+                                                    $formattedDate = $date->format('d M y');
+                                                } else {
+                                                    // Jika data kosong, beri nilai kosong pada $formattedDate
+                                                    $formattedDate = '';
+                                                }
+                                                ?>
+                                                <td><?= $formattedDate ?></td>
+                                                <?php
+                                                // Periksa apakah $row['start_konstruksi'] ada dan tidak kosong
+                                                if (!empty($row['gostore_date'])) {
+                                                    // Format tanggal jika data ada
+                                                    $date = new DateTime($row['gostore_date']);
+                                                    $formattedDate = $date->format('d M y');
+                                                } else {
+                                                    // Jika data kosong, beri nilai kosong pada $formattedDate
+                                                    $formattedDate = '';
+                                                }
+                                                ?>
+                                                <td><?= $formattedDate ?></td>
+                                                <?php
+                                                // Periksa apakah $row['start_konstruksi'] ada dan tidak kosong
+                                                if (!empty($row['rto_date'])) {
+                                                    // Format tanggal jika data ada
+                                                    $date = new DateTime($row['rto_date']);
+                                                    $formattedDate = $date->format('d M y');
+                                                } else {
+                                                    // Jika data kosong, beri nilai kosong pada $formattedDate
+                                                    $formattedDate = '';
+                                                }
+                                                ?>
+                                                <td><?= $formattedDate ?></td>
                                                 <td><?= $row['approved_by'] ?></td>
                                                 <td>
                                                     <!-- Tombol Edit -->
@@ -203,10 +226,10 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Kode Store</th>
                                                 <th>Nama Store</th>
                                                 <th>Alamat Lokasi</th>
-                                                <th>Status BoD</th>
                                                 <th>End Date SPK</th>
                                                 <th>Jadwal Kick Off Meeting</th>
                                                 <th>Target GO Store</th>
+                                                <th>Target RTO</th>
                                                 <th>Last Updated by</th>
 												<th>Action</th>
                                             </tr>

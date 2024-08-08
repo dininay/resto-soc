@@ -57,6 +57,7 @@ $sql = "
     INNER JOIN land ON soc_fat.kode_lahan = land.kode_lahan
     INNER JOIN resto ON soc_fat.kode_lahan = resto.kode_lahan
     INNER JOIN dokumen_loacd ON soc_fat.kode_lahan = dokumen_loacd.kode_lahan
+    GROUP BY land.kode_lahan
 ";
 $result = $conn->query($sql);
 
@@ -80,7 +81,8 @@ if ($result && $result->num_rows > 0) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -151,7 +153,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -166,9 +168,9 @@ if ($result && $result->num_rows > 0) {
                                                 <!-- Tombol Edit -->
                                                     
                                                         <div>
-                                                            <a href="operation/soc-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                            <!-- <a href="operation/soc-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
                                                             <i class="i-Pen-2"></i>
-                                                            </a>
+                                                            </a> -->
                                                             <a href="operation/soc-detail.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-primary">
                                                             <i class="i-Book"></i>
                                                             </a>

@@ -3,17 +3,17 @@
 include "../../koneksi.php";
 
 // Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST["status_approvprocurement"])&& isset($_POST["catatan_proc"])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST["status_tender"])&& isset($_POST["catatan_tender"])) {
     $id = $_POST["id"];
-    $status_approvprocurement = $_POST["status_approvprocurement"];
-    $catatan_proc = $_POST["catatan_proc"];
+    $status_tender = $_POST["status_tender"];
+    $catatan_tender = $_POST["catatan_tender"];
     $issue_detail = isset($_POST["issue_detail"]) ? $_POST["issue_detail"] : null;
     $pic = isset($_POST["pic"]) ? $_POST["pic"] : null;
     $action_plan = isset($_POST["action_plan"]) ? $_POST["action_plan"] : null;
     $submit_legal = null;
     $obstacle = null;
     $kronologi = null;
-    $start_date = date("Y-m-d");
+    $end_date = date("Y-m-d");
 
     // Periksa apakah file kronologi ada dalam $_FILES
     if (isset($_FILES["kronologi"])) {
@@ -39,18 +39,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
     $conn->begin_transaction();
 
     try {
-        // Query untuk memperbarui status_approvprocurement berdasarkan id
-        $sql_update = "UPDATE procurement SET status_approvprocurement = ?, catatan_proc = ?, start_date = ? WHERE id = ?";
+        // Query untuk memperbarui status_tender berdasarkan id
+        $sql_update = "UPDATE procurement SET status_tender = ?, catatan_tender = ?, end_date = ? WHERE id = ?";
         $stmt_update = $conn->prepare($sql_update);
-        $start_date = date("Y-m-d");
-        $stmt_update->bind_param("sssi", $status_approvprocurement, $catatan_proc, $start_date, $id);
+        $end_date = date("Y-m-d");
+        $stmt_update->bind_param("sssi", $status_tender, $catatan_tender, $end_date, $id);
 
         // Eksekusi query update
         if ($stmt_update->execute() === TRUE) {
-            // Jika status_approvprocurement diubah menjadi 'Approve'
-            if ($status_approvprocurement == 'Signed') {
-                // Tentukan start_date
-                $sql_subquery = "SELECT nama_vendor, start_date FROM procurement WHERE id = ?";
+            // Jika status_tender diubah menjadi 'Approve'
+            if ($status_tender == 'Done') {
+                // Tentukan end_date
+                $sql_subquery = "SELECT nama_vendor, end_date FROM procurement WHERE id = ?";
                 $stmt_subquery = $conn->prepare($sql_subquery);
                 $stmt_subquery->bind_param("i", $id);
                 $stmt_subquery->execute();
@@ -59,7 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                 if ($result_subquery->num_rows > 0) {
                     $row_subquery = $result_subquery->fetch_assoc();
                     $nama_vendor = $row_subquery['nama_vendor'];
-                    $start_date = $row_subquery['start_date'];
+                    $end_date = $row_subquery['end_date'];
                     // Perbarui status_lokasi menjadi 'Aktif' berdasarkan nama_vendor yang diperoleh dari subquery
                     $sql_update_status = "UPDATE vendor SET status_lokasi = 'Aktif' WHERE kode_vendor = ?";
                     $stmt_update_status = $conn->prepare($sql_update_status);
@@ -75,8 +75,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                         echo "SLA days: $hari_sla<br>";
 
                         // Tentukan sla_spk
-                        $sla_spk = date("Y-m-d", strtotime("$start_date + $hari_sla days"));
-                        $sla_fattender = date("Y-m-d", strtotime("$start_date + $hari_sla days"));
+                        $sla_spk = date("Y-m-d", strtotime("$end_date + $hari_sla days"));
+                        $sla_fattender = date("Y-m-d", strtotime("$end_date + $hari_sla days"));
                         echo "SLA SPK: $sla_spk<br>";
                     } else {
                         // Rollback transaksi jika data SLA tidak ditemukan
@@ -86,9 +86,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
 
                     
                 // Query untuk memperbarui submit_legal dan catatan_owner di tabel procurement
-                $sql_update_pending = "UPDATE procurement SET status_approvprocurement = ?, catatan_proc = ?, start_date = ? WHERE id = ?";
+                $sql_update_pending = "UPDATE procurement SET status_tender = ?, catatan_tender = ?, end_date = ? WHERE id = ?";
                 $stmt_update_pending = $conn->prepare($sql_update_pending);
-                $stmt_update_pending->bind_param("sssi", $status_approvprocurement, $catatan_proc, $start_date, $id);
+                $stmt_update_pending->bind_param("sssi", $status_tender, $catatan_tender, $end_date, $id);
                 $stmt_update_pending->execute();
                     
                         // Update sla_spk dan status_spk di tabel resto
@@ -115,7 +115,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                 // Komit transaksi
                 $conn->commit();
                 echo "Status berhasil diperbarui.";
-            } elseif ($status_approvprocurement == 'Pending') {
+            } elseif ($status_tender == 'Pending') {
                 // Ambil kode_lahan dari tabel procurement
                 $sql_get_kode_lahan = "SELECT kode_lahan FROM procurement WHERE id = ?";
                 $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
@@ -126,9 +126,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                 $stmt_get_kode_lahan->free_result();
 
                 // Query untuk memperbarui submit_legal dan catatan_owner di tabel procurement
-                $sql_update_pending = "UPDATE procurement SET status_approvprocurement = ?, catatan_proc = ?, start_date = ? WHERE id = ?";
+                $sql_update_pending = "UPDATE procurement SET status_tender = ?, catatan_tender = ?, end_date = ? WHERE id = ?";
                 $stmt_update_pending = $conn->prepare($sql_update_pending);
-                $stmt_update_pending->bind_param("sssi", $status_approvprocurement, $catatan_proc, $start_date, $id);
+                $stmt_update_pending->bind_param("sssi", $status_tender, $catatan_tender, $end_date, $id);
                 $stmt_update_pending->execute();
 
                 $status_hold = "In Process";
@@ -151,16 +151,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                     if ($result_sla_stkonstruksi->num_rows > 0) {
                         $row_sla_stkonstruksi = $result_sla_stkonstruksi->fetch_assoc();
                         $hari_sla_stkonstruksi = $row_sla_stkonstruksi['sla'];
-                        $sla_fat = date("Y-m-d", strtotime($start_date . ' + ' . $hari_sla_stkonstruksi . ' days'));
+                        $sla_fat = date("Y-m-d", strtotime($end_date . ' + ' . $hari_sla_stkonstruksi . ' days'));
                     } else {
                         $conn->rollback();
                         echo "Error: Data SLA tidak ditemukan untuk divisi ST-Konstruksi.";
                         exit;
                     }
-                    // Jika status tidak diubah menjadi Approve atau Pending, hanya perlu memperbarui status_approvprocurement
-                    $sql_update_other = "UPDATE procurement SET status_approvprocurement = ?, catatan_proc = ?, start_date = ? WHERE id = ?";
+                    // Jika status tidak diubah menjadi Approve atau Pending, hanya perlu memperbarui status_tender
+                    $sql_update_other = "UPDATE procurement SET status_tender = ?, catatan_tender = ?, end_date = ? WHERE id = ?";
                     $stmt_update_other = $conn->prepare($sql_update_other);
-                    $stmt_update_other->bind_param("sssi", $status_approvprocurement, $catatan_proc, $start_date, $id);
+                    $stmt_update_other->bind_param("sssi", $status_tender, $catatan_tender, $end_date, $id);
                 
                         // Update sla_spk dan status_spk di tabel resto
                         $sql_update_spk = "UPDATE resto SET status_fat = 'In Process', sla_fat WHERE kode_lahan = (SELECT kode_lahan FROM procurement WHERE id = ?)";

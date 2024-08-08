@@ -39,7 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
 
     try {
         // Jika status_approvlegalvd diubah menjadi Approve
-        if ($status_kpt2 == 'Approve') {
+        if ($status_kpt2 == 'Done') {
             $kpt_date2 = date("Y-m-d H:i:s");
 
             // Query untuk memperbarui status status_kpt2 di tabel draft

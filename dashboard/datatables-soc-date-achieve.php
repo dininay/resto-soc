@@ -112,7 +112,8 @@ function getStatusBadgeColor($remarks) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -190,16 +191,76 @@ function getStatusBadgeColor($remarks) {
                                                 <td><?= $row['kode_store'] ?></td>
                                                 <td><?= $row['nama_lahan'] ?></td>
                                                 <td><?= $row['lokasi'] ?></td>
-                                                <td><?= $row['draft_end_date'] ?></td>
-                                                <td><?= $row['sla_spk'] ?></td>
-                                                <td><?= $row['spk_date'] ?></td>
+                                                <td>
+                                                    <?php if (!empty($row['draft_end_date'])): ?>
+                                                        <?php
+                                                        $date = new DateTime($row['draft_end_date']);
+                                                        $formattedDate = $date->format('d M y');
+                                                        ?>
+                                                        <?= $formattedDate ?>
+                                                    <?php else: ?>
+                                                        <!-- Jika kosong, tampilkan pesan atau biarkan kosong -->
+                                                        <!-- Misalnya, <span>-</span> atau <span>Not Available</span> -->
+                                                        <!-- <span>Not Available</span> -->
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
+                                                    <?php if (!empty($row['sla_spk'])): ?>
+                                                        <?php
+                                                        $date = new DateTime($row['sla_spk']);
+                                                        $formattedDate = $date->format('d M y');
+                                                        ?>
+                                                        <?= $formattedDate ?>
+                                                    <?php else: ?>
+                                                        <!-- Jika kosong, tampilkan pesan atau biarkan kosong -->
+                                                        <!-- Misalnya, <span>-</span> atau <span>Not Available</span> -->
+                                                        <!-- <span>Not Available</span> -->
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
+                                                    <?php if (!empty($row['spk_date'])): ?>
+                                                        <?php
+                                                        $date = new DateTime($row['spk_date']);
+                                                        $formattedDate = $date->format('d M y');
+                                                        ?>
+                                                        <?= $formattedDate ?>
+                                                    <?php else: ?>
+                                                        <!-- Jika kosong, tampilkan pesan atau biarkan kosong -->
+                                                        <!-- Misalnya, <span>-</span> atau <span>Not Available</span> -->
+                                                        <!-- <span>Not Available</span> -->
+                                                    <?php endif; ?>
+                                                </td>
                                                 <td>
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $status ?>
                                                     </span>
                                                 </td>
-                                                <td><?= $row['sla_kom'] ?></td>
-                                                <td><?= $row['kom_date'] ?></td>
+                                                <td>
+                                                    <?php if (!empty($row['sla_kom'])): ?>
+                                                        <?php
+                                                        $date = new DateTime($row['sla_kom']);
+                                                        $formattedDate = $date->format('d M y');
+                                                        ?>
+                                                        <?= $formattedDate ?>
+                                                    <?php else: ?>
+                                                        <!-- Jika kosong, tampilkan pesan atau biarkan kosong -->
+                                                        <!-- Misalnya, <span>-</span> atau <span>Not Available</span> -->
+                                                        <!-- <span>Not Available</span> -->
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
+                                                    <?php if (!empty($row['kom_date'])): ?>
+                                                        <?php
+                                                        $date = new DateTime($row['kom_date']);
+                                                        $formattedDate = $date->format('d M y');
+                                                        ?>
+                                                        <?= $formattedDate ?>
+                                                    <?php else: ?>
+                                                        <!-- Jika kosong, tampilkan pesan atau biarkan kosong -->
+                                                        <!-- Misalnya, <span>-</span> atau <span>Not Available</span> -->
+                                                        <!-- <span>Not Available</span> -->
+                                                    <?php endif; ?>
+                                                </td>
                                                 <?php
                                                 $status = '';
                                                 $badge_color = '';
@@ -214,10 +275,22 @@ function getStatusBadgeColor($remarks) {
                                                     </span>
                                                 </td>
                                                 <?php
-                                                $target_rto = !empty($row['gostore_date']) ? date('Y-m-d', strtotime($row['gostore_date'] . ' -' . 3 . ' days')) : '';
+                                                $target_rto = !empty($row['gostore_date']) ? date('d M y', strtotime($row['gostore_date'] . ' -' . 3 . ' days')) : '';
                                                 ?>
                                                 <td><?= $target_rto ?></td>
-                                                <td><?= $row['rto_act'] ?></td>
+                                                <td>
+                                                    <?php if (!empty($row['rto_act'])): ?>
+                                                        <?php
+                                                        $date = new DateTime($row['rto_act']);
+                                                        $formattedDate = $date->format('d M y');
+                                                        ?>
+                                                        <?= $formattedDate ?>
+                                                    <?php else: ?>
+                                                        <!-- Jika kosong, tampilkan pesan atau biarkan kosong -->
+                                                        <!-- Misalnya, <span>-</span> atau <span>Not Available</span> -->
+                                                        <!-- <span>Not Available</span> -->
+                                                    <?php endif; ?>
+                                                </td>
                                                 <?php
                                                 $status = '';
                                                 $badge_color = '';
@@ -231,8 +304,32 @@ function getStatusBadgeColor($remarks) {
                                                         <?= $status ?>
                                                     </span>
                                                 </td>
-                                                <td><?= $row['gostore_date'] ?></td>
-                                                <td><?= $row['go_fix'] ?></td>
+                                                <td>
+                                                    <?php if (!empty($row['gostore_date'])): ?>
+                                                        <?php
+                                                        $date = new DateTime($row['gostore_date']);
+                                                        $formattedDate = $date->format('d M y');
+                                                        ?>
+                                                        <?= $formattedDate ?>
+                                                    <?php else: ?>
+                                                        <!-- Jika kosong, tampilkan pesan atau biarkan kosong -->
+                                                        <!-- Misalnya, <span>-</span> atau <span>Not Available</span> -->
+                                                        <!-- <span>Not Available</span> -->
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
+                                                    <?php if (!empty($row['go_fix'])): ?>
+                                                        <?php
+                                                        $date = new DateTime($row['go_fix']);
+                                                        $formattedDate = $date->format('d M y');
+                                                        ?>
+                                                        <?= $formattedDate ?>
+                                                    <?php else: ?>
+                                                        <!-- Jika kosong, tampilkan pesan atau biarkan kosong -->
+                                                        <!-- Misalnya, <span>-</span> atau <span>Not Available</span> -->
+                                                        <!-- <span>Not Available</span> -->
+                                                    <?php endif; ?>
+                                                </td>
                                                 <?php
                                                 $status = '';
                                                 $badge_color = '';
@@ -524,6 +621,22 @@ $(document).ready(function() {
             var id = element.id;
             document.getElementById('delete').value = id;
         }
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Hancurkan DataTable jika sudah ada
+            if ($.fn.DataTable.isDataTable('#zero_configuration_table')) {
+                $('#zero_configuration_table').DataTable().destroy();
+            }
+
+            // Inisialisasi DataTable
+            $('#zero_configuration_table').DataTable({
+                scrollX: true, // Menambahkan scroll horizontal
+                fixedColumns: {
+                    leftColumns: 3 // Jumlah kolom yang ingin di-fix
+                }
+            });
+        });
     </script>
 </body>
 

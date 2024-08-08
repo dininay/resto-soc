@@ -1,10 +1,10 @@
 <?php
 // Koneksi ke database
 include "../koneksi.php";
-
+$confirm_sdgqs = "";
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT d.kode_lahan, d.nama_lahan, d.lokasi, r.id, r.kode_lahan, s.lamp_desainplan, r.keterangan, 
-r.jenis_biaya, r.jumlah, r.date, r.lamp_rab, r.confirm_sdgqs, t.lamp_vd, t.kode_store
+r.jenis_biaya, r.jumlah, r.date, r.lamp_rab, r.confirm_sdgqs, t.lamp_vd, t.kode_store, r.sla_date, r.start_date
 FROM land d
 INNER JOIN dokumen_loacd t ON d.kode_lahan = t.kode_lahan
 INNER JOIN sdg_rab r ON d.kode_lahan = r.kode_lahan
@@ -24,6 +24,65 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
+$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'QS'";
+$sla_result = $conn->query($sla_query);
+
+$sla_value = 0; // Default SLA value
+
+if ($sla_result->num_rows > 0) {
+    $row = $sla_result->fetch_assoc();
+    $sla_value = $row['sla'];
+} else {
+    echo "No SLA value found for 'Owner Surveyor'";
+}
+
+function calculateScoring($start_date, $end_date, $sla) {
+    $today = new DateTime();
+    $start_date = $start_date ?: $today->format('Y-m-d');
+    $end_date = $end_date ?: $today->format('Y-m-d');
+    $sla_days = $sla ?: 0;
+
+    $start_date_obj = new DateTime($start_date);
+    $end_date_obj = new DateTime($end_date);
+
+    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
+
+    if ($sla_days != 0) {
+        if ($date_diff > $sla_days) {
+            $scoring = -((($date_diff - $sla_days) / $sla_days) * 100);
+        } else {
+            $scoring = ((($sla_days - $date_diff) / $sla_days) * 100);
+        }
+    } else {
+        $scoring = 0;
+    }
+
+    return round($scoring, 2);
+}
+// Fungsi untuk menentukan remarks berdasarkan scoring
+function getRemarks($scoring) {
+    if ($scoring >= 0) {
+        return "good";
+    } elseif ($scoring >= -30) {
+        return "poor";
+    } else {
+        return "bad";
+    }
+}
+
+// Fungsi untuk menentukan warna badge berdasarkan remarks
+function getBadgeColor($remarks) {
+    switch ($remarks) {
+        case 'good':
+            return 'success'; // Hijau
+        case 'poor':
+            return 'warning'; // Kuning
+        case 'bad':
+            return 'danger'; // Merah
+        default:
+            return 'secondary'; // Default jika remarks tidak dikenali
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="">
@@ -32,7 +91,8 @@ if ($result && $result->num_rows > 0) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -40,6 +100,27 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
+<style>
+        .hidden {
+            display: none;
+        },
+
+        .small-column {
+            max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */
+            overflow: hidden; /* Memotong konten yang meluas */
+            text-overflow: ellipsis; /* Menampilkan elipsis jika konten terlalu panjang */
+            white-space: nowrap; /* Mencegah teks membungkus ke baris baru */
+        }
+
+        th, td {
+                white-space: nowrap;
+            }
+        table.dataTable {
+            border-collapse:  collapse!important;
+        }
+    </style>
 </head>
 
 <body class="text-left">
@@ -83,6 +164,7 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Jumlah</th>
                                                 <th>Lampiran RAB</th>
                                                 <th>Status</th>
+                                                <th>SLA</th>
 												<th>Action</th>
                                             </tr>
                                         </thead>
@@ -173,7 +255,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             case 'In Design Revision':
                                                                 $badge_color = 'primary';
@@ -186,6 +268,56 @@ if ($result && $result->num_rows > 0) {
                                                     <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
                                                         <?php echo $row['confirm_sdgqs']; ?>
                                                     </span>
+                                                </td>
+                                                <td>
+                                                    <?php
+                                                    // Mendapatkan tanggal sla_date dari kolom data
+                                                    $slaLegalDate = new DateTime($row['sla_date']);
+                                                    
+                                                    // Mendapatkan tanggal hari ini
+                                                    $today = new DateTime();
+                                                    
+                                                    // Menghitung selisih hari antara sla_date dan hari ini
+                                                    $diff = $today->diff($slaLegalDate);
+                                                    
+                                                    // Menghitung scoring
+                                                    $scoring = calculateScoring($row['start_date'], $row['sla_date'], $sla_value); // Make sure $sla_value is set correctly
+                                                    $remarks = getRemarks($scoring);
+
+                                                    if ($row['confirm_sdgqs'] == "Approve") {
+                                                        // Menentukan label berdasarkan remarks
+                                                        $status_label = '';
+                                                        switch ($remarks) {
+                                                            case 'good':
+                                                                $status_label = 'Done Good';
+                                                                break;
+                                                            case 'poor':
+                                                                $status_label = 'Done Poor';
+                                                                break;
+                                                            case 'bad':
+                                                                $status_label = 'Done Bad';
+                                                                break;
+                                                        }
+
+                                                        echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
+                                                    } else {
+                                                        // Menghitung jumlah hari terlambat
+                                                        $lateDays = $slaLegalDate->diff($today)->days;
+                                                        
+                                                        // Jika terlambat
+                                                        if ($today > $slaLegalDate) {
+                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+                                                        } else {
+                                                            // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
+                                                            if ($diff) {
+                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
+                                                            } else {
+                                                                // Tampilkan peringatan "H + X"
+                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
+                                                            }
+                                                        }
+                                                    }
+                                                    ?>
                                                 </td>
                                                 <td>
                                                     <?php if ($row['confirm_sdgqs'] !== 'Approve') : ?>
@@ -263,6 +395,7 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Jumlah</th>
                                                 <th>Lampiran RAB</th>
                                                 <th>Status</th>
+                                                <th>SLA</th>
 												<th>Action</th>
                                             </tr>
                                         </tfoot>
@@ -492,6 +625,42 @@ if ($result && $result->num_rows > 0) {
             document.getElementById('delete').value = id;
         }
     </script>
+    <script>
+    $(document).ready(function(){
+        // Saat tombol edit diklik
+        $('.edit-btn').click(function(){
+            // Ambil data-id dari tombol edit
+            var id = $(this).data('id');
+
+            // Isi nilai input tersembunyi dengan ID yang diambil
+            $('#modalKodeLahan').val(id);
+        });
+    });
+    
+    // Function to toggle the visibility of issue detail section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
+        }
+    }
+
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function () {
+        toggleIssueDetail();
+    });
+    </script>
+    <?php if ($confirm_sdgqs == 'Pending') { ?>
+        <script>
+            $(document).ready(function () {
+                $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+            });
+        </script>
+    <?php } ?>
 </body>
 
 </html>

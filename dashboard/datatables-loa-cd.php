@@ -3,7 +3,7 @@
 include "../koneksi.php";
 $status_approvloacd = "";
 // Query untuk mengambil data dari tabel land dengan status_approvowner 'Approve'
-$sql = "SELECT dokumen_loacd.*, land.kode_lahan, land.lamp_land, re.lamp_vl, re.status_vl, re.status_approvowner, re.status_approvnego
+$sql = "SELECT dokumen_loacd.*, land.kode_lahan, land.nama_lahan, land.lamp_land, re.lamp_vl, re.status_vl, re.status_approvowner, re.status_approvnego
         FROM dokumen_loacd
         INNER JOIN land ON dokumen_loacd.kode_lahan = land.kode_lahan
         INNER JOIN re ON dokumen_loacd.kode_lahan = re.kode_lahan
@@ -22,6 +22,66 @@ if ($result && $result->num_rows > 0) {
         $data[] = $row;
     }
 }
+
+$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'VL'";
+$sla_result = $conn->query($sla_query);
+
+$sla_value = 0; // Default SLA value
+
+if ($sla_result->num_rows > 0) {
+    $row = $sla_result->fetch_assoc();
+    $sla_value = $row['sla'];
+} else {
+    echo "No SLA value found for 'Owner Surveyor'";
+}
+
+function calculateScoring($start_date, $end_date, $sla) {
+    $today = new DateTime();
+    $start_date = $start_date ?: $today->format('Y-m-d');
+    $end_date = $end_date ?: $today->format('Y-m-d');
+    $sla_days = $sla ?: 0;
+
+    $start_date_obj = new DateTime($start_date);
+    $end_date_obj = new DateTime($end_date);
+
+    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
+
+    if ($sla_days != 0) {
+        if ($date_diff > $sla_days) {
+            $scoring = -((($date_diff - $sla_days) / $sla_days) * 100);
+        } else {
+            $scoring = ((($sla_days - $date_diff) / $sla_days) * 100);
+        }
+    } else {
+        $scoring = 0;
+    }
+
+    return round($scoring, 2);
+}
+// Fungsi untuk menentukan remarks berdasarkan scoring
+function getRemarks($scoring) {
+    if ($scoring >= 0) {
+        return "good";
+    } elseif ($scoring >= -30) {
+        return "poor";
+    } else {
+        return "bad";
+    }
+}
+
+// Fungsi untuk menentukan warna badge berdasarkan remarks
+function getBadgeColor($remarks) {
+    switch ($remarks) {
+        case 'good':
+            return 'success'; // Hijau
+        case 'poor':
+            return 'warning'; // Kuning
+        case 'bad':
+            return 'danger'; // Merah
+        default:
+            return 'secondary'; // Default jika remarks tidak dikenali
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="">
@@ -30,7 +90,8 @@ if ($result && $result->num_rows > 0) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -41,10 +102,24 @@ if ($result && $result->num_rows > 0) {
     <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
 <style>
-    .hidden {
-        display: none;
-    }
-</style>
+        .hidden {
+            display: none;
+        },
+
+        .small-column {
+            max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */
+            overflow: hidden; /* Memotong konten yang meluas */
+            text-overflow: ellipsis; /* Menampilkan elipsis jika konten terlalu panjang */
+            white-space: nowrap; /* Mencegah teks membungkus ke baris baru */
+        }
+
+        th, td {
+                white-space: nowrap;
+            }
+        table.dataTable {
+            border-collapse:  collapse!important;
+        }
+    </style>
 </head>
 
 <body class="text-left">
@@ -80,12 +155,14 @@ if ($result && $result->num_rows > 0) {
                                         <thead>
                                             <tr>
                                                 <th>Inventory Code</th>
+                                                <th>Nama Lahan</th>
                                                 <th>Lampiran Lahan</th>
-                                                <th>Approval Owner</th>
+                                                <th>Approval BoD</th>
                                                 <th>Approval Negosiator</th>
                                                 <th>Lampiran VL</th>
                                                 <th>Status VL</th>
-                                                <th>Tgl Berlaku</th>
+                                                <th>Harga Deal Sewa</th>
+                                                <th>Masa Sewa</th>
                                                 <th>Lampiran LOA - CD</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -95,6 +172,7 @@ if ($result && $result->num_rows > 0) {
                                         <?php foreach ($data as $row): ?>
                                             <tr>
                                                 <td><?= $row['kode_lahan'] ?></td>
+                                                <td><?= $row['nama_lahan'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_land_files = explode(",", $row['lamp_land']); // Pisahkan nama file menjadi array
@@ -123,7 +201,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -146,7 +224,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -169,7 +247,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -202,6 +280,7 @@ if ($result && $result->num_rows > 0) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>    
+                                                <td><?= $row['deal_sewa'] ?> </td>
                                                 <td><?= $row['masa_berlaku'] ?> Tahun</td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
@@ -226,43 +305,58 @@ if ($result && $result->num_rows > 0) {
                                                 }
                                                 ?>
                                                 <td>
-                                                <?php
-                                                // Mendapatkan tanggal slaLoaDate dari kolom data
-                                                $slaLoaDate = new DateTime($row['slaloa_date']);
-                                                
-                                                // Mendapatkan tanggal hari ini
-                                                $today = new DateTime();
-                                                
-                                                // Menghitung selisih hari antara slaLoaDate dan hari ini
-                                                $diff = $today->diff($slaLoaDate);
-                                                
-                                                // Jika status_approvowner adalah "Approve"
-                                                if ($row['status_approvloacd'] == "Approve") {
-                                                    echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
-                                                    echo '<p>Status changed to Approved on: ' . $row['start_date'] . '</p>';
-                                                } else {
-                                                    // Menghitung jumlah hari terlambat
-                                                    $lateDays = $slaLoaDate->diff($today)->days;
+                                                    <?php
+                                                    // Mendapatkan tanggal sla_date dari kolom data
+                                                    $slaLegalDate = new DateTime($row['slaloa_date']);
                                                     
-                                                    // Jika terlambat
-                                                    if ($today > $slaLoaDate) {
-                                                        echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+                                                    // Mendapatkan tanggal hari ini
+                                                    $today = new DateTime();
+                                                    
+                                                    // Menghitung selisih hari antara sla_date dan hari ini
+                                                    $diff = $today->diff($slaLegalDate);
+                                                    
+                                                    // Menghitung scoring
+                                                    $scoring = calculateScoring($row['start_date'], $row['slaloa_date'], $sla_value); // Make sure $sla_value is set correctly
+                                                    $remarks = getRemarks($scoring);
+
+                                                    if ($row['status_approvloacd'] == "Approve") {
+                                                        // Menentukan label berdasarkan remarks
+                                                        $status_label = '';
+                                                        switch ($remarks) {
+                                                            case 'good':
+                                                                $status_label = 'Done Good';
+                                                                break;
+                                                            case 'poor':
+                                                                $status_label = 'Done Poor';
+                                                                break;
+                                                            case 'bad':
+                                                                $status_label = 'Done Bad';
+                                                                break;
+                                                        }
+
+                                                        echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
-                                                        // Tampilkan peringatan "H - X" atau "H + X"
-                                                        if ($diff->days < 0) {
-                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . abs($diff->days) . ' hari</button>';
-                                                        } elseif ($diff->days == 0) {
-                                                            echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">Hari Ini</button>';
+                                                        // Menghitung jumlah hari terlambat
+                                                        $lateDays = $slaLegalDate->diff($today)->days;
+                                                        
+                                                        // Jika terlambat
+                                                        if ($today > $slaLegalDate) {
+                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
                                                         } else {
-                                                            echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
+                                                            // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
+                                                            if ($diff) {
+                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
+                                                            } else {
+                                                                // Tampilkan peringatan "H + X"
+                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
+                                                            }
                                                         }
                                                     }
-                                                }
-                                                ?>
-                                            </td>
+                                                    ?>
+                                                </td>
 
                                                 <td>
-                                                        <a href="re/loa-cd-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
+                                                        <a href="re/loa-cd-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>
                                                         <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_approvloacd'] ?>">
@@ -296,7 +390,24 @@ if ($result && $result->num_rows > 0) {
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="pic">PIC</label>
-                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                            <select class="form-control" id="pic" name="pic">
+                                                                                <option value="">Pilih PIC</option>
+                                                                                <option value="Legal">Legal</option>
+                                                                                <option value="Marketing">Marketing</option>
+                                                                                <option value="Landlord">Landlord</option>
+                                                                                <option value="Scm">SCM</option>
+                                                                                <option value="Sdg-project">SDG Project</option>
+                                                                                <option value="Sdg-design">SDG Design</option>
+                                                                                <option value="Sdg-equipment">SDG Equipment</option>
+                                                                                <option value="Sdg-qs">SDG QS</option>
+                                                                                <option value="Operations">Operations</option>
+                                                                                <option value="Procurement">Procurement</option>
+                                                                                <option value="Taf">TAF</option>
+                                                                                <option value="HR">HR</option>
+                                                                                <option value="Academy">Academy</option>
+                                                                                <option value="Negotiator">Negotiator</option>
+                                                                                <option value="Others">Others</option>
+                                                                            </select>
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="action_plan">Action Plan</label>
@@ -320,12 +431,14 @@ if ($result && $result->num_rows > 0) {
                                         <tfoot>
                                             <tr>
                                                 <th>Inventory Code</th>
+                                                <th>Nama Lahan</th>
                                                 <th>Lampiran Lahan</th>
-                                                <th>Approval Owner</th>
+                                                <th>Approval BoD</th>
                                                 <th>Approval Negosiator</th>
                                                 <th>Lampiran VL</th>
                                                 <th>Status VL</th>
-                                                <th>Tgl Berlaku</th>
+                                                <th>Harga Deal Sewa</th>
+                                                <th>Masa Sewa</th>
                                                 <th>Lampiran LOA - CD</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -592,6 +705,24 @@ if ($result && $result->num_rows > 0) {
             var id = element.id;
             document.getElementById('delete').value = id;
         }
+    </script>
+    
+    <script>
+        $(document).ready(function() {
+            // Hancurkan DataTable jika sudah ada
+            if ($.fn.DataTable.isDataTable('#zero_configuration_table')) {
+                $('#zero_configuration_table').DataTable().destroy();
+            }
+
+            // Inisialisasi DataTable
+            $('#zero_configuration_table').DataTable({
+                scrollX: true, // Menambahkan scroll horizontal
+                fixedColumns: {
+                    leftColumns: 3, // Jumlah kolom yang ingin di-fix
+                    topColumns: 2
+                }
+            });
+        });
     </script>
 </body>
 

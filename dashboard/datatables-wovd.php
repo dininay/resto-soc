@@ -107,7 +107,8 @@ if ($result && $result->num_rows > 0) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -149,7 +150,7 @@ if ($result && $result->num_rows > 0) {
                                         <thead>
                                             <tr>
                                                 <th>Inventory Code</th>
-                                                <th>Approval Owner</th>
+                                                <th>Approval BoD</th>
                                                 <th>Approval Legal</th>
                                                 <th>Approval Negosiator</th>
                                                 <th>Lampiran Lahan</th>
@@ -178,7 +179,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -201,7 +202,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -224,7 +225,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -303,7 +304,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -328,7 +329,7 @@ if ($result && $result->num_rows > 0) {
                                                     // Jika status_approvowner adalah "Approve"
                                                     if ($row['status_approvlegalvd'] == "Approve") {
                                                         echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
-                                                        echo '<p>Status changed to Approved on: ' . $row['end_date'] . '</p>';
+                                                        
                                                     } else {
                                                         // Menghitung jumlah hari terlambat
                                                         $lateDays = $slaVdDate->diff($today)->days;
@@ -369,7 +370,7 @@ if ($result && $result->num_rows > 0) {
                                         <tfoot>
                                             <tr>
                                                 <th>Inventory Code</th>
-                                                <th>Approval Owner</th>
+                                                <th>Approval BoD</th>
                                                 <th>Approval Legal</th>
                                                 <th>Approval Negosiator</th>
                                                 <th>Lampiran Lahan</th>

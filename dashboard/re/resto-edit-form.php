@@ -29,6 +29,7 @@ if(isset($_GET['id'])) {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -50,10 +51,10 @@ if(isset($_GET['id'])) {
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Land Sourcing</h1>
+                    <h1>Resto Name</h1>
                     <ul>
                         <li><a href="href">Edit</a></li>
-                        <li>Land Sourcing</li>
+                        <li>Resto Name</li>
                     </ul>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>

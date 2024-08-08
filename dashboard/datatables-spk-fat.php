@@ -5,8 +5,8 @@ include "../koneksi.php";
 $status_fat = "";
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, d.lamp_draf, c.lamp_loacd, p.status_approvprocurement, 
-        d.jadwal_psm, s.lamp_desainplan, p.nama_vendor, v.kode_vendor, v.lamp_vendor, v.lamp_profil, r.*, v.nama, c.kode_store,
-        c.lamp_vd, q.lamp_rab, c.status_approvlegalvd, s.lamp_pbg, s.lamp_permit, s.submit_legal, d.valdoc_legal
+        d.jadwal_psm, s.lamp_desainplan, p.nama_vendor, p.lamp_vendor, p.lamp_profil, r.*, c.kode_store,
+        c.lamp_vd, q.lamp_rab, c.status_approvlegalvd, s.lamp_pbg, s.lamp_permit, s.submit_legal, d.valdoc_legal, p.alamat
         FROM draft d
         INNER JOIN land l ON d.kode_lahan = l.kode_lahan
         INNER JOIN dokumen_loacd c ON d.kode_lahan = c.kode_lahan
@@ -14,11 +14,12 @@ $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, d.lamp_draf, c
         INNER JOIN resto r ON d.kode_lahan = r.kode_lahan
         INNER JOIN procurement p ON r.kode_lahan = p.kode_lahan
         INNER JOIN sdg_rab q ON r.kode_lahan = q.kode_lahan
-        LEFT JOIN (
-            SELECT v1.nama, v1.kode_vendor, v1.lamp_vendor, v1.lamp_profil
-            FROM vendor v1
-        ) v ON p.nama_vendor = v.kode_vendor
-        WHERE r.status_fat IN ('In Process', 'Signed', 'Pending', 'In Revision')";
+        -- LEFT JOIN (
+        --     SELECT v1.nama, v1.kode_vendor, v1.lamp_vendor, v1.lamp_profil
+        --     FROM vendor v1
+        -- ) v ON p.nama_vendor = v.kode_vendor
+        WHERE r.status_fat IN ('In Process', 'Signed', 'Pending', 'In Revision')
+        GROUP BY l.kode_lahan";
 
 $result = $conn->query($sql);
 
@@ -34,6 +35,65 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
+$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'SPK-FAT'";
+$sla_result = $conn->query($sla_query);
+
+$sla_value = 0; // Default SLA value
+
+if ($sla_result->num_rows > 0) {
+    $row = $sla_result->fetch_assoc();
+    $sla_value = $row['sla'];
+} else {
+    echo "No SLA value found for 'Owner Surveyor'";
+}
+
+function calculateScoring($start_date, $end_date, $sla) {
+    $today = new DateTime();
+    $start_date = $start_date ?: $today->format('Y-m-d');
+    $end_date = $end_date ?: $today->format('Y-m-d');
+    $sla_days = $sla ?: 0;
+
+    $start_date_obj = new DateTime($start_date);
+    $end_date_obj = new DateTime($end_date);
+
+    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
+
+    if ($sla_days != 0) {
+        if ($date_diff > $sla_days) {
+            $scoring = -((($date_diff - $sla_days) / $sla_days) * 100);
+        } else {
+            $scoring = ((($sla_days - $date_diff) / $sla_days) * 100);
+        }
+    } else {
+        $scoring = 0;
+    }
+
+    return round($scoring, 2);
+}
+// Fungsi untuk menentukan remarks berdasarkan scoring
+function getRemarks($scoring) {
+    if ($scoring >= 0) {
+        return "good";
+    } elseif ($scoring >= -30) {
+        return "poor";
+    } else {
+        return "bad";
+    }
+}
+
+// Fungsi untuk menentukan warna badge berdasarkan remarks
+function getBadgeColor($remarks) {
+    switch ($remarks) {
+        case 'good':
+            return 'success'; // Hijau
+        case 'poor':
+            return 'warning'; // Kuning
+        case 'bad':
+            return 'danger'; // Merah
+        default:
+            return 'secondary'; // Default jika remarks tidak dikenali
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="">
@@ -42,7 +102,8 @@ if ($result && $result->num_rows > 0) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -53,10 +114,24 @@ if ($result && $result->num_rows > 0) {
     <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
 <style>
-    .hidden {
-        display: none;
-    }
-</style>
+        .hidden {
+            display: none;
+        },
+
+        .small-column {
+            max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */
+            overflow: hidden; /* Memotong konten yang meluas */
+            text-overflow: ellipsis; /* Menampilkan elipsis jika konten terlalu panjang */
+            white-space: nowrap; /* Mencegah teks membungkus ke baris baru */
+        }
+
+        th, td {
+                white-space: nowrap;
+            }
+        table.dataTable {
+            border-collapse:  collapse!important;
+        }
+    </style>
 </head>
 
 <body class="text-left">
@@ -101,11 +176,11 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Status Validasi Document Legal</th>
                                                 <th>Nama Vendor</th>
                                                 <th>Lampiran Profil</th>
-                                                <th>Lampiran Vendor</th>
+                                                <th>Lampiran Pendukung Vendor</th>
                                                 <th>Status Procurement</th>
                                                 <th>Lampiran SPK</th>
                                                 <th>Status SPK</th>
-                                                <th>Jadwal Kick Off Meeting</th>
+                                                <th>Lampiran Signing by TAF</th>
                                                 <th>Status FAT</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -152,7 +227,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -197,7 +272,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -265,7 +340,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                                 case 'In Revision':
                                                                     $badge_color = 'primary';
@@ -313,7 +388,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -324,7 +399,33 @@ if ($result && $result->num_rows > 0) {
                                                         <?php echo $row['status_spk']; ?>
                                                     </span>
                                                 </td>
-                                                <td><?= $row['sla_kom'] ?></td>   
+                                                <!-- <?php
+                                                $date = new DateTime($row['sla_kom']);
+                                                $formattedDate = $date->format('d M y');
+                                                ?>
+                                                <td><?= $formattedDate ?></td> -->
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_signedtaf_files = explode(",", $row['lamp_signedtaf']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_signedtaf'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_signedtaf_files as $splegal) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $splegal . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>    
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -337,7 +438,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                                 case 'In Revision':
                                                                     $badge_color = 'primary';
@@ -354,32 +455,53 @@ if ($result && $result->num_rows > 0) {
                                                 <td>
                                                     <?php
                                                     // Mendapatkan tanggal sla_date dari kolom data
-                                                    $slaLegalDate = new DateTime($row['sla_spk']);
+                                                    $slaLegalDate = new DateTime($row['sla_fat']);
                                                     
                                                     // Mendapatkan tanggal hari ini
                                                     $today = new DateTime();
                                                     
-                                                    // Menghitung selisih hari antara sla_date dan hari ini
-                                                    $diff = $today->diff($slaLegalDate);
-                                                    
-                                                    // Jika status_approvowner adalah "Approve"
-                                                    if ($row['status_fat'] == "Signed") {
-                                                        echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
-                                                        echo '<p>Status changed to Approved on: ' . $row['fat_date'] . '</p>';
+                                                    // Mengecek apakah hari ini adalah hari Sabtu atau Minggu
+                                                    if ($today->format('N') == 6 || $today->format('N') == 7) { // N = 6 is Saturday, N = 7 is Sunday
+                                                        echo '<button type="button" class="btn btn-sm btn-info" disabled>Sedang Libur</button>';
                                                     } else {
-                                                        // Menghitung jumlah hari terlambat
-                                                        $lateDays = $slaLegalDate->diff($today)->days;
+                                                        // Menghitung selisih hari antara sla_fat dan hari ini
+                                                        $diff = $today->diff($slaLegalDate);
                                                         
-                                                        // Jika terlambat
-                                                        if ($today > $slaLegalDate) {
-                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+                                                        // Menghitung scoring
+                                                        $scoring = calculateScoring($row['fat_date'], $row['sla_fat'], $sla_value); // Make sure $sla_value is set correctly
+                                                        $remarks = getRemarks($scoring);
+
+                                                        if ($row['status_fat'] == "Signed") {
+                                                            // Menentukan label berdasarkan remarks
+                                                            $status_label = '';
+                                                            switch ($remarks) {
+                                                                case 'good':
+                                                                    $status_label = 'Done Good';
+                                                                    break;
+                                                                case 'poor':
+                                                                    $status_label = 'Done Poor';
+                                                                    break;
+                                                                case 'bad':
+                                                                    $status_label = 'Done Bad';
+                                                                    break;
+                                                            }
+
+                                                            echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                         } else {
-                                                            // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
-                                                            if ($diff) {
-                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
+                                                            // Menghitung jumlah hari terlambat
+                                                            $lateDays = $slaLegalDate->diff($today)->days;
+                                                            
+                                                            // Jika terlambat
+                                                            if ($today > $slaLegalDate) {
+                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
                                                             } else {
-                                                                // Tampilkan peringatan "H + X"
-                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
+                                                                // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
+                                                                if ($diff->days > 0) {
+                                                                    echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
+                                                                } else {
+                                                                    // Tampilkan peringatan "H + X"
+                                                                    echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
+                                                                }
                                                             }
                                                         }
                                                     }
@@ -420,6 +542,12 @@ if ($result && $result->num_rows > 0) {
                                                                             <option value="In Revision">In Revision</option>
                                                                         </select>
                                                                     </div>
+                                                                    <div class="hidden" id="signedDetailSection">
+                                                                        <div class="form-group">
+                                                                            <label for="lamp_signedtaf">Upload File Signing TAF</label>
+                                                                            <input type="file" class="form-control" id="lamp_signedtaf" name="lamp_signedtaf[]" multiple>
+                                                                        </div>
+                                                                    </div>
                                                                     <div id="issueDetailSection" class="hidden">
                                                                         <div class="form-group">
                                                                             <label for="issue_detail">Issue Detail</label>
@@ -427,7 +555,24 @@ if ($result && $result->num_rows > 0) {
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="pic">PIC</label>
-                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                            <select class="form-control" id="pic" name="pic">
+                                                                                <option value="">Pilih PIC</option>
+                                                                                <option value="Legal">Legal</option>
+                                                                                <option value="Marketing">Marketing</option>
+                                                                                <option value="Landlord">Landlord</option>
+                                                                                <option value="Scm">SCM</option>
+                                                                                <option value="Sdg-project">SDG Project</option>
+                                                                                <option value="Sdg-design">SDG Design</option>
+                                                                                <option value="Sdg-equipment">SDG Equipment</option>
+                                                                                <option value="Sdg-qs">SDG QS</option>
+                                                                                <option value="Operations">Operations</option>
+                                                                                <option value="Procurement">Procurement</option>
+                                                                                <option value="Taf">TAF</option>
+                                                                                <option value="HR">HR</option>
+                                                                                <option value="Academy">Academy</option>
+                                                                                <option value="Negotiator">Negotiator</option>
+                                                                                <option value="Others">Others</option>
+                                                                            </select>
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="action_plan">Action Plan</label>
@@ -459,11 +604,11 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Status Validasi Document Legal</th>
                                                 <th>Nama Vendor</th>
                                                 <th>Lampiran Profil</th>
-                                                <th>Lampiran Vendor</th>
+                                                <th>Lampiran Pendukung Vendor</th>
                                                 <th>Status Procurement</th>
                                                 <th>Lampiran SPK</th>
                                                 <th>Status SPK</th>
-                                                <th>Jadwal Kick Off Meeting</th>
+                                                <th>Lampiran Signing by TAF</th>
                                                 <th>Status FAT</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -690,41 +835,43 @@ if ($result && $result->num_rows > 0) {
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
     
     <script>
-    $(document).ready(function(){
+    $(document).ready(function() {
         // Saat tombol edit diklik
-        $('.edit-btn').click(function(){
+        $('.edit-btn').click(function() {
             // Ambil data-id dari tombol edit
             var id = $(this).data('id');
 
             // Isi nilai input tersembunyi dengan ID yang diambil
             $('#modalId').val(id);
         });
-    });
-    
-    // Function to toggle the visibility of issue detail section
-    function toggleIssueDetail() {
-        var statusSelect = document.getElementById("statusSelect");
-        var issueDetailSection = document.getElementById("issueDetailSection");
 
-        if (statusSelect.value === "Pending") {
-            issueDetailSection.style.display = "block";
-        } else {
-            issueDetailSection.style.display = "none";
+        // Event listener for statusSelect change
+        $('#statusSelect').on('change', function() {
+            toggleDetails();
+        });
+
+        // Function to toggle the visibility of issue detail section and signed detail section
+        function toggleDetails() {
+            var statusSelect = document.getElementById("statusSelect");
+            var issueDetailSection = document.getElementById("issueDetailSection");
+            var signedDetailSection = document.getElementById("signedDetailSection");
+
+            if (statusSelect.value === "Pending") {
+                issueDetailSection.style.display = "block";
+                signedDetailSection.style.display = "none";
+            } else if (statusSelect.value === "Signed") {
+                signedDetailSection.style.display = "block";
+                issueDetailSection.style.display = "none";
+            } else {
+                issueDetailSection.style.display = "none";
+                signedDetailSection.style.display = "none";
+            }
         }
-    }
 
-    // Event listener for statusSelect change
-    $('#statusSelect').on('change', function () {
-        toggleIssueDetail();
+        // Initialize the details based on the current status
+        toggleDetails();
     });
 </script>
-<?php if ($status_fat == 'Pending') { ?>
-    <script>
-        $(document).ready(function () {
-            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
-        });
-    </script>
-<?php } ?>
     <script>
         // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
         function setDelete(element) {
@@ -742,6 +889,22 @@ $(document).ready(function() {
     });
 });
 </script>
+    <script>
+        $(document).ready(function() {
+            // Hancurkan DataTable jika sudah ada
+            if ($.fn.DataTable.isDataTable('#zero_configuration_table')) {
+                $('#zero_configuration_table').DataTable().destroy();
+            }
+
+            // Inisialisasi DataTable
+            $('#zero_configuration_table').DataTable({
+                scrollX: true, // Menambahkan scroll horizontal
+                fixedColumns: {
+                    leftColumns: 3 // Jumlah kolom yang ingin di-fix
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

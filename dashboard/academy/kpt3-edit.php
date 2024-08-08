@@ -7,7 +7,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     // Ambil nilai tgl_berlaku dan penanggungjawab dari formulir
     $id = $_POST['id'];
-    $kpt_3 = $_POST['kpt_3'];
+    $crew_needed3 = $_POST['crew_needed3'];
+    $crew_act3 = $_POST['crew_act3'];
+    if ($crew_needed3 > 0) {
+        $kpt_3 = round(($crew_act3 / $crew_needed3) * 100);
+    } else {
+        $kpt_3 = 0;
+    }
     // Periksa apakah kunci 'lampiran' ada dalam $_FILES
     $lamp_kpt3 = "";
 
@@ -33,7 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $lamp_kpt3 = implode(",", $lamp_kpt3_paths);
     }
     // Update data di database
-    $sql = "UPDATE socdate_academy SET lamp_kpt3 = '$lamp_kpt3', kpt_3 = '$kpt_3' WHERE id = '$id'";
+    $sql = "UPDATE socdate_academy SET crew_needed3 = '$crew_needed3', crew_act3 = '$crew_act3', lamp_kpt3 = '$lamp_kpt3', kpt_3 = '$kpt_3' WHERE id = '$id'";
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
         header("Location: " . $base_url . "/datatables-hr-kpt-3.php");

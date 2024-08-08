@@ -28,6 +28,65 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
+$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'ST-Konstruksi'";
+$sla_result = $conn->query($sla_query);
+
+$sla_value = 0; // Default SLA value
+
+if ($sla_result->num_rows > 0) {
+    $row = $sla_result->fetch_assoc();
+    $sla_value = $row['sla'];
+} else {
+    echo "No SLA value found for 'Owner Surveyor'";
+}
+
+function calculateScoring($start_date, $end_date, $sla) {
+    $today = new DateTime();
+    $start_date = $start_date ?: $today->format('Y-m-d');
+    $end_date = $end_date ?: $today->format('Y-m-d');
+    $sla_days = $sla ?: 0;
+
+    $start_date_obj = new DateTime($start_date);
+    $end_date_obj = new DateTime($end_date);
+
+    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
+
+    if ($sla_days != 0) {
+        if ($date_diff > $sla_days) {
+            $scoring = -((($date_diff - $sla_days) / $sla_days) * 100);
+        } else {
+            $scoring = ((($sla_days - $date_diff) / $sla_days) * 100);
+        }
+    } else {
+        $scoring = 0;
+    }
+
+    return round($scoring, 2);
+}
+// Fungsi untuk menentukan remarks berdasarkan scoring
+function getRemarks($scoring) {
+    if ($scoring >= 0) {
+        return "good";
+    } elseif ($scoring >= -30) {
+        return "poor";
+    } else {
+        return "bad";
+    }
+}
+
+// Fungsi untuk menentukan warna badge berdasarkan remarks
+function getBadgeColor($remarks) {
+    switch ($remarks) {
+        case 'good':
+            return 'success'; // Hijau
+        case 'poor':
+            return 'warning'; // Kuning
+        case 'bad':
+            return 'danger'; // Merah
+        default:
+            return 'secondary'; // Default jika remarks tidak dikenali
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="">
@@ -36,7 +95,8 @@ if ($result && $result->num_rows > 0) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -90,6 +150,9 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Lampiran SPK</th>
                                                 <th>Lampiran Kick Off Meeting</th>
                                                 <th>Lampiran ST Kontraktor</th>
+                                                <th>Obstacle</th>
+                                                <th>Catatan</th>
+                                                <th>Lampiran Obstacle</th>
                                                 <th>Status ST Kontraktor</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -172,6 +235,52 @@ if ($result && $result->num_rows > 0) {
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
+                                                        switch ($row['obstacle_stkons']) {
+                                                            case 'No':
+                                                                $badge_color = 'success';
+                                                                break;
+                                                            case 'Yes':
+                                                                $badge_color = 'danger';
+                                                                break;
+                                                            case 'In Process':
+                                                                $badge_color = 'primary';
+                                                                break;
+                                                            default:
+                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
+                                                                break;
+                                                        }
+                                                    ?>
+                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
+                                                        <?php echo $row['obstacle_stkons']; ?>
+                                                    </span>
+                                                </td>      
+                                                <td><?= $row['note_stkons'] ?></td>        
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_obsstkons_files = explode(",", $row['lamp_obsstkons']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_obsstkons'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_obsstkons_files as $kom) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $kom . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>        
+                                                <td>
+                                                    <?php
+                                                        // Tentukan warna badge berdasarkan status approval owner
+                                                        $badge_color = '';
                                                         switch ($row['status_stkonstruksi']) {
                                                             case 'Approve':
                                                                 $badge_color = 'success';
@@ -180,7 +289,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -199,13 +308,29 @@ if ($result && $result->num_rows > 0) {
                                                     // Mendapatkan tanggal hari ini
                                                     $today = new DateTime();
                                                     
-                                                    // Menghitung selisih hari antara sla_date dan hari ini
+                                                    // Menghitung selisih hari antara sla_stkonstruksi dan hari ini
                                                     $diff = $today->diff($slaLegalDate);
                                                     
-                                                    // Jika status_approvowner adalah "Approve"
+                                                    // Menghitung scoring
+                                                    $scoring = calculateScoring($row['stkonstruksi_date'], $row['sla_stkonstruksi'], $sla_value); // Make sure $sla_value is set correctly
+                                                    $remarks = getRemarks($scoring);
+
                                                     if ($row['status_stkonstruksi'] == "Approve") {
-                                                        echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
-                                                        echo '<p>Status changed to Approved on: ' . $row['stkonstruksi_date'] . '</p>';
+                                                        // Menentukan label berdasarkan remarks
+                                                        $status_label = '';
+                                                        switch ($remarks) {
+                                                            case 'good':
+                                                                $status_label = 'Done Good';
+                                                                break;
+                                                            case 'poor':
+                                                                $status_label = 'Done Poor';
+                                                                break;
+                                                            case 'bad':
+                                                                $status_label = 'Done Bad';
+                                                                break;
+                                                        }
+
+                                                        echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
                                                         // Menghitung jumlah hari terlambat
                                                         $lateDays = $slaLegalDate->diff($today)->days;
@@ -304,6 +429,9 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Lampiran SPK</th>
                                                 <th>Lampiran Kick Off Meeting</th>
                                                 <th>Lampiran ST Kontraktor</th>
+                                                <th>Obstacle</th>
+                                                <th>Catatan</th>
+                                                <th>Lampiran Obstacle</th>
                                                 <th>Status ST Kontraktor</th>
                                                 <th>SLA</th>
 												<th>Action</th>

@@ -30,6 +30,7 @@ if(isset($_GET['id'])) {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -65,9 +66,15 @@ if(isset($_GET['id'])) {
                             <form method="post" action="loa-cd-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label" for="masa_berlaku">Masa Berlaku</label>
+                                    <label class="col-sm-2 col-form-label" for="masa_berlaku">Masa Sewa</label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="masa_berlaku" name="masa_berlaku" type="text" value="<?php echo $row['masa_berlaku']; ?>" placeholder="Masa Berlaku Sewa (Tahun)" />
+                                        <input class="form-control" id="masa_berlaku" name="masa_berlaku" type="text" value="<?php echo $row['masa_berlaku']; ?>" placeholder="Masa Berlaku Sewa (Tahun)" readonly/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-2 col-form-label" for="deal_sewa">Harga Deal Sewa</label>
+                                    <div class="col-sm-10">
+                                        <input class="form-control" id="deal_sewa" name="deal_sewa" type="text" value="<?php echo $row['deal_sewa']; ?>" placeholder="Harga Deal Sewa" readonly/>
                                     </div>
                                 </div>
                                 <div class="form-group row">

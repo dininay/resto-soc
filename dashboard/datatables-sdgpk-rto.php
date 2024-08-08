@@ -3,8 +3,9 @@
 include "../koneksi.php";
 $status_sdg = "";
 // Query untuk mengambil data dari tabel land
-$sql = "SELECT socdate_sdg.*, d.kode_store
+$sql = "SELECT socdate_sdg.*, d.kode_store, l.nama_lahan
 from socdate_sdg
+JOIN land l ON socdate_sdg.kode_lahan = l.kode_lahan
 JOIN dokumen_loacd d ON socdate_sdg.kode_lahan = d.kode_lahan";
 $result = $conn->query($sql);
 
@@ -19,6 +20,66 @@ if ($result && $result->num_rows > 0) {
         $data[] = $row;
     }
 }
+
+$sla_query = "SELECT sla FROM master_slacons WHERE divisi = 'mep'";
+$sla_result = $conn->query($sla_query);
+
+$sla_value = 0; // Default SLA value
+
+if ($sla_result->num_rows > 0) {
+    $row = $sla_result->fetch_assoc();
+    $sla_value = $row['sla'];
+} else {
+    echo "No SLA value found for 'Owner Surveyor'";
+}
+
+function calculateScoring($start_date, $end_date, $sla) {
+    $today = new DateTime();
+    $start_date = $start_date ?: $today->format('Y-m-d');
+    $end_date = $end_date ?: $today->format('Y-m-d');
+    $sla_days = $sla ?: 0;
+
+    $start_date_obj = new DateTime($start_date);
+    $end_date_obj = new DateTime($end_date);
+
+    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
+
+    if ($sla_days != 0) {
+        if ($date_diff > $sla_days) {
+            $scoring = -((($date_diff - $sla_days) / $sla_days) * 100);
+        } else {
+            $scoring = ((($sla_days - $date_diff) / $sla_days) * 100);
+        }
+    } else {
+        $scoring = 0;
+    }
+
+    return round($scoring, 2);
+}
+// Fungsi untuk menentukan remarks berdasarkan scoring
+function getRemarks($scoring) {
+    if ($scoring >= 0) {
+        return "good";
+    } elseif ($scoring >= -30) {
+        return "poor";
+    } else {
+        return "bad";
+    }
+}
+
+// Fungsi untuk menentukan warna badge berdasarkan remarks
+function getBadgeColor($remarks) {
+    switch ($remarks) {
+        case 'good':
+            return 'success'; // Hijau
+        case 'poor':
+            return 'warning'; // Kuning
+        case 'bad':
+            return 'danger'; // Merah
+        default:
+            return 'secondary'; // Default jika remarks tidak dikenali
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="">
@@ -27,7 +88,8 @@ if ($result && $result->num_rows > 0) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -35,9 +97,32 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/fixedcolumns/3.3.2/css/fixedColumns.dataTables.min.css">
+    <!-- Muat jQuery terlebih dahulu -->
+    <!-- Muat DataTables setelah jQuery -->
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
     <style>
         .hidden {
             display: none;
+        },
+
+        .small-column {
+            max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */
+            overflow: hidden; /* Memotong konten yang meluas */
+            text-overflow: ellipsis; /* Menampilkan elipsis jika konten terlalu panjang */
+            white-space: nowrap; /* Mencegah teks membungkus ke baris baru */
+        }
+
+        th, td {
+                white-space: nowrap;
+            }
+        table.dataTable {
+            border-collapse:  collapse!important;
+        }
+        div.dataTables_wrapper {
+            width: 100%;
+            margin: 0 auto;
         }
     </style>
 </head>
@@ -55,7 +140,7 @@ if ($result && $result->num_rows > 0) {
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Data Kualitas Air, Listrik, IPAL</h1>
+                    <h1>Data MEP - Sumber Evaluation</h1>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
                 <!-- end of row-->
@@ -74,12 +159,18 @@ if ($result && $result->num_rows > 0) {
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>ID Lahan</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
-                                                <th>No Listrik</th>
-                                                <th>Lampiran Listrik</th>
-                                                <th>Lampiran IPAL</th>
-                                                <th>Lampiran Kualitas Air</th>
+                                                <th>Nama Lahan</th>
+                                                <th>Sumber Air</th>
+                                                <th>Lampiran Form Sumber Air</th>
+                                                <th>Kesesuaian Uji Lab</th>
+                                                <th>Lampiran Uji Lab</th>
+                                                <th>Filter Air</th>
+                                                <th>Lampiran Filter Air</th>
+                                                <th>Debit Air Sumur</th>
+                                                <th>Debit Air PDAM</th>
+                                                <th>Nomor ID PDAM</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -90,16 +181,17 @@ if ($result && $result->num_rows > 0) {
                                             <tr>
                                                 <td><?= $row['kode_lahan'] ?></td>
                                                 <td><?= $row['kode_store'] ?></td>
-                                                <td><?= $row['no_listrik'] ?></td>
+                                                <td><?= $row['nama_lahan'] ?></td>
+                                                <td><?= $row['sumber_air'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_listrik_files = explode(",", $row['lamp_listrik']); // Pisahkan nama file menjadi array
+                                                $lamp_sumberair_files = explode(",", $row['lamp_sumberair']); // Pisahkan nama file menjadi array
                                                 // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_listrik'])) {
+                                                if (!empty($row['lamp_sumberair'])) {
                                                     echo '<td>
                                                             <ul style="list-style-type: none; padding: 0; margin: 0;">';
                                                     // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_listrik_files as $listrik) {
+                                                    foreach ($lamp_sumberair_files as $listrik) {
                                                         echo '<li style="display: inline-block; margin-right: 5px;">
                                                                 <a href="uploads/' . $listrik . '" target="_blank">
                                                                     <i class="fas fa-file-pdf nav-icon"></i>
@@ -113,17 +205,18 @@ if ($result && $result->num_rows > 0) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>
+                                                <td><?= $row['kesesuaian_ujilab'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_ipal_files = explode(",", $row['lamp_ipal']); // Pisahkan nama file menjadi array
+                                                $lamp_ujilab_files = explode(",", $row['lamp_ujilab']); // Pisahkan nama file menjadi array
                                                 // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_ipal'])) {
+                                                if (!empty($row['lamp_ujilab'])) {
                                                     echo '<td>
                                                             <ul style="list-style-type: none; padding: 0; margin: 0;">';
                                                     // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_ipal_files as $ipal) {
+                                                    foreach ($lamp_ujilab_files as $listrik) {
                                                         echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $ipal . '" target="_blank">
+                                                                <a href="uploads/' . $listrik . '" target="_blank">
                                                                     <i class="fas fa-file-pdf nav-icon"></i>
                                                                 </a>
                                                             </li>';
@@ -135,17 +228,18 @@ if ($result && $result->num_rows > 0) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>
+                                                <td><?= $row['filter_air'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_ka_files = explode(",", $row['lamp_ka']); // Pisahkan nama file menjadi array
+                                                $lamp_filterair_files = explode(",", $row['lamp_filterair']); // Pisahkan nama file menjadi array
                                                 // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_ka'])) {
+                                                if (!empty($row['lamp_filterair'])) {
                                                     echo '<td>
                                                             <ul style="list-style-type: none; padding: 0; margin: 0;">';
                                                     // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_ka_files as $ka) {
+                                                    foreach ($lamp_filterair_files as $listrik) {
                                                         echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $ka . '" target="_blank">
+                                                                <a href="uploads/' . $listrik . '" target="_blank">
                                                                     <i class="fas fa-file-pdf nav-icon"></i>
                                                                 </a>
                                                             </li>';
@@ -157,11 +251,14 @@ if ($result && $result->num_rows > 0) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>
+                                                <td><?= $row['debit_airsumur'] ?></td>
+                                                <td><?= $row['debit_airpdam'] ?></td>
+                                                <td><?= $row['id_pdam'] ?></td>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
-                                                        switch ($row['status_sdg']) {
+                                                        switch ($row['status_sdgsumber']) {
                                                             case 'Approve':
                                                                 $badge_color = 'success';
                                                                 break;
@@ -169,7 +266,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -177,30 +274,46 @@ if ($result && $result->num_rows > 0) {
                                                         }
                                                     ?>
                                                     <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_sdg']; ?>
+                                                        <?php echo $row['status_sdgsumber']; ?>
                                                     </span>
                                                 </td>
                                                 <td>
                                                     <?php
                                                     // Mendapatkan tanggal sla_date dari kolom data
-                                                    $slaDate = new DateTime($row['sla_sdg']);
+                                                    $slaLegalDate = new DateTime($row['sla_mep']);
                                                     
                                                     // Mendapatkan tanggal hari ini
                                                     $today = new DateTime();
                                                     
-                                                    // Menghitung selisih hari antara sla_date dan hari ini
-                                                    $diff = $today->diff($slaDate);
+                                                    // Menghitung selisih hari antara sla_mep dan hari ini
+                                                    $diff = $today->diff($slaLegalDate);
                                                     
-                                                    // Jika status_approvowner adalah "Approve"
-                                                    if ($row['status_sdg'] == "Approve") {
-                                                        echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
-                                                        echo '<p>Status changed to Approved on: ' . $row['sdg_date'] . '</p>';
+                                                    // Menghitung scoring
+                                                    $scoring = calculateScoring($row['sdgsumber_date'], $row['sla_mep'], $sla_value); // Make sure $sla_value is set correctly
+                                                    $remarks = getRemarks($scoring);
+
+                                                    if ($row['status_sdgsumber'] == "Done") {
+                                                        // Menentukan label berdasarkan remarks
+                                                        $status_label = '';
+                                                        switch ($remarks) {
+                                                            case 'good':
+                                                                $status_label = 'Done Good';
+                                                                break;
+                                                            case 'poor':
+                                                                $status_label = 'Done Poor';
+                                                                break;
+                                                            case 'bad':
+                                                                $status_label = 'Done Bad';
+                                                                break;
+                                                        }
+
+                                                        echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
                                                         // Menghitung jumlah hari terlambat
-                                                        $lateDays = $slaDate->diff($today)->days;
+                                                        $lateDays = $slaLegalDate->diff($today)->days;
                                                         
                                                         // Jika terlambat
-                                                        if ($today > $slaDate) {
+                                                        if ($today > $slaLegalDate) {
                                                             echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
                                                         } else {
                                                             // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
@@ -217,15 +330,13 @@ if ($result && $result->num_rows > 0) {
                                                 
                                                 <td>
                                                 <!-- Tombol Edit -->
-                                                <?php if ($row['status_sdg'] != "Approve"): ?>
-                                                        <a href="sdg-pk/sdgpk-rto-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
+                                                <?php if ($row['status_sdgsumber'] != "Done"): ?>
+                                                        <a href="sdg-pk/sdgpk-rto-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>
-                                                    <?php endif; ?>
-                                                    <?php if ($row['status_sdg'] != "Approve"): ?>
-                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_sdg'] ?>">
+                                                        <!-- <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_sdgsumber'] ?>">
                                                             <i class="nav-icon i-Book"></i>
-                                                        </button>
+                                                        </button> -->
                                                     <?php endif; ?>
                                                 </td>
                                                 <!-- Modal -->
@@ -242,11 +353,11 @@ if ($result && $result->num_rows > 0) {
                                                                 <form id="statusForm" method="post" action="sdg-pk/sdgpk-rto-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" value=<?= $row['id'] ?> id="modalKodeLahan">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve SDG</label>
-                                                                        <select class="form-control" id="statusSelect" name="status_sdg" Placeholder="Pilih">
+                                                                        <label for="statusSelect">Status Approve MEP Sumber</label>
+                                                                        <select class="form-control" id="statusSelect" name="status_sdgsumber" Placeholder="Pilih">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
-                                                                            <option value="Approve">Approve</option>
+                                                                            <option value="Proceed">Proceed</option>
                                                                         </select>
                                                                     </div>
                                                                     <div class="form-group">
@@ -260,7 +371,24 @@ if ($result && $result->num_rows > 0) {
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="pic">PIC</label>
-                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                            <select class="form-control" id="pic" name="pic">
+                                                                                <option value="">Pilih PIC</option>
+                                                                                <option value="Legal">Legal</option>
+                                                                                <option value="Marketing">Marketing</option>
+                                                                                <option value="Landlord">Landlord</option>
+                                                                                <option value="Scm">SCM</option>
+                                                                                <option value="Sdg-project">SDG Project</option>
+                                                                                <option value="Sdg-design">SDG Design</option>
+                                                                                <option value="Sdg-equipment">SDG Equipment</option>
+                                                                                <option value="Sdg-qs">SDG QS</option>
+                                                                                <option value="Operations">Operations</option>
+                                                                                <option value="Procurement">Procurement</option>
+                                                                                <option value="Taf">TAF</option>
+                                                                                <option value="HR">HR</option>
+                                                                                <option value="Academy">Academy</option>
+                                                                                <option value="Negotiator">Negotiator</option>
+                                                                                <option value="Others">Others</option>
+                                                                            </select>
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="action_plan">Action Plan</label>
@@ -282,12 +410,18 @@ if ($result && $result->num_rows > 0) {
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>ID Lahan</th>
+                                                <th>Inventory Code</th>
                                                 <th>Kode Store</th>
-                                                <th>No Listrik</th>
-                                                <th>Lampiran Listrik</th>
-                                                <th>Lampiran IPAL</th>
-                                                <th>Lampiran Kualitas Air</th>
+                                                <th>Nama Lahan</th>
+                                                <th>Sumber Air</th>
+                                                <th>Lampiran Form Sumber Air</th>
+                                                <th>Kesesuaian Uji Lab</th>
+                                                <th>Lampiran Uji Lab</th>
+                                                <th>Filter Air</th>
+                                                <th>Lampiran Filter Air</th>
+                                                <th>Debit Air Sumur</th>
+                                                <th>Debit Air PDAM</th>
+                                                <th>Nomor ID PDAM</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -555,6 +689,29 @@ if ($result && $result->num_rows > 0) {
         });
     </script>
 <?php } ?>
+    <script>
+        $(document).ready(function() {
+            // Hancurkan DataTable jika sudah ada
+            if ($.fn.DataTable.isDataTable('#zero_configuration_table')) {
+                $('#zero_configuration_table').DataTable().destroy();
+            }
+
+            // Inisialisasi DataTable
+            $('#zero_configuration_table').DataTable({
+                scrollX: true, // Menambahkan scroll horizontal
+                fixedColumns: {
+                    leftColumns: 3 // Jumlah kolom yang ingin di-fix
+                },
+                fixedHeader: {
+                    leftColumns: 3
+                }
+            });
+            // Atur ulang lebar kolom saat menggulir horizontal
+            $(window).on('resize', function() {
+                table.columns.adjust().draw();
+            });
+        });
+    </script>
 </body>
 
 </html>

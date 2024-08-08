@@ -4,7 +4,9 @@ include "../koneksi.php";
 
 $status_approvre = "";
 // Query untuk mengambil data dari tabel land
-$sql = "SELECT * FROM land where status_land = 'Aktif'";
+$sql = "SELECT 
+land.*, re.status_approvowner, re.start_date, re.sla_date FROM land Left JOIN re ON re.kode_lahan = land.kode_lahan
+where status_land = 'Aktif'";
 $result = $conn->query($sql);
 
 // Inisialisasi variabel $data dengan array kosong
@@ -17,6 +19,67 @@ if ($result && $result->num_rows > 0) {
         $data[] = $row;
     }
 }
+$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'Owner Surveyor'";
+$sla_result = $conn->query($sla_query);
+
+$sla_value = 0; // Default SLA value
+
+if ($sla_result->num_rows > 0) {
+    $row = $sla_result->fetch_assoc();
+    $sla_value = $row['sla'];
+} else {
+    echo "No SLA value found for 'Owner Surveyor'";
+}
+
+// Fungsi untuk menghitung scoring
+function calculateScoring($start_date, $end_date, $sla) {
+    $today = new DateTime();
+    $start_date = $start_date ?: $today->format('Y-m-d');
+    $end_date = $end_date ?: $today->format('Y-m-d');
+    $sla_days = $sla ?: 0;
+
+    $start_date_obj = new DateTime($start_date);
+    $end_date_obj = new DateTime($end_date);
+
+    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
+
+    if ($sla_days != 0) {
+        if ($date_diff > $sla_days) {
+            $scoring = -((($date_diff - $sla_days) / $sla_days) * 100);
+        } else {
+            $scoring = ((($sla_days - $date_diff) / $sla_days) * 100);
+        }
+    } else {
+        $scoring = 0;
+    }
+
+    return round($scoring, 2);
+}
+
+// Fungsi untuk menentukan remarks berdasarkan scoring
+function getRemarks($scoring) {
+    if ($scoring >= 0) {
+        return "good";
+    } elseif ($scoring >= -30) {
+        return "poor";
+    } else {
+        return "bad";
+    }
+}
+
+// Fungsi untuk menentukan warna badge berdasarkan remarks
+function getBadgeColor($remarks) {
+    switch ($remarks) {
+        case 'good':
+            return 'success'; // Hijau
+        case 'poor':
+            return 'warning'; // Kuning
+        case 'bad':
+            return 'danger'; // Merah
+        default:
+            return 'secondary'; // Default jika remarks tidak dikenali
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -26,25 +89,103 @@ if ($result && $result->num_rows > 0) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
-    <link href="../dist-assets/css/plugins/datatables.min.css" rel="stylesheet"  />
-	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
-	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
+    <link href="../dist-assets/css/plugins/datatables.min.css" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
+    <link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.css"> -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/fixedcolumns/3.3.2/css/fixedColumns.dataTables.min.css">
+    <!-- Muat jQuery terlebih dahulu -->
+    <!-- Muat DataTables setelah jQuery -->
     <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>   
-<style>
-    .hidden {
-        display: none;
-    }
-</style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
+    <style>
+        .hidden {
+            display: none;
+        },
+
+        .small-column {
+            max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */
+            overflow: hidden; /* Memotong konten yang meluas */
+            text-overflow: ellipsis; /* Menampilkan elipsis jika konten terlalu panjang */
+            white-space: nowrap; /* Mencegah teks membungkus ke baris baru */
+        }
+
+        th, td {
+                white-space: nowrap;
+            }
+        table.dataTable {
+            border-collapse:  collapse!important;
+        }
+        div.dataTables_wrapper {
+            width: 100%;
+            margin: 0 auto;
+        }
+    </style>
+    <!-- <style>
+        div.dataTables_wrapper {
+            width: 100%;
+                margin: 0 auto;
+        }
+
+        .table-scroll {
+            overflow-y: auto;
+            max-height: 400px; /* Sesuaikan dengan tinggi yang diinginkan */
+            margin-bottom: 1rem;
+        }
+
+        .table-scroll table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table-scroll thead {
+            position: -webkit-sticky; /* Safari */
+            position: sticky;
+            top: 0;
+            background: #fff; /* Sesuaikan dengan warna background tabel */
+            z-index: 1;
+        }
+
+        div.dataTables_scrollHead table.dataTable {
+            margin-bottom: 0 !important;
+        }
+
+        div.dataTables_scrollBody table {
+            border-top: none;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+        }
+
+        div.dataTables_scrollBody table thead .sorting:after,
+        div.dataTables_scrollBody table thead .sorting_asc:after,
+        div.dataTables_scrollBody table thead .sorting_desc:after {
+            display: none;
+        }
+
+        div.dataTables_scrollBody table tbody tr:first-child th,
+        div.dataTables_scrollBody table tbody tr:first-child td {
+            border-top: none;
+        }
+
+        div.dataTables_scrollFoot>.dataTables_scrollFootInner {
+            box-sizing: content-box;
+        }
+
+        div.dataTables_scrollFoot>.dataTables_scrollFootInner>table {
+            margin-top: 0 !important;
+            border-top: none;
+        }
+    </style> -->
 </head>
 
 <body class="text-left">
-    <div class="app-admin-wrap layout-sidebar-compact sidebar-dark-purple sidenav-open clearfix">
+        <div class="app-admin-wrap layout-sidebar-compact sidebar-dark-purple sidenav-open clearfix">
         <?php
 			include '../layouts/right-sidebar.php';
 		?>
@@ -52,7 +193,7 @@ if ($result && $result->num_rows > 0) {
         <div class="main-content-wrap d-flex flex-column">
             <?php
 			include '../layouts/top-sidebar.php';
-		?>
+		    ?>
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
@@ -69,9 +210,10 @@ if ($result && $result->num_rows > 0) {
 									<p>
 									  <span class="flex-grow-1"></span></p>
 								</div>
-                                <p>
-							  <div class="table-responsive">
-                                    <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
+							    <div class="table-responsive">
+                                    <div class="table-scroll">
+                                        
+                                    <table class="display table table-striped table-bordered display nowrap" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
                                                 <th>Inventory Code</th>
@@ -83,7 +225,10 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Maps</th>
                                                 <th>Latitude</th>
                                                 <th>Longitude</th>
+                                                <th>Harga Sewa</th>
+                                                <th>Minimum Tahun Sewa</th>
                                                 <th>Lampiran</th>
+                                                <th>Status BoD</th>
 												<th>Action</th>
                                             </tr>
                                         </thead>
@@ -96,9 +241,21 @@ if ($result && $result->num_rows > 0) {
                                             <td><?= $row['lokasi'] ?></td>
                                             <td><?= $row['luas_area'] ?></td>
                                             <td><?= $row['no_tlp'] ?></td>
-                                            <td><?= $row['maps'] ?></td>
+                                            <td class="small-column">
+                                                <?php if (!empty($row['maps'])): ?>
+                                                    <a href="<?= htmlspecialchars($row['maps']) ?>" target="_blank" title="View Map">
+                                                        <i class="fas fa-map-marker-alt"></i> <!-- Ikon peta Font Awesome -->
+                                                    </a>
+                                                <?php else: ?>
+                                                    <!-- Jika data kosong, Anda bisa menampilkan pesan atau membiarkannya kosong -->
+                                                    <!-- Misalnya, menampilkan pesan "No link" atau membiarkannya kosong -->
+                                                    <!-- <span>No link</span> -->
+                                                <?php endif; ?>
+                                            </td>
                                             <td><?= $row['latitude'] ?></td>
                                             <td><?= $row['longitude'] ?></td>
+                                            <td><?= $row['harga_sewa'] ?></td>
+                                            <td><?= $row['mintahun_sewa'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_loacd_files = explode(",", $row['lamp_land']); // Pisahkan nama file menjadi array
@@ -121,21 +278,73 @@ if ($result && $result->num_rows > 0) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>
+                                                <td>
+                                                    <?php
+                                                        // Tentukan warna badge dan teks berdasarkan status approval owner dan scoring
+                                                        $badge_color = '';
+                                                        $badge_text = '';
+                                                        $status_approvowner = $row['status_approvowner'];
+
+                                                        if ($status_approvowner === 'Approve') {
+                                                            // Tambahkan logika untuk menentukan warna dan teks berdasarkan scoring
+                                                            $scoring = calculateScoring($row['start_date'], $row['sla_date'], $sla_value);
+                                                            $remarks = getRemarks($scoring);
+
+                                                            // Tentukan warna badge dan teks berdasarkan remarks
+                                                            switch ($remarks) {
+                                                                case 'good':
+                                                                    $badge_color = 'success'; // Hijau
+                                                                    $badge_text = 'Approve Good';
+                                                                    break;
+                                                                case 'poor':
+                                                                    $badge_color = 'warning'; // Kuning
+                                                                    $badge_text = 'Approve Poor';
+                                                                    break;
+                                                                case 'failed':
+                                                                    $badge_color = 'danger'; // Merah
+                                                                    $badge_text = 'Approve Failed';
+                                                                    break;
+                                                                default:
+                                                                    $badge_color = 'secondary'; // Warna default jika remarks tidak dikenali
+                                                                    $badge_text = 'Approve Unknown'; // Teks default jika remarks tidak dikenali
+                                                                    break;
+                                                            }
+                                                        } else {
+                                                            // Warna untuk status selain 'Approve'
+                                                            switch ($status_approvowner) {
+                                                                case 'Pending':
+                                                                    $badge_color = 'danger';
+                                                                    $badge_text = 'Pending';
+                                                                    break;
+                                                                case 'In Process':
+                                                                    $badge_color = 'warning';
+                                                                    $badge_text = 'In Process';
+                                                                    break;
+                                                                default:
+                                                                    $badge_color = 'secondary'; // Warna default jika status tidak dikenali
+                                                                    $badge_text = 'Unknown Status'; // Teks default jika status tidak dikenali
+                                                                    break;
+                                                            }
+                                                        }
+                                                    ?>
+                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
+                                                        <?php echo $badge_text; ?>
+                                                    </span>
+                                                </td>
+
                                             <td>
                                             <!-- Tombol Edit -->
-                                            <?php if ($row['status_approvre'] != "Approve"): ?>
                                             <a href="re/land-sourcing-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
                                                 <i class="i-Pen-2"></i>
                                             </a>
                                             
-                                            <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_approvre'] ?>">
+                                            <!-- <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_approvre'] ?>">
                                                             <i class="nav-icon i-Book"></i>
-                                                        </button>
-                                            <?php endif; ?>
+                                                        </button> -->
                                                 <!-- Tombol Hapus -->
-                                        <!-- <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" id="<?php echo $row['id']; ?>" onclick="setDelete(this)">
-                                            <i class="nav-icon i-Close-Window"></i>
-                                        </button> -->
+                                            <!-- <button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deleteModal" id="<?php echo $row['id']; ?>" onclick="setDelete(this)">
+                                                <i class="nav-icon i-Close-Window"></i>
+                                            </button> -->
                                             </td>
                                         </tr>
                                         <!-- Modal -->
@@ -167,7 +376,24 @@ if ($result && $result->num_rows > 0) {
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="pic">PIC</label>
-                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                            <select class="form-control" id="pic" name="pic">
+                                                                                <option value="">Pilih PIC</option>
+                                                                                <option value="Legal">Legal</option>
+                                                                                <option value="Marketing">Marketing</option>
+                                                                                <option value="Landlord">Landlord</option>
+                                                                                <option value="Scm">SCM</option>
+                                                                                <option value="Sdg-project">SDG Project</option>
+                                                                                <option value="Sdg-design">SDG Design</option>
+                                                                                <option value="Sdg-equipment">SDG Equipment</option>
+                                                                                <option value="Sdg-qs">SDG QS</option>
+                                                                                <option value="Operations">Operations</option>
+                                                                                <option value="Procurement">Procurement</option>
+                                                                                <option value="Taf">TAF</option>
+                                                                                <option value="HR">HR</option>
+                                                                                <option value="Academy">Academy</option>
+                                                                                <option value="Negotiator">Negotiator</option>
+                                                                                <option value="Others">Others</option>
+                                                                            </select>
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="action_plan">Action Plan</label>
@@ -198,11 +424,15 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Maps</th>
                                                 <th>Latitude</th>
                                                 <th>Longitude</th>
+                                                <th>Harga Sewa</th>
+                                                <th>Minimum Tahun Sewa</th>
                                                 <th>Lampiran</th>
+                                                <th>Status BoD</th>
 												<th>Action</th>
                                             </tr>
                                         </tfoot>
-                                    </table>
+                                    </table>    
+                                    </div>
                                     <!-- Modal Konfirmasi Hapus -->
                                     <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
                                         <div class="modal-dialog" role="document">
@@ -478,6 +708,29 @@ $(document).ready(function() {
             var id = element.id;
             document.getElementById('delete').value = id;
         }
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Hancurkan DataTable jika sudah ada
+            if ($.fn.DataTable.isDataTable('#zero_configuration_table')) {
+                $('#zero_configuration_table').DataTable().destroy();
+            }
+
+            // Inisialisasi DataTable
+            $('#zero_configuration_table').DataTable({
+                scrollX: true, // Menambahkan scroll horizontal
+                fixedColumns: {
+                    leftColumns: 3 // Jumlah kolom yang ingin di-fix
+                },
+                fixedHeader: {
+                    leftColumns: 3
+                }
+            });
+            // Atur ulang lebar kolom saat menggulir horizontal
+            $(window).on('resize', function() {
+                table.columns.adjust().draw();
+            });
+        });
     </script>
 </body>
 

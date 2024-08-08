@@ -2,7 +2,7 @@
 // Koneksi ke database
 include "../koneksi.php";
 
-$status_approvowner = "";
+$confirm_negovaldoc = "";
 // Query untuk mengambil data dari tabel re
 
 $sql = "SELECT d.*, 
@@ -27,6 +27,65 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
+$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'Sign'";
+$sla_result = $conn->query($sla_query);
+
+$sla_value = 0; // Default SLA value
+
+if ($sla_result->num_rows > 0) {
+    $row = $sla_result->fetch_assoc();
+    $sla_value = $row['sla'];
+} else {
+    echo "No SLA value found for 'Owner Surveyor'";
+}
+
+function calculateScoring($start_date, $end_date, $sla) {
+    $today = new DateTime();
+    $start_date = $start_date ?: $today->format('Y-m-d');
+    $end_date = $end_date ?: $today->format('Y-m-d');
+    $sla_days = $sla ?: 0;
+
+    $start_date_obj = new DateTime($start_date);
+    $end_date_obj = new DateTime($end_date);
+
+    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
+
+    if ($sla_days != 0) {
+        if ($date_diff > $sla_days) {
+            $scoring = -((($date_diff - $sla_days) / $sla_days) * 100);
+        } else {
+            $scoring = ((($sla_days - $date_diff) / $sla_days) * 100);
+        }
+    } else {
+        $scoring = 0;
+    }
+
+    return round($scoring, 2);
+}
+// Fungsi untuk menentukan remarks berdasarkan scoring
+function getRemarks($scoring) {
+    if ($scoring >= 0) {
+        return "good";
+    } elseif ($scoring >= -30) {
+        return "poor";
+    } else {
+        return "bad";
+    }
+}
+
+// Fungsi untuk menentukan warna badge berdasarkan remarks
+function getBadgeColor($remarks) {
+    switch ($remarks) {
+        case 'good':
+            return 'success'; // Hijau
+        case 'poor':
+            return 'warning'; // Kuning
+        case 'bad':
+            return 'danger'; // Merah
+        default:
+            return 'secondary'; // Default jika remarks tidak dikenali
+    }
+}
 // Tutup koneksi database
 $conn->close();
 ?>
@@ -37,23 +96,36 @@ $conn->close();
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/datatables.min.css" rel="stylesheet"  />
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
 <style>
-    .hidden {
-        display: none;
-    }
-</style>
+        .hidden {
+            display: none;
+        },
+
+        .small-column {
+            max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */
+            overflow: hidden; /* Memotong konten yang meluas */
+            text-overflow: ellipsis; /* Menampilkan elipsis jika konten terlalu panjang */
+            white-space: nowrap; /* Mencegah teks membungkus ke baris baru */
+        }
+
+        th, td {
+                white-space: nowrap;
+            }
+        table.dataTable {
+            border-collapse:  collapse!important;
+        }
+    </style>
 </head>
 
 <body class="text-left">
@@ -96,8 +168,9 @@ $conn->close();
                                                 <th>Lampiran VL</th>
                                                 <th>Lampiran VD</th>
                                                 <th>Lampiran PSM Legal</th>
-                                                <th>Lampiran Draft</th>
-                                                <th>Lampiran Draft Signed</th>
+                                                <th>Lampiran Draft From RE</th>
+                                                <th>Lampiran Draft Signed From BoD</th>
+                                                <th>Lampiran Draft Signed By Negotiator</th>
                                                 <th>Catatan Negotiator</th>
                                                 <th>Status Negotiator</th>
                                                 <th>SLA</th>
@@ -252,6 +325,28 @@ $conn->close();
                                                     // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
                                                     echo '<td></td>';
                                                 }
+                                                ?>                         
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_nego_files = explode(",", $row['lamp_nego']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_nego'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_nego_files as $file) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $file . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
                                                 ?>      
                                                 <td><?= $row['catatan_negovaldoc'] ?></td>
                                                 <td>
@@ -259,7 +354,7 @@ $conn->close();
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['confirm_negovaldoc']) {
-                                                            case 'Signed':
+                                                            case 'Done':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -288,10 +383,26 @@ $conn->close();
                                                     // Menghitung selisih hari antara sla_date dan hari ini
                                                     $diff = $today->diff($slaLegalDate);
                                                     
-                                                    // Jika status_approvowner adalah "Approve"
-                                                    if ($row['confirm_negovaldoc'] == "Approve") {
-                                                        echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
-                                                        echo '<p>Status changed to Approved on: ' . $row['negovaldoc_date'] . '</p>';
+                                                    // Menghitung scoring
+                                                    $scoring = calculateScoring($row['negovaldoc_date'], $row['slanegovaldoc_date'], $sla_value); // Make sure $sla_value is set correctly
+                                                    $remarks = getRemarks($scoring);
+
+                                                    if ($row['confirm_negovaldoc'] == "Done") {
+                                                        // Menentukan label berdasarkan remarks
+                                                        $status_label = '';
+                                                        switch ($remarks) {
+                                                            case 'good':
+                                                                $status_label = 'Done Good';
+                                                                break;
+                                                            case 'poor':
+                                                                $status_label = 'Done Poor';
+                                                                break;
+                                                            case 'bad':
+                                                                $status_label = 'Done Bad';
+                                                                break;
+                                                        }
+
+                                                        echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
                                                         // Menghitung jumlah hari terlambat
                                                         $lateDays = $slaLegalDate->diff($today)->days;
@@ -313,11 +424,11 @@ $conn->close();
                                                 </td>
                                                 <td>
                                                     <!-- Tombol Edit -->
-                                                    <?php if ($row['confirm_negovaldoc'] != "Approve"): ?>
+                                                    <?php if ($row['confirm_negovaldoc'] != "Done"): ?>
                                                         <div>
-                                                        <!-- <a href="owner/draft-sewa-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mb-2">
+                                                        <a href="negosiator/sign-finaldoc-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
                                                             <i class="nav-icon i-Pen-2"></i>
-                                                        </a> -->
+                                                        </a>
                                                         <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['confirm_negovaldoc'] ?>">
                                                             <i class="nav-icon i-Book"></i>
                                                         </button>
@@ -335,19 +446,18 @@ $conn->close();
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <form id="statusForm" method="post" action="negosiator/draft-sewa-process.php" enctype="multipart/form-data">
-                                                                    <input type="hidden" name="id" id="modalId" value="<?= $row['id']; ?>">
+                                                                <form id="statusForm" method="post" action="negosiator/sign-finaldoc-process.php" enctype="multipart/form-data">
+                                                                    <input type="hidden" name="id" value="<?=$row["id"]?>"  id="modalId">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve</label>
+                                                                        <label for="statusSelect">Status Approve Sign Nego</label>
                                                                         <select class="form-control" id="statusSelect" name="confirm_negovaldoc">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
-                                                                            <option value="Approve">Approve</option>
-                                                                            <option value="Reject">Reject</option>
+                                                                            <option value="Done">Done</option>
                                                                         </select>
                                                                     </div>
                                                                     <div class="form-group">
-                                                                        <label for="catatan_negovaldoc">Catatan Negotiator</label>
+                                                                        <label for="catatan_negovaldoc">Catatan Sign</label>
                                                                         <input type="text" class="form-control" id="catatan_negovaldoc" name="catatan_negovaldoc">
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">
@@ -357,7 +467,24 @@ $conn->close();
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="pic">PIC</label>
-                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                            <select class="form-control" id="pic" name="pic">
+                                                                                <option value="">Pilih PIC</option>
+                                                                                <option value="Legal">Legal</option>
+                                                                                <option value="Marketing">Marketing</option>
+                                                                                <option value="Landlord">Landlord</option>
+                                                                                <option value="Scm">SCM</option>
+                                                                                <option value="Sdg-project">SDG Project</option>
+                                                                                <option value="Sdg-design">SDG Design</option>
+                                                                                <option value="Sdg-equipment">SDG Equipment</option>
+                                                                                <option value="Sdg-qs">SDG QS</option>
+                                                                                <option value="Operations">Operations</option>
+                                                                                <option value="Procurement">Procurement</option>
+                                                                                <option value="Taf">TAF</option>
+                                                                                <option value="HR">HR</option>
+                                                                                <option value="Academy">Academy</option>
+                                                                                <option value="Negotiator">Negotiator</option>
+                                                                                <option value="Others">Others</option>
+                                                                            </select>
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="action_plan">Action Plan</label>
@@ -376,7 +503,7 @@ $conn->close();
                                                 </div>
                                                     </td>
                                             </tr>
-                                        <?php endforeach; ?>
+                                            <?php endforeach; ?>
                                         </tbody>
                                         <tfoot>
                                             <tr>
@@ -389,8 +516,9 @@ $conn->close();
                                                 <th>Lampiran VL</th>
                                                 <th>Lampiran VD</th>
                                                 <th>Lampiran PSM Legal</th>
-                                                <th>Lampiran Draft</th>
-                                                <th>Lampiran Draft Signed</th>
+                                                <th>Lampiran Draft From RE</th>
+                                                <th>Lampiran Draft Signed From BoD</th>
+                                                <th>Lampiran Draft Signed By Negotiator</th>
                                                 <th>Catatan Negotiator</th>
                                                 <th>Status Negotiator</th>
                                                 <th>SLA</th>
@@ -676,6 +804,44 @@ $conn->close();
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Toggle issue detail section based on the initial value of statusSelect
+            toggleIssueDetail();
+
+            // When the statusSelect value changes, toggle the issue detail section
+            $('#statusSelect').on('change', function() {
+                toggleIssueDetail();
+            });
+
+            // Show the modal if status_approvowner is 'Pending'
+            <?php if ($confirm_negovaldoc == 'Pending') { ?>
+                $('#editModal').modal('show');
+            <?php } ?>
+
+            // Fill the hidden input with the correct ID when the edit button is clicked
+            $('.edit-btn').click(function() {
+                var id = $(this).data('id');
+                $('#modalId').val(id);
+            });
+        });
+
+        function toggleIssueDetail() {
+            var statusSelect = document.getElementById("statusSelect");
+            var issueDetailSection = document.getElementById("issueDetailSection");
+
+            if (statusSelect.value === "Pending") {
+                issueDetailSection.style.display = "block";
+            } else {
+                issueDetailSection.style.display = "none";
+            }
+        }
+    </script>
     <script>
         // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
         function setDelete(element) {
@@ -696,89 +862,21 @@ $conn->close();
     </script>
 
 <script>
-    // JavaScript to handle opening the modal and setting form values
-    $('#editModal').on('show.bs.modal', function (event) {
-        var button = $(event.relatedTarget); // Button that triggered the modal
-        var kodeLahan = button.data('id'); // Extract info from data-* attributes
-        var status = button.data('status'); // Extract status
+        $(document).ready(function() {
+            // Hancurkan DataTable jika sudah ada
+            if ($.fn.DataTable.isDataTable('#zero_configuration_table')) {
+                $('#zero_configuration_table').DataTable().destroy();
+            }
 
-        // Update the modal's content.
-        var modal = $(this);
-        modal.find('#modalKodeLahan').val(kodeLahan);
-        modal.find('#statusSelect').val(status);
-
-        // Toggle issue detail section visibility
-        toggleIssueDetail();
-    });
-
-    // Function to toggle the visibility of issue detail section
-    function toggleIssueDetail() {
-        var statusSelect = document.getElementById("statusSelect");
-        var issueDetailSection = document.getElementById("issueDetailSection");
-
-        if (statusSelect.value === "Pending") {
-            issueDetailSection.style.display = "block";
-        } else {
-            issueDetailSection.style.display = "none";
-        }
-    }
-
-    // Event listener for statusSelect change
-    $('#statusSelect').on('change', function () {
-        toggleIssueDetail();
-    });
-</script>
-<?php if ($status_approvowner == 'Pending') { ?>
-    <script>
-        $(document).ready(function () {
-            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+            // Inisialisasi DataTable
+            $('#zero_configuration_table').DataTable({
+                scrollX: true, // Menambahkan scroll horizontal
+                fixedColumns: {
+                    leftColumns: 3 // Jumlah kolom yang ingin di-fix
+                }
+            });
         });
     </script>
-<?php } ?>
-
-
-    <script>
-    // When the document is ready
-    $(document).ready(function() {
-        // Get the initial value of status approval owner
-        var initialStatus = $('#editStatusOwner').val();
-
-        // Function to generate dropdown options based on the initial status
-        function generateOptions(initialStatus) {
-            var optionsHtml = '';
-            // If the initial status is In Process
-            if (initialStatus === 'In Process') {
-                optionsHtml += '<option value="Pending">Pending</option>';
-                optionsHtml += '<option value="Approve">Approve</option>';
-            }
-            // If the initial status is Pending
-            else if (initialStatus === 'Pending') {
-                optionsHtml += '<option value="In Process">In Process</option>';
-                optionsHtml += '<option value="Approve">Approve</option>';
-            }
-            // If the initial status is Approve, disable the select input
-            else if (initialStatus === 'Approve') {
-                optionsHtml += '<option value="Approve" disabled selected>Approve</option>';
-            }
-            // Update the dropdown options
-            $('#editStatusOwner').html(optionsHtml);
-        }
-
-        // Generate initial dropdown options based on the initial status
-        generateOptions(initialStatus);
-
-        // When the value of the select input changes
-        $('#editStatusOwner').change(function() {
-            var selectedStatus = $(this).val();
-            // Regenerate dropdown options based on the selected status
-            generateOptions(selectedStatus);
-        });
-    });
-</script>
-
-<script>
-    
-</script>
 
 <script>
     function showPopup(daysLeft) {

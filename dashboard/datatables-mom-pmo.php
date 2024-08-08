@@ -25,7 +25,8 @@ if ($result && $result->num_rows > 0) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -79,7 +80,19 @@ if ($result && $result->num_rows > 0) {
                                         <?php foreach ($data as $row): ?>
                                         <tr>
                                             <td><?= $row['notes'] ?></td>
-                                            <td><?= $row['date'] ?></td>
+                                                <td>
+                                                    <?php if (!empty($row['date'])): ?>
+                                                        <?php
+                                                        $date = new DateTime($row['date']);
+                                                        $formattedDate = $date->format('d M y');
+                                                        ?>
+                                                        <?= $formattedDate ?>
+                                                    <?php else: ?>
+                                                        <!-- Jika kosong, tampilkan pesan atau biarkan kosong -->
+                                                        <!-- Misalnya, <span>-</span> atau <span>Not Available</span> -->
+                                                        <!-- <span>Not Available</span> -->
+                                                    <?php endif; ?>
+                                                </td>
                                             <td><?= $row['updated_by'] ?></td>
                                                 <td>
                                                     <?php

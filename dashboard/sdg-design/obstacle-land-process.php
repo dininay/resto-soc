@@ -130,7 +130,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 $conn->rollback();
                 echo "Error: " . $e->getMessage();
             }
-        } elseif ($status_obssdg == 'Diajukan') {
+        } elseif ($status_obssdg == 'Done') {
                 $obs_date = date("Y-m-d H:i:s");
                 $start_date = date("Y-m-d H:i:s");
                 $confirm_sdgdesain = "In Process";

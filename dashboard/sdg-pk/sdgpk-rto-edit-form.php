@@ -30,6 +30,7 @@ if(isset($_GET['id'])) {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -51,10 +52,10 @@ if(isset($_GET['id'])) {
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Kualitas Air, Listrik, IPAL</h1>
+                    <h1>MEP - Sumber Evaluation</h1>
                     <ul>
                         <li><a href="href">Edit</a></li>
-                        <li>Kualitas Air, Listrik, IPAL</li>
+                        <li>MEP - Sumber Evaluation</li>
                     </ul>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
@@ -65,33 +66,79 @@ if(isset($_GET['id'])) {
                             <form method="post" action="sdgpk-rto-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="no_listrik">No Listrik</label>
+                                    <label class="col-sm-3 col-form-label" for="sumber_air">Sumber Air</label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="no_listrik" name="no_listrik" type="text" placeholder="No Listrik" value="<?php echo $row['no_listrik']; ?>"/>
+                                        <select class="form-control" id="sumber_air" name="sumber_air">
+                                            <option value="">Select Sumber Air</option>
+                                            <option value="PDAM" <?php echo ($row['sumber_air'] == 'PDAM') ? 'selected' : ''; ?>>PDAM</option>
+                                            <option value="Sumur" <?php echo ($row['sumber_air'] == 'Sumur') ? 'selected' : ''; ?>>Sumur</option>
+                                            <option value="Keduanya" <?php echo ($row['sumber_air'] == 'Keduanya') ? 'selected' : ''; ?>>Keduanya</option>
+                                            <!-- Add more options as needed -->
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_listrik">Upload Lampiran Listrik</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_sumberair">Upload Lampiran Form Pengajuan Sumber Air</label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
-                                            <input name="lamp_listrik[]" type="file" multiple="multiple" />
+                                            <input name="lamp_sumberair[]" type="file" multiple="multiple" />
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_ipal">Upload Lampiran IPAL</label>
+                                    <label class="col-sm-3 col-form-label" for="kesesuaian_ujilab">Kesesuaian Uji Lab Air sudah sesuai no 2 tahun 2023</label>
                                     <div class="col-sm-9">
-                                        <div class="dropzone" id="multple-file-upload" >
-                                            <input name="lamp_ipal[]" type="file" multiple="multiple" />
+                                        <select class="form-control" id="kesesuaian_ujilab" name="kesesuaian_ujilab" onchange="toggleUjilabDetail()">
+                                            <option value="">Select Kesesuaian Uji Lab</option>
+                                            <option value="Yes" <?php echo ($row['kesesuaian_ujilab'] == 'Yes') ? 'selected' : ''; ?>>Yes</option>
+                                            <option value="No" <?php echo ($row['kesesuaian_ujilab'] == 'No') ? 'selected' : ''; ?>>No</option>
+                                            <!-- Add more options as needed -->
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group row" id="uji-lab" style="display: none;">
+                                    <label class="col-sm-3 col-form-label" for="lamp_ujilab">Upload Lampiran Kesesuaian Uji Lab</label>
+                                    <div class="col-sm-9">
+                                        <div class="dropzone" id="multiple-file-upload">
+                                            <input name="lamp_ujilab[]" type="file" multiple="multiple" />
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_ka">Upload Lampiran Kualitas Air</label>
+                                    <label class="col-sm-3 col-form-label" for="filter_air">Filter Air</label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="filter_air" name="filter_air" onchange="toggleFilterDetail()">
+                                            <option value="">Select Filter Air</option>
+                                            <option value="Yes" <?php echo ($row['filter_air'] == 'Yes') ? 'selected' : ''; ?>>Yes</option>
+                                            <option value="No" <?php echo ($row['filter_air'] == 'No') ? 'selected' : ''; ?>>No</option>
+                                            <!-- Add more options as needed -->
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group row" id="filter-air" style="display: none;">
+                                    <label class="col-sm-3 col-form-label" for="lamp_filterair">Upload Lampiran Filter Air</label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
-                                            <input name="lamp_ka[]" type="file" multiple="multiple" />
+                                            <input name="lamp_filterair[]" type="file" multiple="multiple" />
                                         </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="debit_airsumur">Debit Air Sumur</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="debit_airsumur" name="debit_airsumur" type="text" placeholder="Debit Air Sumur" value="<?php echo $row['debit_airsumur']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="debit_airpdam">Debit Air PDAM</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="debit_airpdam" name="debit_airpdam" type="text" placeholder="Debit Air PDAM" value="<?php echo $row['debit_airpdam']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="id_pdam">Nomor ID PDAM</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="id_pdam" name="id_pdam" type="text" placeholder="Nomor ID PDAM" value="<?php echo $row['id_pdam']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -276,6 +323,34 @@ if(isset($_GET['id'])) {
     <script src="../../dist-assets/js/scripts/script.min.js"></script>
     <script src="../../dist-assets/js/scripts/sidebar.compact.script.min.js"></script>
     <script src="../../dist-assets/js/scripts/customizer.script.min.js"></script>
+    <script>
+    function toggleFilterDetail() {
+        var filterAir = document.getElementById("filter_air");
+        var lampiranFilter = document.getElementById("filter-air");
+        if (filterAir.value === "Yes") {
+            lampiranFilter.style.display = "flex";
+        } else {
+            lampiranFilter.style.display = "none";
+        }
+    }
+
+    // Panggil fungsi saat halaman dimuat untuk menyesuaikan tampilan berdasarkan nilai awal
+    window.onload = toggleFilterDetail;
+    </script>
+    <script>
+    function toggleUjilabDetail() {
+        var ujiLab = document.getElementById("kesesuaian_ujilab");
+        var lampiranUjilab = document.getElementById("uji-lab");
+        if (ujiLab.value === "Yes") {
+            lampiranUjilab.style.display = "flex";
+        } else {
+            lampiranUjilab.style.display = "none";
+        }
+    }
+
+    // Call the function on page load to set the initial display state
+    window.onload = toggleUjilabDetail;
+</script>
 </body>
 
 </html>

@@ -42,6 +42,7 @@ $conn->close();
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -77,7 +78,7 @@ $conn->close();
                             <form method="post" action="draft-sewa-edit.php" enctype="multipart/form-data">
                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 
-                            <div class="form-group row">
+                                <div class="form-group row">
                                     <label class="col-sm-3 col-form-label" for="lamp_bod">Upload Table Sewa</label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >

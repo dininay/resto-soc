@@ -8,7 +8,8 @@ if(isset($_GET['id'])) {
     $id = $_GET['id'];
 
     // Query untuk mendapatkan data resep berdasarkan ID
-    $result = $conn->query("SELECT * FROM draft WHERE id = '$id'");
+    $result = $conn->query("SELECT 
+    draft.*, dokumen_loacd.kode_store FROM draft LEFT JOIN dokumen_loacd ON draft.kode_lahan = dokumen_loacd.kode_lahan WHERE draft.id = '$id'");
 
     // Periksa apakah data ditemukan
     if ($result->num_rows > 0) {
@@ -28,6 +29,7 @@ if(isset($_GET['id'])) {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -62,13 +64,20 @@ if(isset($_GET['id'])) {
                             <div class="card-body">
                             <form method="post" action="sign-psm-edit.php" enctype="multipart/form-data">
                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
-                                
+                            <input type="hidden" name="kode_lahan" value="<?php echo $row['kode_lahan']; ?>">
+                            
                             <div class="form-group row">
                                     <label class="col-sm-3 col-form-label" for="lamp_signpsm">Upload Sign PSM</label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_signpsm[]" type="file" multiple="multiple" />
                                         </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="kode_store">Kode Store</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="kode_store" name="kode_store" type="text" value="<?php echo $row['kode_store']; ?>">
                                     </div>
                                 </div>
                                 <div class="form-group row">

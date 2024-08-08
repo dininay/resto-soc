@@ -7,7 +7,7 @@ $sql = "
         SELECT 
         summary_soc.*,
         resto.gostore_date,
-        resto.sla_steqp,
+        equipment.sla_steqp,
         land.kode_lahan,
         land.nama_lahan,
         land.lokasi,
@@ -66,6 +66,7 @@ $sql = "
         dokumen_loacd.kode_store
         FROM resto
          JOIN land ON resto.kode_lahan = land.kode_lahan
+         JOIN equipment ON resto.kode_lahan = equipment.kode_lahan
          JOIN summary_soc ON resto.kode_lahan = summary_soc.kode_lahan
          JOIN soc_fat ON summary_soc.kode_lahan = soc_fat.kode_lahan
          JOIN soc_hrga ON soc_fat.kode_lahan = soc_hrga.kode_lahan
@@ -112,7 +113,8 @@ if ($result && $result->num_rows > 0) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -182,15 +184,55 @@ if ($result && $result->num_rows > 0) {
                                                 <td><?= $row['kode_store'] ?></td>
                                                 <td><?= $row['nama_lahan'] ?></td>
                                                 <td><?= $row['lokasi'] ?></td>
-                                                <td><?= $row['gostore_date'] ?></td>
-                                                <td><?= $row['go_fix'] ?></td>
-                                                <td><?= $row['rto_act'] ?></td>
+                                                <?php
+                                                $date = new DateTime($row['gostore_date']);
+                                                $formattedDate = $date->format('d M y');
+                                                ?>
+                                                <td><?= $formattedDate ?></td>
+                                                <td>
+                                                    <?php if (!empty($row['go_fix'])): ?>
+                                                        <?php
+                                                        $date = new DateTime($row['go_fix']);
+                                                        $formattedDate = $date->format('d M y');
+                                                        ?>
+                                                        <?= $formattedDate ?>
+                                                    <?php else: ?>
+                                                        <!-- Jika kosong, tampilkan pesan atau biarkan kosong -->
+                                                        <!-- Misalnya, <span>-</span> atau <span>Not Available</span> -->
+                                                        <!-- <span>Not Available</span> -->
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
+                                                    <?php if (!empty($row['rto_act'])): ?>
+                                                        <?php
+                                                        $date = new DateTime($row['rto_act']);
+                                                        $formattedDate = $date->format('d M y');
+                                                        ?>
+                                                        <?= $formattedDate ?>
+                                                    <?php else: ?>
+                                                        <!-- Jika kosong, tampilkan pesan atau biarkan kosong -->
+                                                        <!-- Misalnya, <span>-</span> atau <span>Not Available</span> -->
+                                                        <!-- <span>Not Available</span> -->
+                                                    <?php endif; ?>
+                                                </td>
                                                 <td><?= $row['sla_steqp'] ?></td>
                                                 <td><?= $row['type_kitchen'] ?></td>
                                                 <td><?= $row['jam_ops'] ?></td>
                                                 <td>Rp. <?= $row['project_sales'] ?></td>
                                                 <td><?= $row['crew_needed'] ?></td>
-                                                <td><?= $row['spk_release'] ?></td>
+                                                <td>
+                                                    <?php if (!empty($row['spk_release'])): ?>
+                                                        <?php
+                                                        $date = new DateTime($row['spk_release']);
+                                                        $formattedDate = $date->format('d M y');
+                                                        ?>
+                                                        <?= $formattedDate ?>
+                                                    <?php else: ?>
+                                                        <!-- Jika kosong, tampilkan pesan atau biarkan kosong -->
+                                                        <!-- Misalnya, <span>-</span> atau <span>Not Available</span> -->
+                                                        <!-- <span>Not Available</span> -->
+                                                    <?php endif; ?>
+                                                </td>
                                                 <td>
                                                     <?php 
                                                         $total1 = rtrim(50 * number_format(($row['bangunan_mural'] + $row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) / 6, 2) / 100, '0') . (number_format(50 * (($row['bangunan_mural'] + $row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) / 6 / 100), 2)[strlen(number_format(50 * (($row['bangunan_mural'] + $row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) / 6 / 100), 2)) - 1] == '.' ? '0' : '');
@@ -526,6 +568,22 @@ $(document).ready(function() {
     });
 });
 </script>
+    <script>
+        $(document).ready(function() {
+            // Hancurkan DataTable jika sudah ada
+            if ($.fn.DataTable.isDataTable('#zero_configuration_table')) {
+                $('#zero_configuration_table').DataTable().destroy();
+            }
+
+            // Inisialisasi DataTable
+            $('#zero_configuration_table').DataTable({
+                scrollX: true, // Menambahkan scroll horizontal
+                fixedColumns: {
+                    leftColumns: 3 // Jumlah kolom yang ingin di-fix
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

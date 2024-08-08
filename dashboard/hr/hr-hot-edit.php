@@ -7,8 +7,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     // Ambil nilai tgl_berlaku dan penanggungjawab dari formulir
     $id = $_POST['id'];
-    $hot = $_POST['hot'];
-    $persen_hot = $_POST['persen_hot'];
     // Periksa apakah kunci 'lampiran' ada dalam $_FILES
     $lamp_hot = "";
 
@@ -35,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Update data di database
-    $sql = "UPDATE socdate_hr SET lamp_hot = '$lamp_hot', persen_hot = '$persen_hot', hot = '$hot' WHERE id = '$id'";
+    $sql = "UPDATE socdate_hr SET lamp_hot = '$lamp_hot' WHERE id = '$id'";
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
         header("Location: " . $base_url . "/datatables-hr-hot.php");

@@ -31,6 +31,7 @@ if(isset($_GET['id'])) {
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -280,27 +281,51 @@ if(isset($_GET['id'])) {
     <script src="../../dist-assets/js/scripts/customizer.script.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.2/dropzone.min.js"></script>
     
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Ambil elemen input date
-        var dateInput = document.getElementById('gostore_date');
-        
-        // Buat objek tanggal hari ini
-        var today = new Date();
-        
-        // Tambahkan 100 hari ke tanggal hari ini
-        today.setDate(today.getDate() + 100);
-        
-        // Format tanggal menjadi yyyy-mm-dd
-        var year = today.getFullYear();
-        var month = (today.getMonth() + 1).toString().padStart(2, '0');
-        var day = today.getDate().toString().padStart(2, '0');
-        var minDate = year + '-' + month + '-' + day;
-        
-        // Setel atribut min pada input date
-        dateInput.setAttribute('min', minDate);
-    });
-</script>
+    <!-- <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ambil elemen input date
+            var dateInput = document.getElementById('gostore_date');
+            
+            // Buat objek tanggal hari ini
+            var today = new Date();
+            
+            // Tambahkan 100 hari ke tanggal hari ini
+            today.setDate(today.getDate() + 100);
+            
+            // Format tanggal menjadi yyyy-mm-dd
+            var year = today.getFullYear();
+            var month = (today.getMonth() + 1).toString().padStart(2, '0');
+            var day = today.getDate().toString().padStart(2, '0');
+            var minDate = year + '-' + month + '-' + day;
+            
+            // Setel atribut min pada input date
+            dateInput.setAttribute('min', minDate);
+        });
+    </script> -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ambil elemen input date
+            var dateInput = document.getElementById('gostore_date');
+
+            // Pastikan elemen input date ada
+            if (dateInput) {
+                // Buat objek tanggal hari ini
+                var today = new Date();
+                
+                // Tambahkan 100 hari ke tanggal hari ini
+                today.setDate(today.getDate());
+                
+                // Format tanggal menjadi yyyy-mm-dd
+                var year = today.getFullYear();
+                var month = (today.getMonth() + 1).toString().padStart(2, '0');
+                var day = today.getDate().toString().padStart(2, '0');
+                var minDate = year + '-' + month + '-' + day;
+                
+                // Setel atribut min pada input date
+                dateInput.setAttribute('min', minDate);
+            }
+        });
+    </script>
     <script>
         // Tambahkan event listener untuk radio button ganti_lampiran
         document.querySelectorAll('input[name="ganti_lampiran"]').forEach(function(radio) {

@@ -39,7 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
 
     try {
         // Jika status_approvlegalvd diubah menjadi Approve
-        if ($status_tm == 'Approve') {
+        if ($status_tm == 'Done') {
             $tm_date = date("Y-m-d H:i:s");
 
             // Query untuk memperbarui status status_tm di tabel draft
@@ -130,7 +130,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         // Komit transaksi
         $conn->commit();
         // Redirect ke halaman datatables-checkval-legal.php
-        // header("Location: ../datatables-it.php");
+        header("Location: ../datatables-hr-qs.php");
         exit; // Pastikan tidak ada output lain setelah header redirect
     } catch (Exception $e) {
         // Rollback transaksi jika terjadi kesalahan

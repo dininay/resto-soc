@@ -20,6 +20,65 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
+$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'Owner Surveyor'";
+$sla_result = $conn->query($sla_query);
+
+$sla_value = 0; // Default SLA value
+
+if ($sla_result->num_rows > 0) {
+    $row = $sla_result->fetch_assoc();
+    $sla_value = $row['sla'];
+} else {
+    echo "No SLA value found for 'Owner Surveyor'";
+}
+
+function calculateScoring($start_date, $end_date, $sla) {
+    $today = new DateTime();
+    $start_date = $start_date ?: $today->format('Y-m-d');
+    $end_date = $end_date ?: $today->format('Y-m-d');
+    $sla_days = $sla ?: 0;
+
+    $start_date_obj = new DateTime($start_date);
+    $end_date_obj = new DateTime($end_date);
+
+    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
+
+    if ($sla_days != 0) {
+        if ($date_diff > $sla_days) {
+            $scoring = -((($date_diff - $sla_days) / $sla_days) * 100);
+        } else {
+            $scoring = ((($sla_days - $date_diff) / $sla_days) * 100);
+        }
+    } else {
+        $scoring = 0;
+    }
+
+    return round($scoring, 2);
+}
+// Fungsi untuk menentukan remarks berdasarkan scoring
+function getRemarks($scoring) {
+    if ($scoring >= 0) {
+        return "good";
+    } elseif ($scoring >= -30) {
+        return "poor";
+    } else {
+        return "bad";
+    }
+}
+
+// Fungsi untuk menentukan warna badge berdasarkan remarks
+function getBadgeColor($remarks) {
+    switch ($remarks) {
+        case 'good':
+            return 'success'; // Hijau
+        case 'poor':
+            return 'warning'; // Kuning
+        case 'bad':
+            return 'danger'; // Merah
+        default:
+            return 'secondary'; // Default jika remarks tidak dikenali
+    }
+}
 // Tutup koneksi database
 $conn->close();
 ?>
@@ -30,22 +89,28 @@ $conn->close();
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/datatables.min.css" rel="stylesheet"  />
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>   
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
     .hidden {
         display: none;
-    }
+    },
+
+.small-column {
+    max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */
+    overflow: hidden; /* Memotong konten yang meluas */
+    text-overflow: ellipsis; /* Menampilkan elipsis jika konten terlalu panjang */
+    white-space: nowrap; /* Mencegah teks membungkus ke baris baru */
+}
 </style>
 </head>
 
@@ -62,7 +127,7 @@ $conn->close();
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Datatables Approval Owner</h1>
+                    <h1>Datatables Approval BoD</h1>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
                 <!-- end of row-->
@@ -81,11 +146,18 @@ $conn->close();
                                         <thead>
                                             <tr>
                                                 <th>Inventory Code</th>
+                                                <th>Kota</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
 												<th>Luas Area</th>
+                                                <th>No Telepon</th>
+                                                <th>Maps</th>
+                                                <th>Latitude</th>
+                                                <th>Longitude</th>
+                                                <th>Harga Sewa</th>
+                                                <th>Minimum Tahun Sewa</th>
                                                 <th>Lampiran</th>
-                                                <th>Approval Owner</th>
+                                                <th>Approval BoD</th>
                                                 <th>Catatan Owner</th>
                                                 <th>Approved Date</th>
                                                 <th>SLA</th>
@@ -96,25 +168,48 @@ $conn->close();
                                         <?php foreach ($data as $row): ?>
                                             <tr>
                                                 <td><?= $row['kode_lahan'] ?></td>
+                                                <td><?= $row['city'] ?></td>
                                                 <td><?= $row['nama_lahan'] ?></td>
                                                 <td><?= $row['lokasi'] ?></td>
                                                 <td><?= $row['luas_area'] ?></td>
+                                                <td><?= $row['no_tlp'] ?></td>
+                                                <td class="small-column">
+                                                    <?php if (!empty($row['maps'])): ?>
+                                                        <a href="<?= htmlspecialchars($row['maps']) ?>" target="_blank" title="View Map">
+                                                            <i class="fas fa-map-marker-alt"></i> <!-- Ikon peta Font Awesome -->
+                                                        </a>
+                                                    <?php else: ?>
+                                                        <!-- Jika data kosong, Anda bisa menampilkan pesan atau membiarkannya kosong -->
+                                                        <!-- Misalnya, menampilkan pesan "No link" atau membiarkannya kosong -->
+                                                        <!-- <span>No link</span> -->
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td><?= $row['latitude'] ?></td>
+                                                <td><?= $row['longitude'] ?></td>
+                                                <td><?= $row['harga_sewa'] ?></td>
+                                                <td><?= $row['mintahun_sewa'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_land_files = explode(",", $row['lamp_land']); // Pisahkan nama file menjadi array
-                                                ?>
-
-                                                <td>
-                                                    <ul style="list-style-type: none; padding: 0; margin: 0;">
-                                                        <?php foreach ($lamp_land_files as $file): ?>
-                                                            <li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/<?= $file ?>" target="_blank">
+                                                $lamp_loacd_files = explode(",", $row['lamp_land']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_land'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_loacd_files as $file) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $file . '" target="_blank">
                                                                     <i class="fas fa-file-pdf nav-icon"></i>
                                                                 </a>
-                                                            </li>
-                                                        <?php endforeach; ?>
-                                                    </ul>
-                                                </td>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -127,7 +222,7 @@ $conn->close();
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -139,7 +234,11 @@ $conn->close();
                                                     </span>
                                                 </td>
                                                 <td><?= $row['catatan_owner'] ?></td>
-                                                <td><?= $row['start_date'] ?></td>
+                                                <?php
+                                                $date = new DateTime($row['start_date']);
+                                                $formattedDate = $date->format('d M y');
+                                                ?>
+                                                <td><?= $formattedDate ?></td>
                                                 <td>
                                                     <?php
                                                     // Mendapatkan tanggal sla_date dari kolom data
@@ -151,10 +250,26 @@ $conn->close();
                                                     // Menghitung selisih hari antara sla_date dan hari ini
                                                     $diff = $today->diff($slaLegalDate);
                                                     
-                                                    // Jika status_approvowner adalah "Approve"
+                                                    // Menghitung scoring
+                                                    $scoring = calculateScoring($row['start_date'], $row['sla_date'], $sla_value); // Make sure $sla_value is set correctly
+                                                    $remarks = getRemarks($scoring);
+
                                                     if ($row['status_approvowner'] == "Approve") {
-                                                        echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
-                                                        echo '<p>Status changed to Approved on: ' . $row['start_date'] . '</p>';
+                                                        // Menentukan label berdasarkan remarks
+                                                        $status_label = '';
+                                                        switch ($remarks) {
+                                                            case 'good':
+                                                                $status_label = 'Done Good';
+                                                                break;
+                                                            case 'poor':
+                                                                $status_label = 'Done Poor';
+                                                                break;
+                                                            case 'bad':
+                                                                $status_label = 'Done Bad';
+                                                                break;
+                                                        }
+
+                                                        echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
                                                         // Menghitung jumlah hari terlambat
                                                         $lateDays = $slaLegalDate->diff($today)->days;
@@ -198,7 +313,7 @@ $conn->close();
                                                                 <form id="statusForm" method="post" action="owner/approval-owner-fix-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="kode_lahan" id="modalKodeLahan">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve Owner</label>
+                                                                        <label for="statusSelect">Status Approve BoD</label>
                                                                         <select class="form-control" id="statusSelect" name="status_approvowner">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
@@ -207,7 +322,7 @@ $conn->close();
                                                                         </select>
                                                                     </div>
                                                                     <div class="form-group">
-                                                                        <label for="catatan">Catatan Owner</label>
+                                                                        <label for="catatan">Catatan BoD</label>
                                                                         <input type="text" class="form-control" id="catatan" name="catatan_owner">
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">
@@ -217,7 +332,24 @@ $conn->close();
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="pic">PIC</label>
-                                                                            <textarea class="form-control" id="pic" name="pic"></textarea>
+                                                                            <select class="form-control" id="pic" name="pic">
+                                                                                <option value="">Pilih PIC</option>
+                                                                                <option value="Legal">Legal</option>
+                                                                                <option value="Marketing">Marketing</option>
+                                                                                <option value="Landlord">Landlord</option>
+                                                                                <option value="Scm">SCM</option>
+                                                                                <option value="Sdg-project">SDG Project</option>
+                                                                                <option value="Sdg-design">SDG Design</option>
+                                                                                <option value="Sdg-equipment">SDG Equipment</option>
+                                                                                <option value="Sdg-qs">SDG QS</option>
+                                                                                <option value="Operations">Operations</option>
+                                                                                <option value="Procurement">Procurement</option>
+                                                                                <option value="Taf">TAF</option>
+                                                                                <option value="HR">HR</option>
+                                                                                <option value="Academy">Academy</option>
+                                                                                <option value="Negotiator">Negotiator</option>
+                                                                                <option value="Others">Others</option>
+                                                                            </select>
                                                                         </div>
                                                                         <div class="form-group">
                                                                             <label for="action_plan">Action Plan</label>
@@ -240,11 +372,18 @@ $conn->close();
                                         <tfoot>
                                             <tr>
                                                 <th>Inventory Code</th>
+                                                <th>Kota</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
 												<th>Luas Area</th>
+                                                <th>No Telepon</th>
+                                                <th>Maps</th>
+                                                <th>Latitude</th>
+                                                <th>Longitude</th>
+                                                <th>Harga Sewa</th>
+                                                <th>Minimum Tahun Sewa</th>
                                                 <th>Lampiran</th>
-                                                <th>Approval Owner</th>
+                                                <th>Approval BoD</th>
                                                 <th>Catatan Owner</th>
                                                 <th>Approved Date</th>
                                                 <th>SLA</th>
@@ -643,7 +782,22 @@ $conn->close();
         alert("Data sudah approve tepat waktu");
     }
 </script>
+    <script>
+        $(document).ready(function() {
+            // Hancurkan DataTable jika sudah ada
+            if ($.fn.DataTable.isDataTable('#zero_configuration_table')) {
+                $('#zero_configuration_table').DataTable().destroy();
+            }
 
+            // Inisialisasi DataTable
+            $('#zero_configuration_table').DataTable({
+                scrollX: true, // Menambahkan scroll horizontal
+                fixedColumns: {
+                    leftColumns: 3 // Jumlah kolom yang ingin di-fix
+                }
+            });
+        });
+    </script>
 
 </body>
 

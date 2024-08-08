@@ -73,7 +73,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
 
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, d.lamp_draf, r.id, r.kode_lahan, s.lamp_desainplan, r.keterangan, 
-r.jenis_biaya, r.jumlah, r.date, r.lamp_rab, r.confirm_sdgqs, r.sla_date, r.start_date, c.kode_store, c.lamp_vd, c.status_approvlegalvd, p.status_approvprocurement
+r.jenis_biaya, r.jumlah, r.date, r.lamp_rab, r.confirm_sdgqs, r.sla_date, r.start_date, c.kode_store, c.lamp_vd, c.status_approvlegalvd, p.*
 FROM draft d
 INNER JOIN land l ON d.kode_lahan = l.kode_lahan
 INNER JOIN dokumen_loacd c ON d.kode_lahan = c.kode_lahan
@@ -103,7 +103,8 @@ if ($result && $result->num_rows > 0) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Dashboard Resto | Mie Gacoan<</title>
+    <title>Dashboard Resto | Mie Gacoan</title>
+    <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
@@ -111,6 +112,34 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/fixedcolumns/3.3.2/css/fixedColumns.dataTables.min.css">
+    <!-- Muat jQuery terlebih dahulu -->
+    <!-- Muat DataTables setelah jQuery -->
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
+    <style>
+        .hidden {
+            display: none;
+        },
+
+        .small-column {
+            max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */
+            overflow: hidden; /* Memotong konten yang meluas */
+            text-overflow: ellipsis; /* Menampilkan elipsis jika konten terlalu panjang */
+            white-space: nowrap; /* Mencegah teks membungkus ke baris baru */
+        }
+
+        th, td {
+                white-space: nowrap;
+            }
+        table.dataTable {
+            border-collapse:  collapse!important;
+        }
+        div.dataTables_wrapper {
+            width: 100%;
+            margin: 0 auto;
+        }
+    </style>
 </head>
 
 <body class="text-left">
@@ -148,16 +177,14 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
-                                                <th>Lampiran Lahan</th>
-                                                <th>Lampiran Loa CD</th>
-                                                <th>Lampiran Draft</th>
-                                                <th>Lampiran Desain</th>
                                                 <th>Status RAB</th>
                                                 <th>Lampiran RAB</th>
                                                 <th>Jumlah</th>
                                                 <th>Status VD</th>
                                                 <th>Lampiran VD</th>
+                                                <th>Lampiran SPK RAB</th>
                                                 <th>Status Procurement</th>
+                                                <th>Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -167,94 +194,6 @@ if ($result && $result->num_rows > 0) {
                                                 <td><?= $row['kode_store'] ?></td>
                                                 <td><?= $row['nama_lahan'] ?></td>
                                                 <td><?= $row['lokasi'] ?></td>
-                                                <?php
-                                                // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_land_files = explode(",", $row['lamp_land']); // Pisahkan nama file menjadi array
-                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_land'])) {
-                                                    echo '<td>
-                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
-                                                    // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_land_files as $land) {
-                                                        echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $land . '" target="_blank">
-                                                                    <i class="fas fa-file-pdf nav-icon"></i>
-                                                                </a>
-                                                            </li>';
-                                                    }
-                                                    echo '</ul>
-                                                        </td>';
-                                                } else {
-                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
-                                                    echo '<td></td>';
-                                                }
-                                                ?>
-                                                <?php
-                                                // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_loacd_files = explode(",", $row['lamp_loacd']); // Pisahkan nama file menjadi array
-                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_loacd'])) {
-                                                    echo '<td>
-                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
-                                                    // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_loacd_files as $loacd) {
-                                                        echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $loacd . '" target="_blank">
-                                                                    <i class="fas fa-file-pdf nav-icon"></i>
-                                                                </a>
-                                                            </li>';
-                                                    }
-                                                    echo '</ul>
-                                                        </td>';
-                                                } else {
-                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
-                                                    echo '<td></td>';
-                                                }
-                                                ?>
-                                                <?php
-                                                // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_draft_files = explode(",", $row['lamp_draf']); // Pisahkan nama file menjadi array
-                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_draf'])) {
-                                                    echo '<td>
-                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
-                                                    // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_draft_files as $draft) {
-                                                        echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $draft . '" target="_blank">
-                                                                    <i class="fas fa-file-pdf nav-icon"></i>
-                                                                </a>
-                                                            </li>';
-                                                    }
-                                                    echo '</ul>
-                                                        </td>';
-                                                } else {
-                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
-                                                    echo '<td></td>';
-                                                }
-                                                ?>
-                                                <?php
-                                                // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_desainplan_files = explode(",", $row['lamp_desainplan']); // Pisahkan nama file menjadi array
-                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_desainplan'])) {
-                                                    echo '<td>
-                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
-                                                    // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_desainplan_files as $desainplan) {
-                                                        echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $desainplan . '" target="_blank">
-                                                                    <i class="fas fa-file-pdf nav-icon"></i>
-                                                                </a>
-                                                            </li>';
-                                                    }
-                                                    echo '</ul>
-                                                        </td>';
-                                                } else {
-                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
-                                                    echo '<td></td>';
-                                                }
-                                                ?>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -267,7 +206,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -313,7 +252,7 @@ if ($result && $result->num_rows > 0) {
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -346,19 +285,41 @@ if ($result && $result->num_rows > 0) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_spkrabcons_files = explode(",", $row['lamp_spkrabcons']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_spkrabcons'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_spkrabcons_files as $lamp_vd) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $lamp_vd . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['status_approvprocurement']) {
-                                                            case 'Approve':
+                                                            case 'Done':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
                                                                 $badge_color = 'danger';
                                                                 break;
                                                             case 'In Process':
-                                                                $badge_color = 'warning';
+                                                                $badge_color = 'primary';
                                                                 break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
@@ -369,6 +330,84 @@ if ($result && $result->num_rows > 0) {
                                                         <?php echo $row['status_approvprocurement']; ?>
                                                     </span>
                                                 </td>
+                                                <td>
+                                                    <!-- Tombol Edit -->
+                                                    <?php if ($row['status_approvprocurement'] != "Done"): ?>
+                                                        <a href="procurement/spk-rab-procur-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                            <i class="i-Pen-2"></i>
+                                                        </a>
+                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_approvprocurement'] ?>">
+                                                            <i class="nav-icon i-Book"></i>
+                                                        </button>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <!-- Modal -->
+                                                <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+                                                    <div class="modal-dialog" role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="editModalLabel">Edit Status</h5>
+                                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <form id="statusForm" method="post" action="procurement/spk-rab-procur-process.php" enctype="multipart/form-data">
+                                                                    <input type="hidden" name="id" id="modalKodeLahan">
+                                                                    <div class="form-group">
+                                                                        <label for="statusSelect">Status Approve Procurement</label>
+                                                                        <select class="form-control" id="statusSelect" name="status_approvprocurement" Placeholder="Pilih">
+                                                                            <option value="In Process">In Process</option>
+                                                                            <option value="Pending">Pending</option>
+                                                                            <option value="In Review By TAF">In Review By TAF</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="catatan_proc">Catatan Procurement</label>
+                                                                        <input type="text" class="form-control" id="catatan_proc" name="catatan_proc">
+                                                                    </div>
+                                                                    <div id="issueDetailSection" class="hidden">
+                                                                        <div class="form-group">
+                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="pic">PIC</label>
+                                                                            <select class="form-control" id="pic" name="pic">
+                                                                                <option value="">Pilih PIC</option>
+                                                                                <option value="Legal">Legal</option>
+                                                                                <option value="Marketing">Marketing</option>
+                                                                                <option value="Landlord">Landlord</option>
+                                                                                <option value="Scm">SCM</option>
+                                                                                <option value="Sdg-project">SDG Project</option>
+                                                                                <option value="Sdg-design">SDG Design</option>
+                                                                                <option value="Sdg-equipment">SDG Equipment</option>
+                                                                                <option value="Sdg-qs">SDG QS</option>
+                                                                                <option value="Operations">Operations</option>
+                                                                                <option value="Procurement">Procurement</option>
+                                                                                <option value="Taf">TAF</option>
+                                                                                <option value="HR">HR</option>
+                                                                                <option value="Academy">Academy</option>
+                                                                                <option value="Negotiator">Negotiator</option>
+                                                                                <option value="Others">Others</option>
+                                                                            </select>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                                                                        </div>
+                                                                    </div>
+                                                                    <button type="submit" class="btn btn-primary">Save changes</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </tr>
                                         <?php endforeach; ?>
                                         </tbody>
                                         <tfoot>
@@ -377,16 +416,14 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
-                                                <th>Lampiran Lahan</th>
-                                                <th>Lampiran Loa CD</th>
-                                                <th>Lampiran Draft</th>
-                                                <th>Lampiran Desain</th>
                                                 <th>Status RAB</th>
                                                 <th>Lampiran RAB</th>
                                                 <th>Jumlah</th>
                                                 <th>Status VD</th>
                                                 <th>Lampiran VD</th>
+                                                <th>Lampiran SPK RAB</th>
                                                 <th>Status Procurement</th>
+                                                <th>Action</th>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -609,6 +646,44 @@ if ($result && $result->num_rows > 0) {
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
     <script>
+    // JavaScript to handle opening the modal and setting form values
+    $('#editModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); // Button that triggered the modal
+        var kodeLahan = button.data('id'); // Extract info from data-* attributes
+        var status = button.data('status'); // Extract status
+
+        // Update the modal's content.
+        var modal = $(this);
+        modal.find('#modalKodeLahan').val(kodeLahan);
+        modal.find('#statusSelect').val(status);
+    });
+    // Function to toggle the visibility of issue detail section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
+        }
+    }
+
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function () {
+        toggleIssueDetail();
+    });
+</script>
+<?php if ($status_approvprocurement == 'Pending') { ?>
+    <script>
+        $(document).ready(function () {
+            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+        });
+    </script>
+<?php } ?>
+</script>
+
+    <script>
 $(document).ready(function() {
     $(".edit-btn").click(function() {
         // Sembunyikan semua form yang terbuka
@@ -624,6 +699,22 @@ $(document).ready(function() {
             var id = element.id;
             document.getElementById('delete').value = id;
         }
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Hancurkan DataTable jika sudah ada
+            if ($.fn.DataTable.isDataTable('#zero_configuration_table')) {
+                $('#zero_configuration_table').DataTable().destroy();
+            }
+
+            // Inisialisasi DataTable
+            $('#zero_configuration_table').DataTable({
+                scrollX: true, // Menambahkan scroll horizontal
+                fixedColumns: {
+                    leftColumns: 3 // Jumlah kolom yang ingin di-fix
+                }
+            });
+        });
     </script>
 </body>
 
