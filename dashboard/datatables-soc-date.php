@@ -79,7 +79,7 @@ $sql = "SELECT
             draft.slalegal_date AS draft_slalegal_date,
             draft.sla_date AS draft_sla_date,
             draft.end_date AS draft_end_date,
-            draft.fatpsm_date AS draft_fat_date,
+            draft.psmfat_date AS draft_fat_date,
             draft.slafatpsm_date AS draft_slafat_date,
             procurement.start_date AS procurement_start_date,
             procurement.sla_date AS procurement_sla_date
@@ -1152,19 +1152,19 @@ $conn->close();
                                                     <?php                                              
                                                     $sla_ff_date = $sla_kom_date != 'N/A' ? date('Y-m-d', strtotime($sla_kom_date . ' +' . ($master_slacons['hrga_tm'] ?? 0) . ' days')) : 'N/A';
                                                     ?>
-                                                <td colspan="4"><?= $row ['kode_lahan'] ?></td>
+                                                <td colspan="2"><span class="badge badge-<?= getBadgeColor('') ?>"><?= $row ['kode_lahan'] ?></span></td>
                                                 <?php
                                                 // Ambil total remarks untuk kode lahan saat ini
                                                 $good_count = isset($totals_per_kode_lahan[$row['kode_lahan']]['good']) ? $totals_per_kode_lahan[$row['kode_lahan']]['good'] : 0;
                                                 $poor_count = isset($totals_per_kode_lahan[$row['kode_lahan']]['poor']) ? $totals_per_kode_lahan[$row['kode_lahan']]['poor'] : 0;
                                                 $failed_count = isset($totals_per_kode_lahan[$row['kode_lahan']]['failed']) ? $totals_per_kode_lahan[$row['kode_lahan']]['failed'] : 0;
                                                 ?>
-                                                <td colspan="4"><span class="badge badge-<?= getBadgeColor('good') ?>">Total Good</span></td>
-                                                <td colspan="2"><?= $good_count ?></td>
-                                                <td colspan="4"><span class="badge badge-<?= getBadgeColor('poor') ?>">Total Poor</span></td>
-                                                <td colspan="2"><?= $poor_count ?></td>
-                                                <td colspan="4"><span class="badge badge-<?= getBadgeColor('failed') ?>">Total Failed</span></td>
-                                                <td colspan="2"><?= $failed_count ?></td>
+                                                <td colspan="2"><span class="badge badge-<?= getBadgeColor('good') ?>">Total Good</span></td>
+                                                <td colspan="1"><span class="badge badge-<?= getBadgeColor('good') ?>"><?= $good_count ?></span></td>
+                                                <td colspan="2"><span class="badge badge-<?= getBadgeColor('poor') ?>">Total Poor</span></td>
+                                                <td colspan="1"><span class="badge badge-<?= getBadgeColor('poor') ?>"><?= $poor_count ?></span></td>
+                                                <td colspan="2"><span class="badge badge-<?= getBadgeColor('failed') ?>">Total Failed</span></td>
+                                                <td colspan="1"><span class="badge badge-<?= getBadgeColor('failed') ?>"><?= $failed_count ?></span></td>
                                                 <?php endforeach; ?>
                                                 <?php endforeach; ?>
                                             </tr>
