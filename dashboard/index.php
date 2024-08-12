@@ -476,9 +476,9 @@ function getStatusBadgeColor($status) {
                         </div>
                     </div> -->
                 </div>
-                <div class="row">
-                    <div class="card mb-4">
-                        <div class="card-body p-0">
+                <div class="row" style="width: 80%; margin: 0 auto;">
+                    <div class="card mb-3">
+                        <div class="card-body p-2">
                             <div class="card-title border-bottom d-flex align-items-center m-0 p-3">
                                 <span>Monthly Schedule - <?php echo date('F Y'); ?></span>
                                 <span class="flex-grow-1"></span>
@@ -497,7 +497,7 @@ function getStatusBadgeColor($status) {
                                         </select>
                                     </div>
                                     <div class="form-group mr-2">
-                                        <label for="year">Select Year:</label>
+                                        <label for="year"style="font-size: 12px;">Select Year:</label>
                                         <select name="year" id="year" class="form-control ml-2">
                                             <?php
                                             $currentYear = date('Y');
@@ -513,7 +513,7 @@ function getStatusBadgeColor($status) {
                             </div>
                                 <span class="badge badge-pill badge-warning">Updated daily</span>
                             </div>
-                            <div class="d-flex flex-wrap p-3">
+                            <div class="d-flex flex-wrap p-2">
                                 <?php
                                 // Get selected month and year from the form, or use current month and year as default
                                 $selectedMonth = isset($_GET['month']) ? $_GET['month'] : date('m');
@@ -528,20 +528,19 @@ function getStatusBadgeColor($status) {
                                     $date = new DateTime("$selectedYear-$selectedMonth-$day");
                                     $dateString = $date->format('Y-m-d');
                                     
-                                    echo "<div class='col-md-2 col-sm-4 mb-3'>";
-                                    echo "<div class='card border p-3'>";
-                                    echo "<h6>{$date->format('d')}</h6>"; // Display only the day of the month
+                                    echo "<div class='col-6 col-sm-4 col-md-2 mb-2'>";
+                                    echo "<div class='card border p-2' style='height: 100px; max-width: 100%; overflow: hidden;'>";
+                                    echo "<p class='m-0' style='font-size: 12px;'>{$date->format('d')}</p>"; // Display only the day of the month
 
-                                    // Check if there's any event for this date
-                                    $eventFound = false;
+                                    // Initialize the event content as an empty string
+                                    $eventContent = '';
 
                                     // Check for sla_spk
                                     foreach ($schedule as $event) {
                                         if ($event['sla_spk'] == $dateString) {
-                                            echo "<h6>Deadline SPK</h6>";
-                                            echo "<h6>Nama : {$event['nama_lahan']}</h6>";
-                                            echo "<h6>Kode Store : {$event['kode_store']}</h6>";
-                                            $eventFound = true;
+                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Deadline SPK</p>";
+                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
+                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
                                             break;
                                         }
                                     }
@@ -549,10 +548,9 @@ function getStatusBadgeColor($status) {
                                     // Check for sla_kom
                                     foreach ($schedule as $event) {
                                         if ($event['sla_kom'] == $dateString) {
-                                            echo "<h6>Kick Off Meeting</h6>";
-                                            echo "<h6>Nama : {$event['nama_lahan']}</h6>";
-                                            echo "<h6>Kode Store : {$event['kode_store']}</h6>";
-                                            $eventFound = true;
+                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Kick Off Meeting</p>";
+                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
+                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
                                             break;
                                         }
                                     }
@@ -560,10 +558,9 @@ function getStatusBadgeColor($status) {
                                     // Check for sla_steqp
                                     foreach ($schedule as $event) {
                                         if ($event['sla_steqp'] == $dateString) {
-                                            echo "<h6>ST EQuipment</h6>";
-                                            echo "<h6>Nama : {$event['nama_lahan']}</h6>";
-                                            echo "<h6>Kode Store : {$event['kode_store']}</h6>";
-                                            $eventFound = true;
+                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>ST EQuipment</p>";
+                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
+                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
                                             break;
                                         }
                                     }
@@ -571,10 +568,9 @@ function getStatusBadgeColor($status) {
                                     // Check for sla_stkonstruksi
                                     foreach ($schedule as $event) {
                                         if ($event['sla_stkonstruksi'] == $dateString) {
-                                            echo "<h6>ST Kontraktor</h6>";
-                                            echo "<h6>Nama : {$event['nama_lahan']}</h6>";
-                                            echo "<h6>Kode Store : {$event['kode_store']}</h6>";
-                                            $eventFound = true;
+                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>ST Kontraktor</p>";
+                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
+                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
                                             break;
                                         }
                                     }
@@ -582,10 +578,9 @@ function getStatusBadgeColor($status) {
                                     // Check for gostore_date
                                     foreach ($schedule as $event) {
                                         if ($event['gostore_date'] == $dateString) {
-                                            echo "<h6>GO</h6>";
-                                            echo "<h6>Nama : {$event['nama_lahan']}</h6>";
-                                            echo "<h6>Kode Store : {$event['kode_store']}</h6>";
-                                            $eventFound = true;
+                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>GO</p>";
+                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
+                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
                                             break;
                                         }
                                     }
@@ -593,20 +588,18 @@ function getStatusBadgeColor($status) {
                                     // Check for rto_act
                                     foreach ($schedule as $event) {
                                         if ($event['rto_act'] == $dateString) {
-                                            echo "<h6>RTO</h6>";
-                                            echo "<h6>Nama : {$event['nama_lahan']}</h6>";
-                                            echo "<h6>Kode Store : {$event['kode_store']}</h6>";
-                                            $eventFound = true;
+                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>RTO</p>";
+                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
+                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
                                             break;
                                         }
                                     }
 
-                                    if (!$eventFound) {
-                                        echo "<p></p>";
-                                        echo "<p></p>";
-                                        echo "<p></p>";
-                                        echo "<p></p>";
-                                        echo "<p></p>";
+                                    // Display the event content or an empty message
+                                    if ($eventContent) {
+                                        echo $eventContent;
+                                    } else {
+                                        echo "<p class='text-truncate' style='font-size: 10px; margin: 0; color: transparent;'>No Events</p>";
                                     }
                                     
                                     echo "</div>";
@@ -656,7 +649,7 @@ function getStatusBadgeColor($status) {
                                                     echo "<td>{$event['kode_lahan']}</td>";
                                                     echo "<td>{$event['akun_gis']}</td>";
                                                     echo "<td>{$event['kode_store']}</td>";
-                                                    $goFixDate = date('d M y', strtotime($event['go_fix']));
+                                                    $goFixDate = !empty($event['go_fix']) ? date('d M y', strtotime($event['go_fix'])) : '';
                                                     echo "<td>{$goFixDate}</td>";
                                                     echo "<td>{$event['jam_ops']}</td>";
                                                     echo "<td>{$event['crew_needed']}</td>";
@@ -711,8 +704,8 @@ function getStatusBadgeColor($status) {
                                                     echo "<td>{$event['kode_lahan']}</td>";
                                                     echo "<td>{$event['nama_lahan']}</td>";
                                                     echo "<td>{$event['kode_store']}</td>";
-                                                    $gostoreDate = date('d M y', strtotime($event['gostore_date']));
-                                                    $goFixDate = date('d M y', strtotime($event['go_fix']));
+                                                    $gostoreDate = !empty($event['gostore_date']) ? date('d M y', strtotime($event['gostore_date'])) : '';
+                                                    $goFixDate = !empty($event['go_fix']) ? date('d M y', strtotime($event['go_fix'])) : '';
 
                                                     echo "<td>{$gostoreDate}</td>";
                                                     echo "<td>{$goFixDate}</td>";

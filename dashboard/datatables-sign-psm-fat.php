@@ -12,7 +12,7 @@ $sql = "SELECT d.*,
         LEFT JOIN land l ON d.kode_lahan = l.kode_lahan
         LEFT JOIN dokumen_loacd dl ON d.kode_lahan = dl.kode_lahan
         LEFT JOIN re r ON d.kode_lahan = r.kode_lahan
-        WHERE d.confirm_nego = 'In Review by TAF'";
+        WHERE d.confirm_nego IN ('In Review by TAF', 'Approve')";
 $result = $conn->query($sql);
 
 // Inisialisasi variabel $data dengan array kosong
@@ -362,7 +362,7 @@ $conn->close();
                                                         $diff = $today->diff($slaLegalDate);
                                                         
                                                         // Menghitung scoring
-                                                        $scoring = calculateScoring($row['fatpsm_date'], $row['slafatpsm_date'], $sla_value); // Make sure $sla_value is set correctly
+                                                        $scoring = calculateScoring($row['psmfat_date'], $row['slafatpsm_date'], $sla_value); // Make sure $sla_value is set correctly
                                                         $remarks = getRemarks($scoring);
 
                                                         if ($row['confirm_fatpsm'] == "Approve") {

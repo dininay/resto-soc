@@ -247,7 +247,7 @@ function getBadgeColor($remarks) {
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['status_spkwofat']) {
-                                                            case 'Done':
+                                                            case 'Approve':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -321,7 +321,7 @@ function getBadgeColor($remarks) {
                                                     ?>
                                                 </td>
                                                 <td>
-                                                    <?php if ($row['status_spkwofat'] != "Done"): ?>
+                                                    <?php if ($row['status_spkwofat'] != "Approve"): ?>
                                                             <!-- <a href="procurement/spk-wodesign-procur-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
                                                             <i class="i-Pen-2"></i>
                                                             </a> -->

@@ -301,7 +301,7 @@ function getBadgeColor($remarks) {
                                                 
                                                 <td>
                                                 <!-- Tombol Edit -->
-                                                <?php if ($row['status_spkwoipaltaf'] != "Done"): ?>
+                                                <?php if ($row['status_spkwoipaltaf'] != "Approve"): ?>
                                                         <!-- <a href="procurement/spkipal-procur-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a> -->

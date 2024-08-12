@@ -82,7 +82,16 @@ if ($result && $result->num_rows > 0) {
                                             <td><?= $row['kode_lahan'] ?></td>
                                             <td><?= $row['city'] ?></td>
                                             <td><?= $row['nama_lahan'] ?></td>
-                                            <td><?= $row['bp_date'] ?></td>
+                                            <?php
+                                            // Assuming $row['bp_date'] contains a date string
+                                            $date = !empty($row['bp_date']) ? new DateTime($row['bp_date']) : null;
+
+                                            if ($date) {
+                                                echo "<td>" . $date->format('d M y') . "</td>";
+                                            } else {
+                                                echo "<td></td>"; // Or leave it empty if there's no date
+                                            }
+                                            ?>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner

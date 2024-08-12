@@ -7,7 +7,7 @@ $sql = "SELECT socdate_sdg.*, d.kode_store, l.nama_lahan
 from socdate_sdg
 JOIN land l ON socdate_sdg.kode_lahan = l.kode_lahan
 JOIN dokumen_loacd d ON socdate_sdg.kode_lahan = d.kode_lahan
-WHERE status_procurspkwofa IN ('In Process', 'Done', 'In Review By TAF', 'Pending')";
+WHERE status_procurspkwofa IN ('In Process', 'Approve', 'In Review By TAF', 'Pending')";
 $result = $conn->query($sql);
 
 
@@ -283,7 +283,7 @@ function getBadgeColor($remarks) {
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['status_procurspkwofa']) {
-                                                            case 'Done':
+                                                            case 'Approve':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -316,7 +316,7 @@ function getBadgeColor($remarks) {
                                                     $scoring = calculateScoring($row['spkwofa_date'], $row['sla_spkwofa'], $sla_value); // Make sure $sla_value is set correctly
                                                     $remarks = getRemarks($scoring);
 
-                                                    if ($row['status_procurspkwofa'] == "In Review By TAF" || $row['status_procurspkwofa'] == "Done") {
+                                                    if ($row['status_procurspkwofa'] == "In Review By TAF" || $row['status_procurspkwofa'] == "Approve") {
                                                         // Menentukan label berdasarkan remarks
                                                         $status_label = '';
                                                         switch ($remarks) {
@@ -354,7 +354,7 @@ function getBadgeColor($remarks) {
                                                 
                                                 <td>
                                                 <!-- Tombol Edit -->
-                                                <?php if ($row['status_procurspkwofa'] != "Done"): ?>
+                                                <?php if ($row['status_procurspkwofa'] != "Approve"): ?>
                                                         <a href="procurement/spkfa-procur-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>
