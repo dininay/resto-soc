@@ -3,12 +3,14 @@
 include "../koneksi.php";
 $confirm_sdgqs = "";
 // Query untuk mengambil data dari tabel land
-$sql = "SELECT d.kode_lahan, d.nama_lahan, d.lokasi, r.id, r.kode_lahan, s.lamp_desainplan, r.keterangan, 
+$sql = "SELECT d.kode_lahan, d.nama_lahan, d.lokasi, r.id, r.kode_lahan, s.lamp_desainplan, r.keterangan, p.lamp_vendor, p.nama_vendor,
 r.jenis_biaya, r.jumlah, r.date, r.lamp_rab, r.confirm_sdgqs, t.lamp_vd, t.kode_store, r.sla_date, r.start_date
 FROM land d
 INNER JOIN dokumen_loacd t ON d.kode_lahan = t.kode_lahan
 INNER JOIN sdg_rab r ON d.kode_lahan = r.kode_lahan
 INNER JOIN sdg_desain s ON d.kode_lahan = s.kode_lahan
+LEFT JOIN procurement p ON d.kode_lahan = p.kode_lahan
+WHERE s.confirm_sdgdesain = 'Approve'
 GROUP BY s.kode_lahan";
 $result = $conn->query($sql);
 
@@ -24,7 +26,7 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
-$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'QS'";
+$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'Design'";
 $sla_result = $conn->query($sla_query);
 
 $sla_value = 0; // Default SLA value
@@ -33,19 +35,20 @@ if ($sla_result->num_rows > 0) {
     $row = $sla_result->fetch_assoc();
     $sla_value = $row['sla'];
 } else {
-    echo "No SLA value found for 'Owner Surveyor'";
+    echo "No SLA value found for 'Design'";
 }
 
-function calculateScoring($start_date, $end_date, $sla) {
-    $today = new DateTime();
-    $start_date = $start_date ?: $today->format('Y-m-d');
-    $end_date = $end_date ?: $today->format('Y-m-d');
-    $sla_days = $sla ?: 0;
-
+// Fungsi untuk menghitung scoring
+function calculateScoring($start_date, $sla_date, $sla) {
     $start_date_obj = new DateTime($start_date);
-    $end_date_obj = new DateTime($end_date);
+    $sla_date_obj = new DateTime($sla_date);
+    
+    if ($start_date_obj <= $sla_date_obj) {
+        return 100; // Skor 100 jika start_date tidak melebihi sla_date
+    }
 
-    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
+    $date_diff = $start_date_obj->diff($sla_date_obj)->days;
+    $sla_days = $sla ?: 0;
 
     if ($sla_days != 0) {
         if ($date_diff > $sla_days) {
@@ -59,11 +62,12 @@ function calculateScoring($start_date, $end_date, $sla) {
 
     return round($scoring, 2);
 }
+
 // Fungsi untuk menentukan remarks berdasarkan scoring
 function getRemarks($scoring) {
-    if ($scoring >= 0) {
+    if ($scoring >= 75) {
         return "good";
-    } elseif ($scoring >= -30) {
+    } elseif ($scoring >= 0) {
         return "poor";
     } else {
         return "bad";
@@ -163,6 +167,8 @@ function getBadgeColor($remarks) {
                                                 <th>Keterangan</th>
                                                 <th>Jumlah</th>
                                                 <th>Lampiran RAB</th>
+                                                <th>Nama Vendor</th>
+                                                <th>Lampiran Pendukung Vendor</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -243,6 +249,29 @@ function getBadgeColor($remarks) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>
+                                                <td><?= $row['nama_vendor'] ?></td>
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_vendor_files = explode(",", $row['lamp_vendor']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_vendor'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_vendor_files as $vendor) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $vendor . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -271,20 +300,15 @@ function getBadgeColor($remarks) {
                                                 </td>
                                                 <td>
                                                     <?php
-                                                    // Mendapatkan tanggal sla_date dari kolom data
-                                                    $slaLegalDate = new DateTime($row['sla_date']);
-                                                    
-                                                    // Mendapatkan tanggal hari ini
-                                                    $today = new DateTime();
-                                                    
-                                                    // Menghitung selisih hari antara sla_date dan hari ini
-                                                    $diff = $today->diff($slaLegalDate);
-                                                    
+                                                    $start_date = $row['start_date'];
+                                                    $sla_date = $row['sla_date'];
+                                                    $confirm_sdgqs = $row['confirm_sdgqs'];
+
                                                     // Menghitung scoring
-                                                    $scoring = calculateScoring($row['start_date'], $row['sla_date'], $sla_value); // Make sure $sla_value is set correctly
+                                                    $scoring = calculateScoring($start_date, $sla_date, $sla_value);
                                                     $remarks = getRemarks($scoring);
 
-                                                    if ($row['confirm_sdgqs'] == "Approve") {
+                                                    if ($confirm_sdgqs === 'Approve') {
                                                         // Menentukan label berdasarkan remarks
                                                         $status_label = '';
                                                         switch ($remarks) {
@@ -301,20 +325,22 @@ function getBadgeColor($remarks) {
 
                                                         echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
-                                                        // Menghitung jumlah hari terlambat
-                                                        $lateDays = $slaLegalDate->diff($today)->days;
-                                                        
-                                                        // Jika terlambat
-                                                        if ($today > $slaLegalDate) {
-                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+                                                        // Mendapatkan tanggal hari ini
+                                                        $today = new DateTime();
+
+                                                        // Convert $sla_date to DateTime object
+                                                        $sla_date_obj = new DateTime($sla_date);
+
+                                                        // Menghitung jumlah hari menuju SLA date
+                                                        $diff = $today->diff($sla_date_obj);
+                                                        $daysDifference = (int)$diff->format('%R%a'); // Menyertakan tanda plus atau minus
+
+                                                        if ($daysDifference < 0) {
+                                                            // SLA telah terlewat, hitung sebagai hari terlambat
+                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . abs($daysDifference) . ' hari</button>';
                                                         } else {
-                                                            // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
-                                                            if ($diff) {
-                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
-                                                            } else {
-                                                                // Tampilkan peringatan "H + X"
-                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
-                                                            }
+                                                            // SLA belum tercapai, hitung mundur
+                                                            echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $daysDifference . '</button>';
                                                         }
                                                     }
                                                     ?>
@@ -394,6 +420,8 @@ function getBadgeColor($remarks) {
                                                 <th>Keterangan</th>
                                                 <th>Jumlah</th>
                                                 <th>Lampiran RAB</th>
+                                                <th>Nama Vendor</th>
+                                                <th>Lampiran Pendukung Vendor</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>

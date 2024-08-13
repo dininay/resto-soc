@@ -13,6 +13,7 @@ $sql = "SELECT d.*,
         LEFT JOIN land l ON d.kode_lahan = l.kode_lahan
         LEFT JOIN dokumen_loacd dl ON d.kode_lahan = dl.kode_lahan
         LEFT JOIN re r ON d.kode_lahan = r.kode_lahan
+        WHERE d.confirm_fatpsm = 'Approve'
         GROUP BY l.kode_lahan";
 $result = $conn->query($sql);
 
@@ -27,6 +28,7 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
+
 $sla_query = "SELECT sla FROM master_sla WHERE divisi = 'Sign'";
 $sla_result = $conn->query($sla_query);
 
@@ -36,19 +38,20 @@ if ($sla_result->num_rows > 0) {
     $row = $sla_result->fetch_assoc();
     $sla_value = $row['sla'];
 } else {
-    echo "No SLA value found for 'Owner Surveyor'";
+    echo "No SLA value found for 'Sign'";
 }
 
-function calculateScoring($start_date, $end_date, $sla) {
-    $today = new DateTime();
-    $start_date = $start_date ?: $today->format('Y-m-d');
-    $end_date = $end_date ?: $today->format('Y-m-d');
-    $sla_days = $sla ?: 0;
-
+// Fungsi untuk menghitung scoring
+function calculateScoring($start_date, $sla_date, $sla) {
     $start_date_obj = new DateTime($start_date);
-    $end_date_obj = new DateTime($end_date);
+    $sla_date_obj = new DateTime($sla_date);
+    
+    if ($start_date_obj <= $sla_date_obj) {
+        return 100; // Skor 100 jika start_date tidak melebihi sla_date
+    }
 
-    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
+    $date_diff = $start_date_obj->diff($sla_date_obj)->days;
+    $sla_days = $sla ?: 0;
 
     if ($sla_days != 0) {
         if ($date_diff > $sla_days) {
@@ -62,11 +65,12 @@ function calculateScoring($start_date, $end_date, $sla) {
 
     return round($scoring, 2);
 }
+
 // Fungsi untuk menentukan remarks berdasarkan scoring
 function getRemarks($scoring) {
-    if ($scoring >= 0) {
+    if ($scoring >= 75) {
         return "good";
-    } elseif ($scoring >= -30) {
+    } elseif ($scoring >= 0) {
         return "poor";
     } else {
         return "bad";
@@ -170,7 +174,8 @@ $conn->close();
                                                 <th>Lampiran VL</th>
                                                 <th>Lampiran VD</th>
                                                 <th>Lampiran PSM Legal</th>
-                                                <th>Lampiran Draft</th>
+                                                <th>Lampiran Draft Table Sewa</th>
+                                                <th>Lampiran Final PSM & Table Sewa</th>
                                                 <th>Catatan BoD</th>
                                                 <th>Status BoD</th>
                                                 <th>SLA</th>
@@ -303,6 +308,28 @@ $conn->close();
                                                     // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
                                                     echo '<td></td>';
                                                 }
+                                                ?>                     
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_bod_files = explode(",", $row['lamp_bod']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_bod'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_bod_files as $file) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $file . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
                                                 ?>     
                                                 <td><?= $row['catatan_bod'] ?></td>
                                                 <td>
@@ -327,23 +354,18 @@ $conn->close();
                                                     <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
                                                         <?php echo $row['confirm_bod']; ?>
                                                     </span>
-                                                </td>        
+                                                </td>   
                                                 <td>
                                                     <?php
-                                                    // Mendapatkan tanggal sla_date dari kolom data
-                                                    $slaLegalDate = new DateTime($row['slabod_date']);
-                                                    
-                                                    // Mendapatkan tanggal hari ini
-                                                    $today = new DateTime();
-                                                    
-                                                    // Menghitung selisih hari antara sla_date dan hari ini
-                                                    $diff = $today->diff($slaLegalDate);
-                                                    
+                                                    $start_date = $row['bod_date'];
+                                                    $sla_date = $row['slabod_date'];
+                                                    $confirm_bod = $row['confirm_bod'];
+
                                                     // Menghitung scoring
-                                                    $scoring = calculateScoring($row['bod_date'], $row['slabod_date'], $sla_value); // Make sure $sla_value is set correctly
+                                                    $scoring = calculateScoring($start_date, $sla_date, $sla_value);
                                                     $remarks = getRemarks($scoring);
 
-                                                    if ($row['confirm_bod'] == "Approve") {
+                                                    if ($confirm_bod === 'Approve') {
                                                         // Menentukan label berdasarkan remarks
                                                         $status_label = '';
                                                         switch ($remarks) {
@@ -360,20 +382,22 @@ $conn->close();
 
                                                         echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
-                                                        // Menghitung jumlah hari terlambat
-                                                        $lateDays = $slaLegalDate->diff($today)->days;
-                                                        
-                                                        // Jika terlambat
-                                                        if ($today > $slaLegalDate) {
-                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+                                                        // Mendapatkan tanggal hari ini
+                                                        $today = new DateTime();
+
+                                                        // Convert $sla_date to DateTime object
+                                                        $sla_date_obj = new DateTime($sla_date);
+
+                                                        // Menghitung jumlah hari menuju SLA date
+                                                        $diff = $today->diff($sla_date_obj);
+                                                        $daysDifference = (int)$diff->format('%R%a'); // Menyertakan tanda plus atau minus
+
+                                                        if ($daysDifference < 0) {
+                                                            // SLA telah terlewat, hitung sebagai hari terlambat
+                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . abs($daysDifference) . ' hari</button>';
                                                         } else {
-                                                            // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
-                                                            if ($diff) {
-                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
-                                                            } else {
-                                                                // Tampilkan peringatan "H + X"
-                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
-                                                            }
+                                                            // SLA belum tercapai, hitung mundur
+                                                            echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $daysDifference . '</button>';
                                                         }
                                                     }
                                                     ?>
@@ -472,7 +496,8 @@ $conn->close();
                                                 <th>Lampiran VL</th>
                                                 <th>Lampiran VD</th>
                                                 <th>Lampiran PSM Legal</th>
-                                                <th>Lampiran Draft</th>
+                                                <th>Lampiran Draft Table Sewa</th>
+                                                <th>Lampiran Final PSM & Table Sewa</th>
                                                 <th>Catatan BoD</th>
                                                 <th>Status BoD</th>
                                                 <th>SLA</th>

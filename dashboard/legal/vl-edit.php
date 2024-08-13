@@ -31,9 +31,22 @@ $lamp_vl = "";
         // Join all file paths into a comma-separated string
         $lamp_vl = implode(",", $lamp_vl_paths);
     }
-
+    $vl_date = date("Y-m-d H:i:s");
+    // Ambil SLA dari tabel master_sla untuk divisi ST-EQP
+    $sql_sla_steqp = "SELECT sla FROM master_sla WHERE divisi = 'VL'";
+    $result_sla_steqp = $conn->query($sql_sla_steqp);
+    if ($result_sla_steqp->num_rows > 0) {
+        $row_sla_steqp = $result_sla_steqp->fetch_assoc();
+        $hari_sla_steqp = $row_sla_steqp['sla'];
+        $slavllegal_date = date("Y-m-d", strtotime($vl_date . ' + ' . $hari_sla_steqp . ' days'));
+    } else {
+        $conn->rollback();
+        echo "Error: Data SLA tidak ditemukan untuk divisi VL.";
+        exit;
+    }
+    $status_vl = "In Process";
     // Update data di database
-    $sql = "UPDATE re SET lamp_vl = '$lamp_vl' WHERE id = '$id'";
+    $sql = "UPDATE re SET lamp_vl = '$lamp_vl', vl_date = '$vl_date', slavllegal_date = '$slavllegal_date', status_vl = '$status_vl' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
         header("Location:" . $base_url . "/datatables-validasi-lahan.php");

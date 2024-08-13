@@ -393,7 +393,7 @@ function getBadgeColor($remarks) {
                                                 <td>
                                                     <?php
                                                     // Mendapatkan tanggal sla_date dari kolom data
-                                                    $slaLegalDate = new DateTime($row['sla_spkrab']);
+                                                    $slaLegalDate = new DateTime($row['sla_spkfat']);
                                                     
                                                     // Mendapatkan tanggal hari ini
                                                     $today = new DateTime();
@@ -406,7 +406,7 @@ function getBadgeColor($remarks) {
                                                         $diff = $today->diff($slaLegalDate);
                                                         
                                                         // Menghitung scoring
-                                                        $scoring = calculateScoring($row['spkfat_date'], $row['sla_spkrab'], $sla_value); // Make sure $sla_value is set correctly
+                                                        $scoring = calculateScoring($row['spkfat_date'], $row['sla_spkfat'], $sla_value); // Make sure $sla_value is set correctly
                                                         $remarks = getRemarks($scoring);
 
                                                         if ($row['status_spkfat'] == "Approve") {

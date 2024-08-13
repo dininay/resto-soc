@@ -157,10 +157,11 @@ function getBadgeColor($remarks) {
                                                 <th>Inventory Code</th>
                                                 <th>Nama Lahan</th>
                                                 <th>Kode Store</th>
-                                                <th>Lampiran Desain</th>
+                                                <th>Lampiran WO Obstacle</th>
                                                 <th>Catatan</th>
                                                 <th>Confirm SDG</th>
                                                 <th>Lampiran Legal</th>
+                                                <th>Catatan Obs Legal</th>
                                                 <th>Approve Legal</th>
                                                 <th>SLA Legal</th>
                                                 <th>Action</th>
@@ -174,13 +175,13 @@ function getBadgeColor($remarks) {
                                                 <td><?= $row['kode_store'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_loacd_files = explode(",", $row['lamp_desainplan']); // Pisahkan nama file menjadi array
+                                                $lamp_layouting_files = explode(",", $row['lamp_layouting']); // Pisahkan nama file menjadi array
                                                 // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_desainplan'])) {
+                                                if (!empty($row['lamp_layouting'])) {
                                                     echo '<td>
                                                             <ul style="list-style-type: none; padding: 0; margin: 0;">';
                                                     // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_loacd_files as $file) {
+                                                    foreach ($lamp_layouting_files as $file) {
                                                         echo '<li style="display: inline-block; margin-right: 5px;">
                                                                 <a href="uploads/' . $file . '" target="_blank">
                                                                     <i class="fas fa-file-pdf nav-icon"></i>
@@ -242,6 +243,7 @@ function getBadgeColor($remarks) {
                                                 }
                                                 ?>          
                                                 </td>
+                                                <td><?= $row['catatan_obslegal'] ?></td>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -401,10 +403,11 @@ function getBadgeColor($remarks) {
                                                 <th>Inventory Code</th>
                                                 <th>Nama Lahan</th>
                                                 <th>Kode Store</th>
-                                                <th>Lampiran Desain</th>
+                                                <th>Lampiran WO Obstacle</th>
                                                 <th>Catatan</th>
                                                 <th>Confirm SDG</th>
                                                 <th>Lampiran Legal</th>
+                                                <th>Catatan Obs Legal</th>
                                                 <th>Approve Legal</th>
                                                 <th>SLA Legal</th>
                                                 <th>Action</th>

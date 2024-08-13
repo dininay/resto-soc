@@ -8,6 +8,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Ambil nilai dari formulir
     $id = $_POST['id'];
     $obstacle = $_POST["obstacle"];
+    $urugan = $_POST["urugan"];
     $note = $_POST["note"];
     $obs_detail = $_POST["obs_detail"];
     $obs_date = date("Y-m-d");
@@ -86,9 +87,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     
     $sla_date = date('Y-m-d', strtotime($obs_date . ' + ' . $sla_sdgd . ' days'));
-
+    $confirm_sdgurugan = "In Process";
     // Update data di database
-    $sql = "UPDATE sdg_desain SET obstacle = '$obstacle', note = '$note', obs_detail = '$obs_detail', note_survey = '$note_survey', lamp_layouting = '$lamp_layouting', lamp_survey = '$lamp_survey', obs_date = '$obs_date', sla_date = '$sla_date' WHERE id = '$id'";
+    $sql = "UPDATE sdg_desain SET obstacle = '$obstacle', urugan = '$urugan', confirm_sdgurugan = '$confirm_sdgurugan', note = '$note', obs_detail = '$obs_detail', note_survey = '$note_survey', lamp_layouting = '$lamp_layouting', lamp_survey = '$lamp_survey', obs_date = '$obs_date', sla_date = '$sla_date' WHERE id = '$id'";
     var_dump($sql);
     if ($conn->query($sql) === TRUE) {
         header("Location: " . $base_url . "/datatables-obstacle-sdg.php");

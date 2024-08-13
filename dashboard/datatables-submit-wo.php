@@ -13,7 +13,8 @@ dokumen_loacd.kode_store
 FROM sdg_desain
 INNER JOIN land ON sdg_desain.kode_lahan = land.kode_lahan
 INNER JOIN dokumen_loacd ON sdg_desain.kode_lahan = dokumen_loacd.kode_lahan
-WHERE sdg_desain.status_survey IN ('Done','In Process','Pending')
+INNER JOIN re ON sdg_desain.kode_lahan = re.kode_lahan
+WHERE re.status_approvnego = 'Approve'
 GROUP BY sdg_desain.kode_lahan";
 $result = $conn->query($sql);
 

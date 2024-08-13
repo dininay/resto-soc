@@ -7,8 +7,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
     $id = $_POST["id"];
     $status_approvlegalvd = $_POST["status_approvlegalvd"];
     $catatan_vd = $_POST["catatan_vd"];
+    
+    // Periksa apakah file kronologi ada dalam $_FILES
+    $lamp_vdsign_paths = array();
+    if (isset($_FILES["lamp_vdsign"])) {
+        foreach ($_FILES['lamp_vdsign']['name'] as $key => $filename) {
+            $file_tmp = $_FILES['lamp_vdsign']['tmp_name'][$key];
+            $target_dir = "../uploads/";
+            $target_file = $target_dir . basename($filename);
 
-    $end_date = null;
+            // Attempt to move the uploaded file to the target directory
+            if (move_uploaded_file($file_tmp, $target_dir . $target_file)) {
+                $lamp_vdsign_paths[] = $filename;
+            } else {
+                echo "Gagal mengunggah file " . $filename . "<br>";
+            }
+        }
+
+        // Join all file paths into a comma-separated string
+        $lamp_vdsign = implode(",", $lamp_vdsign_paths);
+    } else {
+        $lamp_vdsign = null; // Set kronologi to null if no files were uploaded
+    }
+    $vdlegal_date = null;
     $sla_date = null;
     $issue_detail = isset($_POST["issue_detail"]) ? $_POST["issue_detail"] : null;
     $pic = isset($_POST["pic"]) ? $_POST["pic"] : null;
@@ -42,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
     try {
         // Jika status_approvlegalvd diubah menjadi Approve
         if ($status_approvlegalvd == 'Approve') {
-            $end_date = date("Y-m-d H:i:s");
+            $vdlegal_date = date("Y-m-d H:i:s");
             // Hitung sla_permit berdasarkan divisi legal_permit
             // Ambil jumlah hari SLA dari tabel master_sla berdasarkan divisi = 'fl' (Field)
             $sql_sla_fl = "SELECT sla FROM master_slacons WHERE divisi = 'hrga_fl'";
@@ -83,9 +104,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                     }
 
                     // Query untuk memperbarui status_approvlegalvd
-                    $sql_update = "UPDATE dokumen_loacd SET status_approvlegalvd = ?, catatan_vd = ?, end_date = ? WHERE id = ?";
+                    $sql_update = "UPDATE dokumen_loacd SET status_approvlegalvd = ?, catatan_vd = ?, vdlegal_date = ?, lamp_vdsign = ? WHERE id = ?";
                     $stmt_update = $conn->prepare($sql_update);
-                    $stmt_update->bind_param("sssi", $status_approvlegalvd, $catatan_vd, $end_date, $id);
+                    $stmt_update->bind_param("ssssi", $status_approvlegalvd, $catatan_vd, $vdlegal_date, $lamp_vdsign, $id);
                     if (!$stmt_update->execute()) {
                         throw new Exception("Error updating status_approvlegalvd: " . $stmt_update->error);
                     }
@@ -101,8 +122,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                         $row_sla_negosiator = $result_select_sla_negosiator->fetch_assoc();
                         $sla_negosiator_days = $row_sla_negosiator['sla'];
 
-                        // Tambahkan jumlah hari SLA Negotiator ke end_date untuk mendapatkan sla_date
-                        $sla_date = date('Y-m-d H:i:s', strtotime($end_date . ' + ' . $sla_negosiator_days . ' days'));
+                        // Tambahkan jumlah hari SLA Negotiator ke vdlegal_date untuk mendapatkan sla_date
+                        $sla_date = date('Y-m-d H:i:s', strtotime($vdlegal_date . ' + ' . $sla_negosiator_days . ' days'));
 
                         // Masukkan data ke tabel draft
                         $draft_legal = "In Process";
@@ -124,8 +145,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                             $row_sla_psm = $result_select_sla_psm->fetch_assoc();
                             $sla_psm_days = $row_sla_psm['sla'];
 
-                            // Tambahkan jumlah hari SLA Negotiator ke end_date untuk mendapatkan sla_date
-                            $slapsm_date = date('Y-m-d H:i:s', strtotime($end_date . ' + ' . $sla_psm_days . ' days'));
+                            // Tambahkan jumlah hari SLA Negotiator ke vdlegal_date untuk mendapatkan sla_date
+                            $slapsm_date = date('Y-m-d H:i:s', strtotime($vdlegal_date . ' + ' . $sla_psm_days . ' days'));
 
                             // Masukkan juga perintah untuk mengupdate status_confirm_nego di tabel draft menjadi "In Process"
                             $sql_update_confirm_nego = "UPDATE draft SET confirm_nego = 'In Process', slapsm_date = ? WHERE kode_lahan = ?";
@@ -166,12 +187,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 echo "Error: Data SLA tidak ditemukan untuk divisi tm.";
             }
         } elseif ($status_approvlegalvd == 'Pending') {
-            $end_date = date("Y-m-d H:i:s");
+            $vdlegal_date = date("Y-m-d H:i:s");
 
-            // Query untuk memperbarui status_approvlegalvd, catatan_vd, dan end_date di tabel dokumen_loacd
-            $sql_update_re = "UPDATE dokumen_loacd SET status_approvlegalvd = ?, catatan_vd = ?, end_date = ? WHERE id = ?";
+            // Query untuk memperbarui status_approvlegalvd, catatan_vd, dan vdlegal_date di tabel dokumen_loacd
+            $sql_update_re = "UPDATE dokumen_loacd SET status_approvlegalvd = ?, catatan_vd = ?, vdlegal_date = ? WHERE id = ?";
             $stmt_update_re = $conn->prepare($sql_update_re);
-            $stmt_update_re->bind_param("sssi", $status_approvlegalvd, $catatan_vd, $end_date, $id);
+            $stmt_update_re->bind_param("sssi", $status_approvlegalvd, $catatan_vd, $vdlegal_date, $id);
             if (!$stmt_update_re->execute()) {
                 throw new Exception("Error updating status_approvlegalvd: " . $stmt_update_re->error);
             }
@@ -190,6 +211,76 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 $stmt_update_hold = $conn->prepare($sql_update_hold);
                 $stmt_update_hold->bind_param("ss", $status_hold, $kode_lahan);
                 $stmt_update_hold->execute();
+            }
+        } elseif ($status_approvlegalvd == 'In Revision') {
+            
+            // Ambil kode_lahan dari tabel re
+            $sql_get_kode_lahan = "SELECT kode_lahan FROM dokumen_loacd WHERE id = ?";
+            $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+            $stmt_get_kode_lahan->bind_param("i", $id);
+            $stmt_get_kode_lahan->execute();
+            $stmt_get_kode_lahan->bind_result($kode_lahan);
+            $stmt_get_kode_lahan->fetch();
+            $stmt_get_kode_lahan->free_result();
+
+            // Query untuk memperbarui status_approvlegalvd, vllegal_date di tabel re dan memasukkan data ke dalam tabel hold_project
+            $sql_update_re = "UPDATE dokumen_loacd SET status_approvlegalvd = ?, catatan_vd = ?, vdlegal_date = ?, lamp_vdsign = ? WHERE id = ?";
+            $stmt_update_re = $conn->prepare($sql_update_re);
+            $stmt_update_re->bind_param("ssssi", $status_approvlegalvd, $catatan_vd, $vdlegal_date, $lamp_vdsign, $id);
+            $stmt_update_re->execute();
+            
+            // Komit transaksi
+            $conn->commit();
+            echo "Status berhasil diperbarui dan data ditahan.";
+        } elseif ($status_approvlegalvd == 'Reject') {
+            // Ambil kode lahan sebelum menghapus dari tabel re
+            $sql = "SELECT kode_lahan FROM dokumen_loacd WHERE kode_lahan = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("s", $kode_lahan);
+            $stmt->execute();
+            $stmt->bind_result($kode_lahan);
+            $stmt->fetch();
+            $stmt->close();
+    
+            // Mulai transaksi
+            $conn->begin_transaction();
+    
+            try {
+                // Hapus data dari tabel re berdasarkan kode_lahan
+                $sql = "DELETE FROM re WHERE kode_lahan = ?";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("s", $kode_lahan);
+                $stmt->execute();
+    
+                // Perbarui status_land menjadi Reject pada tabel land berdasarkan kode lahan
+                $sql = "UPDATE land SET status_land = 'Reject' WHERE kode_lahan = ?";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("s", $kode_lahan);
+                $stmt->execute();
+    
+                // Komit transaksi
+                $conn->commit();
+                echo "Data berhasil dihapus dan status berhasil diperbarui.";
+            } catch (Exception $e) {
+                // Rollback transaksi jika terjadi kesalahan
+                $conn->rollback();
+                echo "Error: " . $e->getMessage();
+            }
+        } else {
+            // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_approvlegalvd di tabel re
+            $sql = "UPDATE dokumen_loacd SET status_approvlegalvd = ?, catatan_vd = ?, vdlegal_date = ? WHERE id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("sssi", $status_approvlegalvd, $catatan_vd, $vdlegal_date, $id);
+            $stmt->execute();
+
+            // Check if update was successful
+            if ($stmt->affected_rows > 0) {
+                echo "<script>
+                        alert('Status berhasil diperbarui.');
+                        window.location.href = window.location.href;
+                     </script>";
+            } else {
+                echo "Error: Gagal memperbarui status. Tidak ada perubahan dilakukan.";
             }
         }
 

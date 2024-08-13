@@ -1,15 +1,19 @@
 <?php
 // Koneksi ke database
 include "../koneksi.php";
-$status_sdg = "";
-// Query untuk mengambil data dari tabel land
-$sql = "SELECT socdate_sdg.*, d.kode_store, l.nama_lahan
-from socdate_sdg
-JOIN land l ON socdate_sdg.kode_lahan = l.kode_lahan
-JOIN dokumen_loacd d ON socdate_sdg.kode_lahan = d.kode_lahan
-WHERE socdate_sdg.status_spkwoipal IN ('In Process', 'Approve', 'In Review By TAF', 'Pending')";
-$result = $conn->query($sql);
 
+$confirm_nego = "";
+// Query untuk mengambil data dari tabel land
+$sql = "SELECT d.*, 
+               l.nama_lahan, l.lokasi, l.lamp_land,
+               dl.lamp_loacd, dl.lamp_vd, dl.kode_store,
+               r.lamp_vl
+        FROM draft d
+        LEFT JOIN land l ON d.kode_lahan = l.kode_lahan
+        LEFT JOIN dokumen_loacd dl ON d.kode_lahan = dl.kode_lahan
+        LEFT JOIN re r ON d.kode_lahan = r.kode_lahan
+        GROUP BY l.kode_lahan";
+$result = $conn->query($sql);
 
 // Inisialisasi variabel $data dengan array kosong
 $data = [];
@@ -22,8 +26,23 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
+// Jika terdapat request POST untuk menghapus data
+// if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])) {
+//     // Ambil ID karyawan yang akan dihapus dari request POST
+//     $id = $_POST["id"];
 
-$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'SPK'";
+//     // Query untuk menghapus data dari tabel land berdasarkan ID
+//     $sql = "DELETE FROM negosiator WHERE id = '$id'";
+
+//     // Eksekusi query
+//     if ($conn->query($sql) === TRUE) {
+//         echo "Data berhasil dihapus.";
+//     } else {
+//         echo "Error: " . $sql . "<br>" . $conn->error;
+//     }
+// }
+
+$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'Final PSM'";
 $sla_result = $conn->query($sla_query);
 
 $sla_value = 0; // Default SLA value
@@ -32,20 +51,19 @@ if ($sla_result->num_rows > 0) {
     $row = $sla_result->fetch_assoc();
     $sla_value = $row['sla'];
 } else {
-    echo "No SLA value found for 'SPK'";
+    echo "No SLA value found for 'Owner Surveyor'";
 }
 
-// Fungsi untuk menghitung scoring
-function calculateScoring($start_date, $sla_date, $sla) {
-    $start_date_obj = new DateTime($start_date);
-    $sla_date_obj = new DateTime($sla_date);
-    
-    if ($start_date_obj <= $sla_date_obj) {
-        return 100; // Skor 100 jika start_date tidak melebihi sla_date
-    }
-
-    $date_diff = $start_date_obj->diff($sla_date_obj)->days;
+function calculateScoring($start_date, $end_date, $sla) {
+    $today = new DateTime();
+    $start_date = $start_date ?: $today->format('Y-m-d');
+    $end_date = $end_date ?: $today->format('Y-m-d');
     $sla_days = $sla ?: 0;
+
+    $start_date_obj = new DateTime($start_date);
+    $end_date_obj = new DateTime($end_date);
+
+    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
 
     if ($sla_days != 0) {
         if ($date_diff > $sla_days) {
@@ -59,12 +77,11 @@ function calculateScoring($start_date, $sla_date, $sla) {
 
     return round($scoring, 2);
 }
-
 // Fungsi untuk menentukan remarks berdasarkan scoring
 function getRemarks($scoring) {
-    if ($scoring >= 75) {
+    if ($scoring >= 0) {
         return "good";
-    } elseif ($scoring >= 0) {
+    } elseif ($scoring >= -30) {
         return "poor";
     } else {
         return "bad";
@@ -84,6 +101,8 @@ function getBadgeColor($remarks) {
             return 'secondary'; // Default jika remarks tidak dikenali
     }
 }
+// Tutup koneksi database
+$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="">
@@ -101,12 +120,9 @@ function getBadgeColor($remarks) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/fixedcolumns/3.3.2/css/fixedColumns.dataTables.min.css">
-    <!-- Muat jQuery terlebih dahulu -->
-    <!-- Muat DataTables setelah jQuery -->
     <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
-    <style>
+<style>
         .hidden {
             display: none;
         },
@@ -124,10 +140,6 @@ function getBadgeColor($remarks) {
         table.dataTable {
             border-collapse:  collapse!important;
         }
-        div.dataTables_wrapper {
-            width: 100%;
-            margin: 0 auto;
-        }
     </style>
 </head>
 
@@ -144,7 +156,7 @@ function getBadgeColor($remarks) {
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Data MEP - IPAL</h1>
+                    <h1>Datatables Penetapan Kode Store</h1>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
                 <!-- end of row-->
@@ -154,22 +166,20 @@ function getBadgeColor($remarks) {
                             <div class="card-body">
                                 <h4 class="card-title mb-3"></h4>
 								<div class="footer-bottom float-right">
-									<!-- <p><a class="btn btn-primary btn-icon m-1" href="sdg-pk/sdgpk-rto-from.php">+ add Data </a></p> -->
+									<!-- <p><a class="btn btn-primary btn-icon m-1" href="negosiator/dealing-negosiator-from.php">+ add Negosiation</a></p> -->
 									<p>
 									  <span class="flex-grow-1"></span></p>
 								</div>
                                 <p>
 							  <div class="table-responsive">
-                                    <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
+                              <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
                                                 <th>Inventory Code</th>
                                                 <th>Kode Store</th>
-                                                <th>Nama Lahan</th>
-                                                <th>Lampiran WO Req IPAL</th>
-                                                <th>Lampiran SPK IPAL</th>
-                                                <th>Status</th>
-                                                <th>SLA</th>
+                                                <th>Nama Lokasi</th>
+                                                <th>Alamat Lokasi</th>
+                                                <th>Lampiran VD</th>
 												<th>Action</th>
                                             </tr>
                                         </thead>
@@ -179,17 +189,18 @@ function getBadgeColor($remarks) {
                                                 <td><?= $row['kode_lahan'] ?></td>
                                                 <td><?= $row['kode_store'] ?></td>
                                                 <td><?= $row['nama_lahan'] ?></td>
+                                                <td><?= $row['lokasi'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lampwo_reqipal_files = explode(",", $row['lampwo_reqipal']); // Pisahkan nama file menjadi array
+                                                $lamp_vd_files = explode(",", $row['lamp_vd']); // Pisahkan nama file menjadi array
                                                 // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lampwo_reqipal'])) {
+                                                if (!empty($row['lamp_vd'])) {
                                                     echo '<td>
                                                             <ul style="list-style-type: none; padding: 0; margin: 0;">';
                                                     // Loop untuk setiap file dalam array
-                                                    foreach ($lampwo_reqipal_files as $listrik) {
+                                                    foreach ($lamp_vd_files as $file) {
                                                         echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $listrik . '" target="_blank">
+                                                                <a href="uploads/' . $file . '" target="_blank">
                                                                     <i class="fas fa-file-pdf nav-icon"></i>
                                                                 </a>
                                                             </li>';
@@ -200,110 +211,19 @@ function getBadgeColor($remarks) {
                                                     // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
                                                     echo '<td></td>';
                                                 }
-                                                ?>
-                                                <?php
-                                                // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_spkwoipal_files = explode(",", $row['lamp_spkwoipal']); // Pisahkan nama file menjadi array
-                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_spkwoipal'])) {
-                                                    echo '<td>
-                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
-                                                    // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_spkwoipal_files as $listrik) {
-                                                        echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $listrik . '" target="_blank">
-                                                                    <i class="fas fa-file-pdf nav-icon"></i>
-                                                                </a>
-                                                            </li>';
-                                                    }
-                                                    echo '</ul>
-                                                        </td>';
-                                                } else {
-                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
-                                                    echo '<td></td>';
-                                                }
-                                                ?>
-                                                <td>
-                                                    <?php
-                                                        // Tentukan warna badge berdasarkan status approval owner
-                                                        $badge_color = '';
-                                                        switch ($row['status_spkwoipal']) {
-                                                            case 'Approve':
-                                                                $badge_color = 'success';
-                                                                break;
-                                                            case 'Pending':
-                                                                $badge_color = 'danger';
-                                                                break;
-                                                            case 'In Process':
-                                                                $badge_color = 'primary';
-                                                                break;
-                                                            default:
-                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
-                                                                break;
-                                                        }
-                                                    ?>
-                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_spkwoipal']; ?>
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <?php
-                                                    $start_date = $row['spkwoipal_date'];
-                                                    $sla_date = $row['sla_spkwoipal'];
-                                                    $status_spkwoipal = $row['status_spkwoipal'];
-
-                                                    // Menghitung scoring
-                                                    $scoring = calculateScoring($start_date, $sla_date, $sla_value);
-                                                    $remarks = getRemarks($scoring);
-
-                                                    if ($status_spkwoipal === 'In Review By TAF' || $status_spkwoipal === 'Approve') {
-                                                        // Menentukan label berdasarkan remarks
-                                                        $status_label = '';
-                                                        switch ($remarks) {
-                                                            case 'good':
-                                                                $status_label = 'Done Good';
-                                                                break;
-                                                            case 'poor':
-                                                                $status_label = 'Done Poor';
-                                                                break;
-                                                            case 'bad':
-                                                                $status_label = 'Done Bad';
-                                                                break;
-                                                        }
-
-                                                        echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
-                                                    } else {
-                                                        // Mendapatkan tanggal hari ini
-                                                        $today = new DateTime();
-                                                        
-                                                        // Menghitung jumlah hari terlambat
-                                                        $lateDays = $sla_date < $today ? $today->diff($sla_date)->days : 0;
-                                                        
-                                                        if ($lateDays > 0) {
-                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
-                                                        } else {
-                                                            $diff = $sla_date->diff($today);
-                                                            if ($diff->days <= 5) {
-                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
-                                                            } else {
-                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
-                                                            }
-                                                        }
-                                                    }
-                                                    ?>
-                                                </td>
+                                                ?>  
                                                 
                                                 <td>
-                                                <!-- Tombol Edit -->
-                                                <?php if ($row['status_spkwoipal'] != "Approve"): ?>
-                                                        <a href="procurement/spkipal-procur-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                    <!-- Tombol Edit -->
+                                                        <div>
+                                                        <a href="fat/kode-store-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>
-                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_spkwoipal'] ?>">
+                                                        <!-- <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['confirm_nego'] ?>">
                                                             <i class="nav-icon i-Book"></i>
-                                                        </button>
-                                                    <?php endif; ?>
-                                                </td>
+                                                        </button> -->
+                                                    </div>
+
                                                 <!-- Modal -->
                                                 <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
                                                     <div class="modal-dialog" role="document">
@@ -315,19 +235,19 @@ function getBadgeColor($remarks) {
                                                                 </button>
                                                             </div>
                                                             <div class="modal-body">
-                                                                <form id="statusForm" method="post" action="procurement/spkipal-procur-process.php" enctype="multipart/form-data">
-                                                                    <input type="hidden" name="id" value=<?= $row['id'] ?> id="modalKodeLahan">
+                                                                <form id="statusForm" method="post" action="fat/kode-store-process.php" enctype="multipart/form-data">
+                                                                    <input type="hidden" name="id" id="modalId" value="<?= $row['id']; ?>">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve SPK IPAL</label>
-                                                                        <select class="form-control" id="statusSelect" name="status_spkwoipal" Placeholder="Pilih">
+                                                                        <label for="statusSelect">Status Draft PSM </label>
+                                                                        <select class="form-control" id="statusSelect" name="confirm_nego">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
                                                                             <option value="In Review By TAF">In Review By TAF</option>
                                                                         </select>
                                                                     </div>
                                                                     <div class="form-group">
-                                                                        <label for="catatan_spkwoipal">Catatan SPK IPAL</label>
-                                                                        <input type="text" class="form-control" id="catatan_spkwoipal" name="catatan_spkwoipal">
+                                                                        <label for="catatan_psm">Catatan Draft PSM</label>
+                                                                        <input type="text" class="form-control" id="catatan_psm" name="catatan_psm">
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">
                                                                         <div class="form-group">
@@ -370,6 +290,7 @@ function getBadgeColor($remarks) {
                                                         </div>
                                                     </div>
                                                 </div>
+                                                    </td>
                                             </tr>
                                         <?php endforeach; ?>
                                         </tbody>
@@ -377,11 +298,9 @@ function getBadgeColor($remarks) {
                                             <tr>
                                                 <th>Inventory Code</th>
                                                 <th>Kode Store</th>
-                                                <th>Nama Lahan</th>
-                                                <th>Lampiran WO Req IPAL</th>
-                                                <th>Lampiran SPK IPAL</th>
-                                                <th>Status</th>
-                                                <th>SLA</th>
+                                                <th>Nama Lokasi</th>
+                                                <th>Alamat Lokasi</th>
+                                                <th>Lampiran VD</th>
 												<th>Action</th>
                                             </tr>
                                         </tfoot>
@@ -401,7 +320,7 @@ function getBadgeColor($remarks) {
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                                                    <form method="POST" action="draft-sewa-delete.php">
+                                                    <form method="POST" action="approval-owner-delete.php">
                                                         <input type="hidden" name="id" id="delete" value="">
                                                         <button type="submit" class="btn btn-danger">Hapus</button>
                                                     </form>
@@ -409,6 +328,65 @@ function getBadgeColor($remarks) {
                                             </div>
                                         </div>
                                     </div>
+                                    <!-- Modal untuk "Tepat Waktu" -->
+                                    <div class="modal fade" id="approvalModal" tabindex="-1" role="dialog" aria-labelledby="approvalModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="approvalModalLabel">Pemberitahuan</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Data sudah approve tepat waktu.
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Modal untuk "Deadline Approval" -->
+                                    <div class="modal fade" id="deadlineModal" tabindex="-1" role="dialog" aria-labelledby="deadlineModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="deadlineModalLabel">Pemberitahuan</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Tersisa waktu <?php echo $diff->days; ?> hari, segera lakukan approval.</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Modal untuk "Terlambat Approval" -->
+                                    <div class="modal fade" id="lateApprovalModal" tabindex="-1" role="dialog" aria-labelledby="lateApprovalModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="lateApprovalModalLabel">Pemberitahuan</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Data sudah terlambat untuk di-approve. Telah terlambat <?php echo $lateDays; ?> hari.</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -435,6 +413,7 @@ function getBadgeColor($remarks) {
                 <!-- fotter end -->
             </div>
         </div>
+
     </div><!-- ============ Search UI Start ============= -->
     <div class="search-ui">
         <div class="search-header">
@@ -604,13 +583,8 @@ function getBadgeColor($remarks) {
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
-    <script>
-        // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
-        function setDelete(element) {
-            var id = element.id;
-            document.getElementById('delete').value = id;
-        }
-    </script>
+    <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>     -->
+    
     <script>
     $(document).ready(function(){
         // Saat tombol edit diklik
@@ -619,7 +593,7 @@ function getBadgeColor($remarks) {
             var id = $(this).data('id');
 
             // Isi nilai input tersembunyi dengan ID yang diambil
-            $('#modalKodeLahan').val(id);
+            $('#modalId').val(id);
         });
     });
     
@@ -640,7 +614,7 @@ function getBadgeColor($remarks) {
         toggleIssueDetail();
     });
 </script>
-<?php if ($status_sdg == 'Pending') { ?>
+<?php if ($confirm_nego == 'Pending') { ?>
     <script>
         $(document).ready(function () {
             $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
@@ -648,6 +622,79 @@ function getBadgeColor($remarks) {
     </script>
 <?php } ?>
     <script>
+$(document).ready(function() {
+    $(".edit-btn").click(function() {
+        // Sembunyikan semua form yang terbuka
+        $(".status-form").hide();
+        // Tampilkan form di samping tombol edit yang diklik
+        $(this).next(".status-form").show();
+    });
+});
+</script>
+
+    <script>
+        // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
+        function setDelete(element) {
+            var id = element.id;
+            document.getElementById('delete').value = id;
+        }
+    </script>
+
+
+    <script>
+    // When the document is ready
+    $(document).ready(function() {
+        // Get the initial value of status approval owner
+        var initialStatus = $('#editStatusOwner').val();
+
+        // Function to generate dropdown options based on the initial status
+        function generateOptions(initialStatus) {
+            var optionsHtml = '';
+            // If the initial status is In Process
+            if (initialStatus === 'In Process') {
+                optionsHtml += '<option value="Pending">Pending</option>';
+                optionsHtml += '<option value="Approve">Approve</option>';
+            }
+            // If the initial status is Pending
+            else if (initialStatus === 'Pending') {
+                optionsHtml += '<option value="In Process">In Process</option>';
+                optionsHtml += '<option value="Approve">Approve</option>';
+            }
+            // If the initial status is Approve, disable the select input
+            else if (initialStatus === 'Approve') {
+                optionsHtml += '<option value="Approve" disabled selected>Approve</option>';
+            }
+            // Update the dropdown options
+            $('#editStatusOwner').html(optionsHtml);
+        }
+
+        // Generate initial dropdown options based on the initial status
+        generateOptions(initialStatus);
+
+        // When the value of the select input changes
+        $('#editStatusOwner').change(function() {
+            var selectedStatus = $(this).val();
+            // Regenerate dropdown options based on the selected status
+            generateOptions(selectedStatus);
+        });
+    });
+</script>
+
+<script>
+    
+</script>
+
+<script>
+    function showPopup(daysLeft) {
+        alert("Tersisa waktu " + daysLeft + " hari, segera lakukan approval.");
+    }
+
+    function showApprovalPopup() {
+        alert("Data sudah approve tepat waktu");
+    }
+</script>
+
+<script>
         $(document).ready(function() {
             // Hancurkan DataTable jika sudah ada
             if ($.fn.DataTable.isDataTable('#zero_configuration_table')) {
@@ -659,17 +706,11 @@ function getBadgeColor($remarks) {
                 scrollX: true, // Menambahkan scroll horizontal
                 fixedColumns: {
                     leftColumns: 3 // Jumlah kolom yang ingin di-fix
-                },
-                fixedHeader: {
-                    leftColumns: 3
                 }
-            });
-            // Atur ulang lebar kolom saat menggulir horizontal
-            $(window).on('resize', function() {
-                table.columns.adjust().draw();
             });
         });
     </script>
+
 </body>
 
 </html>

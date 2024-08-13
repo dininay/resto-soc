@@ -8,7 +8,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Ambil nilai tgl_berlaku dan penanggungjawab dari formulir
     $id = $_POST['id'];
     $kode_lahan = $_POST['kode_lahan'];
-    $kode_store = $_POST['kode_store'];
     
     // Periksa apakah kunci 'lampiran' ada dalam $_FILES
     $lamp_signpsm = "";

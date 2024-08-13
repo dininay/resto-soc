@@ -13,7 +13,7 @@ d.jadwal_psm, s.lamp_desainplan, c.kode_store, e.*
         INNER JOIN resto r ON d.kode_lahan = r.kode_lahan
         INNER JOIN procurement p ON r.kode_lahan = r.kode_lahan
         INNER JOIN equipment e ON e.kode_lahan = r.kode_lahan
-        WHERE e.status_woeqp = 'Proceed By Procurement'
+        WHERE e.status_woeqp IN ('Proceed By Procurement','Approve')
         GROUP BY l.kode_lahan";
 $result = $conn->query($sql);
 
@@ -29,7 +29,8 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
-$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'Sign'";
+
+$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'SPK'";
 $sla_result = $conn->query($sla_query);
 
 $sla_value = 0; // Default SLA value
@@ -38,19 +39,20 @@ if ($sla_result->num_rows > 0) {
     $row = $sla_result->fetch_assoc();
     $sla_value = $row['sla'];
 } else {
-    echo "No SLA value found for 'Owner Surveyor'";
+    echo "No SLA value found for 'SPK'";
 }
 
-function calculateScoring($start_date, $end_date, $sla) {
-    $today = new DateTime();
-    $start_date = $start_date ?: $today->format('Y-m-d');
-    $end_date = $end_date ?: $today->format('Y-m-d');
-    $sla_days = $sla ?: 0;
-
+// Fungsi untuk menghitung scoring
+function calculateScoring($start_date, $sla_date, $sla) {
     $start_date_obj = new DateTime($start_date);
-    $end_date_obj = new DateTime($end_date);
+    $sla_date_obj = new DateTime($sla_date);
+    
+    if ($start_date_obj <= $sla_date_obj) {
+        return 100; // Skor 100 jika start_date tidak melebihi sla_date
+    }
 
-    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
+    $date_diff = $start_date_obj->diff($sla_date_obj)->days;
+    $sla_days = $sla ?: 0;
 
     if ($sla_days != 0) {
         if ($date_diff > $sla_days) {
@@ -64,11 +66,12 @@ function calculateScoring($start_date, $end_date, $sla) {
 
     return round($scoring, 2);
 }
+
 // Fungsi untuk menentukan remarks berdasarkan scoring
 function getRemarks($scoring) {
-    if ($scoring >= 0) {
+    if ($scoring >= 75) {
         return "good";
-    } elseif ($scoring >= -30) {
+    } elseif ($scoring >= 0) {
         return "poor";
     } else {
         return "bad";
@@ -273,7 +276,7 @@ function getBadgeColor($remarks) {
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['status_eqpdevprocur']) {
-                                                            case 'Done':
+                                                            case 'Approve':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -293,20 +296,15 @@ function getBadgeColor($remarks) {
                                                 </td>
                                                 <td>
                                                     <?php
-                                                    // Mendapatkan tanggal sla_date dari kolom data
-                                                    $slaLegalDate = new DateTime($row['sla_eqpdevprocur']);
-                                                    
-                                                    // Mendapatkan tanggal hari ini
-                                                    $today = new DateTime();
-                                                    
-                                                    // Menghitung selisih hari antara sla_eqpdevprocur dan hari ini
-                                                    $diff = $today->diff($slaLegalDate);
-                                                    
+                                                    $start_date = $row['eqpdevprocur_date'];
+                                                    $sla_date = $row['sla_eqpdevprocur'];
+                                                    $status_eqpdevprocur = $row['status_eqpdevprocur'];
+
                                                     // Menghitung scoring
-                                                    $scoring = calculateScoring($row['eqpdevprocur_date'], $row['sla_eqpdevprocur'], $sla_value); // Make sure $sla_value is set correctly
+                                                    $scoring = calculateScoring($start_date, $sla_date, $sla_value);
                                                     $remarks = getRemarks($scoring);
 
-                                                    if ($row['status_eqpdevprocur'] == "In Review By TAF" || $row['status_eqpdevprocur'] == "Done") {
+                                                    if ($status_eqpdevprocur === 'In Review By TAF' || $status_eqpdevprocur === 'Approve') {
                                                         // Menentukan label berdasarkan remarks
                                                         $status_label = '';
                                                         switch ($remarks) {
@@ -323,18 +321,19 @@ function getBadgeColor($remarks) {
 
                                                         echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
-                                                        // Menghitung jumlah hari terlambat
-                                                        $lateDays = $slaLegalDate->diff($today)->days;
+                                                        // Mendapatkan tanggal hari ini
+                                                        $today = new DateTime();
                                                         
-                                                        // Jika terlambat
-                                                        if ($today > $slaLegalDate) {
+                                                        // Menghitung jumlah hari terlambat
+                                                        $lateDays = $sla_date < $today ? $today->diff($sla_date)->days : 0;
+                                                        
+                                                        if ($lateDays > 0) {
                                                             echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
                                                         } else {
-                                                            // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
-                                                            if ($diff) {
+                                                            $diff = $sla_date->diff($today);
+                                                            if ($diff->days <= 5) {
                                                                 echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
                                                             } else {
-                                                                // Tampilkan peringatan "H + X"
                                                                 echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
                                                             }
                                                         }
@@ -352,7 +351,7 @@ function getBadgeColor($remarks) {
                                                     $interval = $today->diff($sla_steqp)->format("%r%a");
 
                                                     // Menampilkan tombol jika status bukan Approve dan sudah mendekati H-21 dari deadline
-                                                    if ($row['status_eqpdevprocur'] !== 'Done') : ?>
+                                                    if ($row['status_eqpdevprocur'] !== 'Approve') : ?>
                                                         <div>
                                                             <a href="procurement/eqpdev-procur-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
                                                                 <i class="i-Pen-2"></i>

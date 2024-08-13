@@ -13,7 +13,8 @@ dokumen_loacd.kode_store
 FROM sdg_desain
 INNER JOIN land ON sdg_desain.kode_lahan = land.kode_lahan
 INNER JOIN dokumen_loacd ON sdg_desain.kode_lahan = dokumen_loacd.kode_lahan
-WHERE sdg_desain.status_survey IN ('Done','In Process','Pending')
+INNER JOIN re ON sdg_desain.kode_lahan = re.kode_lahan
+WHERE re.status_approvnego = 'Approve'
 GROUP BY sdg_desain.kode_lahan";
 $result = $conn->query($sql);
 
@@ -166,9 +167,10 @@ function getBadgeColor($remarks) {
                                                 <th>Alamat Lokasi</th>
                                                 <th>Obstacle</th>
                                                 <th>Note</th>
+                                                <th>Lampiran WO Obstacle</th>
                                                 <th>Obstacle Date</th>
+                                                <th>Temuan Urugan</th>
                                                 <th>Lampiran Legal</th>
-                                                <th>Obstacle Legal Date</th>
                                                 <th>Status Legal</th>
                                                 <th>Lampiran Survey & Layouting</th>
 												<th>Status Survey & Layouting</th>
@@ -205,10 +207,52 @@ function getBadgeColor($remarks) {
                                                 </td>
                                                 <td><?= $row['note'] ?></td>
                                                 <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_layouting_files = explode(",", $row['lamp_layouting']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_layouting'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_layouting_files as $loacd) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $loacd . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>
+                                                <?php
                                                 $date = new DateTime($row['obs_date']);
                                                 $formattedDate = $date->format('d M y');
                                                 ?>
                                                 <td><?= $formattedDate ?></td>
+                                                <td>
+                                                    <?php
+                                                        // Tentukan warna badge berdasarkan status approval owner
+                                                        $badge_color = '';
+                                                        switch ($row['urugan']) {
+                                                            case 'No':
+                                                                $badge_color = 'success';
+                                                                break;
+                                                            case 'Yes':
+                                                                $badge_color = 'warning';
+                                                                break;
+                                                            default:
+                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
+                                                                break;
+                                                        }
+                                                    ?>
+                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
+                                                        <?php echo $row['urugan']; ?>
+                                                    </span>
+                                                </td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_legal_files = explode(",", $row['lamp_legal']); // Pisahkan nama file menjadi array
@@ -231,11 +275,6 @@ function getBadgeColor($remarks) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>
-                                                <?php
-                                                $date = new DateTime($row['obslegal_date']);
-                                                $formattedDate = $date->format('d M y');
-                                                ?>
-                                                <td><?= $formattedDate ?></td>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -443,9 +482,10 @@ function getBadgeColor($remarks) {
                                                 <th>Alamat Lokasi</th>
                                                 <th>Obstacle</th>
                                                 <th>Note</th>
+                                                <th>Lampiran WO Obstacle</th>
                                                 <th>Obstacle Date</th>
+                                                <th>Temuan Urugan</th>
                                                 <th>Lampiran Legal</th>
-                                                <th>Obstacle Legal Date</th>
                                                 <th>Status Legal</th>
                                                 <th>Lampiran Survey & Layouting</th>
 												<th>Status Survey & Layouting</th>

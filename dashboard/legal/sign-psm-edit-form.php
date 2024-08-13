@@ -83,12 +83,6 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="kode_store">Kode Store</label>
-                                    <div class="col-sm-9">
-                                        <input class="form-control" id="kode_store" name="kode_store" type="text" value="<?php echo $row['kode_store']; ?>">
-                                    </div>
-                                </div>
-                                <div class="form-group row">
                                     <div class="col-sm-10">
                                         <button class="btn btn-primary" type="submit">Simpan</button>
                                     </div>

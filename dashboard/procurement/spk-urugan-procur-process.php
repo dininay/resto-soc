@@ -3,17 +3,17 @@
 include "../../koneksi.php";
 
 // Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST["status_eqptaf"])&& isset($_POST["catatan_eqptaf"])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST["status_procururugan"])&& isset($_POST["catatan_procururugan"])) {
     $id = $_POST["id"];
-    $status_eqptaf = $_POST["status_eqptaf"];
-    $catatan_eqptaf = $_POST["catatan_eqptaf"];
+    $status_procururugan = $_POST["status_procururugan"];
+    $catatan_procururugan = $_POST["catatan_procururugan"];
     $issue_detail = isset($_POST["issue_detail"]) ? $_POST["issue_detail"] : null;
     $pic = isset($_POST["pic"]) ? $_POST["pic"] : null;
     $action_plan = isset($_POST["action_plan"]) ? $_POST["action_plan"] : null;
     $submit_legal = null;
     $obstacle = null;
     $kronologi = null;
-    $eqptaf_date = date("Y-m-d");
+    $spkurugan_date = date("Y-m-d");
 
     // Periksa apakah file kronologi ada dalam $_FILES
     if (isset($_FILES["kronologi"])) {
@@ -39,27 +39,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
     $conn->begin_transaction();
 
     try {
-        // Query untuk memperbarui status_eqptaf berdasarkan id
-        $sql_update = "UPDATE equipment SET status_eqptaf = ?, catatan_eqptaf = ?, eqptaf_date = ? WHERE id = ?";
+        // Query untuk memperbarui status_procururugan berdasarkan id
+        $sql_update = "UPDATE procurement SET status_procururugan = ?, catatan_procururugan = ?, spkurugan_date = ? WHERE id = ?";
         $stmt_update = $conn->prepare($sql_update);
-        $eqptaf_date = date("Y-m-d");
-        $stmt_update->bind_param("sssi", $status_eqptaf, $catatan_eqptaf, $eqptaf_date, $id);
+        $spkurugan_date = date("Y-m-d");
+        $stmt_update->bind_param("sssi", $status_procururugan, $catatan_procururugan, $spkurugan_date, $id);
 
         // Eksekusi query update
         if ($stmt_update->execute() === TRUE) {
-            // Jika status_eqptaf diubah menjadi 'Approve'
-            if ($status_eqptaf == 'Approve') {
-                $eqptaf_date = date("Y-m-d");
-                $status_woeqp = "Approve";
-                $status_eqpdevprocur = "Approve";
-                // Query untuk memperbarui submit_legal dan catatan_owner di tabel equipment
-                $sql_update_pending = "UPDATE equipment SET status_eqptaf = ?, catatan_eqptaf = ?, eqptaf_date = ?, status_woeqp = ?, status_eqpdevprocur = ? WHERE id = ?";
+            // Jika status_procururugan diubah menjadi 'Approve'
+            if ($status_procururugan == 'In Review By TAF') {
+                $spkurugan_date = date("Y-m-d");
+                                // Ambil SLA dari tabel master_sla untuk divisi SPK
+                $sql_sla_spk = "SELECT sla FROM master_sla WHERE divisi = 'SPK-FAT'";
+                $result_sla_spk = $conn->query($sql_sla_spk);
+                if ($result_sla_spk->num_rows > 0) {
+                    $row_sla_spk = $result_sla_spk->fetch_assoc();
+                    $hari_sla_spk = $row_sla_spk['sla'];
+
+                    // Hitung sla_spkwo berdasarkan wo_date + SLA dari divisi SPK
+                    $sla_spkfaturugan = date("Y-m-d", strtotime($spkurugan_date . ' + ' . $hari_sla_spk . ' days'));
+                } else {
+                    echo "Error: Data SLA tidak ditemukan untuk divisi SPK.";
+                    exit;
+                }
+                $status_spkfaturugan = "In Process";
+                
+                // Query untuk memperbarui submit_legal dan catatan_owner di tabel procurement
+                $sql_update_pending = "UPDATE procurement SET status_procururugan = ?, catatan_procururugan = ?, spkurugan_date = ?, status_spkfaturugan = ?, sla_spkfaturugan = ? WHERE id = ?";
                 $stmt_update_pending = $conn->prepare($sql_update_pending);
-                $stmt_update_pending->bind_param("sssssi", $status_eqptaf, $catatan_eqptaf, $eqptaf_date, $status_woeqp, $status_eqpdevprocur, $id);
+                $stmt_update_pending->bind_param("sssssi", $status_procururugan, $catatan_procururugan, $spkurugan_date, $status_spkfaturugan, $sla_spkfaturugan, $id);
                 $stmt_update_pending->execute();
                 
                 // Periksa apakah kode_lahan ada di tabel hold_project
-                $sql_check_hold = "SELECT kode_lahan FROM hold_project WHERE kode_lahan = (SELECT kode_lahan FROM equipment WHERE id = ?)";
+                $sql_check_hold = "SELECT kode_lahan FROM hold_project WHERE kode_lahan = (SELECT kode_lahan FROM procurement WHERE id = ?)";
                 $stmt_check_hold = $conn->prepare($sql_check_hold);
                 $stmt_check_hold->bind_param("i", $id);
                 $stmt_check_hold->execute();
@@ -68,7 +81,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                 if ($stmt_check_hold->num_rows > 0) {
                     // Jika kode_lahan ada di hold_project, update status_hold menjadi 'Done'
                     $status_hold = 'Done';
-                    $sql_update_hold = "UPDATE hold_project SET status_hold = ? WHERE kode_lahan = (SELECT kode_lahan FROM equipment WHERE id = ?)";
+                    $sql_update_hold = "UPDATE hold_project SET status_hold = ? WHERE kode_lahan = (SELECT kode_lahan FROM procurement WHERE id = ?)";
                     $stmt_update_hold = $conn->prepare($sql_update_hold);
                     $stmt_update_hold->bind_param("si", $status_hold, $id);
                     $stmt_update_hold->execute();
@@ -76,9 +89,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                 // Komit transaksi
                 $conn->commit();
                 echo "Status berhasil diperbarui.";
-            } elseif ($status_eqptaf == 'Pending') {
-                // Ambil kode_lahan dari tabel equipment
-                $sql_get_kode_lahan = "SELECT kode_lahan FROM equipment WHERE id = ?";
+            } elseif ($status_procururugan == 'Pending') {
+                // Ambil kode_lahan dari tabel procurement
+                $sql_get_kode_lahan = "SELECT kode_lahan FROM procurement WHERE id = ?";
                 $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
                 $stmt_get_kode_lahan->bind_param("i", $id);
                 $stmt_get_kode_lahan->execute();
@@ -86,10 +99,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                 $stmt_get_kode_lahan->fetch();
                 $stmt_get_kode_lahan->free_result();
 
-                // Query untuk memperbarui submit_legal dan catatan_owner di tabel equipment
-                $sql_update_pending = "UPDATE equipment SET status_eqptaf = ?, catatan_eqptaf = ?, eqptaf_date = ? WHERE id = ?";
+                // Query untuk memperbarui submit_legal dan catatan_owner di tabel procurement
+                $sql_update_pending = "UPDATE procurement SET status_procururugan = ?, catatan_procururugan = ?, spkurugan_date = ? WHERE id = ?";
                 $stmt_update_pending = $conn->prepare($sql_update_pending);
-                $stmt_update_pending->bind_param("sssi", $status_eqptaf, $catatan_eqptaf, $eqptaf_date, $id);
+                $stmt_update_pending->bind_param("sssi", $status_procururugan, $catatan_procururugan, $spkurugan_date, $id);
                 $stmt_update_pending->execute();
 
                 $status_hold = "In Process";
@@ -112,16 +125,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                     // if ($result_sla_stkonstruksi->num_rows > 0) {
                     //     $row_sla_stkonstruksi = $result_sla_stkonstruksi->fetch_assoc();
                     //     $hari_sla_stkonstruksi = $row_sla_stkonstruksi['sla'];
-                    //     $sla_fat = date("Y-m-d", strtotime($eqptaf_date . ' + ' . $hari_sla_stkonstruksi . ' days'));
+                    //     $sla_fat = date("Y-m-d", strtotime($spkurugan_date . ' + ' . $hari_sla_stkonstruksi . ' days'));
                     // } else {
                     //     $conn->rollback();
                     //     echo "Error: Data SLA tidak ditemukan untuk divisi ST-Konstruksi.";
                     //     exit;
                     // }
-                    // Jika status tidak diubah menjadi Approve atau Pending, hanya perlu memperbarui status_eqptaf
-                    $sql_update_other = "UPDATE equipment SET status_eqptaf = ?, catatan_eqptaf = ?, eqptaf_date = ? WHERE id = ?";
+                    // Jika status tidak diubah menjadi Approve atau Pending, hanya perlu memperbarui status_procururugan
+                    $sql_update_other = "UPDATE procurement SET status_procururugan = ?, catatan_procururugan = ?, spkurugan_date = ? WHERE id = ?";
                     $stmt_update_other = $conn->prepare($sql_update_other);
-                    $stmt_update_other->bind_param("sssi", $status_eqptaf, $catatan_eqptaf, $eqptaf_date, $id);
+                    $stmt_update_other->bind_param("sssi", $status_procururugan, $catatan_procururugan, $spkurugan_date, $id);
     
 
                 // Eksekusi query
@@ -143,7 +156,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
             $conn->rollback();
             echo "Error: " . $sql_update . "<br>" . $conn->error;
         }
-        header("Location: ../datatables-review-spkeqp.php");
+        header("Location: ../datatables-checkval-rab-urugan.php");
         exit; // Pastikan tidak ada output lain setelah header redirect
     } catch (Exception $e) {
         // Rollback transaksi jika terjadi kesalahan

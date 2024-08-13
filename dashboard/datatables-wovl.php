@@ -212,6 +212,7 @@ function getBadgeColor($remarks) {
                                                 <th>Lampiran Land</th>
                                                 <th>Status VL</th>
                                                 <th>Lampiran VL</th>
+                                                <th>Lampiran VL Signed</th>
                                                 <th>Catatan VL</th>
                                                 <th>SLA</th>
                                                 <th>Action</th>
@@ -313,23 +314,40 @@ function getBadgeColor($remarks) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>       
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_vlsign_files = explode(",", $row['lamp_vlsign']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_vlsign'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_vlsign_files as $kom) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $kom . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>       
                                                 <td><?= $row['catatan_vl'] ?></td>  
                                                 <td>
                                                     <?php
-                                                    // Mendapatkan tanggal sla_date dari kolom data
-                                                    $slaLegalDate = new DateTime($row['slavl_date']);
-                                                    
-                                                    // Mendapatkan tanggal hari ini
-                                                    $today = new DateTime();
-                                                    
-                                                    // Menghitung selisih hari antara sla_date dan hari ini
-                                                    $diff = $today->diff($slaLegalDate);
-                                                    
+                                                    $start_date = $row['vllegal_date'];
+                                                    $sla_date = $row['slavllegal_date'];
+                                                    $status_vl = $row['status_vl'];
+
                                                     // Menghitung scoring
-                                                    $scoring = calculateScoring($row['vl_date'], $row['slavl_date'], $sla_value); // Make sure $sla_value is set correctly
+                                                    $scoring = calculateScoring($start_date, $sla_date, $sla_value);
                                                     $remarks = getRemarks($scoring);
 
-                                                    if ($row['status_vl'] == "Approve") {
+                                                    if ($status_vl === 'Approve') {
                                                         // Menentukan label berdasarkan remarks
                                                         $status_label = '';
                                                         switch ($remarks) {
@@ -346,20 +364,22 @@ function getBadgeColor($remarks) {
 
                                                         echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
-                                                        // Menghitung jumlah hari terlambat
-                                                        $lateDays = $slaLegalDate->diff($today)->days;
-                                                        
-                                                        // Jika terlambat
-                                                        if ($today > $slaLegalDate) {
-                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+                                                        // Mendapatkan tanggal hari ini
+                                                        $today = new DateTime();
+
+                                                        // Convert $sla_date to DateTime object
+                                                        $sla_date_obj = new DateTime($sla_date);
+
+                                                        // Menghitung jumlah hari menuju SLA date
+                                                        $diff = $today->diff($sla_date_obj);
+                                                        $daysDifference = (int)$diff->format('%R%a'); // Menyertakan tanda plus atau minus
+
+                                                        if ($daysDifference < 0) {
+                                                            // SLA telah terlewat, hitung sebagai hari terlambat
+                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . abs($daysDifference) . ' hari</button>';
                                                         } else {
-                                                            // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
-                                                            if ($diff) {
-                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
-                                                            } else {
-                                                                // Tampilkan peringatan "H + X"
-                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
-                                                            }
+                                                            // SLA belum tercapai, hitung mundur
+                                                            echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $daysDifference . '</button>';
                                                         }
                                                     }
                                                     ?>
@@ -414,6 +434,7 @@ function getBadgeColor($remarks) {
                                                                         <select class="form-control" id="statusSelect" name="status_vl">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
+                                                                            <option value="In Revision">In Revision</option>
                                                                             <option value="Approve">Approve</option>
                                                                             <option value="Reject">Reject</option>
                                                                         </select>
@@ -422,6 +443,10 @@ function getBadgeColor($remarks) {
                                                                         <label for="catatan_vl">Catatan VL</label>
                                                                         <input type="text" class="form-control" id="catatan_vl" name="catatan_vl">
                                                                     </div>
+                                                                        <div class="form-group">
+                                                                            <label for="lamp_vlsign">Upload File VL</label>
+                                                                            <input type="file" class="form-control" id="lamp_vlsign" name="lamp_vlsign[]" multiple>
+                                                                        </div>
                                                                     <div id="issueDetailSection" class="hidden">
                                                                         <div class="form-group">
                                                                             <label for="issue_detail">Issue Detail</label>
@@ -478,6 +503,7 @@ function getBadgeColor($remarks) {
                                                 <th>Lampiran Land</th>
                                                 <th>Status VL</th>
                                                 <th>Lampiran VL</th>
+                                                <th>Lampiran VL Signed</th>
                                                 <th>Catatan VL</th>
                                                 <th>SLA</th>
                                                 <th>Action</th>

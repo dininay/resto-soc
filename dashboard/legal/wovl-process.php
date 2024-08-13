@@ -7,7 +7,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
     $id = $_POST["id"];
     $status_vl = $_POST["status_vl"];
     $catatan_vl = $_POST["catatan_vl"];
-    $vl_date = null;
+    // Periksa apakah file kronologi ada dalam $_FILES
+    $lamp_vlsign_paths = array();
+    if(isset($_FILES["lamp_vlsign"])) {
+        foreach($_FILES['lamp_vlsign']['name'] as $key => $filename) {
+            $file_tmp = $_FILES['lamp_vlsign']['tmp_name'][$key];
+            $target_dir = "../uploads/";
+            $target_file = $target_dir . basename($filename);
+
+            // Attempt to move the uploaded file to the target directory
+            if (move_uploaded_file($file_tmp, $target_dir . $target_file)) {
+                $lamp_vlsign_paths[] = $filename;
+            } else {
+                echo "Gagal mengunggah file " . $filename . "<br>";
+            }
+        }
+
+        // Join all file paths into a comma-separated string
+        $lamp_vlsign = implode(",", $lamp_vlsign_paths);
+    } else {
+        $lamp_vlsign = null; // Set kronologi to null if no files were uploaded
+    }
+    $vllegal_date = null;
     $issue_detail = isset($_POST["issue_detail"]) ? $_POST["issue_detail"] : null;
     $pic = isset($_POST["pic"]) ? $_POST["pic"] : null;
     $action_plan = isset($_POST["action_plan"]) ? $_POST["action_plan"] : null;
@@ -39,14 +60,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
     try {
         // Jika status_vl diubah menjadi Approve
         if ($status_vl == 'Approve') {
-            $vl_date = date("Y-m-d H:i:s");
+            $vllegal_date = date("Y-m-d H:i:s");
 
-            // Query untuk memperbarui status_vl dan vl_date di tabel re
-            $sql_update_re = "UPDATE re SET status_vl = ?, catatan_vl = ?, vl_date = ? WHERE id = ?";
+            // Query untuk memperbarui status_vl dan vllegal_date di tabel re
+            $sql_update_re = "UPDATE re SET status_vl = ?, catatan_vl = ?, vllegal_date = ?, lamp_vlsign = ? WHERE id = ?";
             $stmt_update_re = $conn->prepare($sql_update_re);
-            $stmt_update_re->bind_param("sssi", $status_vl, $catatan_vl, $vl_date, $id);
+            $stmt_update_re->bind_param("ssssi", $status_vl, $catatan_vl, $vllegal_date, $lamp_vlsign, $id);
             $stmt_update_re->execute();
-            
+            var_dump($lamp_vlsign);
             // Ambil kode_lahan dari tabel re
             $sql_get_kode_lahan = "SELECT kode_lahan FROM re WHERE id = ?";
             $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
@@ -85,10 +106,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             $stmt_get_kode_lahan->fetch();
             $stmt_get_kode_lahan->free_result();
 
-            // Query untuk memperbarui status_vl, vl_date di tabel re dan memasukkan data ke dalam tabel hold_project
-            $sql_update_re = "UPDATE re SET status_vl = ?, catatan_vl = ?, vl_date = ? WHERE id = ?";
+            // Query untuk memperbarui status_vl, vllegal_date di tabel re dan memasukkan data ke dalam tabel hold_project
+            $sql_update_re = "UPDATE re SET status_vl = ?, catatan_vl = ?, vllegal_date = ? WHERE id = ?";
             $stmt_update_re = $conn->prepare($sql_update_re);
-            $stmt_update_re->bind_param("sssi", $status_vl,$catatan_vl, $vl_date, $id);
+            $stmt_update_re->bind_param("sssi", $status_vl,$catatan_vl, $vllegal_date, $id);
             $stmt_update_re->execute();
 
             $status_hold = "In Process";
@@ -114,10 +135,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             $stmt_get_kode_lahan->fetch();
             $stmt_get_kode_lahan->free_result();
 
-            // Query untuk memperbarui status_vl, vl_date di tabel re dan memasukkan data ke dalam tabel hold_project
-            $sql_update_re = "UPDATE re SET status_vl = ?, catatan_vl = ?, vl_date = ? WHERE id = ?";
+            // Query untuk memperbarui status_vl, vllegal_date di tabel re dan memasukkan data ke dalam tabel hold_project
+            $sql_update_re = "UPDATE re SET status_vl = ?, catatan_vl = ? WHERE id = ?";
             $stmt_update_re = $conn->prepare($sql_update_re);
-            $stmt_update_re->bind_param("sssi", $status_vl, $catatan_vl, $vl_date, $id);
+            $stmt_update_re->bind_param("ssi", $status_vl, $catatan_vl, $id);
             $stmt_update_re->execute();
             
             // Komit transaksi

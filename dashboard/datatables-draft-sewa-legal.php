@@ -171,7 +171,8 @@ $conn->close();
                                                 <th>Lampiran VL</th>
                                                 <th>Lampiran VD</th>
                                                 <th>Lampiran PSM Legal</th>
-                                                <th>Lampiran Draft</th>
+                                                <th>Lampiran Draft Table Sewa</th>
+                                                <th>Lampiran Final PSM & Table Sewa</th>
                                                 <th>Status BoD</th>
                                                 <th>Confirm RE</th>
                                                 <th>SLA</th>
@@ -292,6 +293,28 @@ $conn->close();
                                                             <ul style="list-style-type: none; padding: 0; margin: 0;">';
                                                     // Loop untuk setiap file dalam array
                                                     foreach ($lamp_loacd_files as $file) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $file . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>                        
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_bod_files = explode(",", $row['lamp_bod']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_bod'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_bod_files as $file) {
                                                         echo '<li style="display: inline-block; margin-right: 5px;">
                                                                 <a href="uploads/' . $file . '" target="_blank">
                                                                     <i class="fas fa-file-pdf nav-icon"></i>
@@ -495,7 +518,8 @@ $conn->close();
                                                 <th>Lampiran VL</th>
                                                 <th>Lampiran VD</th>
                                                 <th>Lampiran PSM Legal</th>
-                                                <th>Lampiran Draft</th>
+                                                <th>Lampiran Draft Table Sewa</th>
+                                                <th>Lampiran Final PSM & Table Sewa</th>
                                                 <th>Status BoD</th>
                                                 <th>Confirm RE</th>
                                                 <th>SLA</th>

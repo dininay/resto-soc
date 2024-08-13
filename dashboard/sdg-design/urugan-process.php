@@ -2,20 +2,27 @@
 // Koneksi ke database
 include "../../koneksi.php";
 
+echo $_POST["id"];
+
 // Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["status_obslegal"]) && isset($_POST["catatan_obslegal"])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["confirm_sdgurugan"]) && isset($_POST["catatan_sdgurugan"])) {
     $id = $_POST["id"];
-    $status_obslegal = $_POST["status_obslegal"];
-    $catatan_obslegal = $_POST["catatan_obslegal"];
-    $end_date = date("Y-m-d H:i:s");
+    var_dump($id); // Debugging untuk memastikan ID diterima
+    $confirm_sdgurugan = $_POST["confirm_sdgurugan"];
+    var_dump($confirm_sdgurugan);
+    $catatan_sdgurugan = $_POST["catatan_sdgurugan"];
+    $urugan_date = null;
+    $slalegal_date = null;
     $issue_detail = isset($_POST["issue_detail"]) ? $_POST["issue_detail"] : null;
     $pic = isset($_POST["pic"]) ? $_POST["pic"] : null;
     $action_plan = isset($_POST["action_plan"]) ? $_POST["action_plan"] : null;
+    $submit_legal = null;
+    $obstacle = null;
 
     // Periksa apakah file kronologi ada dalam $_FILES
     $kronologi_paths = array();
-    if(isset($_FILES["kronologi"])) {
-        foreach($_FILES['kronologi']['name'] as $key => $filename) {
+    if (isset($_FILES["kronologi"])) {
+        foreach ($_FILES['kronologi']['name'] as $key => $filename) {
             $file_tmp = $_FILES['kronologi']['tmp_name'][$key];
             $target_dir = "../uploads/";
             $target_file = $target_dir . basename($filename);
@@ -34,21 +41,59 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         $kronologi = null; // Set kronologi to null if no files were uploaded
     }
 
+    if ($confirm_sdgurugan == 'Approve') {
+        $submit_legal = 'In Process';
+        $urugan_date = date("Y-m-d H:i:s");
+    } else {
+        $urugan_date = date("Y-m-d H:i:s");
+    }
+
+        // Ambil urugan_date dari database
+    $sql_select_urugan_date = "SELECT urugan_date FROM sdg_desain WHERE id = ?";
+    $stmt_select_urugan_date = $conn->prepare($sql_select_urugan_date);
+    $stmt_select_urugan_date->bind_param("i", $id);
+    $stmt_select_urugan_date->execute();
+    $result_urugan_date = $stmt_select_urugan_date->get_result();
+
+    if ($row = $result_urugan_date->fetch_assoc()) {
+        $urugan_date = $row['urugan_date'];
+    } else {
+        $conn->rollback();
+        echo "Error: Data not found for id: $id.";
+        exit;
+    }
+
+    // Ambil jumlah SLA dari tabel master_sla berdasarkan divisi "Legal"
+    $sql_select_sla = "SELECT sla FROM master_sla WHERE divisi = 'Legal'";
+    $result_sla = $conn->query($sql_select_sla);
+
+    if ($row_sla = $result_sla->fetch_assoc()) {
+        $sla_days = $row_sla['sla'];
+        $urugan_date_obj = new DateTime($urugan_date);
+        $urugan_date_obj->modify("+$sla_days days");
+        $slalegal_date = $urugan_date_obj->format("Y-m-d");
+    } else {
+        $conn->rollback();
+        echo "Error: SLA not found for divisi: Legal.";
+        exit;
+    }
+
     // Mulai transaksi
     $conn->begin_transaction();
 
     try {
-        // Query untuk memperbarui status_obslegal berdasarkan id
-        $sql_update_sdg_desain = "UPDATE sdg_desain SET status_obslegal = ?, catatan_obslegal = ?, end_date = ? WHERE id = ?";
-        $stmt_update_sdg_desain = $conn->prepare($sql_update_sdg_desain);
-        $stmt_update_sdg_desain->bind_param("sssi", $status_obslegal, $catatan_obslegal, $end_date, $id);
+        $urugan_date = date("Y-m-d H:i:s");
+        // Query untuk memperbarui confirm_sdgurugan dan obstacle
+        $sql = "UPDATE sdg_desain SET confirm_sdgurugan = ?, catatan_sdgurugan = ?,  urugan_date = ? WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sssi", $confirm_sdgurugan, $catatan_sdgurugan,  $urugan_date, $id);
 
         // Eksekusi query
-        if ($stmt_update_sdg_desain->execute() === TRUE) {
-            // Jika status_obslegal diubah menjadi Approve
-            if ($status_obslegal == 'Done') {
+        if ($stmt->execute() === TRUE) {
+            // Jika submit_legal diubah menjadi Approve
+            if ($confirm_sdgurugan == 'Approve') {
                 // Ambil data dari tabel sdg_desain berdasarkan id yang diedit
-                $sql_select = "SELECT kode_lahan, end_date, lamp_desainplan FROM sdg_desain WHERE id = ?";
+                $sql_select = "SELECT kode_lahan, end_date FROM sdg_desain WHERE id = ?";
                 $stmt_select = $conn->prepare($sql_select);
                 $stmt_select->bind_param("i", $id);
                 $stmt_select->execute();
@@ -57,25 +102,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                     // Ambil jumlah SLA dari tabel master_sla berdasarkan divisi "SDG-QS"
                     $sql_select_sla_qs = "SELECT sla FROM master_sla WHERE divisi = 'QS'";
                     $result_sla_qs = $conn->query($sql_select_sla_qs);
-                    
+
                     if ($row_sla_qs = $result_sla_qs->fetch_assoc()) {
                         $sla_days_qs = $row_sla_qs['sla'];
                         $end_date_obj = new DateTime($row['end_date']);
                         $end_date_obj->modify("+$sla_days_qs days");
                         $sla_date = $end_date_obj->format("Y-m-d");
+                        $slaurugan_date = $end_date_obj->format("Y-m-d");
 
                         // Masukkan data ke tabel sdg_rab
-                        $sql_insert = "INSERT INTO sdg_rab (kode_lahan, confirm_sdgqs, sla_date) VALUES (?,?,?)";
+                        $sql_insert = "INSERT INTO sdg_rab (kode_lahan, confirm_sdgqs, sla_date, confirm_qsurugan, slaurugan_date) VALUES (?,?,?,?,?)";
                         $stmt_insert = $conn->prepare($sql_insert);
                         // Tambahkan 'In Process' untuk kolom confirm_sdgqs
                         $confirm_sdgqs = 'In Process';
-                        $stmt_insert->bind_param("sss", $row['kode_lahan'], $confirm_sdgqs, $sla_date);
+                        $confirm_qsurugan = 'In Process';
+                        $stmt_insert->bind_param("sssss", $row['kode_lahan'], $confirm_sdgqs, $sla_date, $confirm_qsurugan, $slaurugan_date);
                         $stmt_insert->execute();
-                    } else {
-                        $conn->rollback();
-                        echo "Error: SLA not found for divisi: SDG-QS.";
-                        exit;
-                    }
+                    } 
+                    
                     // Ambil kode_lahan dari tabel re
                     $sql_get_kode_lahan = "SELECT kode_lahan FROM sdg_desain WHERE id = ?";
                     $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
@@ -103,9 +147,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                     // Komit transaksi
                     $conn->commit();
                     echo "Status berhasil diperbarui.";
-                }
-            } elseif ($status_obslegal == 'Pending') {
-                // Ambil kode_lahan dari tabel re
+                } 
+            } elseif ($confirm_sdgurugan == 'Pending') {
+                // Ambil kode_lahan dari tabel sdg_desain
                 $sql_get_kode_lahan = "SELECT kode_lahan FROM sdg_desain WHERE id = ?";
                 $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
                 $stmt_get_kode_lahan->bind_param("i", $id);
@@ -113,81 +157,48 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 $stmt_get_kode_lahan->bind_result($kode_lahan);
                 $stmt_get_kode_lahan->fetch();
                 $stmt_get_kode_lahan->free_result();
-    
-                // Query untuk memperbarui status_obslegal, end_date di tabel re dan memasukkan data ke dalam tabel hold_project
-                $sql_update_re = "UPDATE sdg_desain SET status_obslegal = ?, catatan_obslegal = ?, end_date = ? WHERE id = ?";
-                $stmt_update_re = $conn->prepare($sql_update_re);
-                $stmt_update_re->bind_param("sssi", $status_obslegal, $catatan_obslegal, $end_date, $id);
-                $stmt_update_re->execute();
-    
+
+                // Query untuk memperbarui submit_legal dan catatan_owner di tabel sdg_desain
+                $sql = "UPDATE sdg_desain SET confirm_sdgurugan = ?, catatan_sdgurugan = ?, obstacle = ?, submit_legal = ?, urugan_date = ?, slalegal_date = ? WHERE kode_lahan = ?";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("sssssss", $confirm_sdgurugan, $catatan_sdgurugan, $obstacle, $submit_legal, $urugan_date, $slalegal_date, $kode_lahan);
+                $stmt->execute();
+
                 $status_hold = "In Process";
                 $due_date = date("Y-m-d H:i:s");
 
-                // Debugging: tampilkan data yang akan dimasukkan ke tabel hold_project
-                echo "Data yang akan dimasukkan ke hold_project: <br>";
-                echo "kode_lahan: " . $kode_lahan . "<br>";
-                echo "issue_detail: " . $issue_detail . "<br>";
-                echo "pic: " . $pic . "<br>";
-                echo "action_plan: " . $action_plan . "<br>";
-                echo "due_date: " . $due_date . "<br>";
-                echo "status_hold: " . $status_hold . "<br>";
-                echo "kronologi: " . $kronologi . "<br>";
-    
                 // Query untuk memasukkan data ke dalam tabel hold_project
                 $sql_hold = "INSERT INTO hold_project (kode_lahan, issue_detail, pic, action_plan, due_date, status_hold, kronologi) VALUES (?, ?, ?, ?, ?, ?, ?)";
                 $stmt_hold = $conn->prepare($sql_hold);
                 $stmt_hold->bind_param("sssssss", $kode_lahan, $issue_detail, $pic, $action_plan, $due_date, $status_hold, $kronologi);
-                
-                // Eksekusi query dan periksa keberhasilan
-                if ($stmt_hold->execute() === TRUE) {
-                    echo "Data berhasil dimasukkan ke tabel hold_project.";
-                } else {
-                    echo "Error: " . $sql_hold . "<br>" . $conn->error;
-                }
+                $stmt_hold->execute();
 
                 // Komit transaksi
                 $conn->commit();
                 echo "Status berhasil diperbarui dan data ditahan.";
-            } elseif ($status_obslegal == 'In Process') {
-                // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_obslegal di tabel re
-                $sql = "UPDATE sdg_desain SET status_obslegal = ?, catatan_obslegal = ?, end_date = ? WHERE id = ?";
-                $stmt = $conn->prepare($sql);
-                $stmt->bind_param("sssi", $status_obslegal, $catatan_obslegal, $end_date, $id);
-                $stmt->execute();
-    
-                // Check if update was successful
-                if ($stmt->affected_rows > 0) {
-                    echo "<script>
-                            alert('Status berhasil diperbarui.');
-                            window.location.href = window.location.href;
-                         </script>";
-                } else {
-                    echo "Error: Gagal memperbarui status. Tidak ada perubahan dilakukan.";
-                }
             } else {
-                // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_obslegal di tabel re
-                $sql = "UPDATE sdg_desain SET status_obslegal = ?, catatan_obslegal = ?, end_date = ? WHERE id = ?";
+                // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_$status_obssdg
+                $sql = "UPDATE sdg_desain SET confirm_sdgurugan = ?, catatan_sdgurugan = ?, obstacle = ?, submit_legal = ?, urugan_date = ?, slalegal_date = ? WHERE kode_lahan = ?";
                 $stmt = $conn->prepare($sql);
-                $stmt->bind_param("sssi", $status_obslegal, $catatan_obslegal, $end_date, $id);
-                $stmt->execute();
-    
-                // Check if update was successful
-                if ($stmt->affected_rows > 0) {
+                $stmt->bind_param("sssssss", $confirm_sdgurugan, $catatan_sdgurugan, $obstacle, $submit_legal, $urugan_date, $slalegal_date, $kode_lahan);
+
+                // Eksekusi query
+                if ($stmt->execute() === TRUE) {
                     echo "<script>
                             alert('Status berhasil diperbarui.');
                             window.location.href = window.location.href;
                          </script>";
                 } else {
-                    echo "Error: Gagal memperbarui status. Tidak ada perubahan dilakukan.";
+                    echo "Error: " . $sql . "<br>" . $conn->error;
                 }
             }
         } else {
-            // Rollback transaksi jika terjadi kesalahan
-            $conn->rollback();
-            echo "Error: " . $sql_update_sdg_desain . "<br>" . $conn->error;
+            echo "Error: " . $sql . "<br>" . $conn->error;
         }
-        header("Location: ../datatables-design-legal.php");
-        exit; // Pastikan tidak ada output lain setelah header redirect
+        // Redirect ke halaman datatables-approval-owner.php
+header("Location: ../datatables-urugan.php");
+exit;
+
     } catch (Exception $e) {
         // Rollback transaksi jika terjadi kesalahan
         $conn->rollback();

@@ -113,10 +113,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 $stmt_dokumen->execute();
 
                 // Insert data ke tabel sdg_desain
-                $sql_sdgd = "INSERT INTO sdg_desain (kode_lahan, confirm_sdgdesain, status_obssdg, sla_survey) 
-                             VALUES (?, ?, ?, ?)";
+                $sql_sdgd = "INSERT INTO sdg_desain (kode_lahan, status_obssdg, sla_survey) 
+                             VALUES ( ?, ?, ?)";
                 $stmt_sdgd = $conn->prepare($sql_sdgd);
-                $stmt_sdgd->bind_param("ssss", $updated_row['kode_lahan'], $confirm_sdgdesain, $status_obssdg, $sla_survey);
+                $stmt_sdgd->bind_param("sss", $updated_row['kode_lahan'],  $status_obssdg, $sla_survey);
                 $stmt_sdgd->execute();
 
                 // Query untuk memasukkan data ke dalam tabel hold_project

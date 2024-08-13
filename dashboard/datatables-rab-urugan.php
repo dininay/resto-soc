@@ -1,13 +1,17 @@
 <?php
 // Koneksi ke database
 include "../koneksi.php";
-$status_sdg = "";
+$confirm_qsurugan = "";
 // Query untuk mengambil data dari tabel land
-$sql = "SELECT socdate_sdg.*, d.kode_store, l.nama_lahan
-from socdate_sdg
-JOIN land l ON socdate_sdg.kode_lahan = l.kode_lahan
-JOIN dokumen_loacd d ON socdate_sdg.kode_lahan = d.kode_lahan
-WHERE socdate_sdg.status_spkwoipal IN ('In Process', 'Approve', 'In Review By TAF', 'Pending')";
+$sql = "SELECT d.kode_lahan, d.nama_lahan, d.lokasi, s.lamp_urugan, r.keterangan, p.lamp_vendorurugan, p.nama_vendorurugan,
+r.*,t.lamp_vd, t.kode_store
+FROM land d
+INNER JOIN dokumen_loacd t ON d.kode_lahan = t.kode_lahan
+INNER JOIN sdg_rab r ON d.kode_lahan = r.kode_lahan
+INNER JOIN sdg_desain s ON d.kode_lahan = s.kode_lahan
+LEFT JOIN procurement p ON d.kode_lahan = p.kode_lahan
+WHERE s.urugan = 'Yes'
+GROUP BY s.kode_lahan";
 $result = $conn->query($sql);
 
 
@@ -23,7 +27,7 @@ if ($result && $result->num_rows > 0) {
 }
 
 
-$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'SPK'";
+$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'QS'";
 $sla_result = $conn->query($sla_query);
 
 $sla_value = 0; // Default SLA value
@@ -32,7 +36,7 @@ if ($sla_result->num_rows > 0) {
     $row = $sla_result->fetch_assoc();
     $sla_value = $row['sla'];
 } else {
-    echo "No SLA value found for 'SPK'";
+    echo "No SLA value found for 'QS'";
 }
 
 // Fungsi untuk menghitung scoring
@@ -101,12 +105,9 @@ function getBadgeColor($remarks) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/fixedcolumns/3.3.2/css/fixedColumns.dataTables.min.css">
-    <!-- Muat jQuery terlebih dahulu -->
-    <!-- Muat DataTables setelah jQuery -->
     <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>    
-    <style>
+<style>
         .hidden {
             display: none;
         },
@@ -124,10 +125,6 @@ function getBadgeColor($remarks) {
         table.dataTable {
             border-collapse:  collapse!important;
         }
-        div.dataTables_wrapper {
-            width: 100%;
-            margin: 0 auto;
-        }
     </style>
 </head>
 
@@ -144,7 +141,7 @@ function getBadgeColor($remarks) {
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Data MEP - IPAL</h1>
+                    <h1>List data RAB</h1>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
                 <!-- end of row-->
@@ -154,7 +151,6 @@ function getBadgeColor($remarks) {
                             <div class="card-body">
                                 <h4 class="card-title mb-3"></h4>
 								<div class="footer-bottom float-right">
-									<!-- <p><a class="btn btn-primary btn-icon m-1" href="sdg-pk/sdgpk-rto-from.php">+ add Data </a></p> -->
 									<p>
 									  <span class="flex-grow-1"></span></p>
 								</div>
@@ -165,9 +161,15 @@ function getBadgeColor($remarks) {
                                             <tr>
                                                 <th>Inventory Code</th>
                                                 <th>Kode Store</th>
-                                                <th>Nama Lahan</th>
-                                                <th>Lampiran WO Req IPAL</th>
-                                                <th>Lampiran SPK IPAL</th>
+                                                <th>Nama Lokasi</th>
+                                                <th>Alamat Lokasi</th>
+                                                <th>Lampiran VD</th>
+                                                <th>Lampiran Urugan From SDG Design</th>
+                                                <th>Keterangan</th>
+                                                <th>Jumlah</th>
+                                                <th>Lampiran RAB</th>
+                                                <th>Nama Vendor</th>
+                                                <th>Lampiran Pendukung Vendor</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -179,17 +181,64 @@ function getBadgeColor($remarks) {
                                                 <td><?= $row['kode_lahan'] ?></td>
                                                 <td><?= $row['kode_store'] ?></td>
                                                 <td><?= $row['nama_lahan'] ?></td>
+                                                <td><?= $row['lokasi'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lampwo_reqipal_files = explode(",", $row['lampwo_reqipal']); // Pisahkan nama file menjadi array
+                                                $lamp_vd_files = explode(",", $row['lamp_vd']); // Pisahkan nama file menjadi array
                                                 // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lampwo_reqipal'])) {
+                                                if (!empty($row['lamp_vd'])) {
                                                     echo '<td>
                                                             <ul style="list-style-type: none; padding: 0; margin: 0;">';
                                                     // Loop untuk setiap file dalam array
-                                                    foreach ($lampwo_reqipal_files as $listrik) {
+                                                    foreach ($lamp_vd_files as $vd) {
                                                         echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $listrik . '" target="_blank">
+                                                                <a href="uploads/' . $vd . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul> 
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_urugan_files = explode(",", $row['lamp_urugan']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_urugan'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_urugan_files as $desainplan) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $desainplan . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul> 
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>
+                                                <td><?= $row['ket_urugan'] ?></td>
+                                                <td><?= $row['jumlah_urugan'] ?></td>
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_raburugan_files = explode(",", $row['lamp_raburugan']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_raburugan'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_raburugan_files as $rab) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $rab . '" target="_blank">
                                                                     <i class="fas fa-file-pdf nav-icon"></i>
                                                                 </a>
                                                             </li>';
@@ -201,17 +250,18 @@ function getBadgeColor($remarks) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>
+                                                <td><?= $row['nama_vendorurugan'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_spkwoipal_files = explode(",", $row['lamp_spkwoipal']); // Pisahkan nama file menjadi array
+                                                $lamp_vendorurugan_files = explode(",", $row['lamp_vendorurugan']); // Pisahkan nama file menjadi array
                                                 // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_spkwoipal'])) {
+                                                if (!empty($row['lamp_vendorurugan'])) {
                                                     echo '<td>
                                                             <ul style="list-style-type: none; padding: 0; margin: 0;">';
                                                     // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_spkwoipal_files as $listrik) {
+                                                    foreach ($lamp_vendorurugan_files as $vendor) {
                                                         echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $listrik . '" target="_blank">
+                                                                <a href="uploads/' . $vendor . '" target="_blank">
                                                                     <i class="fas fa-file-pdf nav-icon"></i>
                                                                 </a>
                                                             </li>';
@@ -227,7 +277,7 @@ function getBadgeColor($remarks) {
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
-                                                        switch ($row['status_spkwoipal']) {
+                                                        switch ($row['confirm_qsurugan']) {
                                                             case 'Approve':
                                                                 $badge_color = 'success';
                                                                 break;
@@ -237,26 +287,29 @@ function getBadgeColor($remarks) {
                                                             case 'In Process':
                                                                 $badge_color = 'primary';
                                                                 break;
+                                                            case 'In Design Revision':
+                                                                $badge_color = 'primary';
+                                                                break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
                                                                 break;
                                                         }
                                                     ?>
                                                     <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_spkwoipal']; ?>
+                                                        <?php echo $row['confirm_qsurugan']; ?>
                                                     </span>
                                                 </td>
                                                 <td>
                                                     <?php
-                                                    $start_date = $row['spkwoipal_date'];
-                                                    $sla_date = $row['sla_spkwoipal'];
-                                                    $status_spkwoipal = $row['status_spkwoipal'];
+                                                    $start_date = $row['qsurugan_date'];
+                                                    $sla_date = $row['slaurugan_date'];
+                                                    $confirm_qsurugan = $row['confirm_qsurugan'];
 
                                                     // Menghitung scoring
                                                     $scoring = calculateScoring($start_date, $sla_date, $sla_value);
                                                     $remarks = getRemarks($scoring);
 
-                                                    if ($status_spkwoipal === 'In Review By TAF' || $status_spkwoipal === 'Approve') {
+                                                    if ($confirm_qsurugan === 'Approve') {
                                                         // Menentukan label berdasarkan remarks
                                                         $status_label = '';
                                                         switch ($remarks) {
@@ -275,111 +328,101 @@ function getBadgeColor($remarks) {
                                                     } else {
                                                         // Mendapatkan tanggal hari ini
                                                         $today = new DateTime();
-                                                        
-                                                        // Menghitung jumlah hari terlambat
-                                                        $lateDays = $sla_date < $today ? $today->diff($sla_date)->days : 0;
-                                                        
-                                                        if ($lateDays > 0) {
-                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+
+                                                        // Convert $sla_date to DateTime object
+                                                        $sla_date_obj = new DateTime($sla_date);
+
+                                                        // Menghitung jumlah hari menuju SLA date
+                                                        $diff = $today->diff($sla_date_obj);
+                                                        $daysDifference = (int)$diff->format('%R%a'); // Menyertakan tanda plus atau minus
+
+                                                        if ($daysDifference < 0) {
+                                                            // SLA telah terlewat, hitung sebagai hari terlambat
+                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . abs($daysDifference) . ' hari</button>';
                                                         } else {
-                                                            $diff = $sla_date->diff($today);
-                                                            if ($diff->days <= 5) {
-                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
-                                                            } else {
-                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
-                                                            }
+                                                            // SLA belum tercapai, hitung mundur
+                                                            echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $daysDifference . '</button>';
                                                         }
                                                     }
                                                     ?>
                                                 </td>
-                                                
                                                 <td>
-                                                <!-- Tombol Edit -->
-                                                <?php if ($row['status_spkwoipal'] != "Approve"): ?>
-                                                        <a href="procurement/spkipal-procur-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                    <?php if ($row['confirm_qsurugan'] !== 'Approve') : ?>
+                                                        <a href="sdg-qs/urugan-qs-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>
-                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_spkwoipal'] ?>">
+                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['confirm_qsurugan'] ?>">
                                                             <i class="nav-icon i-Book"></i>
                                                         </button>
                                                     <?php endif; ?>
                                                 </td>
-                                                <!-- Modal -->
-                                                <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
-                                                    <div class="modal-dialog" role="document">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title" id="editModalLabel">Edit Status</h5>
-                                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                                    <span aria-hidden="true">&times;</span>
-                                                                </button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                <form id="statusForm" method="post" action="procurement/spkipal-procur-process.php" enctype="multipart/form-data">
-                                                                    <input type="hidden" name="id" value=<?= $row['id'] ?> id="modalKodeLahan">
+
+                                            <!-- Modal -->
+                                            <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="editModalLabel">Edit Status</h5>
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <form id="statusForm" method="post" action="sdg-qs/raburugan-process.php" enctype="multipart/form-data">
+                                                                <input type="hidden" name="id" id="modalKodeLahan">
+                                                                <div class="form-group">
+                                                                    <label for="statusSelect">Status Approve SDG QS</label>
+                                                                    <select class="form-control" id="statusSelect" name="confirm_qsurugan" Placeholder="Pilih">
+                                                                        <option value="In Process">In Process</option>
+                                                                        <option value="Pending">Pending</option>
+                                                                        <option value="Approve">Approve</option>
+                                                                        <option value="In Design Revision">In Design Revision</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                    <label for="catatan_qsurugan">Catatan SDG QS</label>
+                                                                    <input type="text" class="form-control" id="catatan_qsurugan" name="catatan_qsurugan">
+                                                                </div>
+                                                                <div id="issueDetailSection" class="hidden">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve SPK IPAL</label>
-                                                                        <select class="form-control" id="statusSelect" name="status_spkwoipal" Placeholder="Pilih">
-                                                                            <option value="In Process">In Process</option>
-                                                                            <option value="Pending">Pending</option>
-                                                                            <option value="In Review By TAF">In Review By TAF</option>
-                                                                        </select>
+                                                                        <label for="issue_detail">Issue Detail</label>
+                                                                        <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
                                                                     </div>
                                                                     <div class="form-group">
-                                                                        <label for="catatan_spkwoipal">Catatan SPK IPAL</label>
-                                                                        <input type="text" class="form-control" id="catatan_spkwoipal" name="catatan_spkwoipal">
+                                                                        <label for="pic">PIC</label>
+                                                                        <textarea class="form-control" id="pic" name="pic"></textarea>
                                                                     </div>
-                                                                    <div id="issueDetailSection" class="hidden">
-                                                                        <div class="form-group">
-                                                                            <label for="issue_detail">Issue Detail</label>
-                                                                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
-                                                                        </div>
-                                                                        <div class="form-group">
-                                                                            <label for="pic">PIC</label>
-                                                                            <select class="form-control" id="pic" name="pic">
-                                                                                <option value="">Pilih PIC</option>
-                                                                                <option value="Legal">Legal</option>
-                                                                                <option value="Marketing">Marketing</option>
-                                                                                <option value="Landlord">Landlord</option>
-                                                                                <option value="Scm">SCM</option>
-                                                                                <option value="Sdg-project">SDG Project</option>
-                                                                                <option value="Sdg-design">SDG Design</option>
-                                                                                <option value="Sdg-equipment">SDG Equipment</option>
-                                                                                <option value="Sdg-qs">SDG QS</option>
-                                                                                <option value="Operations">Operations</option>
-                                                                                <option value="Procurement">Procurement</option>
-                                                                                <option value="Taf">TAF</option>
-                                                                                <option value="HR">HR</option>
-                                                                                <option value="Academy">Academy</option>
-                                                                                <option value="Negotiator">Negotiator</option>
-                                                                                <option value="Others">Others</option>
-                                                                            </select>
-                                                                        </div>
-                                                                        <div class="form-group">
-                                                                            <label for="action_plan">Action Plan</label>
-                                                                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
-                                                                        </div>
-                                                                        <div class="form-group">
-                                                                            <label for="kronologi">Upload File Kronologi</label>
-                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
-                                                                        </div>
+                                                                    <div class="form-group">
+                                                                        <label for="action_plan">Action Plan</label>
+                                                                        <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
                                                                     </div>
-                                                                    <button type="submit" class="btn btn-primary">Save changes</button>
-                                                                </form>
-                                                            </div>
+                                                                    <div class="form-group">
+                                                                        <label for="kronologi">Upload File Kronologi</label>
+                                                                        <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                                                                    </div>
+                                                                </div>
+                                                                <button type="submit" class="btn btn-primary">Save changes</button>
+                                                            </form>
                                                         </div>
                                                     </div>
                                                 </div>
+                                            </div>
                                             </tr>
-                                        <?php endforeach; ?>
+                                            <?php endforeach; ?>
                                         </tbody>
                                         <tfoot>
                                             <tr>
                                                 <th>Inventory Code</th>
                                                 <th>Kode Store</th>
-                                                <th>Nama Lahan</th>
-                                                <th>Lampiran WO Req IPAL</th>
-                                                <th>Lampiran SPK IPAL</th>
+                                                <th>Nama Lokasi</th>
+                                                <th>Alamat Lokasi</th>
+                                                <th>Lampiran VD</th>
+                                                <th>Lampiran Urugan From SDG Design</th>
+                                                <th>Keterangan</th>
+                                                <th>Jumlah</th>
+                                                <th>Lampiran RAB</th>
+                                                <th>Nama Vendor</th>
+                                                <th>Lampiran Pendukung Vendor</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -639,14 +682,14 @@ function getBadgeColor($remarks) {
     $('#statusSelect').on('change', function () {
         toggleIssueDetail();
     });
-</script>
-<?php if ($status_sdg == 'Pending') { ?>
-    <script>
-        $(document).ready(function () {
-            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
-        });
     </script>
-<?php } ?>
+    <?php if ($confirm_qsurugan == 'Pending') { ?>
+        <script>
+            $(document).ready(function () {
+                $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+            });
+        </script>
+    <?php } ?>
     <script>
         $(document).ready(function() {
             // Hancurkan DataTable jika sudah ada
@@ -659,14 +702,7 @@ function getBadgeColor($remarks) {
                 scrollX: true, // Menambahkan scroll horizontal
                 fixedColumns: {
                     leftColumns: 3 // Jumlah kolom yang ingin di-fix
-                },
-                fixedHeader: {
-                    leftColumns: 3
                 }
-            });
-            // Atur ulang lebar kolom saat menggulir horizontal
-            $(window).on('resize', function() {
-                table.columns.adjust().draw();
             });
         });
     </script>

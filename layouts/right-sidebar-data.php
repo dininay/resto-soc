@@ -115,7 +115,9 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                                 || $current_page == 'datatables-land-survey' 
                                 || $current_page == 'datatables-formval-release-design' 
                                 || $current_page == 'datatables-obstacle-sdg' 
+                                || $current_page == 'datatables-urugan' 
                                 || strpos($current_page, 'submit-wo-edit-form') !== false 
+                                || strpos($current_page, 'urugan-edit-form') !== false 
                                 || strpos($current_page, 'obstacle-land-edit-form') !== false 
                                 || strpos($current_page, 'design-edit-form') !== false 
                             ) ? 'active' : ''; ?>" data-item="forms">
@@ -129,8 +131,8 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
 
                     <!-- SDG QS Head -->
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "SDG-QS") : ?>
-                    <li class="nav-item <?php echo ($current_page == 'datatables-data-picture' || $current_page == 'datatables-rab' 
-                    || $current_page == 'datatables-validation-rab' || strpos($current_page, 'rab-edit-form')!== false) ? 'active' : ''; ?>" data-item="sessions">
+                    <li class="nav-item <?php echo ($current_page == 'datatables-data-picture' || $current_page == 'datatables-rab' || $current_page == 'datatables-rab-urugan' 
+                    || $current_page == 'datatables-validation-rab' || strpos($current_page, 'rab-edit-form')!== false  || strpos($current_page, 'urugan-qs-edit-form')!== false) ? 'active' : ''; ?>" data-item="sessions">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Administrator"></i>
                             <span class="nav-text">SDG QS</span>
@@ -141,9 +143,9 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
 
                     <!-- Procurement Head -->
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "Procurement") : ?>
-                    <li class="nav-item <?php echo ($current_page == 'datatables-checkval-rab-from-sdg' || strpos($current_page, 'eqpdev-procur-edit-form') !== false ||
+                    <li class="nav-item <?php echo ($current_page == 'datatables-checkval-rab-from-sdg' || strpos($current_page, 'eqpdev-procur-edit-form') !== false ||  $current_page == 'datatables-tender-urugan' || $current_page == 'datatables-checkval-rab-urugan' || strpos($current_page, 'spk-urugan-procur-edit-form')!== false ||
                     $current_page == 'datatables-procurement' || $current_page == 'datatables-vendor' || strpos($current_page, 'spk-wodesign-procur-edit-form')!== false || strpos($current_page, 'spkfa-procur-edit-form')!== false || strpos($current_page, 'spkipal-procur-edit-form')!== false ||
-                    $current_page == 'datatables-tender'|| $current_page == 'datatables-spk-sdgpk'|| $current_page == 'datatables-eqpdev-procur' || strpos($current_page, 'procurement-edit-form')!== false || strpos($current_page, 'spk-edit-form')!== false || strpos($current_page, 'spk-rab-procur-edit-form')!== false ) ? 'active' : ''; ?>" data-item="others">
+                    $current_page == 'datatables-tender'|| $current_page == 'datatables-spk-sdgpk'|| $current_page == 'datatables-eqpdev-procur' || strpos($current_page, 'procurement-edit-form')!== false || strpos($current_page, 'spk-edit-form')!== false || strpos($current_page, 'urugantender-edit-form')!== false || strpos($current_page, 'spk-rab-procur-edit-form')!== false ) ? 'active' : ''; ?>" data-item="others">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Double-Tap"></i>
                             <span class="nav-text">Procurement</span>
@@ -247,7 +249,7 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
 
                     <!-- FAT Head -->
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "FAT") : ?>
-                    <li class="nav-item <?php echo ($current_page == 'datatables-fat' || $current_page == 'datatables-tender-fat' || $current_page == 'datatables-spk-fat' || $current_page == 'datatables-sign-psm-fat' || strpos($current_page, 'fat-edit-form')!== false || strpos($current_page, 'tafpay-edit-form')!== false) ? 'active' : ''; ?>" data-item="fat">
+                    <li class="nav-item <?php echo ($current_page == 'datatables-fat' || $current_page == 'datatables-review-rab-urugan' || $current_page == 'datatables-tender-fat' || $current_page == 'datatables-spk-fat' || $current_page == 'datatables-sign-psm-fat' || strpos($current_page, 'fat-edit-form')!== false || strpos($current_page, 'tafpay-edit-form')!== false || strpos($current_page, 'kode-store-edit-form') !== false) ? 'active' : ''; ?>" data-item="fat">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Cursor-Click"></i>
                             <span class="nav-text">FAT</span>
@@ -551,13 +553,19 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
 						<li class="nav-item <?= ($current_page == 'datatables-submit-wo' || strpos($current_page, 'submit-wo-edit-form') !== false) ? 'active' : ''; ?>">
                             <a href="<?= $base_url . '/datatables-submit-wo.php'?>">
                                 <i class="nav-icon i-Email"></i>
-                                <span class="item-name">Submit WO</span>
+                                <span class="item-name">Submit WO Design</span>
                             </a>
                         </li>
                         <li class="nav-item <?= ($current_page == 'datatables-obstacle-sdg' || strpos($current_page, 'obstacle-land-edit-form') !== false) ? 'active' : ''; ?>">
                             <a href="<?= $base_url . '/datatables-obstacle-sdg.php'?>">
                                 <i class="nav-icon i-Receipt-4"></i>
                                 <span class="item-name">Land Survey & Layouting</span>
+                            </a>
+                        </li>
+                        <li class="nav-item <?php echo ($current_page == 'datatables-urugan' || strpos($current_page, 'urugan-edit-form') !== false)  ? 'active' : ''; ?>">
+                            <a href="datatables-urugan.php">
+                                <i class="nav-icon i-Line-Chart-2"></i>
+                                <span class="item-name">Urugan</span>
                             </a>
                         </li>
                         <li class="nav-item <?= ($current_page == 'datatables-design' || strpos($current_page, 'design-edit-form') !== false) ? 'active' : ''; ?>">
@@ -581,12 +589,12 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                         <p>SDG QS Division</p>
                     </header>
                     <ul class="childNav">
-                        <!-- <li class="nav-item <?php echo $current_page == 'datatables-data-picture' ? 'active' : ''; ?>">
-                            <a href="datatables-data-picture.php">
+                        <li class="nav-item <?php echo ($current_page == 'datatables-rab-urugan'|| strpos($current_page, 'urugan-qs-edit-form')!== false) ? 'active' : ''; ?>">
+                            <a href="datatables-rab-urugan.php">
                                 <i class="nav-icon i-Bell1"></i>
-                                <span class="item-name">Release Data Picture From SDG Design</span>
+                                <span class="item-name">RAB Creation - Urugan</span>
                             </a>
-                        </li> -->
+                        </li>
 						<li class="nav-item <?= ($current_page == 'datatables-rab' || strpos($current_page, 'rab-edit-form') !== false) ? 'active' : ''; ?>">
                             <a href="<?= $base_url . '/datatables-rab.php'?>">
                                 <i class="nav-icon i-Checked-User"></i>
@@ -614,16 +622,29 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                                 <span class="item-name">SPK Design</span>
                             </a>
                         </li>
-                        <li class="nav-item <?php echo ($current_page == 'datatables-checkval-rab-from-sdg' || strpos($current_page, 'spk-rab-procur-edit-form') !== false) ? 'active' : ''; ?>">
-                            <a href="<?= $base_url . '/datatables-checkval-rab-from-sdg.php'?>">
-                                <i class="nav-icon i-Tag-2"></i>
-                                <span class="item-name">SPK for RAB Construction</span>
+                        
+                        <li class="nav-item <?php echo ($current_page == 'datatables-tender-urugan' || strpos($current_page, 'urugantender-edit-form')!== false) ? 'active' : ''; ?>">
+                            <a href="datatables-tender-urugan.php">
+                                <i class="nav-icon i-Checked-User"></i>
+                                <span class="item-name">Tender Urugan Process</span>
                             </a>
                         </li>
-                        <li class="nav-item <?= ($current_page == 'datatables-tender' || strpos($current_page, 'procurement-edit-form') !== false) ? 'active' : ''; ?>">
-                            <a href="<?= $base_url . '/datatables-tender.php'?>">
+                        <li class="nav-item <?php echo ($current_page == 'datatables-checkval-rab-urugan'|| strpos($current_page, 'spk-urugan-procur-edit-form')!== false) ? 'active' : ''; ?>">
+                            <a href="datatables-checkval-rab-urugan.php">
+                                <i class="nav-icon i-Loading-3"></i>
+                                <span class="item-name">SPK for RAB Urugan</span>
+                            </a>
+                        </li>
+                        <li class="nav-item <?php echo $current_page == 'datatables-tender' ? 'active' : ''; ?>">
+                            <a href="datatables-tender.php">
                                 <i class="nav-icon i-Error-404-Window"></i>
-                                <span class="item-name">Tender Process</span>
+                                <span class="item-name">Tender Construction Process</span>
+                            </a>
+                        </li>
+                        <li class="nav-item <?php echo $current_page == 'datatables-checkval-rab-from-sdg' ? 'active' : ''; ?>">
+                            <a href="datatables-checkval-rab-from-sdg.php">
+                                <i class="nav-icon i-Tag-2"></i>
+                                <span class="item-name">SPK for RAB Construction</span>
                             </a>
                         </li>
                         <li class="nav-item <?php echo ($current_page == 'datatables-spkfa-procurement'|| strpos($current_page, 'spkfa-procur-edit-form') !== false) ? 'active' : ''; ?>">
@@ -707,13 +728,13 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                         <li class="nav-item <?php echo ($current_page == 'datatables-kom-schedule' || strpos($current_page, 'kom-schedule-edit-form')!== false) ? 'active' : ''; ?>">
                             <a href="<?= $base_url . '/datatables-kom-schedule.php'?>">
                                 <i class="nav-icon i-File-Clipboard-Text--Image"></i>
-                                <span class="item-name">Scheduling Kick Off Meeting</span>
+                                <span class="item-name">Scheduling Kick Off Meeting Construction</span>
                             </a>
                         </li>
                         <li class="nav-item <?= ($current_page == 'datatables-kom-sdgpk' || strpos($current_page, 'kom-edit-form') !== false) ? 'active' : ''; ?>">
                             <a href="<?= $base_url . '/datatables-kom-sdgpk.php'?>">
                                 <i class="nav-icon i-Speach-Bubble-3"></i>
-                                <span class="item-name">Result Kick Off Meeting</span>
+                                <span class="item-name">Result Kick Off Meeting Construction</span>
                             </a>
                         </li>
                         <li class="nav-item <?php echo $current_page == 'datatables-construction-act-vendor' ? 'active' : ''; ?>">
@@ -941,6 +962,12 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                                 <span class="item-name">Data Tender</span>
                             </a>
                         </li> -->
+                        <li class="nav-item <?php echo ($current_page == 'datatables-kode-store-taf' || strpos($current_page, 'kode-store-edit-form') !== false) ? 'active' : ''; ?>">
+                            <a href="datatables-kode-store-taf.php">
+                                <i class="nav-icon i-Close-Window"></i>
+                                <span class="item-name">Penetapan Kode Store</span>
+                            </a>
+                        </li>
 						<li class="nav-item <?php echo $current_page == 'datatables-sign-psm-fat' ? 'active' : ''; ?>">
                             <a href="<?= $base_url . '/datatables-sign-psm-fat.php'?>">
                                 <i class="nav-icon i-Checked-User"></i>
@@ -951,6 +978,12 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                             <a href="datatables-review-wo-from-sdg.php">
                                 <i class="nav-icon i-Add-File"></i>
                                 <span class="item-name">Review SPK Design</span>
+                            </a>
+                        </li>
+                        <li class="nav-item <?php echo $current_page == 'datatables-review-rab-urugan' ? 'active' : ''; ?>">
+                            <a href="datatables-review-rab-urugan.php">
+                                <i class="nav-icon i-Loading-2"></i>
+                                <span class="item-name">Review SPK for RAB Urugan</span>
                             </a>
                         </li>
                         <li class="nav-item <?php echo $current_page == 'datatables-review-rab-from-sdg' ? 'active' : ''; ?>">

@@ -8,7 +8,7 @@ if(isset($_GET['id'])) {
     $id = $_GET['id'];
 
     // Query untuk mendapatkan data resep berdasarkan ID
-    $result = $conn->query("SELECT * FROM sdg_desain WHERE id = '$id'");
+    $result = $conn->query("SELECT * FROM sdg_rab WHERE id = '$id'");
 
     // Periksa apakah data ditemukan
     if ($result->num_rows > 0) {
@@ -50,10 +50,10 @@ if(isset($_GET['id'])) {
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Layouting</h1>
+                    <h1>RAB Urugan</h1>
                     <ul>
                         <li><a href="href">Edit</a></li>
-                        <li>Layouting</li>
+                        <li>RAB Urugan</li>
                     </ul>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
@@ -61,67 +61,30 @@ if(isset($_GET['id'])) {
                     <div class="col-md-7">
                         <div class="card mb-5">
                             <div class="card-body">
-                            <form method="post" action="obstacle-land-edit.php" enctype="multipart/form-data">
+                            <form method="post" action="raburugan-edit.php" enctype="multipart/form-data">
                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="note_survey">Result Survey</label>
+                                    <label class="col-sm-3 col-form-label" for="ket_urugan">Keterangan</label>
                                     <div class="col-sm-9">
-                                        <textarea class="form-control" id="note_survey" name="note_survey" rows="4" cols="50"><?php echo $row['note_survey']; ?></textarea>
+                                        <input class="form-control" id="ket_urugan" name="ket_urugan" type="text" placeholder="Keterangan" value="<?php echo $row['ket_urugan']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_survey">Upload Dokumen Pendukung</label>
+                                    <label class="col-sm-3 col-form-label" for="jumlah_urugan">Amount (include PPN)</label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="jumlah_urugan" name="jumlah_urugan" type="text" oninput="formatRupiah(this)" placeholder="Masukkan Angka Saja" value="<?php echo $row['jumlah_urugan']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="lamp_raburugan">Upload Lampiran RAB Urugan</label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
-                                            <input name="lamp_survey[]" type="file" multiple="multiple" />
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="urugan">Apakah ada temuan urugan ?</label>
-                                    <div class="col-sm-9">
-                                        <select class="form-control" id="urugan" name="urugan" onchange="toggleUruganDetail()">
-                                        <option>Pilih</option>
-                                            <option value="Yes" <?php echo ($row['urugan'] == 'Yes') ? 'selected' : ''; ?>>Ya</option>
-                                            <option value="No" <?php echo ($row['urugan'] == 'No') ? 'selected' : ''; ?>>Tidak</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="obstacle">Obstacle</label>
-                                    <div class="col-sm-9">
-                                        <select class="form-control" id="obstacle" name="obstacle" onchange="toggleObstacleDetail()">
-                                        <option>Pilih</option>
-                                            <option value="Yes" <?php echo ($row['obstacle'] == 'Yes') ? 'selected' : ''; ?>>Ya</option>
-                                            <option value="No" <?php echo ($row['obstacle'] == 'No') ? 'selected' : ''; ?>>Tidak</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="form-group row" id="obstacle-detail" style="display: none;">
-                                    <label class="col-sm-3 col-form-label" for="obs_detail">Detail Obstacle</label>
-                                    <div class="col-sm-9">
-                                        <input class="form-control" id="obs_detail" name="obs_detail" type="text" value="<?php echo $row['obs_detail']; ?>">
-                                    </div>
-                                </div>
-                                <div class="form-group row" id="note" style="display: none;">
-                                    <label class="col-sm-3 col-form-label" for="note">Catatan</label>
-                                    <div class="col-sm-9">
-                                        <textarea class="form-control" id="note" name="note" rows="4" cols="50"><?php echo $row['note']; ?></textarea>
-                                    </div>
-                                </div>
-                                <div class="form-group row" id="lamp-survey" style="display: none;">
-                                    <label class="col-sm-3 col-form-label" for="lamp_layouting">Upload WO Obstacle</label>
-                                    <div class="col-sm-9">
-                                        <div class="dropzone" id="multple-file-upload" >
-                                            <input name="lamp_layouting[]" type="file" multiple="multiple" />
+                                            <input name="lamp_raburugan[]" type="file" multiple="multiple" />
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <div class="col-sm-10">
+                                    <div class="col-sm-9">
                                         <button class="btn btn-primary" type="submit">Simpan</button>
                                     </div>
                                 </div>
@@ -302,26 +265,7 @@ if(isset($_GET['id'])) {
     <script src="../../dist-assets/js/scripts/script.min.js"></script>
     <script src="../../dist-assets/js/scripts/sidebar.compact.script.min.js"></script>
     <script src="../../dist-assets/js/scripts/customizer.script.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.2/dropzone.min.js"></script><script>
-    function toggleObstacleDetail() {
-        var obstacleSelect = document.getElementById("obstacle");
-        var obstacleDetail = document.getElementById("obstacle-detail");
-        var lampSurvey = document.getElementById("lamp-survey");
-        var noteDetail = document.getElementById("note");
-        if (obstacleSelect.value === "Yes") {
-            obstacleDetail.style.display = "flex";
-            noteDetail.style.display = "flex";
-            lampSurvey.style.display = "flex";
-        } else {
-            obstacleDetail.style.display = "none";
-            noteDetail.style.display = "none";
-            lampSurvey.style.display = "none";
-        }
-    }
-
-    // Panggil fungsi saat halaman dimuat untuk menyesuaikan tampilan berdasarkan nilai awal
-    window.onload = toggleObstacleDetail;
-</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.2/dropzone.min.js"></script>
     
     <script>
         // Tambahkan event listener untuk radio button ganti_lampiran
@@ -336,6 +280,23 @@ if(isset($_GET['id'])) {
                 }
             });
         });
+    </script>
+    <script>
+        function formatRupiah(input) {
+            let value = input.value.replace(/[^,\d]/g, '').toString();
+            let split = value.split(',');
+            let sisa = split[0].length % 3;
+            let rupiah = split[0].substr(0, sisa);
+            let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if (ribuan) {
+                let separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+
+            rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+            input.value = 'Rp. ' + rupiah;
+        }
     </script>
 
 </body>

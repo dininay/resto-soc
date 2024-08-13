@@ -32,16 +32,16 @@ if ($sla_result->num_rows > 0) {
 }
 
 // Fungsi untuk menghitung scoring
-function calculateScoring($start_date, $end_date, $sla) {
+function calculateScoring($start_date, $sla_date, $sla) {
     $today = new DateTime();
     $start_date = $start_date ?: $today->format('Y-m-d');
-    $end_date = $end_date ?: $today->format('Y-m-d');
+    $sla_date = $sla_date ?: $today->format('Y-m-d');
     $sla_days = $sla ?: 0;
 
     $start_date_obj = new DateTime($start_date);
-    $end_date_obj = new DateTime($end_date);
+    $sla_date_obj = new DateTime($sla_date);
 
-    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
+    $date_diff = $sla_date_obj->diff($start_date_obj)->days + 1;
 
     if ($sla_days != 0) {
         if ($date_diff > $sla_days) {
@@ -57,13 +57,18 @@ function calculateScoring($start_date, $end_date, $sla) {
 }
 
 // Fungsi untuk menentukan remarks berdasarkan scoring
-function getRemarks($scoring) {
-    if ($scoring >= 0) {
+function getRemarks($start_date, $sla_date, $sla) {
+    if (new DateTime($start_date) <= new DateTime($sla_date)) {
         return "good";
-    } elseif ($scoring >= -30) {
-        return "poor";
     } else {
-        return "bad";
+        $scoring = calculateScoring($start_date, $sla_date, $sla);
+        if ($scoring >= 0) {
+            return "good";
+        } elseif ($scoring >= -30) {
+            return "poor";
+        } else {
+            return "bad";
+        }
     }
 }
 
@@ -294,52 +299,34 @@ function getBadgeColor($remarks) {
                                                 ?>
                                                 <td>
                                                     <?php
-                                                        // Tentukan warna badge dan teks berdasarkan status approval owner dan scoring
-                                                        $badge_color = '';
-                                                        $badge_text = '';
-                                                        $status_approvowner = $row['status_approvowner'];
+                                                    $badge_color = '';
+                                                    $badge_text = '';
+                                                    $status_approvowner = $row['status_approvowner'];
+                                                    
+                                                    if ($status_approvowner === 'Approve') {
+                                                        // Tentukan remarks berdasarkan SLA dan tanggal
+                                                        $remarks = getRemarks($row['start_date'], $row['sla_date'], $sla_value);
 
-                                                        if ($status_approvowner === 'Approve') {
-                                                            // Tambahkan logika untuk menentukan warna dan teks berdasarkan scoring
-                                                            $scoring = calculateScoring($row['start_date'], $row['sla_date'], $sla_value);
-                                                            $remarks = getRemarks($scoring);
-
-                                                            // Tentukan warna badge dan teks berdasarkan remarks
-                                                            switch ($remarks) {
-                                                                case 'good':
-                                                                    $badge_color = 'success'; // Hijau
-                                                                    $badge_text = 'Approve Good';
-                                                                    break;
-                                                                case 'poor':
-                                                                    $badge_color = 'warning'; // Kuning
-                                                                    $badge_text = 'Approve Poor';
-                                                                    break;
-                                                                case 'failed':
-                                                                    $badge_color = 'danger'; // Merah
-                                                                    $badge_text = 'Approve Failed';
-                                                                    break;
-                                                                default:
-                                                                    $badge_color = 'secondary'; // Warna default jika remarks tidak dikenali
-                                                                    $badge_text = 'Approve Unknown'; // Teks default jika remarks tidak dikenali
-                                                                    break;
-                                                            }
-                                                        } else {
-                                                            // Warna untuk status selain 'Approve'
-                                                            switch ($status_approvowner) {
-                                                                case 'Pending':
-                                                                    $badge_color = 'danger';
-                                                                    $badge_text = 'Pending';
-                                                                    break;
-                                                                case 'In Process':
-                                                                    $badge_color = 'warning';
-                                                                    $badge_text = 'In Process';
-                                                                    break;
-                                                                default:
-                                                                    $badge_color = 'secondary'; // Warna default jika status tidak dikenali
-                                                                    $badge_text = 'Unknown Status'; // Teks default jika status tidak dikenali
-                                                                    break;
-                                                            }
+                                                        // Tentukan warna badge dan teks berdasarkan remarks
+                                                        $badge_color = getBadgeColor($remarks);
+                                                        $badge_text = 'Approve ' . ucfirst($remarks) ;
+                                                    } else {
+                                                        // Warna untuk status selain 'Approve'
+                                                        switch ($status_approvowner) {
+                                                            case 'Pending':
+                                                                $badge_color = 'danger';
+                                                                $badge_text = 'Pending';
+                                                                break;
+                                                            case 'In Process':
+                                                                $badge_color = 'warning';
+                                                                $badge_text = 'In Process';
+                                                                break;
+                                                            default:
+                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
+                                                                $badge_text = 'Unknown Status'; // Teks default jika status tidak dikenali
+                                                                break;
                                                         }
+                                                    }
                                                     ?>
                                                     <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
                                                         <?php echo $badge_text; ?>
