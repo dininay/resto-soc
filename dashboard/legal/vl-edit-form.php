@@ -65,7 +65,7 @@ if(isset($_GET['id'])) {
                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 
                             <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_vl">Upload VL</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_vl">Upload VL<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_vl[]" type="file" multiple="multiple" />

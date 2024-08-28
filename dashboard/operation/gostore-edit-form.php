@@ -85,13 +85,13 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="nama_store">Nama Resto Baru</label>
+                                    <label class="col-sm-3 col-form-label" for="nama_store">Nama Resto Baru<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="nama_store" name="nama_lahan" type="text" value="<?php echo $row['nama_lahan']; ?>" placeholder="Nama Store" />
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="gostore_date">Target GO Store</label>
+                                    <label class="col-sm-3 col-form-label" for="gostore_date">Target GO Store<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="gostore_date" name="gostore_date" type="date" value="<?php echo $row['gostore_date']; ?>" placeholder="Jadwal GO Store" />
                                     </div>

@@ -14,7 +14,7 @@ JOIN issue on resto.kode_lahan = issue.kode_lahan
 JOIN land on resto.kode_lahan = land.kode_lahan
 JOIN dokumen_loacd on resto.kode_lahan = dokumen_loacd.kode_lahan
 JOIN socdate_sdg on resto.kode_lahan = socdate_sdg.kode_lahan
-GROUP BY land.kode_lahan";
+WHERE issue.status_defect in ('In Process', 'Done')";
 $result = $conn->query($sql);
 
 // Inisialisasi variabel $data dengan array kosong
@@ -38,19 +38,20 @@ if ($sla_result->num_rows > 0) {
     $row = $sla_result->fetch_assoc();
     $sla_value = $row['sla'];
 } else {
-    echo "No SLA value found for 'Owner Surveyor'";
+    echo "No SLA value found for 'Konstruksi'";
 }
 
-function calculateScoring($start_date, $end_date, $sla) {
-    $today = new DateTime();
-    $start_date = $start_date ?: $today->format('Y-m-d');
-    $end_date = $end_date ?: $today->format('Y-m-d');
-    $sla_days = $sla ?: 0;
-
+// Fungsi untuk menghitung scoring
+function calculateScoring($start_date, $sla_date, $sla) {
     $start_date_obj = new DateTime($start_date);
-    $end_date_obj = new DateTime($end_date);
+    $sla_date_obj = new DateTime($sla_date);
+    
+    if ($start_date_obj <= $sla_date_obj) {
+        return 100; // Skor 100 jika start_date tidak melebihi sla_date
+    }
 
-    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
+    $date_diff = $start_date_obj->diff($sla_date_obj)->days;
+    $sla_days = $sla ?: 0;
 
     if ($sla_days != 0) {
         if ($date_diff > $sla_days) {
@@ -64,11 +65,12 @@ function calculateScoring($start_date, $end_date, $sla) {
 
     return round($scoring, 2);
 }
+
 // Fungsi untuk menentukan remarks berdasarkan scoring
 function getRemarks($scoring) {
-    if ($scoring >= 0) {
+    if ($scoring >= 75) {
         return "good";
-    } elseif ($scoring >= -30) {
+    } elseif ($scoring >= 0) {
         return "poor";
     } else {
         return "bad";
@@ -106,6 +108,25 @@ function getBadgeColor($remarks) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .hidden {
+            display: none;
+        },
+
+        .small-column {
+            max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */
+            overflow: hidden; /* Memotong konten yang meluas */
+            text-overflow: ellipsis; /* Menampilkan elipsis jika konten terlalu panjang */
+            white-space: nowrap; /* Mencegah teks membungkus ke baris baru */
+        }
+
+        th, td {
+                white-space: nowrap;
+            }
+        table.dataTable {
+            border-collapse:  collapse!important;
+        }
+    </style>
 </head>
 
 <body class="text-left">
@@ -131,6 +152,7 @@ function getBadgeColor($remarks) {
                             <div class="card-body">
                                 <h4 class="card-title mb-3"></h4>
 								<div class="footer-bottom float-right">
+                                    <p><a class="btn btn-primary btn-icon m-1" href="sdg-pk/issue-form.php">+ add Issue</a></p>
 									<!-- <p><a class="btn btn-primary btn-icon m-1" href="sdg-pk/issue-form.php">+ add Issue</a></p> -->
 									<p>
 									  <span class="flex-grow-1"></span></p>
@@ -143,8 +165,12 @@ function getBadgeColor($remarks) {
                                                 <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lahan</th>
-                                                <th>Tanggal Retensi</th>
-                                                <th>Lampiran BA</th>
+                                                <th>PIC</th>
+                                                <th>Detail Issue</th>
+                                                <th>Target Done</th>
+                                                <th>Lampiran Before</th>
+                                                <th>Tanggal Penyelesaian</th>
+                                                <th>Lampiran After</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -156,6 +182,43 @@ function getBadgeColor($remarks) {
                                             <td><?= $row['kode_lahan'] ?></td>
                                             <td><?= $row['kode_store'] ?></td>
                                             <td><?= $row['nama_lahan'] ?></td>
+                                            <td><?= $row['pic'] ?></td>
+                                            <td><?= $row['issue'] ?></td>
+                                            <td>
+                                                <?php if (!empty($row['target_done'])): ?>
+                                                    <?php
+                                                    $date = new DateTime($row['target_done']);
+                                                    $formattedDate = $date->format('d M y');
+                                                    ?>
+                                                    <?= $formattedDate ?>
+                                                <?php else: ?>
+                                                    <!-- Jika kosong, tampilkan pesan atau biarkan kosong -->
+                                                    <!-- Misalnya, <span>-</span> atau <span>Not Available</span> -->
+                                                    <!-- <span>Not Available</span> -->
+                                                <?php endif; ?>
+                                            </td>
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $file_files = explode(",", $row['lamp_defect']); // Pisahkan nama lamp_defect menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_defect'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($file_files as $file) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $file . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>
                                             <td>
                                                 <?php if (!empty($row['tanggal_retensi'])): ?>
                                                     <?php
@@ -216,20 +279,26 @@ function getBadgeColor($remarks) {
                                                 </td>       
                                                 <td>
                                                     <?php
-                                                    // Mendapatkan tanggal sla_date dari kolom data
-                                                    $slaLegalDate = new DateTime($row['rto_date']);
-                                                    
-                                                    // Mendapatkan tanggal hari ini
-                                                    $today = new DateTime();
-                                                    
-                                                    // Menghitung selisih hari antara rto_date dan hari ini
-                                                    $diff = $today->diff($slaLegalDate);
-                                                    
+                                                    // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
+                                                    date_default_timezone_set('Asia/Jakarta');
+
+                                                    $start_date = $row['defect_date'];
+                                                    $sla_date = $row['rto_date'];
+                                                    $status_defect = $row['status_defect'];
+
                                                     // Menghitung scoring
-                                                    $scoring = calculateScoring($row['defect_date'], $row['rto_date'], $sla_value); // Make sure $sla_value is set correctly
+                                                    $scoring = calculateScoring($start_date, $sla_date, $sla_value);
                                                     $remarks = getRemarks($scoring);
 
-                                                    if ($row['status_defect'] == "Done") {
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
+
+                                                    if ($status_defect === 'Done') {
                                                         // Menentukan label berdasarkan remarks
                                                         $status_label = '';
                                                         switch ($remarks) {
@@ -246,35 +315,54 @@ function getBadgeColor($remarks) {
 
                                                         echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
-                                                        // Menghitung jumlah hari terlambat
-                                                        $lateDays = $slaLegalDate->diff($today)->days;
-                                                        
-                                                        // Jika terlambat
-                                                        if ($today > $slaLegalDate) {
-                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+                                                        // Memeriksa apakah waktu sekarang di luar jam kerja
+                                                        if ($current_time < $work_start || $current_time > $work_end) {
+                                                            echo '<button type="button" class="btn btn-sm btn-info">Di Luar Jam Kerja</button>';
                                                         } else {
-                                                            // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
-                                                            if ($diff) {
-                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
+                                                            // Convert $sla_date to DateTime object
+                                                            $sla_date_obj = new DateTime($sla_date);
+
+                                                            // Menghitung jumlah hari menuju SLA date
+                                                            $diff = $now->diff($sla_date_obj);
+                                                            $daysDifference = (int)$diff->format('%R%a'); // Menyertakan tanda plus atau minus
+
+                                                            if ($daysDifference < 0) {
+                                                                // SLA telah terlewat, hitung sebagai hari terlambat
+                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . abs($daysDifference) . ' hari</button>';
                                                             } else {
-                                                                // Tampilkan peringatan "H + X"
-                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
+                                                                // SLA belum tercapai, hitung mundur
+                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $daysDifference . '</button>';
                                                             }
                                                         }
                                                     }
                                                     ?>
-                                                </td>                                         
+                                                </td>
+                                                
                                                 <td>
-                                                <?php if ($row['status_defect'] != "Approve"): ?>
-                                                    <div>
-                                                        <a href="sdg-pk/issue-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                    <!-- Tombol Edit -->
+                                                    <?php if ($row['status_defect'] != "Done"): ?>
+                                                    <?php
+                                                    // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
+                                                    date_default_timezone_set('Asia/Jakarta');
+
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
+
+                                                    if ($row['status_defect'] != "Done" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                        echo '<a href="sdg-pk/issue-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
-                                                        </a>
-                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_defect'] ?>">
+                                                        </a>';
+                                                        echo '<button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="'. $row['id'] .'" data-status="'.$row['status_defect'] .'">
                                                             <i class="nav-icon i-Book"></i>
-                                                        </button>
-                                                    </div>
-                                                <?php endif; ?>
+                                                        </button>';
+                                                    }
+                                                    ?>
+                                                    <?php endif; ?>
                                                 </td>
 
                                                 <!-- Modal -->
@@ -291,12 +379,20 @@ function getBadgeColor($remarks) {
                                                                 <form id="statusForm" method="post" action="sdg-pk/issue-process.php">
                                                                     <input type="hidden" name="id" id="modalKodeLahan">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Defect List</label>
+                                                                        <label for="statusSelect">Status Defect List<strong><span style="color: red;">*</span></strong></label>
                                                                         <select class="form-control" id="statusSelect" name="status_defect">
                                                                             <option value="Done">Done</option>
                                                                             <option value="In Process">In Process</option>
                                                                         </select>
                                                                     </div>
+                                                                    <div class="form-group">
+                                                                        <label for="tanggal_retensi">Tanggal Penyelesaian<strong><span style="color: red;">*</span></strong></label>
+                                                                        <input type="date" class="form-control" id="tanggal_retensi" name="tanggal_retensi">
+                                                                    </div>
+                                                                        <div class="form-group">
+                                                                            <label for="lamp_badefect">Upload Lampiran After<strong><span style="color: red;">*</span></strong></label>
+                                                                            <input type="file" class="form-control" id="lamp_badefect" name="lamp_badefect[]" multiple>
+                                                                        </div>
                                                                     <button type="submit" class="btn btn-primary">Save changes</button>
                                                                 </form>
                                                             </div>
@@ -313,8 +409,12 @@ function getBadgeColor($remarks) {
                                                 <th>Inventory Code</th>
                                                 <th>Kode Store</th>
                                                 <th>Nama Lahan</th>
-                                                <th>Tanggal Retensi</th>
-                                                <th>Lampiran BA</th>
+                                                <th>PIC</th>
+                                                <th>Detail Issue</th>
+                                                <th>Target Done</th>
+                                                <th>Lampiran Before</th>
+                                                <th>Tanggal Penyelesaian</th>
+                                                <th>Lampiran After</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -558,6 +658,23 @@ function getBadgeColor($remarks) {
             var id = element.id;
             document.getElementById('delete').value = id;
         }
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Hancurkan DataTable jika sudah ada
+            if ($.fn.DataTable.isDataTable('#zero_configuration_table')) {
+                $('#zero_configuration_table').DataTable().destroy();
+            }
+
+            // Inisialisasi DataTable
+            $('#zero_configuration_table').DataTable({
+                scrollX: true, // Menambahkan scroll horizontal
+                fixedColumns: {
+                    leftColumns: 3, // Jumlah kolom yang ingin di-fix
+                    topColumns: 2
+                }
+            });
+        });
     </script>
 </body>
 

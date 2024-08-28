@@ -66,19 +66,19 @@ if(isset($_GET['id'])) {
                             <form method="post" action="scm-ipal-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="tipe_ipal">Hasil Tipe IPAL</label>
+                                    <label class="col-sm-3 col-form-label" for="tipe_ipal">Hasil Tipe IPAL<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="tipe_ipal" name="tipe_ipal" type="text" placeholder="Hasil Tipe IPAL" value="<?php echo $row['tipe_ipal']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="note_ipalscm">Note IPAL</label>
+                                    <label class="col-sm-3 col-form-label" for="note_ipalscm">Note IPAL<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="note_ipalscm" name="note_ipalscm" type="text" placeholder="Note IPAL" value="<?php echo $row['note_ipalscm']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_woipal">Upload Lampiran WO IPAL</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_woipal">Upload Lampiran WO IPAL<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_woipal[]" type="file" multiple="multiple" />

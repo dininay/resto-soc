@@ -213,7 +213,7 @@ if ($result->num_rows > 0) {
         $scoring4 = calculateScoring($row['end_date'], $row['nego_date'], $master_sla['Negosiator']);
         $scoring5 = calculateScoring($row['nego_date'], $row['dokumen_loacd_start_date'], $master_sla['LOA-CD']);
         $scoring6 = calculateScoring($row['vl_date'], $row['dokumen_loacd_end_date'], $master_sla['VD']);
-        $scoring7 = calculateScoring($row['nego_date'], $row['survey_date'], $master_sla['Land Survey']);
+        $scoring7 = calculateScoring($row['nego_date'], $row['survey_date'], $master_sla['Layouting']);
         $scoring8 = calculateScoring($row['survey_date'], $row['layout_date'], $master_sla['Layouting']);
         $scoring9 = calculateScoring($row['layout_date'], $row['sdg_desain_start_date'], $master_sla['Design']);
         $scoring10 = calculateScoring($row['sdg_desain_start_date'], $row['sdg_qs_start_date'], $master_sla['QS']);
@@ -399,7 +399,29 @@ if ($result_chartteam->num_rows > 0) {
 
 $departmentDataJSON = json_encode($departmentData);
 
+$sql_get_kode_lahan = "SELECT DISTINCT kode_lahan FROM resto group by kode_lahan";
+$result_get_kode_lahan = $conn->query($sql_get_kode_lahan);
 
+// Ambil nama_lahan untuk kode_lahan dari tabel land
+$kode_lahan_options = [];
+if ($result_get_kode_lahan->num_rows > 0) {
+    while ($row = $result_get_kode_lahan->fetch_assoc()) {
+        $kode_lahan = $row['kode_lahan'];
+
+        // Query untuk nama_lahan
+        $sql_get_nama_lahan = "SELECT nama_lahan FROM land WHERE kode_lahan = ?";
+        $stmt_get_nama_lahan = $conn->prepare($sql_get_nama_lahan);
+        $stmt_get_nama_lahan->bind_param("s", $kode_lahan);
+        $stmt_get_nama_lahan->execute();
+        $result_get_nama_lahan = $stmt_get_nama_lahan->get_result();
+        $row_nama_lahan = $result_get_nama_lahan->fetch_assoc();
+
+        $kode_lahan_options[] = [
+            'kode_lahan' => $kode_lahan,
+            'nama_lahan' => $row_nama_lahan['nama_lahan']
+        ];
+    }
+}
 
 $conn->close();
 ?>
@@ -487,6 +509,7 @@ $conn->close();
             width: 100%; /* Atur lebar sesuai kebutuhan */
         }
 
+
     </style>
     
     <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
@@ -562,22 +585,30 @@ $conn->close();
                                         </div>
                                     </div>
                                 </div>
-
+                                <div class="form-group">
+                                    <label for="kode_lahan_filter">Filter by Kode Lahan:</label>
+                                    <select id="kode_lahan_filter" class="form-control">
+                                        <option value="">-- Select Kode Lahan --</option>
+                                        <?php foreach ($kode_lahan_options as $option): ?>
+                                            <option value="<?= $option['kode_lahan'] ?>"><?= $option['nama_lahan'] ?> (<?= $option['kode_lahan'] ?>)</option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
 							  <div class="table-responsive">
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                                 <tr>
-                                                    <th rowspan="4" class="sticky-col" style="background-color: #6c757d; color: white;">Proses Phase</th>
-                                                    <th rowspan="4" class="sticky-col" style="background-color: #6c757d; color: white;">Activities</th>
+                                                    <th rowspan="4" class="sticky-col sticky-col-header" style="background-color: #6c757d; color: white;">Proses Phase</th>
+                                                    <th rowspan="4" class="sticky-col sticky-col-header" style="background-color: #6c757d; color: white;">Activities</th>
                                                 </tr>
                                                 <tr>
-                                                    <th colspan="1" class="sticky-col" style="background-color: #6c757d; color: white;">Store</th>
+                                                    <th colspan="1" class="sticky-col sticky-col-header" style="background-color: #6c757d; color: white;">Store</th>
                                                     <?php foreach ($data as $row): ?>
-                                                    <th colspan="11" style="background-color: #6c757d; color: white;"><?= $row['kode_store'] ?></th>
+                                                    <th colspan="11" style="background-color: #6c757d; color: white;" data-kode-lahan="<?= $row['kode_lahan'] ?>"><?= $row['nama_lahan'] ?></th>
                                                     <?php endforeach; ?>
                                                 </tr>
                                                 <tr>
-                                                    <th colspan="1" rowspan="3" class="sticky-col" style="background-color: #6c757d; color: white;">PIC</th>
+                                                    <th colspan="1" rowspan="3" class="sticky-col sticky-col-header" style="background-color: #6c757d; color: white;">PIC</th>
                                                 <?php foreach ($data as $row): ?>
                                                 <th colspan="4" style="background-color: #6c757d; color: white;">Plan</th>
                                                 <th rowspan="3" colspan="1" style="background-color: #6c757d; color: white;">SLA (d)</th>
@@ -772,7 +803,7 @@ $conn->close();
                                                 <td colspan="2"><?= isset($row['nego_date']) && !empty($row['nego_date']) ? date('d M y', strtotime($row['nego_date'])) : '0' ?></td>
                                                 <td colspan="2"><?= isset($row['survey_date']) && !empty($row['survey_date']) ? date('d M y', strtotime($row['survey_date'])) : '0' ?></td>
                                                 <?php 
-                                                $scoring = calculateScoring($row['nego_date'], $row['survey_date'], $master_sla['Land Survey']);
+                                                $scoring = calculateScoring($row['nego_date'], $row['survey_date'], $master_sla['Layouting']);
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);    
                                                 $display_scoring = $scoring < -200 ? '-200%' : round($scoring) . '%';                      
@@ -1623,8 +1654,47 @@ $(document).ready(function() {
             });
         }
     });
-    </script>
+    </script><script>
+document.addEventListener('DOMContentLoaded', function() {
+    var filterElement = document.getElementById('kode_lahan_filter');
+    var tableRows = document.querySelectorAll('#zero_configuration_table tbody tr');
+    var storeHeaders = document.querySelectorAll('#zero_configuration_table thead th[data-kode-lahan]');
 
+    filterElement.addEventListener('change', function() {
+        var selectedKodeLahan = filterElement.value;
+
+        // Filter table rows
+        tableRows.forEach(function(row) {
+            var cells = row.children;
+            var showRow = false;
+            cells.forEach(function(cell, index) {
+                var header = document.querySelectorAll('#zero_configuration_table thead th')[index];
+                if (header && header.getAttribute('data-kode-lahan') === selectedKodeLahan) {
+                    showRow = true;
+                }
+            });
+            row.style.display = (selectedKodeLahan === '' || showRow) ? '' : 'none';
+        });
+
+        // Filter store headers
+        storeHeaders.forEach(function(header) {
+            if (header.getAttribute('data-kode-lahan') === selectedKodeLahan) {
+                header.style.display = '';
+                var index = Array.from(header.parentNode.children).indexOf(header);
+                tableRows.forEach(function(row) {
+                    row.children[index].style.display = '';
+                });
+            } else {
+                header.style.display = 'none';
+                var index = Array.from(header.parentNode.children).indexOf(header);
+                tableRows.forEach(function(row) {
+                    row.children[index].style.display = 'none';
+                });
+            }
+        });
+    });
+});
+</script> 
 </body>
 
 </html>

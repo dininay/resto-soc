@@ -3,9 +3,10 @@
 include "../../koneksi.php";
 
 // Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["status_defect"])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["status_defect"]) && isset($_POST["tanggal_retensi"]) ) {
     $id = $_POST["id"];
     $status_defect = $_POST["status_defect"];
+    $tanggal_retensi = $_POST["tanggal_retensi"];
     $defect_date = null;
 
     // Mulai transaksi
@@ -15,11 +16,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         // Jika status_approvlegalvd diubah menjadi Approve
         if ($status_defect == 'Done') {
             $defect_date = date("Y-m-d H:i:s");
+            
+        $lamp_badefect = "";
+
+        if(isset($_FILES["lamp_badefect"])) {
+            $lamp_badefect_paths = array();
+
+            // Loop through each file
+            foreach($_FILES['lamp_badefect']['name'] as $key => $filename) {
+                $file_tmp = $_FILES['lamp_badefect']['tmp_name'][$key];
+                $file_name = $_FILES['lamp_badefect']['name'][$key];
+                $target_dir = "../uploads/";
+                $target_file = $target_dir . basename($file_name);
+
+                // Attempt to move the uploaded file to the target directory
+                if (move_uploaded_file($file_tmp, $target_file)) {
+                    $lamp_badefect_paths[] = $file_name;
+                } else {
+                    echo "Gagal mengunggah file " . $file_name . "<br>";
+                }
+            }
+
+            // Join all file paths into a comma-separated string
+            $lamp_badefect = implode(",", $lamp_badefect_paths);
+        }
 
             // Query untuk memperbarui status status_defect di tabel draft
-            $sql_update = "UPDATE issue SET status_defect = ?, defect_date = ? WHERE id = ?";
+            $sql_update = "UPDATE issue SET status_defect = ?, defect_date = ?, tanggal_retensi = ?, lamp_badefect = ? WHERE id = ?";
             $stmt_update = $conn->prepare($sql_update);
-            $stmt_update->bind_param("ssi", $status_defect, $defect_date, $id);
+            $stmt_update->bind_param("ssssi", $status_defect, $defect_date, $tanggal_retensi, $lamp_badefect, $id);
             $stmt_update->execute();
 
             if ($stmt_update->affected_rows > 0) {

@@ -65,20 +65,21 @@ if(isset($_GET['id'])) {
                             <div class="card-body">
                             <form method="post" action="hr-ff2-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
+                                <input type="hidden" name="kode_lahan" value="<?php echo $row['kode_lahan']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="ff_2">Fulfillment 2</label>
+                                    <label class="col-sm-3 col-form-label" for="ff_2">Fulfillment 2<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="ff_2" name="ff_2" type="text" placeholder="Fulfillment 2" value="<?php echo $row['ff_2']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="persenff_2">Persen Fulfillment 2</label>
+                                    <label class="col-sm-3 col-form-label" for="persen_ff2">Persen Fulfillment 2<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="persenff_2" name="persenff_2" type="text" placeholder="Persen Fulfillment 2" value="<?php echo $row['persenff_2']; ?>"/>
+                                        <input class="form-control" id="persen_ff2" name="persen_ff2" type="text" placeholder="Persen Fulfillment 2" value="<?php echo $row['persen_ff2']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_ff2">Upload Lampiran Hand Over Training</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_ff2">Upload Lampiran Hand Over Training<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_ff2[]" type="file" multiple="multiple" />
@@ -95,6 +96,22 @@ if(isset($_GET['id'])) {
                             </div>
                         </div>
                     </div>
+                            <div class="col-md-4">
+                                <div class="card mb-5">
+                                    <div class="card-body">
+                                        <div class="form-group row">
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">Perlu Diperhatikan !</p>
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">Format excel / spreadsheet yang dimasukkan berisi data sebagai berikut :</p>
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">- No</p>
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">- Nama</p>
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">- Gender</p>
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">- Birth Of Date</p>
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">- Alamat</p>
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">- Usia</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                 </div>
 				<!-- end of main-content -->
                 <!-- Footer Start -->

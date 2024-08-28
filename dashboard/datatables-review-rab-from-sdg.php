@@ -2,75 +2,6 @@
 // Koneksi ke database
 include "../koneksi.php";
 
-// Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["confirm_sdgqs"])) {
-    $id = $_POST["id"];
-    $confirm_sdgqs = $_POST["confirm_sdgqs"];
-    $start_date = null;
-
-    // Mulai transaksi
-    $conn->begin_transaction();
-
-    try {
-        $start_date = date("Y-m-d H:i:s");
-        // Query untuk memperbarui confirm_sdgqs berdasarkan id
-        $sql_update = "UPDATE sdg_rab SET confirm_sdgqs = ?, start_date = ? WHERE id = ?";
-        $stmt_update = $conn->prepare($sql_update);
-        $stmt_update->bind_param("ssi", $confirm_sdgqs, $start_date, $id);
-
-        // Eksekusi query update
-        if ($stmt_update->execute() === TRUE) {
-            // Jika valdoc_legal diubah menjadi Approve
-            if ($confirm_sdgqs == 'Approve') {
-
-                $sql_rab = "SELECT kode_lahan, lamp_desainplan, lamp_rab, confirm_sdgqs FROM sdg_rab WHERE id = ?";
-                $stmt_rab = $conn->prepare($sql_rab);
-                $stmt_rab->bind_param("i", $id);
-                $stmt_rab->execute();
-                $result_rab = $stmt_rab->get_result();
-                if ($row = $result_rab->fetch_assoc()) {
-                    $sql_select_sla_qs = "SELECT sla FROM master_sla WHERE divisi = 'Procurement'";
-                    $result_sla_qs = $conn->query($sql_select_sla_qs);
-                    
-                    if ($row_sla_qs = $result_sla_qs->fetch_assoc()) {
-                        $sla_days_qs = $row_sla_qs['sla'];
-                        $end_date_obj = new DateTime($start_date);
-                        $end_date_obj->modify("+$sla_days_qs days");
-                        $sla_date = $end_date_obj->format("Y-m-d");
-
-                        // Masukkan data ke tabel 
-                        $sql_insert = "INSERT INTO procurement (kode_lahan, lamp_desainplan, lamp_rab, status_approvsdg, status_approvprocurement, sla_date) VALUES (?, ?, ?, ?, ?, ?)";
-                        $stmt_insert = $conn->prepare($sql_insert);
-                        $status_approvprocurement = 'In Process';
-                        $stmt_insert->bind_param("ssssss", $row['kode_lahan'], $row['lamp_desainplan'], $row['lamp_rab'], $row['confirm_sdgqs'], $status_approvprocurement, $sla_date);
-                        $stmt_insert->execute();
-                    } else {
-                        $conn->rollback();
-                        echo "Error: SLA not found for divisi: Procurement.";
-                        exit;
-                    }
-                } else {
-                    // Rollback transaksi jika terjadi kesalahan pada select
-                    $conn->rollback();
-                    echo "Error: Data not found for id: $id.";
-                    exit;
-                }
-            }
-            // Komit transaksi
-            $conn->commit();
-            echo "Status dan data berhasil diperbarui.";
-        } else {
-            // Rollback transaksi jika terjadi kesalahan pada update
-            $conn->rollback();
-            echo "Error: " . $sql_update . "<br>" . $conn->error;
-        }
-    } catch (Exception $e) {
-        // Rollback transaksi jika terjadi kesalahan
-        $conn->rollback();
-        echo "Error: " . $e->getMessage();
-    }
-}
-
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, d.lamp_draf, r.id, r.kode_lahan, s.lamp_desainplan, r.keterangan, 
 r.jenis_biaya, r.jumlah, r.date, r.lamp_rab, r.confirm_sdgqs, r.sla_date, r.start_date, c.kode_store, c.lamp_vd, c.status_approvlegalvd, p.*
@@ -95,46 +26,29 @@ if ($result && $result->num_rows > 0) {
         $data[] = $row;
     }
 }
-$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'Tender'";
-$sla_result = $conn->query($sla_query);
-
-$sla_value = 0; // Default SLA value
-
-if ($sla_result->num_rows > 0) {
-    $row = $sla_result->fetch_assoc();
-    $sla_value = $row['sla'];
-} else {
-    echo "No SLA value found for 'Owner Surveyor'";
-}
-
-function calculateScoring($start_date, $end_date, $sla) {
-    $today = new DateTime();
-    $start_date = $start_date ?: $today->format('Y-m-d');
-    $end_date = $end_date ?: $today->format('Y-m-d');
-    $sla_days = $sla ?: 0;
-
+function calculateScoring($start_date, $sla_date) {
     $start_date_obj = new DateTime($start_date);
-    $end_date_obj = new DateTime($end_date);
-
-    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
-
-    if ($sla_days != 0) {
-        if ($date_diff > $sla_days) {
-            $scoring = -((($date_diff - $sla_days) / $sla_days) * 100);
-        } else {
-            $scoring = ((($sla_days - $date_diff) / $sla_days) * 100);
-        }
-    } else {
-        $scoring = 0;
+    $sla_date_obj = new DateTime($sla_date);
+    
+    // Jika start_date tidak melebihi sla_date, berikan skor 100
+    if ($start_date_obj <= $sla_date_obj) {
+        return 100;
     }
 
+    // Menghitung selisih hari antara start_date dan sla_date
+    $date_diff = $start_date_obj->diff($sla_date_obj)->days;
+    
+    // Skor dikurangi dengan selisih hari keterlambatan
+    $scoring = max(0, 100 - ($date_diff * 10)); // Penyesuaian sesuai logika bisnis
+    
     return round($scoring, 2);
 }
+
 // Fungsi untuk menentukan remarks berdasarkan scoring
 function getRemarks($scoring) {
-    if ($scoring >= 0) {
+    if ($scoring >= 75) {
         return "good";
-    } elseif ($scoring >= -30) {
+    } elseif ($scoring >= 0) {
         return "poor";
     } else {
         return "bad";
@@ -372,7 +286,7 @@ function getBadgeColor($remarks) {
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['status_spkfat']) {
-                                                            case 'Approve':
+                                                            case 'Done Review':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -392,68 +306,97 @@ function getBadgeColor($remarks) {
                                                 </td>
                                                 <td>
                                                     <?php
-                                                    // Mendapatkan tanggal sla_date dari kolom data
-                                                    $slaLegalDate = new DateTime($row['sla_spkfat']);
-                                                    
-                                                    // Mendapatkan tanggal hari ini
-                                                    $today = new DateTime();
-                                                    
-                                                    // Mengecek apakah hari ini adalah hari Sabtu atau Minggu
-                                                    if ($today->format('N') == 6 || $today->format('N') == 7) { // N = 6 is Saturday, N = 7 is Sunday
-                                                        echo '<button type="button" class="btn btn-sm btn-info" disabled>Sedang Libur</button>';
-                                                    } else {
-                                                        // Menghitung selisih hari antara slafatpsm_date dan hari ini
-                                                        $diff = $today->diff($slaLegalDate);
-                                                        
-                                                        // Menghitung scoring
-                                                        $scoring = calculateScoring($row['spkfat_date'], $row['sla_spkfat'], $sla_value); // Make sure $sla_value is set correctly
-                                                        $remarks = getRemarks($scoring);
+                                                    // Mengatur timezone ke Asia/Jakarta
+                                                    date_default_timezone_set('Asia/Jakarta');
 
-                                                        if ($row['status_spkfat'] == "Approve") {
-                                                            // Menentukan label berdasarkan remarks
-                                                            $status_label = '';
-                                                            switch ($remarks) {
-                                                                case 'good':
-                                                                    $status_label = 'Done Good';
-                                                                    break;
-                                                                case 'poor':
-                                                                    $status_label = 'Done Poor';
-                                                                    break;
-                                                                case 'bad':
-                                                                    $status_label = 'Done Bad';
-                                                                    break;
-                                                            }
+                                                    $start_date = $row['spkfat_date'];
+                                                    $sla_date = $row['sla_spkfat'];
+                                                    $status_spkfat = $row['status_spkfat'];
 
-                                                            echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
+                                                    // Menghitung scoring
+                                                    $scoring = calculateScoring($start_date, $sla_date);
+                                                    $remarks = getRemarks($scoring);
+
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+                                                    $current_day = $now->format('N'); // 1 (Senin) hingga 7 (Minggu)
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
+
+                                                    // Cek apakah hari ini adalah hari kerja (Senin-Jumat)
+                                                    if ($current_day >= 1 && $current_day <= 5) {
+                                                        // Memeriksa apakah waktu sekarang di luar jam kerja
+                                                        if ($current_time < $work_start || $current_time > $work_end) {
+                                                            echo '<button type="button" class="btn btn-sm btn-info">Di Luar Jam Kerja</button>';
                                                         } else {
-                                                            // Menghitung jumlah hari terlambat
-                                                            $lateDays = $slaLegalDate->diff($today)->days;
-                                                            
-                                                            // Jika terlambat
-                                                            if ($today > $slaLegalDate) {
-                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+                                                            if ($status_spkfat === 'Done Review') {
+                                                                // Menentukan label berdasarkan remarks
+                                                                $status_label = '';
+                                                                switch ($remarks) {
+                                                                    case 'good':
+                                                                        $status_label = 'Done Good';
+                                                                        break;
+                                                                    case 'poor':
+                                                                        $status_label = 'Done Poor';
+                                                                        break;
+                                                                    case 'bad':
+                                                                        $status_label = 'Done Bad';
+                                                                        break;
+                                                                }
+
+                                                                echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                             } else {
-                                                                // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
-                                                                if ($diff->days > 0) {
-                                                                    echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
+                                                                // Convert $sla_date to DateTime object
+                                                                $sla_date_obj = new DateTime($sla_date);
+
+                                                                // Menghitung jumlah hari menuju SLA date
+                                                                $diff = $now->diff($sla_date_obj);
+                                                                $daysDifference = (int)$diff->format('%R%a'); // Menyertakan tanda plus atau minus
+
+                                                                if ($daysDifference < 0) {
+                                                                    // SLA telah terlewat, hitung sebagai hari terlambat
+                                                                    echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . abs($daysDifference) . ' hari</button>';
                                                                 } else {
-                                                                    // Tampilkan peringatan "H + X"
-                                                                    echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
+                                                                    // SLA belum tercapai, hitung mundur
+                                                                    echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $daysDifference . '</button>';
                                                                 }
                                                             }
                                                         }
+                                                    } else {
+                                                        // Jika hari ini adalah Sabtu atau Minggu
+                                                        echo '<button type="button" class="btn btn-sm btn-info">Sedang Libur</button>';
                                                     }
                                                     ?>
                                                 </td>
                                                 <td>
                                                     <!-- Tombol Edit -->
-                                                    <?php if ($row['status_spkfat'] != "Approve"): ?>
-                                                        <!-- <a href="procurement/spk-rab-procur-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
-                                                            <i class="i-Pen-2"></i>
-                                                        </a> -->
-                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_spkfat'] ?>">
+                                                    <?php if ($row['status_spkfat'] != "Done Review"): ?>
+                                                    <?php
+                                                    // Mengatur timezone ke Asia/Jakarta
+                                                    date_default_timezone_set('Asia/Jakarta');
+
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+                                                    $current_day = $now->format('N'); // 1 (Senin) hingga 7 (Minggu)
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
+
+                                                    // Cek apakah hari ini adalah hari kerja dan waktu kerja
+                                                    if ($row['status_spkfat'] != "Done Review" && $current_time >= $work_start && $current_time <= $work_end && $current_day >= 1 && $current_day <= 5) {
+                                                        // echo '<a href="marketing/marketing-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
+                                                        //     <i class="nav-icon i-Pen-2"></i>
+                                                        // </a>';
+                                                        echo '<button class="btn btn-sm btn-primary edit-btn mr-2" data-toggle="modal" data-target="#editModal" data-id="'. $row['id'] .'" data-status="'.$row['status_spkfat'] .'">
                                                             <i class="nav-icon i-Book"></i>
-                                                        </button>
+                                                        </button>';
+                                                    }
+                                                    ?>
                                                     <?php endif; ?>
                                                 </td>
                                                 <!-- Modal -->
@@ -470,11 +413,12 @@ function getBadgeColor($remarks) {
                                                                 <form id="statusForm" method="post" action="fat/spk-rab-fat-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" id="modalKodeLahan">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve TAF</label>
+                                                                        <label for="statusSelect">Status Approve TAF<strong><span style="color: red;">*</span></strong></label>
                                                                         <select class="form-control" id="statusSelect" name="status_spkfat" Placeholder="Pilih">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
-                                                                            <option value="Approve">Approve</option>
+                                                                            <option value="Done Review">Done Review</option>
+                                                                            <option value="In Revision">In Revision</option>
                                                                         </select>
                                                                     </div>
                                                                     <div class="form-group">
@@ -483,11 +427,11 @@ function getBadgeColor($remarks) {
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">
                                                                         <div class="form-group">
-                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <label for="issue_detail">Issue Detail<strong><span style="color: red;">*</span></strong></label>
                                                                             <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="pic">PIC</label>
+                                                                            <label for="pic">PIC<strong><span style="color: red;">*</span></strong></label>
                                                                             <select class="form-control" id="pic" name="pic">
                                                                                 <option value="">Pilih PIC</option>
                                                                                 <option value="Legal">Legal</option>
@@ -508,11 +452,11 @@ function getBadgeColor($remarks) {
                                                                             </select>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <label for="action_plan">Action Plan<strong><span style="color: red;">*</span></strong></label>
                                                                             <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <label for="kronologi">Upload File Kronologi<strong><span style="color: red;">*</span></strong></label>
                                                                             <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
                                                                         </div>
                                                                     </div>

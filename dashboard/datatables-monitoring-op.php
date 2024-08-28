@@ -121,6 +121,67 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
+$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'Konstruksi'";
+$sla_result = $conn->query($sla_query);
+
+$sla_value = 0; // Default SLA value
+
+if ($sla_result->num_rows > 0) {
+    $row = $sla_result->fetch_assoc();
+    $sla_value = $row['sla'];
+} else {
+    echo "No SLA value found for 'Konstruksi'";
+}
+
+// Fungsi untuk menghitung scoring
+function calculateScoring($start_date, $sla_date, $sla) {
+    $start_date_obj = new DateTime($start_date);
+    $sla_date_obj = new DateTime($sla_date);
+    
+    if ($start_date_obj <= $sla_date_obj) {
+        return 100; // Skor 100 jika start_date tidak melebihi sla_date
+    }
+
+    $date_diff = $start_date_obj->diff($sla_date_obj)->days;
+    $sla_days = $sla ?: 0;
+
+    if ($sla_days != 0) {
+        if ($date_diff > $sla_days) {
+            $scoring = -((($date_diff - $sla_days) / $sla_days) * 100);
+        } else {
+            $scoring = ((($sla_days - $date_diff) / $sla_days) * 100);
+        }
+    } else {
+        $scoring = 0;
+    }
+
+    return round($scoring, 2);
+}
+
+// Fungsi untuk menentukan remarks berdasarkan scoring
+function getRemarks($scoring) {
+    if ($scoring >= 75) {
+        return "good";
+    } elseif ($scoring >= 0) {
+        return "poor";
+    } else {
+        return "bad";
+    }
+}
+
+// Fungsi untuk menentukan warna badge berdasarkan remarks
+function getBadgeColor($remarks) {
+    switch ($remarks) {
+        case 'good':
+            return 'success'; // Hijau
+        case 'poor':
+            return 'warning'; // Kuning
+        case 'bad':
+            return 'danger'; // Merah
+        default:
+            return 'secondary'; // Default jika remarks tidak dikenali
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="">
@@ -367,67 +428,107 @@ if ($result && $result->num_rows > 0) {
                                                 }
                                                 ?>       
                                                 
-                                                <td><?= $row['week_1'] ?></td> 
-                                                <td><?= $row['week_2'] ?></td> 
-                                                <td><?= $row['week_3'] ?></td> 
-                                                <td><?= $row['week_4'] ?></td> 
-                                                <td><?= $row['week_5'] ?></td> 
-                                                <td><?= $row['week_6'] ?></td> 
-                                                <td><?= $row['week_7'] ?></td> 
-                                                <td><?= $row['week_8'] ?></td> 
-                                                <td><?= $row['week_9'] ?></td> 
-                                                <td><?= $row['week_10'] ?></td> 
-                                                <td><?= $row['week_11'] ?></td> 
-                                                <td><?= $row['week_12'] ?></td> 
-                                                <td><?= $row['week_13'] ?></td> 
-                                                <td><?= $row['week_14'] ?></td> 
-                                                <td><?= $row['week_15'] ?></td> 
+                                                <td><?= $row['week_1'] ?>%</td> 
+                                                <td><?= $row['week_2'] ?>%</td> 
+                                                <td><?= $row['week_3'] ?>%</td> 
+                                                <td><?= $row['week_4'] ?>%</td> 
+                                                <td><?= $row['week_5'] ?>%</td> 
+                                                <td><?= $row['week_6'] ?>%</td> 
+                                                <td><?= $row['week_7'] ?>%</td> 
+                                                <td><?= $row['week_8'] ?>%</td> 
+                                                <td><?= $row['week_9'] ?>%</td> 
+                                                <td><?= $row['week_10'] ?>%</td> 
+                                                <td><?= $row['week_11'] ?>%</td> 
+                                                <td><?= $row['week_12'] ?>%</td> 
+                                                <td><?= $row['week_13'] ?>%</td> 
+                                                <td><?= $row['week_14'] ?>%</td> 
+                                                <td><?= $row['week_15'] ?>%</td> 
                                                 
                                                 <td>
                                                     <?php
-                                                    // Mendapatkan tanggal sla_date dari kolom data
-                                                    $slaLegalDate = new DateTime($row['sla_consact']);
-                                                    
-                                                    // Mendapatkan tanggal hari ini
-                                                    $today = new DateTime();
-                                                    
-                                                    // Menghitung selisih hari antara sla_date dan hari ini
-                                                    $diff = $today->diff($slaLegalDate);
-                                                    
-                                                    // Jika status_approvowner adalah "Approve"
-                                                    if ($row['status_consact'] == "Approve") {
-                                                        echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
-                                                        
+                                                    // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
+                                                    date_default_timezone_set('Asia/Jakarta');
+
+                                                    $start_date = $row['consact_date'];
+                                                    $sla_date = $row['sla_consact'];
+                                                    $status_consact = $row['status_consact'];
+
+                                                    // Menghitung scoring
+                                                    $scoring = calculateScoring($start_date, $sla_date, $sla_value);
+                                                    $remarks = getRemarks($scoring);
+
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
+
+                                                    if ($status_consact === 'Approve') {
+                                                        // Menentukan label berdasarkan remarks
+                                                        $status_label = '';
+                                                        switch ($remarks) {
+                                                            case 'good':
+                                                                $status_label = 'Done Good';
+                                                                break;
+                                                            case 'poor':
+                                                                $status_label = 'Done Poor';
+                                                                break;
+                                                            case 'bad':
+                                                                $status_label = 'Done Bad';
+                                                                break;
+                                                        }
+
+                                                        echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
-                                                        // Menghitung jumlah hari terlambat
-                                                        $lateDays = $slaLegalDate->diff($today)->days;
-                                                        
-                                                        // Jika terlambat
-                                                        if ($today > $slaLegalDate) {
-                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+                                                        // Memeriksa apakah waktu sekarang di luar jam kerja
+                                                        if ($current_time < $work_start || $current_time > $work_end) {
+                                                            echo '<button type="button" class="btn btn-sm btn-info">Di Luar Jam Kerja</button>';
                                                         } else {
-                                                            // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
-                                                            if ($diff) {
-                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
+                                                            // Convert $sla_date to DateTime object
+                                                            $sla_date_obj = new DateTime($sla_date);
+
+                                                            // Menghitung jumlah hari menuju SLA date
+                                                            $diff = $now->diff($sla_date_obj);
+                                                            $daysDifference = (int)$diff->format('%R%a'); // Menyertakan tanda plus atau minus
+
+                                                            if ($daysDifference < 0) {
+                                                                // SLA telah terlewat, hitung sebagai hari terlambat
+                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . abs($daysDifference) . ' hari</button>';
                                                             } else {
-                                                                // Tampilkan peringatan "H + X"
-                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
+                                                                // SLA belum tercapai, hitung mundur
+                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $daysDifference . '</button>';
                                                             }
                                                         }
                                                     }
                                                     ?>
                                                 </td>
+                                                
                                                 <td>
                                                     <!-- Tombol Edit -->
                                                     <?php if ($row['status_consact'] != "Approve"): ?>
-                                                        <div>
-                                                        <a href="sdg-pk/monitoring-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                    <?php
+                                                    // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
+                                                    date_default_timezone_set('Asia/Jakarta');
+
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
+
+                                                    if ($row['status_consact'] != "Approve" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                        echo '<a href="sdg-pk/monitoring-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
-                                                        </a>
-                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_consact'] ?>">
-                                                            <i class="nav-icon i-Book"></i>
-                                                        </button>
-                                                    </div>
+                                                        </a>';
+                                                        // echo '<button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="'. $row['id'] .'" data-status="'.$row['status_consact'] .'">
+                                                        //     <i class="nav-icon i-Book"></i>
+                                                        // </button>';
+                                                    }
+                                                    ?>
                                                     <?php endif; ?>
 
                                                 <!-- Modal -->
@@ -444,7 +545,7 @@ if ($result && $result->num_rows > 0) {
                                                                 <form id="statusForm" method="post" action="">
                                                                     <input type="hidden" name="id" id="modalId" value="<?= $row['id']; ?>">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve Construction</label>
+                                                                        <label for="statusSelect">Status Approve Construction<strong><span style="color: red;">*</span></strong></label>
                                                                         <select class="form-control" id="statusSelect" name="status_consact">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>

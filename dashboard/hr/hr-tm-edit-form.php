@@ -63,32 +63,48 @@ if(isset($_GET['id'])) {
                     <div class="col-md-6">
                         <div class="card mb-5">
                             <div class="card-body">
-                            <form method="post" action="hr-tm-edit.php" enctype="multipart/form-data">
-                                <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="tm">Data QC</label>
-                                    <div class="col-sm-9">
-                                        <input class="form-control" id="tm" name="tm" type="text" placeholder="Data QS" value="<?php echo $row['tm']; ?>"/>
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_tm">Upload Lampiran QC</label>
-                                    <div class="col-sm-9">
-                                        <div class="dropzone" id="multple-file-upload" >
-                                            <input name="lamp_tm[]" type="file" multiple="multiple" />
+                                <form method="post" action="hr-tm-edit.php" enctype="multipart/form-data">
+                                    <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
+                                    <input type="hidden" name="kode_lahan" value="<?php echo $row['kode_lahan']; ?>">
+                                    <div class="form-group row">
+                                        <label class="col-sm-3 col-form-label" for="tm">Data QC<strong><span style="color: red;">*</span></strong></label>
+                                        <div class="col-sm-9">
+                                            <input class="form-control" id="tm" name="tm" type="text" placeholder="Data QS" value="<?php echo $row['tm']; ?>"/>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="form-group row">
-                                    <div class="col-sm-9">
-                                        <button class="btn btn-primary" type="submit">Simpan</button>
+                                    <div class="form-group row">
+                                        <label class="col-sm-3 col-form-label" for="lamp_tm">Upload Lampiran QC<strong><span style="color: red;">*</span></strong></label>
+                                        <div class="col-sm-9">
+                                            <div class="dropzone" id="multple-file-upload" >
+                                                <input name="lamp_tm[]" type="file" multiple="multiple" />
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </form>
-
+                                    <div class="form-group row">
+                                        <div class="col-sm-9">
+                                            <button class="btn btn-primary" type="submit">Simpan</button>
+                                        </div>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     </div>
+                            <div class="col-md-4">
+                                <div class="card mb-5">
+                                    <div class="card-body">
+                                        <div class="form-group row">
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">Perlu Diperhatikan !</p>
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">Format excel / spreadsheet yang dimasukkan berisi data sebagai berikut :</p>
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">- No</p>
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">- Nama</p>
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">- Gender</p>
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">- Birth Of Date</p>
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">- Alamat</p>
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">- Usia</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                 </div>
 				<!-- end of main-content -->
                 <!-- Footer Start -->

@@ -66,7 +66,7 @@ if(isset($_GET['id'])) {
                             <form method="post" action="sdgpk-rto-ipal-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lampwo_reqipal">Upload Lampiran WO Req IPAL</label>
+                                    <label class="col-sm-3 col-form-label" for="lampwo_reqipal">Upload Lampiran WO Req IPAL<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lampwo_reqipal[]" type="file" multiple="multiple" />

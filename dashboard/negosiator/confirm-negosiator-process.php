@@ -1,4 +1,12 @@
 <?php
+// Include PHPMailer library files
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require '../../vendor/autoload.php'; // Hanya jika menggunakan Composer
+
+// Inisialisasi PHPMailer
+$mail = new PHPMailer(true);
 // Koneksi ke database
 include "../../koneksi.php";
 
@@ -142,6 +150,57 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 }
             } else {
                 throw new Exception("Tidak dapat memperbarui status pada tabel re.");
+            }
+            try {
+                // Pengaturan server SMTP
+                $mail->isSMTP();
+                $mail->Host = 'sandbox.smtp.mailtrap.io';  // Ganti dengan SMTP server Anda
+                $mail->SMTPAuth = true;
+                $mail->Username = 'ff811f556f5d12'; // Ganti dengan email Anda
+                $mail->Password = 'c60c92868ce0f8'; // Ganti dengan password email Anda
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                $mail->Port = 2525;
+                
+                // Pengaturan pengirim dan penerima
+                $mail->setFrom('resto-soc@gacoan.com', 'Resto SOC');
+        
+                // Query untuk mendapatkan email pengguna dengan level "Real Estate"
+                $sql = "SELECT email FROM user WHERE level IN ('SDG-Design','Real Estate')";
+                $result = $conn->query($sql);
+        
+                if ($result->num_rows > 0) {
+                    while($row = $result->fetch_assoc()) {
+                        $mail->addAddress($row['email']); // Tambahkan setiap penerima email
+        
+                        // Konten email
+                        $mail->isHTML(true);
+                        $mail->Subject = 'Notification: 1 New Resto SOC Ticket';
+                        $mail->Body    = '
+                        <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                            <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
+                                <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Team,</h2>
+                                <p>You have 1 New Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.</p>
+                                <p>Thank you for your prompt attention to this matter.</p>
+                                <p></p>
+                                <p>Best regards,</p>
+                                <p>Resto - SOC</p>
+                            </div>
+                        </div>';
+                        $mail->AltBody = 'Dear Team,'
+                                       . 'You have 1 New Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.'
+                                       . 'Thank you for your prompt attention to this matter.'
+                                       . 'Best regards,'
+                                       . 'Resto - SOC';
+        
+                        // Kirim email
+                        $mail->send();
+                        $mail->clearAddresses(); // Hapus semua penerima sebelum loop berikutnya
+                    }
+                }
+                $mail->smtpClose(); 
+        
+            } catch (Exception $e) {
+                echo "Email tidak dapat dikirim. Error: {$mail->ErrorInfo}";
             }
         } elseif ($status_approvnego == 'Pending') {
             $nego_date = date("Y-m-d H:i:s");

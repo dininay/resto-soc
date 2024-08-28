@@ -64,10 +64,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 $sla_fat = $sla_fat_obj->format("Y-m-d");
 
                 // Query untuk memperbarui status_spk dan spk_date berdasarkan id
-                $sql_update = "UPDATE resto SET status_spk = ?, spk_date = ?, status_legalizin = ?, status_gostore = ?, status_fat = ? WHERE id = ?";
+                $sql_update = "UPDATE resto SET status_spk = ?, spk_date = ?, status_legalizin = ?, status_gostore = ?, status_fat = ?, status_land = ? WHERE id = ?";
                 $stmt_update = $conn->prepare($sql_update);
                 $status_gostore = 'In Process';
-                $stmt_update->bind_param("sssssi", $status_spk, $spk_date, $status_legalizin, $status_gostore, $status_fat, $id);
+                $status_land = 'In Process';
+                $stmt_update->bind_param("ssssssi", $status_spk, $spk_date, $status_legalizin, $status_gostore, $status_fat, $status_land, $id);
                 $stmt_update->execute();
 
                 // Update status_kom di tabel resto menjadi "In Process"

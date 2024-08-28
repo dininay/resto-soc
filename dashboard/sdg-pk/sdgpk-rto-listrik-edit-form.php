@@ -66,48 +66,70 @@ if(isset($_GET['id'])) {
                             <form method="post" action="sdgpk-rto-listrik-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="sumber_listrik">Sumber Listrik</label>
+                                    <label class="col-sm-3 col-form-label" for="sumber_listrik">Sumber Listrik<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="sumber_listrik" name="sumber_listrik" onchange="toggleListrikDetail()">
                                             <option value="">Select Sumber Listrik</option>
-                                            <option value="PLN" <?php echo ($row['sumber_listrik'] == 'PLN') ? 'selected' : ''; ?>>PLN</option>
-                                            <option value="Lainnya" <?php echo ($row['sumber_listrik'] == 'Lainnya') ? 'selected' : ''; ?>>Lainnya</option>
+                                            <option value="Penyambungan Daya Baru PLN" <?php echo ($row['sumber_listrik'] == 'Penyambungan Daya Baru PLN') ? 'selected' : ''; ?>>Penyambungan Daya Baru PLN</option>
+                                            <option value="Tambah Listrik Existing" <?php echo ($row['sumber_listrik'] == 'Tambah Listrik Existing') ? 'selected' : ''; ?>>Tambah Listrik Existing</option>
                                             <!-- Add more options as needed -->
                                         </select>
                                     </div>
                                 </div>
                                 <div class="form-group row" id="note-listrik" style="display: none;">
-                                    <label class="col-sm-3 col-form-label" for="note_sumberlistrik">Note Lainnya</label>
-                                    <div class="col-sm-9">
-                                        <input class="form-control" id="note_sumberlistrik" name="note_sumberlistrik" type="text" placeholder="Lainnya" value="<?php echo $row['note_sumberlistrik']; ?>"/>
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="form_pengajuanlistrik">Upload Form Pengajuan Listrik</label>
+                                    <label class="col-sm-3 col-form-label" for="form_pengajuanlistrik">Upload Form Pengajuan Listrik<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multiple-file-upload">
                                             <input name="form_pengajuanlistrik[]" type="file" multiple="multiple" />
                                         </div>
                                     </div>
                                 </div>
+                                <div class="form-group row" id="tgl-listrik" style="display: none;">
+                                    <label class="col-sm-3 col-form-label" for="pasanglistrik_date">Tgl Pemasangan Listrik<strong><span style="color: red;">*</span></strong></label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="pasanglistrik_date" name="pasanglistrik_date" type="date" placeholder="Tgl Pemasangan Listrik" value="<?php echo $row['pasanglistrik_date']; ?>"/>
+                                    </div>
+                                </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="hasil_va">Hasil VA (Voltege Ampere)</label>
+                                    <label class="col-sm-3 col-form-label" for="id_pln">ID PLN<strong><span style="color: red;">*</span></strong></label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="id_pln" name="id_pln" type="text" placeholder="ID PLN" value="<?php echo $row['id_pln']; ?>"/>
+                                    </div>
+                                </div>
+                                <!-- <div class="form-group row" id="note-listrik" style="display: none;">
+                                    <label class="col-sm-3 col-form-label" for="note_sumberlistrik">Note Lainnya<strong><span style="color: red;">*</span></strong></label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="note_sumberlistrik" name="note_sumberlistrik" type="text" placeholder="Lainnya" value="<?php echo $row['note_sumberlistrik']; ?>"/>
+                                    </div>
+                                </div> -->
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="hasil_va">Hasil VA (Voltege Ampere)<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="hasil_va" name="hasil_va" type="text" placeholder="Hasil VA" value="<?php echo $row['hasil_va']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="id_pln">ID PLN</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_slo">Upload Document SLO<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="id_pln" name="id_pln" type="text" placeholder="ID PLN" value="<?php echo $row['id_pln']; ?>"/>
+                                        <div class="dropzone" id="multiple-file-upload">
+                                            <input name="lamp_slo[]" type="file" multiple="multiple" />
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="lamp_nidi">Upload Document NIDI<strong><span style="color: red;">*</span></strong></label>
+                                    <div class="col-sm-9">
+                                        <div class="dropzone" id="multiple-file-upload">
+                                            <input name="lamp_nidi[]" type="file" multiple="multiple" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- <div class="form-group row">
                                     <label class="col-sm-3 col-form-label" for="biaya_perkwh">Biaya Per KWH</label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="biaya_perkwh" name="biaya_perkwh" type="text" placeholder="Ketikkan Angka Saja" value="<?php echo $row['biaya_perkwh']; ?>"oninput="formatRupiah(this)"/>
                                     </div>
-                                </div>
+                                </div> -->
                                 <div class="form-group row">
                                     <div class="col-sm-9">
                                         <button class="btn btn-primary" type="submit">Simpan</button>
@@ -294,10 +316,13 @@ if(isset($_GET['id'])) {
     function toggleListrikDetail() {
         var sumberListrik = document.getElementById("sumber_listrik");
         var lampiranFilter = document.getElementById("note-listrik");
-        if (sumberListrik.value === "Lainnya") {
+        var tglListrik = document.getElementById("tgl-listrik");
+        if (sumberListrik.value === "Penyambungan Daya Baru PLN") {
             lampiranFilter.style.display = "flex";
+            tglListrik.style.display = "flex";
         } else {
             lampiranFilter.style.display = "none";
+            tglListrik.style.display = "none";
         }
     }
 

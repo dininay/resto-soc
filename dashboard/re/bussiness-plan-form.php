@@ -48,7 +48,7 @@
                             <div class="card-body">
                             <form method="post" action="bussiness-plan-process.php" enctype="multipart/form-data">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="kode_lokasi">Kota<span style="color: red;">*</span></label>
+                                    <label class="col-sm-3 col-form-label" for="kode_lokasi">Kota<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                     <select class="form-control" id="kode_lokasi" name="city">
                                         <option value="">Pilih Kota</option>
@@ -77,7 +77,7 @@
                                     </div>
                                 </div> -->
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="nama_lokasi">Nama Lahan<span style="color: red;">*</span></label>
+                                    <label class="col-sm-3 col-form-label" for="nama_lokasi">Nama Lahan<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="nama_lokasi" name="nama_lahan" type="text" placeholder="Nama Lokasi" />
                                     </div>

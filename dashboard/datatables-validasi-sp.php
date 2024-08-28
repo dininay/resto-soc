@@ -301,7 +301,7 @@ if ($result && $result->num_rows > 0) {
                                                                 <form id="statusForm" method="post" action="">
                                                                     <input type="hidden" name="kode_lahan" id="modalKodeLahan" value="<?= $row['kode_lahan']; ?>">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve Permit</label>
+                                                                        <label for="statusSelect">Status Approve Permit<strong><span style="color: red;">*</span></strong></label>
                                                                         <select class="form-control" id="statusSelect" name="submit_legal">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>

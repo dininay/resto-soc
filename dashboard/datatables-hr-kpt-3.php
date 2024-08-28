@@ -4,7 +4,11 @@ include "../koneksi.php";
 
 $status_kpt3 = "";
 // Query untuk mengambil data dari tabel land
-$sql = "SELECT * from socdate_academy";
+$sql = "SELECT socdate_academy.*, socdate_hr.lamp_ff3, dokumen_loacd.kode_store, land.nama_lahan 
+from socdate_academy 
+Inner join land ON land.kode_lahan = socdate_academy.kode_lahan
+Inner join socdate_hr ON socdate_hr.kode_lahan = socdate_academy.kode_lahan
+Inner join dokumen_loacd ON dokumen_loacd.kode_lahan = socdate_academy.kode_lahan";
 $result = $conn->query($sql);
 
 
@@ -19,6 +23,67 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
+$sla_query = "SELECT sla FROM master_slacons WHERE divisi = 'kpt3'";
+$sla_result = $conn->query($sla_query);
+
+$sla_value = 0; // Default SLA value
+
+if ($sla_result->num_rows > 0) {
+    $row = $sla_result->fetch_assoc();
+    $sla_value = $row['sla'];
+} else {
+    echo "No SLA value found for 'kpt3'";
+}
+
+// Fungsi untuk menghitung scoring
+function calculateScoring($start_date, $sla_date, $sla) {
+    $start_date_obj = new DateTime($start_date);
+    $sla_date_obj = new DateTime($sla_date);
+    
+    if ($start_date_obj <= $sla_date_obj) {
+        return 100; // Skor 100 jika start_date tidak melebihi sla_date
+    }
+
+    $date_diff = $start_date_obj->diff($sla_date_obj)->days;
+    $sla_days = $sla ?: 0;
+
+    if ($sla_days != 0) {
+        if ($date_diff > $sla_days) {
+            $scoring = -((($date_diff - $sla_days) / $sla_days) * 100);
+        } else {
+            $scoring = ((($sla_days - $date_diff) / $sla_days) * 100);
+        }
+    } else {
+        $scoring = 0;
+    }
+
+    return round($scoring, 2);
+}
+
+// Fungsi untuk menentukan remarks berdasarkan scoring
+function getRemarks($scoring) {
+    if ($scoring >= 75) {
+        return "good";
+    } elseif ($scoring >= 0) {
+        return "poor";
+    } else {
+        return "bad";
+    }
+}
+
+// Fungsi untuk menentukan warna badge berdasarkan remarks
+function getBadgeColor($remarks) {
+    switch ($remarks) {
+        case 'good':
+            return 'success'; // Hijau
+        case 'poor':
+            return 'warning'; // Kuning
+        case 'bad':
+            return 'danger'; // Merah
+        default:
+            return 'secondary'; // Default jika remarks tidak dikenali
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="">
@@ -39,6 +104,20 @@ if ($result && $result->num_rows > 0) {
     <style>
         .hidden {
             display: none;
+        },
+
+        .small-column {
+            max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */
+            overflow: hidden; /* Memotong konten yang meluas */
+            text-overflow: ellipsis; /* Menampilkan elipsis jika konten terlalu panjang */
+            white-space: nowrap; /* Mencegah teks membungkus ke baris baru */
+        }
+
+        th, td {
+                white-space: nowrap;
+            }
+        table.dataTable {
+            border-collapse:  collapse!important;
         }
     </style>
 </head>
@@ -75,11 +154,14 @@ if ($result && $result->num_rows > 0) {
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
-                                                <th>Kode Lahan</th>
-                                                <th>Crew Needed</th>
-                                                <th>Crew Actual</th>
-                                                <th>Completion Training</th>
-                                                <th>Lampiran</th>
+                                                <th>Inventory Code</th>
+                                                <th>Nama Lahan</th>
+                                                <th>Kode Store</th>
+                                                <th>Lampiran FF 3</th>
+                                                <th>Crew Needed FF 3</th>
+                                                <th>Crew Onboarding</th>
+                                                <th>Mortality</th>
+                                                <th>Completion Rate</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -89,20 +171,19 @@ if ($result && $result->num_rows > 0) {
                                         <?php foreach ($data as $row): ?>
                                             <tr>
                                                 <td><?= $row['kode_lahan'] ?></td>
-                                                <td><?= $row['crew_needed3'] ?></td>
-                                                <td><?= $row['crew_act3'] ?></td>
-                                                <td><?= $row['kpt_3'] ?>%</td>
+                                                <td><?= $row['nama_lahan'] ?></td>
+                                                <td><?= $row['kode_store'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_kpt3_files = explode(",", $row['lamp_kpt3']); // Pisahkan nama file menjadi array
+                                                $lamp_ff3_files = explode(",", $row['lamp_ff3']); // Pisahkan nama file menjadi array
                                                 // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_kpt3'])) {
+                                                if (!empty($row['lamp_ff3'])) {
                                                     echo '<td>
                                                             <ul style="list-style-type: none; padding: 0; margin: 0;">';
                                                     // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_kpt3_files as $kpt3) {
+                                                    foreach ($lamp_ff3_files as $tm) {
                                                         echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $kpt3 . '" target="_blank">
+                                                                <a href="uploads/' . $tm . '" target="_blank">
                                                                     <i class="fas fa-file-pdf nav-icon"></i>
                                                                 </a>
                                                             </li>';
@@ -114,6 +195,10 @@ if ($result && $result->num_rows > 0) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>
+                                                <td><?= $row['crew_needed3'] ?></td>
+                                                <td><?= $row['crew_onboardkpt3'] ?></td>
+                                                <td><?= intval($row['mortality_kpt3']) ?>%</td>
+                                                <td><?= intval($row['comprate_kpt3']) ?>%</td>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -139,33 +224,59 @@ if ($result && $result->num_rows > 0) {
                                                 </td>
                                                 <td>
                                                     <?php
-                                                    // Mendapatkan tanggal sla_date dari kolom data
-                                                    $slaDate = new DateTime($row['sla_kpt3']);
-                                                    
-                                                    // Mendapatkan tanggal hari ini
-                                                    $today = new DateTime();
-                                                    
-                                                    // Menghitung selisih hari antara sla_date dan hari ini
-                                                    $diff = $today->diff($slaDate);
-                                                    
-                                                    // Jika status_approvowner adalah "Approve"
-                                                    if ($row['status_kpt3'] == "Done") {
-                                                        echo '<button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#approvalModal">Done</button>';
-                                                        
+                                                    // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
+                                                    date_default_timezone_set('Asia/Jakarta');
+
+                                                    $start_date = $row['kpt_date3'];
+                                                    $sla_date = $row['sla_kpt3'];
+                                                    $status_kpt3 = $row['status_kpt3'];
+
+                                                    // Menghitung scoring
+                                                    $scoring = calculateScoring($start_date, $sla_date, $sla_value);
+                                                    $remarks = getRemarks($scoring);
+
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
+
+                                                    if ($status_kpt3 === 'Done') {
+                                                        // Menentukan label berdasarkan remarks
+                                                        $status_label = '';
+                                                        switch ($remarks) {
+                                                            case 'good':
+                                                                $status_label = 'Done Good';
+                                                                break;
+                                                            case 'poor':
+                                                                $status_label = 'Done Poor';
+                                                                break;
+                                                            case 'bad':
+                                                                $status_label = 'Done Bad';
+                                                                break;
+                                                        }
+
+                                                        echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
-                                                        // Menghitung jumlah hari terlambat
-                                                        $lateDays = $slaDate->diff($today)->days;
-                                                        
-                                                        // Jika terlambat
-                                                        if ($today > $slaDate) {
-                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+                                                        // Memeriksa apakah waktu sekarang di luar jam kerja
+                                                        if ($current_time < $work_start || $current_time > $work_end) {
+                                                            echo '<button type="button" class="btn btn-sm btn-info">Di Luar Jam Kerja</button>';
                                                         } else {
-                                                            // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
-                                                            if ($diff) {
-                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
+                                                            // Convert $sla_date to DateTime object
+                                                            $sla_date_obj = new DateTime($sla_date);
+
+                                                            // Menghitung jumlah hari menuju SLA date
+                                                            $diff = $now->diff($sla_date_obj);
+                                                            $daysDifference = (int)$diff->format('%R%a'); // Menyertakan tanda plus atau minus
+
+                                                            if ($daysDifference < 0) {
+                                                                // SLA telah terlewat, hitung sebagai hari terlambat
+                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . abs($daysDifference) . ' hari</button>';
                                                             } else {
-                                                                // Tampilkan peringatan "H + X"
-                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
+                                                                // SLA belum tercapai, hitung mundur
+                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $daysDifference . '</button>';
                                                             }
                                                         }
                                                     }
@@ -173,14 +284,32 @@ if ($result && $result->num_rows > 0) {
                                                 </td>
                                                 
                                                 <td>
-                                                <!-- Tombol Edit -->
-                                                <?php if ($row['status_kpt3'] != "Done"): ?>
-                                                        <a href="academy/kpt3-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                    <!-- Tombol Edit -->
+                                                    <?php if ($row['status_kpt3'] != "Done"): ?>
+                                                    <?php
+                                                    // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
+                                                    date_default_timezone_set('Asia/Jakarta');
+
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
+
+                                                    if ($row['status_kpt3'] != "Done" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                        echo '<a href="academy/kpt3-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-3">
                                                             <i class="nav-icon i-Pen-2"></i>
-                                                        </a>
-                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_kpt3'] ?>">
+                                                        </a>';
+                                                        echo '<button class="btn btn-sm btn-primary edit-btn mr-3" data-toggle="modal" data-target="#editModal" data-id="'. $row['id'] .'" data-status="'.$row['status_kpt3'] .'">
                                                             <i class="nav-icon i-Book"></i>
-                                                        </button>
+                                                        </button>';
+                                                        echo '<a href="datatables-data-kpt3.php?id='. $row['kode_lahan'].'" class="btn btn-sm btn-info">
+                                                            <i class="nav-icon i-Loading-2"></i>
+                                                        </a>';
+                                                    }
+                                                    ?>
                                                     <?php endif; ?>
                                                 </td>
                                                 <!-- Modal -->
@@ -197,7 +326,7 @@ if ($result && $result->num_rows > 0) {
                                                                 <form id="statusForm" method="post" action="academy/kpt3-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" value=<?= $row['id'] ?> id="modalKodeLahan">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status KPT 3</label>
+                                                                        <label for="statusSelect">Status Academy<strong><span style="color: red;">*</span></strong></label>
                                                                         <select class="form-control" id="statusSelect" name="status_kpt3" Placeholder="Pilih">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
@@ -205,16 +334,16 @@ if ($result && $result->num_rows > 0) {
                                                                         </select>
                                                                     </div>
                                                                     <div class="form-group">
-                                                                        <label for="catatan_kpt3">Catatan KPT 3</label>
-                                                                        <input type="text" class="form-control" id="catatan_kpt3" name="catatan_kpt3">
+                                                                        <label for="catatan_tmaca">Catatan Academy</label>
+                                                                        <input type="text" class="form-control" id="catatan_tmaca" name="catatan_tmaca">
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">
                                                                         <div class="form-group">
-                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <label for="issue_detail">Issue Detail<strong><span style="color: red;">*</span></strong></label>
                                                                             <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="pic">PIC</label>
+                                                                            <label for="pic">PIC<strong><span style="color: red;">*</span></strong></label>
                                                                             <select class="form-control" id="pic" name="pic">
                                                                                 <option value="">Pilih PIC</option>
                                                                                 <option value="Legal">Legal</option>
@@ -235,11 +364,11 @@ if ($result && $result->num_rows > 0) {
                                                                             </select>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <label for="action_plan">Action Plan<strong><span style="color: red;">*</span></strong></label>
                                                                             <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <label for="kronologi">Upload File Kronologi<strong><span style="color: red;">*</span></strong></label>
                                                                             <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
                                                                         </div>
                                                                     </div>
@@ -254,11 +383,14 @@ if ($result && $result->num_rows > 0) {
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <th>Kode Lahan</th>
-                                                <th>Crew Needed</th>
-                                                <th>Crew Actual</th>
-                                                <th>Completion Training</th>
-                                                <th>Lampiran</th>
+                                                <th>Inventory Code</th>
+                                                <th>Nama Lahan</th>
+                                                <th>Kode Store</th>
+                                                <th>Lampiran FF 3</th>
+                                                <th>Crew Needed FF 3</th>
+                                                <th>Crew Onboarding</th>
+                                                <th>Mortality</th>
+                                                <th>Completion Rate</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -525,6 +657,23 @@ if ($result && $result->num_rows > 0) {
             var id = element.id;
             document.getElementById('delete').value = id;
         }
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Hancurkan DataTable jika sudah ada
+            if ($.fn.DataTable.isDataTable('#zero_configuration_table')) {
+                $('#zero_configuration_table').DataTable().destroy();
+            }
+
+            // Inisialisasi DataTable
+            $('#zero_configuration_table').DataTable({
+                scrollX: true, // Menambahkan scroll horizontal
+                fixedColumns: {
+                    leftColumns: 3, // Jumlah kolom yang ingin di-fix
+                    topColumns: 2
+                }
+            });
+        });
     </script>
 </body>
 

@@ -231,7 +231,7 @@ if ($result_status_in_process->num_rows > 0) {
                                                 <!-- Tombol Edit -->
                                                     <?php if ($row['status_hold'] != "Done"): ?>
                                                         <div>
-                                                            <a href="operation/summary-soc-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                            <a href="operation/summary-soc-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mr-2">
                                                             <i class="i-Pen-2"></i>
                                                             </a>
                                                         </div>

@@ -64,7 +64,7 @@ if(isset($_GET['id'])) {
                             <form method="post" action="design-edit.php" enctype="multipart/form-data">
                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label" for="tc">TC</label>
+                                    <label class="col-sm-2 col-form-label" for="tc">TC<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-10">
                                         <select class="form-control" id="tc" name="tc">
                                         <option value="">Pilih</option>
@@ -74,7 +74,7 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label" for="lamp_desainplan">Upload Design</label>
+                                    <label class="col-sm-2 col-form-label" for="lamp_desainplan">Upload Design<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-10">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_desainplan[]" type="file" multiple="multiple" />

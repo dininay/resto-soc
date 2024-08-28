@@ -229,7 +229,7 @@ function getBadgeColor($remarks) {
                                                 <th>Inventory Code</th>
                                                 <th>Kota</th>
                                                 <th>Nama Lokasi</th>
-                                                <th>Alamat Lokasi</th>
+                                                <th>Alamat PBB</th>
 												<th>Luas Area</th>
                                                 <th>No Telepon</th>
                                                 <th>Maps</th>
@@ -362,7 +362,7 @@ function getBadgeColor($remarks) {
                                                                 <form id="statusForm" method="post" action="re/submit-to-owner-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" value="<?=$row["id"]?>" id="modalKodeLahan">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Submit to BoD</label>
+                                                                        <label for="statusSelect">Submit to BoD<strong><span style="color: red;">*</span></strong></label>
                                                                         <select class="form-control" id="statusSelect" name="status_approvre">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
@@ -372,11 +372,11 @@ function getBadgeColor($remarks) {
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">
                                                                         <div class="form-group">
-                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <label for="issue_detail">Issue Detail<strong><span style="color: red;">*</span></strong></label>
                                                                             <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="pic">PIC</label>
+                                                                            <label for="pic">PIC<strong><span style="color: red;">*</span></strong></label>
                                                                             <select class="form-control" id="pic" name="pic">
                                                                                 <option value="">Pilih PIC</option>
                                                                                 <option value="Legal">Legal</option>
@@ -397,11 +397,11 @@ function getBadgeColor($remarks) {
                                                                             </select>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <label for="action_plan">Action Plan<strong><span style="color: red;">*</span></strong></label>
                                                                             <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <label for="kronologi">Upload File Kronologi<strong><span style="color: red;">*</span></strong></label>
                                                                             <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
                                                                         </div>
                                                                     </div>
@@ -420,7 +420,7 @@ function getBadgeColor($remarks) {
                                                 <th>Inventory Code</th>
                                                 <th>Kota</th>
                                                 <th>Nama Lokasi</th>
-                                                <th>Alamat Lokasi</th>
+                                                <th>Alamat PBB</th>
 												<th>Luas Area</th>
                                                 <th>No Telepon</th>
                                                 <th>Maps</th>
@@ -722,7 +722,7 @@ $(document).ready(function() {
     var table = $('#zero_configuration_table').DataTable({
         scrollX: true, // Enable horizontal scrolling
         fixedColumns: {
-            leftColumns: 3 // Number of fixed columns
+            leftColumns: 2 // Number of fixed columns
         } // Fix the header to the top
     });
 

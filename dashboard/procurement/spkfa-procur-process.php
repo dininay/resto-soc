@@ -48,29 +48,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
         // Eksekusi query update
         if ($stmt_update->execute() === TRUE) {
             // Jika status_procurspkwofa diubah menjadi 'Approve'
-            if ($status_procurspkwofa == 'In Review By TAF') {
+            if ($status_procurspkwofa == 'Approve') {
                 $spkwofa_date = date("Y-m-d");
 
-                // Tentukan spkwoipal_date
-                // Ambil SLA dari tabel master_sla untuk divisi SPK
-                $sql_sla_spk = "SELECT sla FROM master_sla WHERE divisi = 'SPK-FAT'";
-                $result_sla_spk = $conn->query($sql_sla_spk);
-                if ($result_sla_spk->num_rows > 0) {
-                    $row_sla_spk = $result_sla_spk->fetch_assoc();
-                    $hari_sla_spk = $row_sla_spk['sla'];
+                // // Tentukan spkwoipal_date
+                // // Ambil SLA dari tabel master_sla untuk divisi SPK
+                // $sql_sla_spk = "SELECT sla FROM master_sla WHERE divisi = 'SPK-FAT'";
+                // $result_sla_spk = $conn->query($sql_sla_spk);
+                // if ($result_sla_spk->num_rows > 0) {
+                //     $row_sla_spk = $result_sla_spk->fetch_assoc();
+                //     $hari_sla_spk = $row_sla_spk['sla'];
 
-                    // Hitung sla_spkwo berdasarkan wo_date + SLA dari divisi SPK
-                    $sla_spkfataf = date("Y-m-d", strtotime($spkwofa_date . ' + ' . $hari_sla_spk . ' days'));
-                } else {
-                    echo "Error: Data SLA tidak ditemukan untuk divisi SPK.";
-                    exit;
-                }
-                $status_spkfataf = "In Process";
+                //     // Hitung sla_spkwo berdasarkan wo_date + SLA dari divisi SPK
+                //     $sla_spkfataf = date("Y-m-d", strtotime($spkwofa_date . ' + ' . $hari_sla_spk . ' days'));
+                // } else {
+                //     echo "Error: Data SLA tidak ditemukan untuk divisi SPK.";
+                //     exit;
+                // }
+                // $status_spkfataf = "In Process";
                 // Tentukan spkwofa_date
                 // Query untuk memperbarui submit_legal dan catatan_owner di tabel socdate_sdg
-                $sql_update_pending = "UPDATE socdate_sdg SET status_procurspkwofa = ?, catatan_spkwofa = ?, spkwofa_date = ?, status_spkfataf = ?, sla_spkfataf = ? WHERE id = ?";
+                $sql_update_pending = "UPDATE socdate_sdg SET status_procurspkwofa = ?, catatan_spkwofa = ?, spkwofa_date = ? WHERE id = ?";
                 $stmt_update_pending = $conn->prepare($sql_update_pending);
-                $stmt_update_pending->bind_param("sssssi", $status_procurspkwofa, $catatan_spkwofa, $spkwofa_date, $status_spkfataf, $sla_spkfataf, $id);
+                $stmt_update_pending->bind_param("sssi", $status_procurspkwofa, $catatan_spkwofa, $spkwofa_date, $id);
                 $stmt_update_pending->execute();
                     
                 // Periksa apakah kode_lahan ada di tabel hold_project

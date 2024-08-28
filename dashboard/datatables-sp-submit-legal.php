@@ -4,7 +4,7 @@ include "../koneksi.php";
 $submit_legal = "";
 // Query untuk mengambil data dari tabel land
 // Query untuk mengambil data dari tabel land
-$sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, d.lamp_draf, d.jadwal_psm, s.lamp_desainplan, 
+$sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, d.lamp_draf, d.jadwal_psm, s.lamp_desainplan, r.gostore_date,
         r.id, r.lamp_splegal, r.catatan_legal, r.submit_date, c.kode_store, s.lamp_pbg, s.lamp_permit, s.submit_legal, s.kode_lahan, s.id
         FROM draft d
         INNER JOIN land l ON d.kode_lahan = l.kode_lahan
@@ -276,7 +276,7 @@ if ($result && $result->num_rows > 0) {
                                                                 <form id="statusForm" method="post" action="legal/permit-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="kode_lahan" id="modalKodeLahan" value="<?= $row['kode_lahan']; ?>">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve Permit</label>
+                                                                        <label for="statusSelect">Status Approve Permit<strong><span style="color: red;">*</span></strong></label>
                                                                         <select class="form-control" id="statusSelect" name="submit_legal">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
@@ -289,11 +289,11 @@ if ($result && $result->num_rows > 0) {
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">
                                                                         <div class="form-group">
-                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <label for="issue_detail">Issue Detail<strong><span style="color: red;">*</span></strong></label>
                                                                             <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="pic">PIC</label>
+                                                                            <label for="pic">PIC<strong><span style="color: red;">*</span></strong></label>
                                                                             <select class="form-control" id="pic" name="pic">
                                                                                 <option value="">Pilih PIC</option>
                                                                                 <option value="Legal">Legal</option>
@@ -314,11 +314,11 @@ if ($result && $result->num_rows > 0) {
                                                                             </select>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <label for="action_plan">Action Plan<strong><span style="color: red;">*</span></strong></label>
                                                                             <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <label for="kronologi">Upload File Kronologi<strong><span style="color: red;">*</span></strong></label>
                                                                             <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
                                                                         </div>
                                                                     </div>

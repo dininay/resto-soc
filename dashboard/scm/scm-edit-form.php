@@ -65,11 +65,20 @@ if(isset($_GET['id'])) {
                             <div class="card-body">
                             <form method="post" action="scm-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
+                                <input type="hidden" name="kode_lahan" value="<?php echo $row['kode_lahan']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_sj">Upload Lampiran Surat Jalan</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_sj">Upload Lampiran Surat Jalan<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_sj[]" type="file" multiple="multiple" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="lamp_utensil">Upload Lampiran Utensil<strong><span style="color: red;">*</span></strong></label>
+                                    <div class="col-sm-9">
+                                        <div class="dropzone" id="multple-file-upload" >
+                                            <input name="lamp_utensil[]" type="file" multiple="multiple" />
                                         </div>
                                     </div>
                                 </div>

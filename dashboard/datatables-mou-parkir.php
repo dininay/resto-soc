@@ -28,19 +28,20 @@ if ($sla_result->num_rows > 0) {
     $row = $sla_result->fetch_assoc();
     $sla_value = $row['sla'];
 } else {
-    echo "No SLA value found for 'Owner Surveyor'";
+    echo "No SLA value found for 'legal'";
 }
 
-function calculateScoring($start_date, $end_date, $sla) {
-    $today = new DateTime();
-    $start_date = $start_date ?: $today->format('Y-m-d');
-    $end_date = $end_date ?: $today->format('Y-m-d');
-    $sla_days = $sla ?: 0;
-
+// Fungsi untuk menghitung scoring
+function calculateScoring($start_date, $sla_date, $sla) {
     $start_date_obj = new DateTime($start_date);
-    $end_date_obj = new DateTime($end_date);
+    $sla_date_obj = new DateTime($sla_date);
+    
+    if ($start_date_obj <= $sla_date_obj) {
+        return 100; // Skor 100 jika start_date tidak melebihi sla_date
+    }
 
-    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
+    $date_diff = $start_date_obj->diff($sla_date_obj)->days;
+    $sla_days = $sla ?: 0;
 
     if ($sla_days != 0) {
         if ($date_diff > $sla_days) {
@@ -54,11 +55,12 @@ function calculateScoring($start_date, $end_date, $sla) {
 
     return round($scoring, 2);
 }
+
 // Fungsi untuk menentukan remarks berdasarkan scoring
 function getRemarks($scoring) {
-    if ($scoring >= 0) {
+    if ($scoring >= 75) {
         return "good";
-    } elseif ($scoring >= -30) {
+    } elseif ($scoring >= 0) {
         return "poor";
     } else {
         return "bad";
@@ -194,20 +196,26 @@ function getBadgeColor($remarks) {
                                                 </td>
                                                 <td>
                                                     <?php
-                                                    // Mendapatkan tanggal sla_date dari kolom data
-                                                    $slaLegalDate = new DateTime($row['sla_legal']);
-                                                    
-                                                    // Mendapatkan tanggal hari ini
-                                                    $today = new DateTime();
-                                                    
-                                                    // Menghitung selisih hari antara sla_date dan hari ini
-                                                    $diff = $today->diff($slaLegalDate);
-                                                    
+                                                    // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
+                                                    date_default_timezone_set('Asia/Jakarta');
+
+                                                    $start_date = $row['sampahparkir_date'];
+                                                    $sla_date = $row['sla_legal'];
+                                                    $status_legal = $row['status_legal'];
+
                                                     // Menghitung scoring
-                                                    $scoring = calculateScoring($row['sampahparkir_date'], $row['sla_legal'], $sla_value); // Make sure $sla_value is set correctly
+                                                    $scoring = calculateScoring($start_date, $sla_date, $sla_value);
                                                     $remarks = getRemarks($scoring);
 
-                                                    if ($row['status_legal'] == "Approve") {
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
+
+                                                    if ($status_legal === 'Done') {
                                                         // Menentukan label berdasarkan remarks
                                                         $status_label = '';
                                                         switch ($remarks) {
@@ -224,19 +232,23 @@ function getBadgeColor($remarks) {
 
                                                         echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
-                                                        // Menghitung jumlah hari terlambat
-                                                        $lateDays = $slaLegalDate->diff($today)->days;
-                                                        
-                                                        // Jika terlambat
-                                                        if ($today > $slaLegalDate) {
-                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+                                                        // Memeriksa apakah waktu sekarang di luar jam kerja
+                                                        if ($current_time < $work_start || $current_time > $work_end) {
+                                                            echo '<button type="button" class="btn btn-sm btn-info">Di Luar Jam Kerja</button>';
                                                         } else {
-                                                            // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
-                                                            if ($diff) {
-                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
+                                                            // Convert $sla_date to DateTime object
+                                                            $sla_date_obj = new DateTime($sla_date);
+
+                                                            // Menghitung jumlah hari menuju SLA date
+                                                            $diff = $now->diff($sla_date_obj);
+                                                            $daysDifference = (int)$diff->format('%R%a'); // Menyertakan tanda plus atau minus
+
+                                                            if ($daysDifference < 0) {
+                                                                // SLA telah terlewat, hitung sebagai hari terlambat
+                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . abs($daysDifference) . ' hari</button>';
                                                             } else {
-                                                                // Tampilkan peringatan "H + X"
-                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
+                                                                // SLA belum tercapai, hitung mundur
+                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $daysDifference . '</button>';
                                                             }
                                                         }
                                                     }
@@ -244,14 +256,29 @@ function getBadgeColor($remarks) {
                                                 </td>
                                                 
                                                 <td>
-                                                <!-- Tombol Edit -->
-                                                <?php if ($row['status_legal'] != "Done"): ?>
-                                                        <a href="legal/mouparkir-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                    <!-- Tombol Edit -->
+                                                    <?php if ($row['status_legal'] != "Done"): ?>
+                                                    <?php
+                                                    // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
+                                                    date_default_timezone_set('Asia/Jakarta');
+
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
+
+                                                    if ($row['status_legal'] != "Done" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                        echo '<a href="legal/mouparkir-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
-                                                        </a>
-                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_legal'] ?>">
+                                                        </a>';
+                                                        echo '<button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="'. $row['id'] .'" data-status="'.$row['status_legal'] .'">
                                                             <i class="nav-icon i-Book"></i>
-                                                        </button>
+                                                        </button>';
+                                                    }
+                                                    ?>
                                                     <?php endif; ?>
                                                 </td>
                                                 <!-- Modal -->
@@ -268,7 +295,7 @@ function getBadgeColor($remarks) {
                                                                 <form id="statusForm" method="post" action="legal/mouparkir-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" value=<?= $row['id'] ?> id="modalKodeLahan">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve Legal</label>
+                                                                        <label for="statusSelect">Status Approve Legal<strong><span style="color: red;">*</span></strong></label>
                                                                         <select class="form-control" id="statusSelect" name="status_legal" Placeholder="Pilih">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
@@ -281,11 +308,11 @@ function getBadgeColor($remarks) {
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">
                                                                         <div class="form-group">
-                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <label for="issue_detail">Issue Detail<strong><span style="color: red;">*</span></strong></label>
                                                                             <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="pic">PIC</label>
+                                                                            <label for="pic">PIC<strong><span style="color: red;">*</span></strong></label>
                                                                             <select class="form-control" id="pic" name="pic">
                                                                                 <option value="">Pilih PIC</option>
                                                                                 <option value="Legal">Legal</option>
@@ -306,11 +333,11 @@ function getBadgeColor($remarks) {
                                                                             </select>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <label for="action_plan">Action Plan<strong><span style="color: red;">*</span></strong></label>
                                                                             <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <label for="kronologi">Upload File Kronologi<strong><span style="color: red;">*</span></strong></label>
                                                                             <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
                                                                         </div>
                                                                     </div>

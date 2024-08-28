@@ -64,7 +64,7 @@ if(isset($_GET['id'])) {
                             <form method="post" action="urugan-edit.php" enctype="multipart/form-data">
                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label" for="lamp_urugan">Upload Dokumen Urugan</label>
+                                    <label class="col-sm-2 col-form-label" for="lamp_urugan">Upload Dokumen Urugan<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-10">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_urugan[]" type="file" multiple="multiple" />

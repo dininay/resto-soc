@@ -1,4 +1,12 @@
 <?php
+// Include PHPMailer library files
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require '../../vendor/autoload.php'; // Hanya jika menggunakan Composer
+
+// Inisialisasi PHPMailer
+$mail = new PHPMailer(true);
 // Koneksi ke database
 include "../../koneksi.php";
 
@@ -82,8 +90,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                     // Hitung SLA berdasarkan hari ini + jumlah hari SLA dari fl dan tm
                     $sla_fl = date("Y-m-d H:i:s", strtotime("+$hari_sla_fl days"));
                     $sla_tm = date("Y-m-d H:i:s", strtotime("+$hari_sla_tm days"));
+                    $sla_flaca = date("Y-m-d H:i:s", strtotime("+$hari_sla_tm days"));
+                    $sla_tmaca = date("Y-m-d H:i:s", strtotime("+$hari_sla_tm days"));
                     $status_fl = "In Process";
                     $status_tm = "In Process";
+                    $status_tmaca = "In Process";
+                    $status_flaca = "In Process";
 
                     // Ambil data dari dokumen_loacd berdasarkan ID yang diedit
                     $sql_select = "SELECT * FROM dokumen_loacd WHERE id = ?";
@@ -104,9 +116,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                     }
 
                     // Query untuk memperbarui status_approvlegalvd
-                    $sql_update = "UPDATE dokumen_loacd SET status_approvlegalvd = ?, catatan_vd = ?, vdlegal_date = ?, lamp_vdsign = ? WHERE id = ?";
+                    $sql_insert = "INSERT INTO socdate_hraca SET kode_lahan = ?, status_flaca = ?, status_tmaca = ?, sla_tmaca = ?, sla_flaca = ?";
+                    $stmt_insert = $conn->prepare($sql_insert);
+                    $stmt_insert->bind_param("sssss", $kode_lahan, $status_flaca, $status_tmaca, $sla_tmaca, $sla_flaca);
+                    if (!$stmt_insert->execute()) {
+                        throw new Exception("Error updating status_approvlegalvd: " . $stmt_insert->error);
+                    }
+
+                    // Ambil SLA dari tabel master_sla untuk divisi ST-EQP
+                    $sql_sla_steqp = "SELECT sla FROM master_sla WHERE divisi = 'Legal'";
+                    $result_sla_steqp = $conn->query($sql_sla_steqp);
+                    if ($result_sla_steqp->num_rows > 0) {
+                        $row_sla_steqp = $result_sla_steqp->fetch_assoc();
+                        $hari_sla_steqp = $row_sla_steqp['sla'];
+                        $sla_tafkode = date("Y-m-d", strtotime($vdlegal_date . ' + ' . $hari_sla_steqp . ' days'));
+                    } else {
+                        $conn->rollback();
+                        echo "Error: Data SLA tidak ditemukan untuk divisi FAT-Sewa.";
+                        exit;
+                    }
+                    $status_tafkode = "In Process";
+                    // Query untuk memperbarui status_approvlegalvd
+                    $sql_update = "UPDATE dokumen_loacd SET status_approvlegalvd = ?, catatan_vd = ?, vdlegal_date = ?, lamp_vdsign = ?, status_tafkode = ?, sla_tafkode = ? WHERE id = ?";
                     $stmt_update = $conn->prepare($sql_update);
-                    $stmt_update->bind_param("ssssi", $status_approvlegalvd, $catatan_vd, $vdlegal_date, $lamp_vdsign, $id);
+                    $stmt_update->bind_param("ssssssi", $status_approvlegalvd, $catatan_vd, $vdlegal_date, $lamp_vdsign, $status_tafkode, $sla_tafkode, $id);
                     if (!$stmt_update->execute()) {
                         throw new Exception("Error updating status_approvlegalvd: " . $stmt_update->error);
                     }
@@ -186,6 +219,65 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 $conn->rollback();
                 echo "Error: Data SLA tidak ditemukan untuk divisi tm.";
             }
+            try {
+                // Pengaturan server SMTP
+                $mail->isSMTP();
+                $mail->Host = 'sandbox.smtp.mailtrap.io';  // Ganti dengan SMTP server Anda
+                $mail->SMTPAuth = true;
+                $mail->Username = 'ff811f556f5d12'; // Ganti dengan email Anda
+                $mail->Password = 'c60c92868ce0f8'; // Ganti dengan password email Anda
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                $mail->Port = 2525;
+                
+                // Pengaturan pengirim dan penerima
+                $mail->setFrom('resto-soc@gacoan.com', 'Resto SOC');
+        
+                // Query untuk mendapatkan email pengguna dengan level "Real Estate"
+                $sql = "SELECT email FROM user WHERE level IN ('BoD','Legal','HR','Academy','TAF')";
+                $result = $conn->query($sql);
+        
+                if ($result->num_rows > 0) {
+                    while($row = $result->fetch_assoc()) {
+                        $email = $row['email'];
+                
+                        // Validasi format email sebelum menambahkannya sebagai penerima
+                        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                            $mail->addAddress($email); // Tambahkan setiap penerima email
+                            
+                            // Konten email
+                            $mail->isHTML(true);
+                            $mail->Subject = 'Notification: 1 New Active Resto SOC Ticket';
+                            $mail->Body    = '
+                            <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                                <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
+                                    <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Team,</h2>
+                                    <p>You have 1 New Active Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.</p>
+                                    <p>Thank you for your prompt attention to this matter.</p>
+                                    <p></p>
+                                    <p>Best regards,</p>
+                                    <p>Resto - SOC</p>
+                                </div>
+                            </div>';
+                            $mail->AltBody = 'Dear Team,'
+                                           . 'You have 1 New Active Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.'
+                                           . 'Thank you for your prompt attention to this matter.'
+                                           . 'Best regards,'
+                                           . 'Resto - SOC';
+                
+                            // Kirim email
+                            $mail->send();
+                            $mail->clearAddresses(); // Hapus semua penerima sebelum loop berikutnya
+                        } else {
+                            echo "Invalid email format: " . $email;
+                        }
+                    }
+                } else {
+                    echo "No emails found.";
+                }
+        
+            } catch (Exception $e) {
+                echo "Email tidak dapat dikirim. Error: {$mail->ErrorInfo}";
+            }
         } elseif ($status_approvlegalvd == 'Pending') {
             $vdlegal_date = date("Y-m-d H:i:s");
 
@@ -232,6 +324,65 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             // Komit transaksi
             $conn->commit();
             echo "Status berhasil diperbarui dan data ditahan.";
+            try {
+                // Pengaturan server SMTP
+                $mail->isSMTP();
+                $mail->Host = 'sandbox.smtp.mailtrap.io';  // Ganti dengan SMTP server Anda
+                $mail->SMTPAuth = true;
+                $mail->Username = 'ff811f556f5d12'; // Ganti dengan email Anda
+                $mail->Password = 'c60c92868ce0f8'; // Ganti dengan password email Anda
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                $mail->Port = 2525;
+                
+                // Pengaturan pengirim dan penerima
+                $mail->setFrom('resto-soc@gacoan.com', 'Resto SOC');
+        
+                // Query untuk mendapatkan email pengguna dengan level "Real Estate"
+                $sql = "SELECT email FROM user WHERE level = 'Real Estate'";
+                $result = $conn->query($sql);
+        
+                if ($result->num_rows > 0) {
+                    while($row = $result->fetch_assoc()) {
+                        $email = $row['email'];
+                
+                        // Validasi format email sebelum menambahkannya sebagai penerima
+                        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                            $mail->addAddress($email); // Tambahkan setiap penerima email
+                            
+                            // Konten email
+                            $mail->isHTML(true);
+                            $mail->Subject = 'Notification: 1 New Active VD Resto SOC Ticket Requires Revision';
+                            $mail->Body    = '
+                            <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                                <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
+                                    <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Team,</h2>
+                                    <p>You have 1 New Active VD Resto SOC Ticket Requires Revision in the Resto SOC system. Please log in to the SOC application to review the details.</p>
+                                    <p>Thank you for your prompt attention to this matter.</p>
+                                    <p></p>
+                                    <p>Best regards,</p>
+                                    <p>Resto - SOC</p>
+                                </div>
+                            </div>';
+                            $mail->AltBody = 'Dear Team,'
+                                           . 'You have 1 New Active VD Resto SOC Ticket Requires Revision in the Resto SOC system. Please log in to the SOC application to review the details.'
+                                           . 'Thank you for your prompt attention to this matter.'
+                                           . 'Best regards,'
+                                           . 'Resto - SOC';
+                
+                            // Kirim email
+                            $mail->send();
+                            $mail->clearAddresses(); // Hapus semua penerima sebelum loop berikutnya
+                        } else {
+                            echo "Invalid email format: " . $email;
+                        }
+                    }
+                } else {
+                    echo "No emails found.";
+                }
+        
+            } catch (Exception $e) {
+                echo "Email tidak dapat dikirim. Error: {$mail->ErrorInfo}";
+            }
         } elseif ($status_approvlegalvd == 'Reject') {
             // Ambil kode lahan sebelum menghapus dari tabel re
             $sql = "SELECT kode_lahan FROM dokumen_loacd WHERE kode_lahan = ?";

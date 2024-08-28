@@ -70,7 +70,7 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row" id="lamp-survey">
-                                    <label class="col-sm-3 col-form-label" for="lamp_survey">Upload Dokumen Pendukung</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_survey">Upload Dokumen Pendukung<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_survey[]" type="file" multiple="multiple" />

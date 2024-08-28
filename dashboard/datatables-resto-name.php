@@ -150,7 +150,7 @@ if ($result && $result->num_rows > 0) {
                                                     <!-- Tombol Edit -->
                                                     <?php if ($row['status_land'] != "Approve"): ?>
                                                         <div>
-                                                        <a href="re/resto-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                        <a href="re/resto-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>
                                                         <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_land'] ?>">
@@ -173,7 +173,7 @@ if ($result && $result->num_rows > 0) {
                                                                 <form id="statusForm" method="post" action="">
                                                                     <input type="hidden" name="id" id="modalId" value="<?= $row['id']; ?>">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve Land</label>
+                                                                        <label for="statusSelect">Status Approve<strong><span style="color: red;">*</span></strong></label>
                                                                         <select class="form-control" id="statusSelect" name="status_land">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>

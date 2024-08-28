@@ -142,9 +142,9 @@ if ($result && $result->num_rows > 0) {
                                                 
                                                 <td>
                                                     <!-- Tombol Edit -->
-                                                        <button class="btn btn-sm btn-warning edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status'] ?>">
+                                                        <!-- <button class="btn btn-sm btn-warning edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status'] ?>">
                                                             <i class="nav-icon i-Pen-2"></i>
-                                                        </button>
+                                                        </button> -->
                                                 </td>
 
                                                 <!-- Modal -->

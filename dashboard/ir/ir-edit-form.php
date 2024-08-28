@@ -66,7 +66,7 @@ if(isset($_GET['id'])) {
                             <form method="post" action="ir-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_rabcs">Upload Lampiran RAB Cleaning Service</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_rabcs">Upload Lampiran RAB Cleaning Service<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_rabcs[]" type="file" multiple="multiple" />
@@ -74,7 +74,7 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_rabsecurity">Upload Lampiran RAB Security</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_rabsecurity">Upload Lampiran RAB Security<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_rabsecurity[]" type="file" multiple="multiple" />

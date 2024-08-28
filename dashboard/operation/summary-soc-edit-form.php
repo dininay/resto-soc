@@ -11,20 +11,9 @@ if (isset($_GET['id'])) {
     $result = $conn->query("SELECT 
         summary_soc.*,
         resto.gostore_date,
-        resto.sla_steqp,
         land.kode_lahan,
         land.nama_lahan,
         land.lokasi,
-        soc_fat.*, 
-        soc_hrga.*, 
-        soc_it.*, 
-        soc_legal.*, 
-        soc_marketing.*, 
-        soc_rto.*, 
-        soc_sdg.*, 
-        note_ba.*, 
-        note_legal.*,
-        doc_legal.*,
         socdate_academy.kpt_1,
         socdate_academy.kpt_2,
         socdate_academy.kpt_3,
@@ -59,29 +48,23 @@ if (isset($_GET['id'])) {
         socdate_marketing.email_resto,
         socdate_marketing.lamp_merchant,
         socdate_scm.lamp_sj,
-        socdate_sdg.no_listrik,
-        socdate_sdg.lamp_listrik,
-        socdate_sdg.lamp_ka,
-        socdate_sdg.lamp_ipal,
-        socdate_sdg.lamp_eqp,
-        socdate_sdg.lamp_ba,
+        socdate_sdg.lamp_sumberair,
+        socdate_sdg.lamp_filterair,
+        socdate_sdg.lamp_ujilab,
+        socdate_sdg.lampwo_reqipal,
+        socdate_sdg.lamp_slo,
+        socdate_sdg.lamp_nidi,
+        socdate_scm.lamp_sj,
         sdg_desain.lamp_permit,
         sdg_desain.lamp_pbg,
+        sdg_pk.month_1,
+        sdg_pk.month_2,
+        sdg_pk.month_3,
         dokumen_loacd.kode_store
         FROM resto
         INNER JOIN land ON resto.kode_lahan = land.kode_lahan
         INNER JOIN summary_soc ON resto.kode_lahan = summary_soc.kode_lahan
-        INNER JOIN soc_fat ON summary_soc.kode_lahan = soc_fat.kode_lahan
-        INNER JOIN soc_hrga ON soc_fat.kode_lahan = soc_hrga.kode_lahan
-        INNER JOIN soc_it ON soc_fat.kode_lahan = soc_it.kode_lahan
-        INNER JOIN soc_legal ON soc_fat.kode_lahan = soc_legal.kode_lahan
-        INNER JOIN soc_marketing ON soc_fat.kode_lahan = soc_marketing.kode_lahan
-        INNER JOIN soc_rto ON soc_fat.kode_lahan = soc_rto.kode_lahan
-        INNER JOIN soc_sdg ON soc_fat.kode_lahan = soc_sdg.kode_lahan
-        INNER JOIN note_ba ON soc_fat.kode_lahan = note_ba.kode_lahan
-        INNER JOIN note_legal ON soc_fat.kode_lahan = note_legal.kode_lahan
-        INNER JOIN doc_legal ON note_legal.kode_lahan = doc_legal.kode_lahan
-        INNER JOIN sign ON soc_fat.kode_lahan = sign.kode_lahan
+        JOIN sdg_pk ON resto.kode_lahan = sdg_pk.kode_lahan
         INNER JOIN socdate_academy ON land.kode_lahan = socdate_academy.kode_lahan
         INNER JOIN socdate_fat ON land.kode_lahan = socdate_fat.kode_lahan
         INNER JOIN socdate_hr ON land.kode_lahan = socdate_hr.kode_lahan
@@ -103,17 +86,6 @@ if (isset($_GET['id'])) {
     } else {
         echo "Data tidak ditemukan.";
     }
-}
-$options = "";
-if ($status_go == "On Schedule") {
-    $options = "<option>Pilih</option><option value='On Schedule'>On Schedule</option><option value='Accelerated'>Accelerated</option><option value='Hold'>Hold</option><option value='Delayed'>Delayed</option>";
-} elseif ($status_go == "Hold") {
-    $options = "<option>Pilih</option><option value='On Schedule'>On Schedule</option><option value='Accelerated'>Accelerated</option><option value='Hold'>Hold</option><option value='Delayed'>Delayed</option>";
-} elseif ($status_go == "Delayed") {
-    $options = "<option>Pilih</option><option value='On Schedule'>On Schedule</option><option value='Accelerated'>Accelerated</option><option value='Hold'>Hold</option><option value='Delayed'>Delayed</option>";
-} else {
-    // Default jika status tidak sesuai
-    $options = "<option>Pilih</option><option value='On Schedule'>On Schedule</option><option value='Accelerated'>Accelerated</option><option value='Hold'>Hold</option><option value='Delayed'>Delayed</option>";
 }
 ?>
 
@@ -168,19 +140,19 @@ if ($status_go == "On Schedule") {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="go_fix">GO Fix</label>
+                                    <label class="col-sm-3 col-form-label" for="go_fix">GO Fix<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="go_fix" name="go_fix" type="date" placeholder="" value="<?php echo $row['go_fix']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="rto_act">RTO Actual</label>
+                                    <label class="col-sm-3 col-form-label" for="rto_act">RTO Actual<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="rto_act" name="rto_act" type="date" placeholder="" value="<?php echo $row['rto_act']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="type_kitchen">Type Kitchen</label>
+                                    <label class="col-sm-3 col-form-label" for="type_kitchen">Type Kitchen<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="type_kitchen" name="type_kitchen">
                                             <option value="">Pilih</option>
@@ -191,77 +163,73 @@ if ($status_go == "On Schedule") {
                                 </div>
 
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="jam_ops">Jam Operasional</label>
+                                    <label class="col-sm-3 col-form-label" for="jam_ops">Jam Operasional<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="jam_ops" name="jam_ops" type="text" placeholder="ex : 8-22" value="<?php echo $row['jam_ops']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="project_sales">Project Sales</label>
+                                    <label class="col-sm-3 col-form-label" for="project_sales">Project Sales<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="project_sales" name="project_sales" type="text" placeholder="100.000.000" value="<?php echo $row['project_sales']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="crew_needed">Crew Needed</label>
+                                    <label class="col-sm-3 col-form-label" for="crew_needed">Crew Needed<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="crew_needed" name="crew_needed" type="number" placeholder="ex : 50" value="<?php echo $row['crew_needed']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="spk_release">SPK Release</label>
+                                    <label class="col-sm-3 col-form-label" for="spk_release">SPK Release<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="spk_release" name="spk_release" type="date" placeholder="" value="<?php echo $row['spk_release']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="gocons_progress">RTO Score</label>
+                                    <label class="col-sm-3 col-form-label" for="gocons_progress">RTO Score<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="gocons_progress" name="gocons_progress" type="text" placeholder="" value="
-                                            <?php 
-                                                $fat = (( !is_null($row['lamp_qris']) ? 100 : 0 ) + ( !is_null($row['lamp_st']) ? 100 : 0 )) / 2;
+                                            
+                                                    <?php
+                                                        $fat = (( !is_null($row['lamp_qris']) ? 100 : 0 ) + ( !is_null($row['lamp_st']) ? 100 : 0 )) / 2;
 
-                                                $academy = (( !is_null($row['kpt_1']) ? 100 : 0 ) + ( !is_null($row['kpt_2']) ? 100 : 0 ) + ( !is_null($row['kpt_3']) ? 100 : 0 )) / 3;
+                                                        $academy = (( !is_null($row['kpt_1']) ? 100 : 0 ) + ( !is_null($row['kpt_2']) ? 100 : 0 ) + ( !is_null($row['kpt_3']) ? 100 : 0 )) / 3;
 
-                                                $hr = (( !is_null($row['tm']) ? 100 : 0 ) + ( !is_null($row['lamp_tm']) ? 100 : 0 ) + ( !is_null($row['ff_1']) ? 100 : 0 ) + ( !is_null($row['lamp_ff1']) ? 100 : 0 ) + ( !is_null($row['ff_2']) ? 100 : 0 ) + ( !is_null($row['lamp_ff2']) ? 100 : 0 ) + ( !is_null($row['ff_3']) ? 100 : 0 ) + ( !is_null($row['lamp_ff3']) ? 100 : 0 ) + ( !is_null($row['hot']) ? 100 : 0 ) + ( !is_null($row['lamp_hot']) ? 100 : 0 )) / 10;
+                                                        $hr = (( !is_null($row['tm']) ? 100 : 0 ) + ( !is_null($row['lamp_tm']) ? 100 : 0 ) + ( !is_null($row['ff_1']) ? 100 : 0 ) + ( !is_null($row['lamp_ff1']) ? 100 : 0 ) + ( !is_null($row['ff_2']) ? 100 : 0 ) + ( !is_null($row['lamp_ff2']) ? 100 : 0 ) + ( !is_null($row['ff_3']) ? 100 : 0 ) + ( !is_null($row['lamp_ff3']) ? 100 : 0 ) + ( !is_null($row['hot']) ? 100 : 0 ) + ( !is_null($row['lamp_hot']) ? 100 : 0 )) / 10;
 
-                                                $ir = (( !is_null($row['lamp_rabcs']) ? 100 : 0 ) + ( !is_null($row['lamp_rabsecurity']) ? 100 : 0 )) / 2;
+                                                        $ir = (( !is_null($row['lamp_rabcs']) ? 100 : 0 ) + ( !is_null($row['lamp_rabsecurity']) ? 100 : 0 )) / 2;
 
-                                                $it = (( !is_null($row['kode_dvr']) ? 100 : 0 ) + ( !is_null($row['web_report']) ? 100 : 0 ) + ( !is_null($row['akun_gis']) ? 100 : 0 ) + ( !is_null($row['lamp_internet']) ? 100 : 0 ) + ( !is_null($row['lamp_cctv']) ? 100 : 0 ) + ( !is_null($row['lamp_config']) ? 100 : 0 ) + ( !is_null($row['lamp_printer']) ? 100 : 0 ) + ( !is_null($row['lamp_sound']) ? 100 : 0 )) / 8;
+                                                        $it = (( !is_null($row['kode_dvr']) ? 100 : 0 ) + ( !is_null($row['web_report']) ? 100 : 0 ) + ( !is_null($row['akun_gis']) ? 100 : 0 ) + ( !is_null($row['lamp_internet']) ? 100 : 0 ) + ( !is_null($row['lamp_cctv']) ? 100 : 0 ) + ( !is_null($row['lamp_config']) ? 100 : 0 ) + ( !is_null($row['lamp_printer']) ? 100 : 0 ) + ( !is_null($row['lamp_sound']) ? 100 : 0 )) / 8;
 
-                                                $legal = (( !is_null($row['mou_parkirsampah']) ? 100 : 0 ) + ( !is_null($row['lamp_pbg']) ? 100 : 0 ) + ( !is_null($row['lamp_permit']) ? 100 : 0 )) / 2;
+                                                        $legal = (( !is_null($row['mou_parkirsampah']) ? 100 : 0 ) + ( !is_null($row['lamp_pbg']) ? 100 : 0 ) + ( !is_null($row['lamp_permit']) ? 100 : 0 )) / 3;
 
-                                                $marketing = (( !is_null($row['gmaps']) ? 100 : 0 ) + ( !is_null($row['lamp_gmaps']) ? 100 : 0 ) + ( !is_null($row['id_m_shopee']) ? 100 : 0 ) + ( !is_null($row['id_m_gojek']) ? 100 : 0 ) + ( !is_null($row['id_m_grab']) ? 100 : 0 ) + ( !is_null($row['email_resto']) ? 100 : 0 ) + ( !is_null($row['lamp_merchant']) ? 100 : 0 )) / 7;
+                                                        $marketing = (( !is_null($row['gmaps']) ? 100 : 0 ) + ( !is_null($row['lamp_gmaps']) ? 100 : 0 ) + ( !is_null($row['id_m_shopee']) ? 100 : 0 ) + ( !is_null($row['id_m_gojek']) ? 100 : 0 ) + ( !is_null($row['id_m_grab']) ? 100 : 0 ) + ( !is_null($row['email_resto']) ? 100 : 0 ) + ( !is_null($row['lamp_merchant']) ? 100 : 0 )) / 7;
 
-                                                $scm = (( !is_null($row['lamp_sj']) ? 100 : 0 ));
+                                                        $scm = (( !is_null($row['lamp_sj']) ? 100 : 0 ));
 
-                                                $sdg = (( !is_null($row['no_listrik']) ? 100 : 0 ) + ( !is_null($row['lamp_listrik']) ? 100 : 0 ) + ( !is_null($row['lamp_ka']) ? 100 : 0 ) + ( !is_null($row['lamp_ipal']) ? 100 : 0 ) + ( !is_null($row['lamp_eqp']) ? 100 : 0 ) + ( !is_null($row['lamp_ba']) ? 100 : 0 )) / 6;
+                                                        $sdg = (( !is_null($row['lamp_ujilab']) ? 100 : 0 ) + ( !is_null($row['lamp_sumberair']) ? 100 : 0 ) + ( !is_null($row['lamp_filterair']) ? 100 : 0 ) + ( !is_null($row['lamp_slo']) ? 100 : 0 ) + ( !is_null($row['lamp_nidi']) ? 100 : 0 ) + ( !is_null($row['lampwo_reqipal']) ? 100 : 0 )) / 6;
 
-                                                $total = ($fat + $academy + $hr + $ir + $it + $legal + $marketing + $scm + $sdg / 9);
-                                                $fix = number_format($total, 2);
-                                                echo $fix; 
+                                                        $total = ($fat + $academy + $hr + $ir + $it + $legal + $marketing + $scm + $sdg) / 9;
+                                                        $fix = number_format($total, 2);
+                                                        echo $fix; 
                                             ?>%" readonly/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="rto_score">GO Construction Progress</label>
+                                    <label class="col-sm-3 col-form-label" for="rto_score">GO Construction Progress<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="rto_score" name="rto_score" type="text" placeholder="" value="
-                                            <?php 
-                                                $total1 = rtrim(50 * number_format(($row['bangunan_mural'] + $row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) / 6, 2) / 100, '0') . (number_format(50 * (($row['bangunan_mural'] + $row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) / 6 / 100), 2)[strlen(number_format(50 * (($row['bangunan_mural'] + $row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) / 6 / 100), 2)) - 1] == '.' ? '0' : '');
-                                                $total2 = rtrim(25 * number_format(($row['perijinan'] + $row['sampah_parkir'] + $row['akses_jkm'] + $row['pkl']) / 4, 2) / 100, '0') . (number_format(25 * (($row['perijinan'] + $row['sampah_parkir'] + $row['akses_jkm'] + $row['pkl']) / 4 / 100), 2)[strlen(number_format(25 * (($row['perijinan'] + $row['sampah_parkir'] + $row['akses_jkm'] + $row['pkl']) / 4 / 100), 2)) - 1] == '.' ? '0' : '');
-                                                $total3 = rtrim(6 * number_format(($row['cctv'] + $row['audio_system'] + $row['lan_infra'] + $row['internet_cust'] + $row['internet_km']) / 5, 2) / 100, '0') . (number_format(6 * (($row['cctv'] + $row['audio_system'] + $row['lan_infra'] + $row['internet_cust'] + $row['internet_km']) / 5 / 100), 2)[strlen(number_format(6 * (($row['cctv'] + $row['audio_system'] + $row['lan_infra'] + $row['internet_cust'] + $row['internet_km']) / 5 / 100), 2)) - 1] == '.' ? '0' : '');
-                                                $total4 = rtrim(8 * number_format(($row['security'] + $row['cs']) / 2, 2) / 100, '0') . (number_format(8 * (($row['security'] + $row['cs']) / 2 / 100), 2)[strlen(number_format(8 * (($row['security'] + $row['cs']) / 2 / 100), 2)) - 1] == '.' ? '0' : '');
-                                                $total5 = rtrim(5 * number_format(($row['post_content'] + $row['ojol'] + $row['tikor_maps']) / 3, 2) / 100, '0') . (number_format(5 * (($row['post_content'] + $row['ojol'] + $row['tikor_maps']) / 3 / 100), 2)[strlen(number_format(5 * (($row['post_content'] + $row['ojol'] + $row['tikor_maps']) / 3 / 100), 2)) - 1] == '.' ? '0' : '');
-                                                $total6 = rtrim(6 * number_format(($row['qris'] + $row['edc']) / 2, 2) / 100, '0') . (number_format(6 * (($row['qris'] + $row['edc']) / 2 / 100), 2)[strlen(number_format(6 * (($row['qris'] + $row['edc']) / 2 / 100), 2)) - 1] == '.' ? '0' : '');
-
-                                                $total = $total1 + $total2 + $total3 + $total4 + $total5 + $total6;
-                                                echo $total; 
+                                                    <?php 
+                                                    if (!empty($row['month_1']) && !empty($row['month_2']) && !empty($row['month_3'])) {
+                                                        $total = $row['month_1'] + $row['month_2'] + $row['month_3']; 
+                                                        echo $total . "%";
+                                                    }
                                             ?>%" readonly/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="status_go">Status GO</label>
+                                    <label class="col-sm-3 col-form-label" for="status_go">Status GO<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="status_go" name="status_go">
                                             <?php echo $options; ?>

@@ -2,14 +2,14 @@
 // Koneksi ke database tracking_resto
 include "../../koneksi.php";
 
-$status_approvowner = ""; 
 // Periksa apakah ada data yang dikirimkan melalui URL (ID)
 if(isset($_GET['id'])) {
     // Ambil ID dari URL
     $id = $_GET['id'];
 
     // Query untuk mendapatkan data resep berdasarkan ID
-    $result = $conn->query("SELECT * FROM dokumen_loacd WHERE id = '$id'");
+    $sql = "SELECT * from dokumen_loacd WHERE id = '$id'";
+    $result = $conn->query($sql);
 
     // Periksa apakah data ditemukan
     if ($result->num_rows > 0) {
@@ -64,15 +64,15 @@ if(isset($_GET['id'])) {
                         <div class="card mb-5">
                             <div class="card-body">
                             <form method="post" action="loa-cd-edit.php" enctype="multipart/form-data">
-                                <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
+                                <input type="hidden" name="id" value="<?php echo $id; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="masa_berlaku">Masa Sewa</label>
+                                    <label class="col-sm-3 col-form-label" for="masa_berlaku">Masa Sewa<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="masa_berlaku" name="masa_berlaku" type="text" value="<?php echo $row['masa_berlaku']; ?>" placeholder="Masa Berlaku Sewa (Tahun)" readonly/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="deal_sewa">Harga Deal Sewa</label>
+                                    <label class="col-sm-3 col-form-label" for="deal_sewa">Harga Deal Sewa<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="deal_sewa" name="deal_sewa" type="text" value="<?php echo $row['deal_sewa']; ?>" placeholder="Harga Deal Sewa" readonly/>
                                     </div>
@@ -84,7 +84,7 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_loacd">Upload LOA & CD</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_loacd">Upload LOA & CD<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_loacd[]" type="file" multiple="multiple" />

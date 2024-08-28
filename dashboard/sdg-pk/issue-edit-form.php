@@ -9,7 +9,7 @@ if(isset($_GET['id'])) {
     $id = $_GET['id'];
 
     // Query untuk mendapatkan data resep berdasarkan ID
-    $result = $conn->query("SELECT * from issue where id = $id");
+    $result = $conn->query("SELECT issue.*, land.nama_lahan from land JOIN issue ON issue.kode_lahan = land.kode_lahan where issue.id = $id");
 
     // Periksa apakah data ditemukan
     if ($result->num_rows > 0) {
@@ -81,16 +81,34 @@ if(isset($_GET['id'])) {
                                 </div>
                             </div>
                             <div class="form-group row">
-                                <label class="col-sm-3 col-form-label" for="tanggal_retensi">Tanggal Retensi</label>
+                                <label class="col-sm-3 col-form-label" for="nama_lahan">Nama Lahan</label>
                                 <div class="col-sm-9">
-                                    <input class="form-control" id="tanggal_retensi" name="tanggal_retensi" type="date" placeholder="Kode Lahan" value="<?php echo $row['tanggal_retensi']; ?>"/>
+                                    <input class="form-control" id="nama_lahan" name="nama_lahan" type="text" placeholder="Kode Lahan" value="<?php echo $row['nama_lahan']; ?>" readonly/>
                                 </div>
                             </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_badefect">Upload Lampiran BA</label>
+                                    <label class="col-sm-3 col-form-label" for="pic">PIC<strong><span style="color: red;">*</span></strong></label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="pic" name="pic" type="text" value="<?php echo $row['pic']; ?>" placeholder="PIC" />
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="target_done">Target Done<strong><span style="color: red;">*</span></strong></label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="target_done" name="target_done" value="<?php echo $row['target_done']; ?>" type="date" placeholder="Target Done" />
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="issue">Issue Detail<strong><span style="color: red;">*</span></strong></label>
+                                    <div class="col-sm-9">
+                                        <textarea class="form-control" id="issue" name="issue" value="<?php echo $row['issue']; ?>" rows="4" cols="50"></textarea>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="lamp_defect">Upload Lampiran Before<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
-                                            <input name="lamp_badefect[]" type="file" multiple="multiple" />
+                                            <input name="lamp_defect[]" type="file" multiple="multiple" value="<?php echo $row['lamp_defect']; ?>"/>
                                         </div>
                                     </div>
                                 </div>

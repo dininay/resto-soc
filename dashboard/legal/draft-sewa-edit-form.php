@@ -79,7 +79,7 @@ $conn->close();
                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 
                             <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_bod">Upload Table Sewa</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_bod">Upload Table Sewa<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_bod[]" type="file" multiple="multiple" />

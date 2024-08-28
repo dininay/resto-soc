@@ -64,19 +64,19 @@ if(isset($_GET['id'])) {
                             <form method="post" action="rab-edit.php" enctype="multipart/form-data">
                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="keterangan">Keterangan</label>
+                                    <label class="col-sm-3 col-form-label" for="keterangan">Keterangan<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="keterangan" name="keterangan" type="text" placeholder="Keterangan" value="<?php echo $row['keterangan']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="jumlah">Amount (include PPN)</label>
+                                    <label class="col-sm-3 col-form-label" for="jumlah">Amount (include PPN)<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="jumlah" name="jumlah" type="text" oninput="formatRupiah(this)" placeholder="Masukkan Angka Saja" value="<?php echo $row['jumlah']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_rab">Upload Lampiran WO + RAB</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_rab">Upload Lampiran WO + RAB<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_rab[]" type="file" multiple="multiple" />

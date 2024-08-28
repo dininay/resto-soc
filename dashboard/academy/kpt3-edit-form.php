@@ -66,12 +66,12 @@ if(isset($_GET['id'])) {
                             <form method="post" action="kpt3-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="crew_needed3">Crew Needed</label>
+                                    <label class="col-sm-3 col-form-label" for="crew_needed3">Crew Needed<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="crew_needed3" name="crew_needed3" type="number" placeholder="Crew Needed Batch 3" value="<?php echo $row['crew_needed3']; ?>"/>
                                     </div>
                                 </div>
-                                <div class="form-group row">
+                                <!-- <div class="form-group row">
                                     <label class="col-sm-3 col-form-label" for="crew_act3">Actual Crew</label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="crew_act3" name="crew_act3" type="number" placeholder="Crew Actual Batch 3" value="<?php echo $row['crew_act3']; ?>"/>
@@ -84,7 +84,7 @@ if(isset($_GET['id'])) {
                                             <input name="lamp_kpt3[]" type="file" multiple="multiple" />
                                         </div>
                                     </div>
-                                </div>
+                                </div> -->
                                 <div class="form-group row">
                                     <div class="col-sm-9">
                                         <button class="btn btn-primary" type="submit">Simpan</button>

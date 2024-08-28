@@ -130,7 +130,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         // Komit transaksi
         $conn->commit();
         // Redirect ke halaman datatables-checkval-legal.php
-        // header("Location: ../datatables-it.php");
+        header("Location: ../datatables-hr-kpt-2.php");
         exit; // Pastikan tidak ada output lain setelah header redirect
     } catch (Exception $e) {
         // Rollback transaksi jika terjadi kesalahan

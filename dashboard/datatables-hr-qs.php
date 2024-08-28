@@ -4,7 +4,10 @@ include "../koneksi.php";
 $status_tm = "";
 
 // Query untuk mengambil data dari tabel land
-$sql = "SELECT * from socdate_hr";
+$sql = "SELECT socdate_hr.*, dokumen_loacd.kode_store, land.nama_lahan 
+from socdate_hr 
+Inner join land ON land.kode_lahan = socdate_hr.kode_lahan
+Inner join dokumen_loacd ON dokumen_loacd.kode_lahan = socdate_hr.kode_lahan";
 $result = $conn->query($sql);
 
 
@@ -28,19 +31,20 @@ if ($sla_result->num_rows > 0) {
     $row = $sla_result->fetch_assoc();
     $sla_value = $row['sla'];
 } else {
-    echo "No SLA value found for 'Owner Surveyor'";
+    echo "No SLA value found for 'hrga_tm'";
 }
 
-function calculateScoring($start_date, $end_date, $sla) {
-    $today = new DateTime();
-    $start_date = $start_date ?: $today->format('Y-m-d');
-    $end_date = $end_date ?: $today->format('Y-m-d');
-    $sla_days = $sla ?: 0;
-
+// Fungsi untuk menghitung scoring
+function calculateScoring($start_date, $sla_date, $sla) {
     $start_date_obj = new DateTime($start_date);
-    $end_date_obj = new DateTime($end_date);
+    $sla_date_obj = new DateTime($sla_date);
+    
+    if ($start_date_obj <= $sla_date_obj) {
+        return 100; // Skor 100 jika start_date tidak melebihi sla_date
+    }
 
-    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
+    $date_diff = $start_date_obj->diff($sla_date_obj)->days;
+    $sla_days = $sla ?: 0;
 
     if ($sla_days != 0) {
         if ($date_diff > $sla_days) {
@@ -54,11 +58,12 @@ function calculateScoring($start_date, $end_date, $sla) {
 
     return round($scoring, 2);
 }
+
 // Fungsi untuk menentukan remarks berdasarkan scoring
 function getRemarks($scoring) {
-    if ($scoring >= 0) {
+    if ($scoring >= 75) {
         return "good";
-    } elseif ($scoring >= -30) {
+    } elseif ($scoring >= 0) {
         return "poor";
     } else {
         return "bad";
@@ -98,6 +103,20 @@ function getBadgeColor($remarks) {
     <style>
         .hidden {
             display: none;
+        },
+
+        .small-column {
+            max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */
+            overflow: hidden; /* Memotong konten yang meluas */
+            text-overflow: ellipsis; /* Menampilkan elipsis jika konten terlalu panjang */
+            white-space: nowrap; /* Mencegah teks membungkus ke baris baru */
+        }
+
+        th, td {
+                white-space: nowrap;
+            }
+        table.dataTable {
+            border-collapse:  collapse!important;
         }
     </style>
 </head>
@@ -135,6 +154,8 @@ function getBadgeColor($remarks) {
                                         <thead>
                                             <tr>
                                                 <th>Inventory Code</th>
+                                                <th>Nama Lahan</th>
+                                                <th>Kode Store</th>
                                                 <th>Data QC</th>
                                                 <th>Lampiran QC</th>
                                                 <th>Status</th>
@@ -146,6 +167,8 @@ function getBadgeColor($remarks) {
                                         <?php foreach ($data as $row): ?>
                                             <tr>
                                                 <td><?= $row['kode_lahan'] ?></td>
+                                                <td><?= $row['nama_lahan'] ?></td>
+                                                <td><?= $row['kode_store'] ?></td>
                                                 <td><?= $row['tm'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
@@ -174,7 +197,7 @@ function getBadgeColor($remarks) {
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['status_tm']) {
-                                                            case 'Approve':
+                                                            case 'Done':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -194,20 +217,26 @@ function getBadgeColor($remarks) {
                                                 </td>
                                                 <td>
                                                     <?php
-                                                    // Mendapatkan tanggal sla_date dari kolom data
-                                                    $slaLegalDate = new DateTime($row['sla_tm']);
-                                                    
-                                                    // Mendapatkan tanggal hari ini
-                                                    $today = new DateTime();
-                                                    
-                                                    // Menghitung selisih hari antara sla_tm dan hari ini
-                                                    $diff = $today->diff($slaLegalDate);
-                                                    
+                                                    // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
+                                                    date_default_timezone_set('Asia/Jakarta');
+
+                                                    $start_date = $row['tm_date'];
+                                                    $sla_date = $row['sla_tm'];
+                                                    $status_tm = $row['status_tm'];
+
                                                     // Menghitung scoring
-                                                    $scoring = calculateScoring($row['tm_date'], $row['sla_tm'], $sla_value); // Make sure $sla_value is set correctly
+                                                    $scoring = calculateScoring($start_date, $sla_date, $sla_value);
                                                     $remarks = getRemarks($scoring);
 
-                                                    if ($row['status_tm'] == "Done") {
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
+
+                                                    if ($status_tm === 'Done') {
                                                         // Menentukan label berdasarkan remarks
                                                         $status_label = '';
                                                         switch ($remarks) {
@@ -224,19 +253,23 @@ function getBadgeColor($remarks) {
 
                                                         echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
-                                                        // Menghitung jumlah hari terlambat
-                                                        $lateDays = $slaLegalDate->diff($today)->days;
-                                                        
-                                                        // Jika terlambat
-                                                        if ($today > $slaLegalDate) {
-                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+                                                        // Memeriksa apakah waktu sekarang di luar jam kerja
+                                                        if ($current_time < $work_start || $current_time > $work_end) {
+                                                            echo '<button type="button" class="btn btn-sm btn-info">Di Luar Jam Kerja</button>';
                                                         } else {
-                                                            // Jika selisih kurang dari atau sama dengan 5 hari, tampilkan peringatan "H - X"
-                                                            if ($diff) {
-                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
+                                                            // Convert $sla_date to DateTime object
+                                                            $sla_date_obj = new DateTime($sla_date);
+
+                                                            // Menghitung jumlah hari menuju SLA date
+                                                            $diff = $now->diff($sla_date_obj);
+                                                            $daysDifference = (int)$diff->format('%R%a'); // Menyertakan tanda plus atau minus
+
+                                                            if ($daysDifference < 0) {
+                                                                // SLA telah terlewat, hitung sebagai hari terlambat
+                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . abs($daysDifference) . ' hari</button>';
                                                             } else {
-                                                                // Tampilkan peringatan "H + X"
-                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
+                                                                // SLA belum tercapai, hitung mundur
+                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $daysDifference . '</button>';
                                                             }
                                                         }
                                                     }
@@ -244,14 +277,32 @@ function getBadgeColor($remarks) {
                                                 </td>
                                                 
                                                 <td>
-                                                <!-- Tombol Edit -->
-                                                <?php if ($row['status_tm'] != "Done"): ?>
-                                                        <a href="hr/hr-tm-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                    <!-- Tombol Edit -->
+                                                    <?php if ($row['status_tm'] != "Done"): ?>
+                                                    <?php
+                                                    // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
+                                                    date_default_timezone_set('Asia/Jakarta');
+
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
+
+                                                    if ($row['status_tm'] != "Done" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                        echo '<a href="hr/hr-tm-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
-                                                        </a>
-                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_tm'] ?>">
+                                                        </a>';
+                                                        echo '<button class="btn btn-sm btn-primary edit-btn mr-2" data-toggle="modal" data-target="#editModal" data-id="'. $row['id'] .'" data-status="'.$row['status_tm'] .'">
                                                             <i class="nav-icon i-Book"></i>
-                                                        </button>
+                                                        </button>';
+                                                        echo '<a href="datatables-data-qs.php?id='. $row['kode_lahan'].'" class="btn btn-sm btn-info">
+                                                            <i class="nav-icon i-Loading-2"></i>
+                                                        </a>';
+                                                    }
+                                                    ?>
                                                     <?php endif; ?>
                                                 </td>
                                                 <!-- Modal -->
@@ -268,7 +319,7 @@ function getBadgeColor($remarks) {
                                                                 <form id="statusForm" method="post" action="hr/tm-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" value=<?= $row['id'] ?> id="modalKodeLahan">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status QS</label>
+                                                                        <label for="statusSelect">Status QC<strong><span style="color: red;">*</span></strong></label>
                                                                         <select class="form-control" id="statusSelect" name="status_tm" Placeholder="Pilih">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
@@ -276,16 +327,16 @@ function getBadgeColor($remarks) {
                                                                         </select>
                                                                     </div>
                                                                     <div class="form-group">
-                                                                        <label for="catatan_tm">Catatan TM</label>
+                                                                        <label for="catatan_tm">Catatan QC</label>
                                                                         <input type="text" class="form-control" id="catatan_tm" name="catatan_tm">
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">
                                                                         <div class="form-group">
-                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <label for="issue_detail">Issue Detail<strong><span style="color: red;">*</span></strong></label>
                                                                             <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="pic">PIC</label>
+                                                                            <label for="pic">PIC<strong><span style="color: red;">*</span></strong></label>
                                                                             <select class="form-control" id="pic" name="pic">
                                                                                 <option value="">Pilih PIC</option>
                                                                                 <option value="Legal">Legal</option>
@@ -306,11 +357,11 @@ function getBadgeColor($remarks) {
                                                                             </select>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <label for="action_plan">Action Plan<strong><span style="color: red;">*</span></strong></label>
                                                                             <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <label for="kronologi">Upload File Kronologi<strong><span style="color: red;">*</span></strong></label>
                                                                             <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
                                                                         </div>
                                                                     </div>
@@ -326,6 +377,8 @@ function getBadgeColor($remarks) {
                                         <tfoot>
                                             <tr>
                                                 <th>Inventory Code</th>
+                                                <th>Nama Lahan</th>
+                                                <th>Kode Store</th>
                                                 <th>Data QC</th>
                                                 <th>Lampiran QC</th>
                                                 <th>Status</th>
@@ -594,6 +647,23 @@ function getBadgeColor($remarks) {
             var id = element.id;
             document.getElementById('delete').value = id;
         }
+    </script>
+    <script>
+        $(document).ready(function() {
+            // Hancurkan DataTable jika sudah ada
+            if ($.fn.DataTable.isDataTable('#zero_configuration_table')) {
+                $('#zero_configuration_table').DataTable().destroy();
+            }
+
+            // Inisialisasi DataTable
+            $('#zero_configuration_table').DataTable({
+                scrollX: true, // Menambahkan scroll horizontal
+                fixedColumns: {
+                    leftColumns: 3, // Jumlah kolom yang ingin di-fix
+                    topColumns: 2
+                }
+            });
+        });
     </script>
 </body>
 

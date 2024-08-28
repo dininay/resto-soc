@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Aug 11, 2024 at 07:52 PM
+-- Generation Time: Aug 13, 2024 at 07:19 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -70,15 +70,19 @@ CREATE TABLE `dokumen_loacd` (
   `start_date` date DEFAULT NULL,
   `slaloa_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
-  `slavd_date` date DEFAULT NULL
+  `slavd_date` date DEFAULT NULL,
+  `slavdlegal_date` date DEFAULT NULL,
+  `vdlegal_date` date DEFAULT NULL,
+  `lamp_vdsign` varchar(1000) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `dokumen_loacd`
 --
 
-INSERT INTO `dokumen_loacd` (`id`, `kode_lahan`, `tgl_berlaku`, `masa_berlaku`, `deal_sewa`, `status_approvloacd`, `status_approvlegalvd`, `lamp_loacd`, `lamp_vd`, `catatan_vd`, `kode_store`, `catatan`, `start_date`, `slaloa_date`, `end_date`, `slavd_date`) VALUES
-(37, 'MLG-001', NULL, '10', 'Rp. 8.000.000', 'Approve', 'Approve', 'Template Laporan Harian Kerja Ibu.pdf', 'Template Laporan Harian Kerja Ibu.pdf', '', 'MALJAK', '', '2024-08-11', '2024-09-01', '2024-08-11', '2024-08-15');
+INSERT INTO `dokumen_loacd` (`id`, `kode_lahan`, `tgl_berlaku`, `masa_berlaku`, `deal_sewa`, `status_approvloacd`, `status_approvlegalvd`, `lamp_loacd`, `lamp_vd`, `catatan_vd`, `kode_store`, `catatan`, `start_date`, `slaloa_date`, `end_date`, `slavd_date`, `slavdlegal_date`, `vdlegal_date`, `lamp_vdsign`) VALUES
+(37, 'MLG-001', NULL, '10', 'Rp. 8.000.000', 'Approve', 'Approve', 'Template Laporan Harian Kerja Ibu.pdf', 'Template Laporan Harian Kerja Ibu.pdf', '', 'MALJAK', '', '2024-08-11', '2024-09-01', '2024-08-11', '2024-08-15', NULL, NULL, NULL),
+(38, 'CIMH-001', NULL, '4', 'Rp. 15.000.000', 'Approve', 'Approve', 'Template Laporan Harian Kerja Ibu.pdf', 'Template Laporan Harian Kerja Ibu.pdf', 'sip', 'CIMRAYA', 'catatan loa cd', '2024-08-12', '2024-09-02', '2024-08-12', '2024-08-16', '2024-08-21', '2024-08-12', 'Template Laporan Harian Kerja Ibu.pdf');
 
 -- --------------------------------------------------------
 
@@ -123,7 +127,8 @@ CREATE TABLE `draft` (
 --
 
 INSERT INTO `draft` (`id`, `kode_lahan`, `lamp_draf`, `jadwal_psm`, `catatan_legal`, `catatan_draft`, `lamp_signpsm`, `draft_legal`, `confirm_nego`, `catatan_psm`, `confirm_fatpsm`, `catatan_psmfat`, `psmfat_date`, `start_date`, `sla_date`, `slalegal_date`, `end_date`, `slapsm_date`, `slafatpsm_date`, `confirm_bod`, `lamp_bod`, `bod_date`, `slabod_date`, `lamp_nego`, `catatan_bod`, `confirm_re`, `catatan_re`, `draftre_date`, `sladraftre_date`) VALUES
-(36, 'MLG-001', 'Template Laporan Harian Kerja Ibu.pdf', NULL, NULL, NULL, 'Template Laporan Harian Kerja Ibu.pdf', 'In Process', 'Approve', '', 'Approve', '', '2024-08-11', NULL, NULL, '2024-08-19', '2024-08-11', '2024-08-19', '2024-08-15', 'Approve', 'Template Laporan Harian Kerja Ibu.pdf', '2024-08-11', '2024-08-13', NULL, '', 'Done', '', '2024-08-11', '2024-08-19');
+(36, 'MLG-001', 'Template Laporan Harian Kerja Ibu.pdf', NULL, NULL, NULL, 'Template Laporan Harian Kerja Ibu.pdf', 'In Process', 'Approve', '', 'Approve', '', '2024-08-11', NULL, NULL, '2024-08-19', '2024-08-11', '2024-08-19', '2024-08-15', 'Approve', 'Template Laporan Harian Kerja Ibu.pdf', '2024-08-11', '2024-08-13', NULL, '', 'Done', '', '2024-08-11', '2024-08-19'),
+(37, 'CIMH-001', NULL, NULL, NULL, NULL, NULL, 'In Process', 'In Process', NULL, NULL, NULL, NULL, NULL, NULL, '2024-08-20', NULL, '2024-08-20', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -168,7 +173,7 @@ CREATE TABLE `equipment` (
 --
 
 INSERT INTO `equipment` (`id`, `kode_lahan`, `lamp_steqp`, `lamp_basteqp`, `status_steqp`, `steqp_date`, `sla_steqp`, `status_eqpdev`, `lamp_eqpdev`, `eqpdev_date`, `sla_eqpdev`, `status_eqpdevprocur`, `lamp_spkeqpdev`, `eqpdevprocur_date`, `sla_eqpdevprocur`, `progress_eqpsite`, `lamp_eqpsite`, `eqpsite_date`, `sla_eqpsite`, `defect_eqpsite`, `notedefect_eqpsite`, `status_eqpsite`, `status_woeqp`, `lamp_woeqp`, `woeqp_date`, `status_eqptaf`, `sla_eqptaf`, `eqptaf_date`, `catatan_eqptaf`) VALUES
-(14, 'MLG-001', NULL, NULL, 'In Process', NULL, '2024-11-14', 'In Process', NULL, '2024-08-11', '2024-11-14', 'In Review By TAF', 'Template Laporan Harian Kerja Ibu.pdf', '2024-08-11', '2024-11-14', NULL, NULL, NULL, '2024-11-14', NULL, NULL, 'In Process', 'Approve', 'Template Laporan Harian Kerja Ibu.pdf', NULL, 'Approve', '2024-08-17', '2024-08-11', '');
+(14, 'MLG-001', NULL, NULL, 'In Process', NULL, '2024-11-14', 'In Process', NULL, '2024-08-11', '2024-11-14', 'Approve', 'Template Laporan Harian Kerja Ibu.pdf', '2024-08-11', '2024-11-14', NULL, NULL, NULL, '2024-11-14', NULL, NULL, 'In Process', 'Approve', 'Template Laporan Harian Kerja Ibu.pdf', NULL, 'Approve', '2024-08-17', '2024-08-11', '');
 
 -- --------------------------------------------------------
 
@@ -280,7 +285,8 @@ CREATE TABLE `land` (
 --
 
 INSERT INTO `land` (`id`, `city`, `kode_lahan`, `nama_lahan`, `status_land`, `bp_date`, `lokasi`, `nama_pemilik`, `alamat_pemilik`, `no_tlp`, `luas_area`, `lamp_land`, `status_approvre`, `status_date`, `sla`, `re_date`, `maps`, `latitude`, `longitude`, `harga_sewa`, `mintahun_sewa`) VALUES
-(42, 'MALANG', 'MLG-001', 'Malang Jakarta', 'Aktif', '2024-08-11', 'Jl. Jakarta Malang', 'Pak Awaludin', 'Jl. Jombang', '082265293431', '1000', 'Template Laporan Harian Kerja Ibu.pdf', 'Approve', '2024-08-11', '2024-08-18', NULL, 'https://www.google.com/maps/place/Mie+Gacoan+Jl.+Jakarta/@-7.9629063,112.621132,17z/data=!3m1!4b1!4m6!3m5!1s0x2dd6296dc886eb2b:0x9155f320e6f9cc0c!8m2!3d-7.9629116!4d112.6237069!16s%2Fg%2F11v02w5rcb?entry=ttu', '-7.9629063', '112.621132', 'Rp. 10.000.000', '5');
+(42, 'MALANG', 'MLG-001', 'Malang Jakarta', 'Aktif', '2024-08-11', 'Jl. Jakarta Malang', 'Pak Awaludin', 'Jl. Jombang', '082265293431', '1000', 'Template Laporan Harian Kerja Ibu.pdf', 'Approve', '2024-08-11', '2024-08-18', NULL, 'https://www.google.com/maps/place/Mie+Gacoan+Jl.+Jakarta/@-7.9629063,112.621132,17z/data=!3m1!4b1!4m6!3m5!1s0x2dd6296dc886eb2b:0x9155f320e6f9cc0c!8m2!3d-7.9629116!4d112.6237069!16s%2Fg%2F11v02w5rcb?entry=ttu', '-7.9629063', '112.621132', 'Rp. 10.000.000', '5'),
+(43, 'CIMAHI', 'CIMH-001', 'Cimahi Kebun Raya', 'Aktif', '2024-08-12', 'Jl. Raya Kebun Cibodas', 'Pak Kurnia', 'Jl. Bunga Coklat', '089765435675', '2000', 'Template Laporan Harian Kerja Ibu.pdf', 'Approve', '2024-08-12', '2024-08-19', NULL, 'https://www.google.com/maps/place/Badan+Koordinasi+Wilayah+Pemerintahan+dan+Pembangunan+Jawa+Timur+III+(+BAKORWIL+III+)+Malang/@-7.9633877,112.6215021,17z/data=!3m1!4b1!4m6!3m5!1s0x2dd6282b6f0d0a61:0x474046e3ce87264a!8m2!3d-7.963393!4d112.624077!16s%2Fg%2F1hm1v4b5x?entry=ttu', '-7.9776716', '112.621132', 'Rp. 20.000.000', '7');
 
 -- --------------------------------------------------------
 
@@ -557,17 +563,36 @@ CREATE TABLE `procurement` (
   `catatan_fattender` varchar(1000) DEFAULT NULL,
   `fattender_date` date DEFAULT NULL,
   `status_spkfat` varchar(100) DEFAULT NULL,
+  `status_spkfaturugan` varchar(100) DEFAULT NULL,
   `spkfat_date` date DEFAULT NULL,
+  `spkfaturugan_date` date DEFAULT NULL,
   `sla_spkfat` date DEFAULT NULL,
-  `catatan_spkfat` varchar(255) DEFAULT NULL
+  `sla_spkfaturugan` date DEFAULT NULL,
+  `catatan_spkfat` varchar(255) DEFAULT NULL,
+  `catatan_spkfaturugan` varchar(255) DEFAULT NULL,
+  `status_procururugan` varchar(100) DEFAULT NULL,
+  `catatan_procururugan` varchar(255) DEFAULT NULL,
+  `lamp_spkurugan` varchar(1000) DEFAULT NULL,
+  `spkurugan_date` date DEFAULT NULL,
+  `sla_spkurugan` date DEFAULT NULL,
+  `status_tenderurugan` varchar(100) DEFAULT NULL,
+  `catatan_tenderurugan` varchar(255) DEFAULT NULL,
+  `nama_vendorurugan` varchar(100) DEFAULT NULL,
+  `alamat_vendorurugan` varchar(255) DEFAULT NULL,
+  `detail_vendorurugan` varchar(255) DEFAULT NULL,
+  `lamp_profilurugan` varchar(1000) DEFAULT NULL,
+  `lamp_vendorurugan` varchar(1000) DEFAULT NULL,
+  `slatenderurugan_date` date DEFAULT NULL,
+  `tenderurugan_date` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `procurement`
 --
 
-INSERT INTO `procurement` (`id`, `kode_lahan`, `status_approvsdg`, `status_approvprocurement`, `lamp_spkrabcons`, `status_tender`, `catatan_tender`, `catatan_proc`, `nama_vendor`, `alamat`, `nohp`, `detail`, `lamp_profil`, `lamp_vendor`, `start_date`, `sla_spkrab`, `end_date`, `sla_date`, `status_fattender`, `sla_fattender`, `catatan_fattender`, `fattender_date`, `status_spkfat`, `spkfat_date`, `sla_spkfat`, `catatan_spkfat`) VALUES
-(15, 'MLG-001', 'Approve', 'Approve', 'Template Laporan Harian Kerja Ibu.pdf', 'Done', '', '', 'PT. ABC', 'Jl. Jakarta', '08652438787', 'tes', 'Template Laporan Harian Kerja Ibu.pdf', 'Template Laporan Harian Kerja Ibu.pdf', '2024-08-11', '2024-08-25', '2024-08-11', '2024-08-25', NULL, NULL, NULL, NULL, 'Approve', '2024-08-11', '2024-08-17', '');
+INSERT INTO `procurement` (`id`, `kode_lahan`, `status_approvsdg`, `status_approvprocurement`, `lamp_spkrabcons`, `status_tender`, `catatan_tender`, `catatan_proc`, `nama_vendor`, `alamat`, `nohp`, `detail`, `lamp_profil`, `lamp_vendor`, `start_date`, `sla_spkrab`, `end_date`, `sla_date`, `status_fattender`, `sla_fattender`, `catatan_fattender`, `fattender_date`, `status_spkfat`, `status_spkfaturugan`, `spkfat_date`, `spkfaturugan_date`, `sla_spkfat`, `sla_spkfaturugan`, `catatan_spkfat`, `catatan_spkfaturugan`, `status_procururugan`, `catatan_procururugan`, `lamp_spkurugan`, `spkurugan_date`, `sla_spkurugan`, `status_tenderurugan`, `catatan_tenderurugan`, `nama_vendorurugan`, `alamat_vendorurugan`, `detail_vendorurugan`, `lamp_profilurugan`, `lamp_vendorurugan`, `slatenderurugan_date`, `tenderurugan_date`) VALUES
+(15, 'MLG-001', 'Approve', 'Approve', 'Template Laporan Harian Kerja Ibu.pdf', 'Done', '', '', 'PT. ABC', 'Jl. Jakarta', '08652438787', 'tes', 'Template Laporan Harian Kerja Ibu.pdf', 'Template Laporan Harian Kerja Ibu.pdf', '2024-08-11', '2024-08-25', '2024-08-11', '2024-08-25', NULL, NULL, NULL, NULL, 'Approve', NULL, '2024-08-11', NULL, '2024-08-17', NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(17, 'CIMH-001', '', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '0000-00-00', NULL, '0000-00-00', NULL, NULL, NULL, NULL, NULL, NULL, 'Approve', NULL, '2024-08-13', NULL, '2024-08-19', NULL, '', 'Approve', '', 'Template Laporan Harian Kerja Ibu.pdf', '2024-08-13', '2024-08-27', 'Done', '', 'PT.', '', '', 'Template Laporan Harian Kerja Ibu.pdf', 'Template Laporan Harian Kerja Ibu.pdf', '2024-08-27', '2024-08-13');
 
 -- --------------------------------------------------------
 
@@ -581,6 +606,7 @@ CREATE TABLE `re` (
   `catatan_owner` varchar(1000) NOT NULL,
   `status_approvowner` varchar(255) NOT NULL,
   `lamp_vl` varchar(1000) DEFAULT NULL,
+  `lamp_vlsign` varchar(255) DEFAULT NULL,
   `catatan_legal` varchar(1000) NOT NULL,
   `status_approvlegal` varchar(255) NOT NULL,
   `catatan_nego` varchar(1000) DEFAULT NULL,
@@ -595,6 +621,8 @@ CREATE TABLE `re` (
   `slalegal_date` date DEFAULT NULL,
   `slanego_date` date DEFAULT NULL,
   `slavl_date` date DEFAULT NULL,
+  `slavllegal_date` date DEFAULT NULL,
+  `vllegal_date` date DEFAULT NULL,
   `deal_sewa` varchar(100) DEFAULT NULL,
   `masa_berlaku` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -603,8 +631,9 @@ CREATE TABLE `re` (
 -- Dumping data for table `re`
 --
 
-INSERT INTO `re` (`id`, `kode_lahan`, `catatan_owner`, `status_approvowner`, `lamp_vl`, `catatan_legal`, `status_approvlegal`, `catatan_nego`, `status_approvnego`, `status_vl`, `catatan_vl`, `start_date`, `end_date`, `nego_date`, `vl_date`, `sla_date`, `slalegal_date`, `slanego_date`, `slavl_date`, `deal_sewa`, `masa_berlaku`) VALUES
-(76, 'MLG-001', '', 'Approve', 'Template Laporan Harian Kerja Ibu.pdf', '', '', '', 'Approve', 'Approve', '', '2024-08-11', '0000-00-00', '2024-08-11', '2024-08-11', '2024-08-18', NULL, '2024-08-18', '2024-08-18', NULL, NULL);
+INSERT INTO `re` (`id`, `kode_lahan`, `catatan_owner`, `status_approvowner`, `lamp_vl`, `lamp_vlsign`, `catatan_legal`, `status_approvlegal`, `catatan_nego`, `status_approvnego`, `status_vl`, `catatan_vl`, `start_date`, `end_date`, `nego_date`, `vl_date`, `sla_date`, `slalegal_date`, `slanego_date`, `slavl_date`, `slavllegal_date`, `vllegal_date`, `deal_sewa`, `masa_berlaku`) VALUES
+(76, 'MLG-001', '', 'Approve', 'Template Laporan Harian Kerja Ibu.pdf', NULL, '', '', '', 'Approve', 'Approve', '', '2024-08-11', '0000-00-00', '2024-08-11', '2024-08-11', '2024-08-18', NULL, '2024-08-18', '2024-08-18', NULL, NULL, NULL, NULL),
+(77, 'CIMH-001', '', 'Approve', 'Template Laporan Harian Kerja Ibu.pdf', 'Template Laporan Harian Kerja Ibu.pdf', '', '', 'catatan negosiator', 'Approve', 'Approve', 'sudah oke', '2024-08-12', '0000-00-00', '2024-08-12', '2024-08-12', '2024-08-19', NULL, '2024-08-19', '2024-08-19', '2024-08-21', '2024-08-12', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -634,9 +663,12 @@ CREATE TABLE `resto` (
   `sla_fat` date DEFAULT NULL,
   `fat_date` date DEFAULT NULL,
   `status_schedule` varchar(255) DEFAULT NULL,
+  `status_scheduleurugan` varchar(10) DEFAULT NULL,
   `catatan_schedule` varchar(1000) DEFAULT NULL,
+  `catatan_scheduleurugan` varchar(100) DEFAULT NULL,
   `schedule_date` date DEFAULT NULL,
-  `status_legalizin` varchar(1000) DEFAULT NULL,
+  `scheduleurugan_date` date DEFAULT NULL,
+  `status_legalizin` varchar(100) DEFAULT NULL,
   `legalizin_date` date DEFAULT NULL,
   `lamp_legalizin` varchar(1000) DEFAULT NULL,
   `lamp_kom` varchar(1000) DEFAULT NULL,
@@ -645,7 +677,7 @@ CREATE TABLE `resto` (
   `kom_date` date DEFAULT NULL,
   `status_kom` varchar(255) DEFAULT NULL,
   `obstacle_kom` varchar(255) DEFAULT NULL,
-  `note_kom` varchar(1000) DEFAULT NULL,
+  `note_kom` varchar(100) DEFAULT NULL,
   `lamp_obskom` varchar(500) DEFAULT NULL,
   `start_konstruksi` date DEFAULT NULL,
   `end_konstruksi` date DEFAULT NULL,
@@ -663,8 +695,9 @@ CREATE TABLE `resto` (
 -- Dumping data for table `resto`
 --
 
-INSERT INTO `resto` (`id`, `kode_lahan`, `lamp_splegal`, `catatan_legal`, `nama_store`, `status_land`, `gostore_date`, `rto_date`, `status_gostore`, `approved_by`, `submit_date`, `start_date`, `lamp_spk`, `sla_spk`, `spk_date`, `status_spk`, `status_fat`, `lamp_signedtaf`, `sla_fat`, `fat_date`, `status_schedule`, `catatan_schedule`, `schedule_date`, `status_legalizin`, `legalizin_date`, `lamp_legalizin`, `lamp_kom`, `sla_kom`, `start_slakom`, `kom_date`, `status_kom`, `obstacle_kom`, `note_kom`, `lamp_obskom`, `start_konstruksi`, `end_konstruksi`, `submit_gis`, `lamp_stkonstruksi`, `status_stkonstruksi`, `stkonstruksi_date`, `sla_stkonstruksi`, `obstacle_stkons`, `note_stkons`, `lamp_obsstkons`) VALUES
-(25, 'MLG-001', NULL, NULL, NULL, 'In Process', '2024-10-27', '2024-10-23', 'In Process', 'Last Updated by BoD', NULL, NULL, NULL, '2024-08-18', NULL, 'In Process', NULL, NULL, NULL, NULL, 'Approve', '', '2024-08-11', NULL, NULL, NULL, 'Template Laporan Harian Kerja Ibu.pdf', '2024-08-17', '2024-08-11', '2024-08-11', 'Done', 'Yes', 'tes', 'Template Laporan Harian Kerja Ibu.pdf', '2024-08-18', NULL, NULL, NULL, 'In Process', NULL, '2024-11-21', NULL, NULL, NULL);
+INSERT INTO `resto` (`id`, `kode_lahan`, `lamp_splegal`, `catatan_legal`, `nama_store`, `status_land`, `gostore_date`, `rto_date`, `status_gostore`, `approved_by`, `submit_date`, `start_date`, `lamp_spk`, `sla_spk`, `spk_date`, `status_spk`, `status_fat`, `lamp_signedtaf`, `sla_fat`, `fat_date`, `status_schedule`, `status_scheduleurugan`, `catatan_schedule`, `catatan_scheduleurugan`, `schedule_date`, `scheduleurugan_date`, `status_legalizin`, `legalizin_date`, `lamp_legalizin`, `lamp_kom`, `sla_kom`, `start_slakom`, `kom_date`, `status_kom`, `obstacle_kom`, `note_kom`, `lamp_obskom`, `start_konstruksi`, `end_konstruksi`, `submit_gis`, `lamp_stkonstruksi`, `status_stkonstruksi`, `stkonstruksi_date`, `sla_stkonstruksi`, `obstacle_stkons`, `note_stkons`, `lamp_obsstkons`) VALUES
+(25, 'MLG-001', NULL, NULL, NULL, 'In Process', '2024-10-27', '2024-10-23', 'In Process', 'Last Updated by BoD', NULL, NULL, NULL, '2024-08-18', NULL, 'In Process', NULL, NULL, NULL, NULL, 'Approve', NULL, '', NULL, '2024-08-11', NULL, NULL, NULL, NULL, 'Template Laporan Harian Kerja Ibu.pdf', '2024-08-17', '2024-08-11', '2024-08-11', 'Done', 'Yes', 'tes', 'Template Laporan Harian Kerja Ibu.pdf', '2024-08-18', NULL, NULL, NULL, 'In Process', NULL, '2024-11-21', NULL, NULL, NULL),
+(26, 'CIMH-001', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-08-20', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'In Process', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -678,14 +711,18 @@ CREATE TABLE `sdg_desain` (
   `lamp_desainplan` varchar(1000) DEFAULT NULL,
   `catatan_sdgdesain` varchar(1000) DEFAULT NULL,
   `tc` varchar(255) DEFAULT NULL,
-  `no_vd` varchar(255) DEFAULT NULL,
   `confirm_sdgdesain` varchar(255) NOT NULL,
+  `confirm_sdgurugan` varchar(255) DEFAULT NULL,
+  `catatan_sdgurugan` varchar(255) DEFAULT NULL,
+  `urugan_date` date DEFAULT NULL,
   `obstacle` varchar(255) NOT NULL,
   `submit_legal` varchar(1000) NOT NULL,
   `catatan_submit` varchar(1000) DEFAULT NULL,
   `submit_date` date DEFAULT NULL,
   `lamp_pbg` varchar(1000) DEFAULT NULL,
   `lamp_permit` varchar(1000) DEFAULT NULL,
+  `lamp_urugan` varchar(500) DEFAULT NULL,
+  `urugan` varchar(100) DEFAULT NULL,
   `catatan_obslegal` varchar(255) DEFAULT NULL,
   `start_date` date DEFAULT NULL,
   `sla_date` date DEFAULT NULL,
@@ -698,15 +735,15 @@ CREATE TABLE `sdg_desain` (
   `lamp_survey` varchar(1000) DEFAULT NULL,
   `note_survey` varchar(1000) DEFAULT NULL,
   `status_survey` varchar(255) DEFAULT NULL,
-  `lamp_layouting` date DEFAULT NULL,
-  `note` varchar(1000) DEFAULT NULL,
+  `lamp_layouting` varchar(255) DEFAULT NULL,
+  `note` varchar(100) DEFAULT NULL,
   `obs_detail` varchar(1000) DEFAULT NULL,
   `status_obssdg` varchar(255) DEFAULT NULL,
   `lamp_legal` varchar(1000) DEFAULT NULL,
   `obs_date` date DEFAULT NULL,
   `status_obslegal` varchar(255) DEFAULT NULL,
   `obslegal_date` date DEFAULT NULL,
-  `sla_obslegal` varchar(255) DEFAULT NULL,
+  `sla_obslegal` date DEFAULT NULL,
   `submit_wo` varchar(1000) DEFAULT NULL,
   `lamp_wo` varchar(1000) DEFAULT NULL,
   `wo_date` date DEFAULT NULL,
@@ -725,8 +762,9 @@ CREATE TABLE `sdg_desain` (
 -- Dumping data for table `sdg_desain`
 --
 
-INSERT INTO `sdg_desain` (`id`, `kode_lahan`, `lamp_desainplan`, `catatan_sdgdesain`, `tc`, `no_vd`, `confirm_sdgdesain`, `obstacle`, `submit_legal`, `catatan_submit`, `submit_date`, `lamp_pbg`, `lamp_permit`, `catatan_obslegal`, `start_date`, `sla_date`, `survey_date`, `sla_survey`, `layout_date`, `sla_layout`, `slalegal_date`, `end_date`, `lamp_survey`, `note_survey`, `status_survey`, `lamp_layouting`, `note`, `obs_detail`, `status_obssdg`, `lamp_legal`, `obs_date`, `status_obslegal`, `obslegal_date`, `sla_obslegal`, `submit_wo`, `lamp_wo`, `wo_date`, `lamp_spkwo`, `status_spkwo`, `sla_spkwo`, `spkwo_date`, `catatan_spkwo`, `status_spkwofat`, `catatan_spkwofat`, `spkwofat_date`, `sla_spkwofat`) VALUES
-(27, 'MLG-001', 'Template Laporan Harian Kerja Ibu.pdf', '', 'TC', NULL, 'Approve', '', 'In Process', NULL, NULL, NULL, NULL, NULL, '2024-08-11', '2024-08-31', NULL, '2024-08-16', NULL, NULL, '2024-08-18', NULL, 'Template Laporan Harian Kerja Ibu.pdf', 'tes', 'In Process', '0000-00-00', 'tes', 'tes', 'Done', NULL, '2024-08-11', 'In Process', NULL, '2024-09-01', 'Yes', 'Template Laporan Harian Kerja Ibu.pdf', '2024-08-11', 'Template Laporan Harian Kerja Ibu.pdf', 'Approve', '2024-08-18', '2024-08-11', '', 'Approve', '', '2024-08-11', '2024-08-17');
+INSERT INTO `sdg_desain` (`id`, `kode_lahan`, `lamp_desainplan`, `catatan_sdgdesain`, `tc`, `confirm_sdgdesain`, `confirm_sdgurugan`, `catatan_sdgurugan`, `urugan_date`, `obstacle`, `submit_legal`, `catatan_submit`, `submit_date`, `lamp_pbg`, `lamp_permit`, `lamp_urugan`, `urugan`, `catatan_obslegal`, `start_date`, `sla_date`, `survey_date`, `sla_survey`, `layout_date`, `sla_layout`, `slalegal_date`, `end_date`, `lamp_survey`, `note_survey`, `status_survey`, `lamp_layouting`, `note`, `obs_detail`, `status_obssdg`, `lamp_legal`, `obs_date`, `status_obslegal`, `obslegal_date`, `sla_obslegal`, `submit_wo`, `lamp_wo`, `wo_date`, `lamp_spkwo`, `status_spkwo`, `sla_spkwo`, `spkwo_date`, `catatan_spkwo`, `status_spkwofat`, `catatan_spkwofat`, `spkwofat_date`, `sla_spkwofat`) VALUES
+(27, 'MLG-001', 'Template Laporan Harian Kerja Ibu.pdf', '', 'TC', 'Approve', NULL, NULL, NULL, '', 'In Process', NULL, NULL, NULL, NULL, NULL, 'No', NULL, '2024-08-11', '2024-08-31', NULL, '2024-08-16', NULL, NULL, '2024-08-18', NULL, 'Template Laporan Harian Kerja Ibu.pdf', 'tes', 'In Process', '0000-00-00', 'tes', 'tes', 'Done', NULL, '2024-08-11', 'In Process', NULL, '2024-09-01', 'Yes', 'Template Laporan Harian Kerja Ibu.pdf', '2024-08-11', 'Template Laporan Harian Kerja Ibu.pdf', 'Approve', '2024-08-18', '2024-08-11', '', 'Approve', '', '2024-08-11', '2024-08-17'),
+(28, 'CIMH-001', NULL, NULL, NULL, 'In Process', 'Approve', '', '2024-08-13', 'Yes', '', NULL, NULL, NULL, NULL, 'Template Laporan Harian Kerja Ibu.pdf', 'Yes', NULL, NULL, '2024-09-02', NULL, '2024-08-22', NULL, NULL, NULL, NULL, 'Template Laporan Harian Kerja Ibu.pdf', 'tes', NULL, 'Template Laporan Harian Kerja Ibu.pdf', 'tes', 'tes', 'Done', NULL, '2024-08-13', 'In Process', NULL, '2024-09-02', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -771,13 +809,20 @@ INSERT INTO `sdg_pk` (`id`, `kode_lahan`, `month_1`, `month_2`, `month_3`, `all_
 CREATE TABLE `sdg_rab` (
   `id` int(11) NOT NULL,
   `kode_lahan` varchar(255) NOT NULL,
-  `date` date NOT NULL,
-  `jenis_biaya` varchar(255) NOT NULL,
-  `jumlah` varchar(255) NOT NULL,
-  `lamp_rab` varchar(1000) NOT NULL,
-  `keterangan` varchar(5000) NOT NULL,
-  `confirm_sdgqs` varchar(255) NOT NULL,
+  `date` date DEFAULT NULL,
+  `jenis_biaya` varchar(255) DEFAULT NULL,
+  `jumlah` varchar(255) DEFAULT NULL,
+  `lamp_rab` varchar(1000) DEFAULT NULL,
+  `keterangan` varchar(5000) DEFAULT NULL,
+  `confirm_sdgqs` varchar(255) DEFAULT NULL,
   `catatan_sdgqs` varchar(255) DEFAULT NULL,
+  `confirm_qsurugan` varchar(100) DEFAULT NULL,
+  `catatan_qsurugan` varchar(255) DEFAULT NULL,
+  `slaurugan_date` date DEFAULT NULL,
+  `qsurugan_date` date DEFAULT NULL,
+  `jumlah_urugan` varchar(255) DEFAULT NULL,
+  `ket_urugan` varchar(255) DEFAULT NULL,
+  `lamp_raburugan` varchar(1000) DEFAULT NULL,
   `sla_date` date DEFAULT NULL,
   `start_date` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -786,8 +831,9 @@ CREATE TABLE `sdg_rab` (
 -- Dumping data for table `sdg_rab`
 --
 
-INSERT INTO `sdg_rab` (`id`, `kode_lahan`, `date`, `jenis_biaya`, `jumlah`, `lamp_rab`, `keterangan`, `confirm_sdgqs`, `catatan_sdgqs`, `sla_date`, `start_date`) VALUES
-(43, 'MLG-001', '0000-00-00', '', 'Rp. 90.000.000', 'Template Laporan Harian Kerja Ibu.pdf', 'tes', 'Approve', '', '2024-08-21', '2024-08-11');
+INSERT INTO `sdg_rab` (`id`, `kode_lahan`, `date`, `jenis_biaya`, `jumlah`, `lamp_rab`, `keterangan`, `confirm_sdgqs`, `catatan_sdgqs`, `confirm_qsurugan`, `catatan_qsurugan`, `slaurugan_date`, `qsurugan_date`, `jumlah_urugan`, `ket_urugan`, `lamp_raburugan`, `sla_date`, `start_date`) VALUES
+(43, 'MLG-001', '0000-00-00', '', 'Rp. 90.000.000', 'Template Laporan Harian Kerja Ibu.pdf', 'tes', 'Approve', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-08-21', '2024-08-11'),
+(44, 'CIMH-001', NULL, NULL, NULL, NULL, NULL, 'In Process', NULL, 'Approve', '', '2024-08-23', '2024-08-13', 'Rp. 20.000.000', 'tes', 'Template Laporan Harian Kerja Ibu.pdf', '2024-08-23', '2024-08-13');
 
 -- --------------------------------------------------------
 
@@ -938,7 +984,8 @@ CREATE TABLE `socdate_hr` (
 --
 
 INSERT INTO `socdate_hr` (`id`, `kode_lahan`, `tm`, `lamp_tm`, `ff_1`, `ff_2`, `ff_3`, `hot`, `lamp_hot`, `sla_ff1`, `sla_ff2`, `sla_ff3`, `status_ff1`, `status_ff2`, `status_ff3`, `ff1_date`, `ff2_date`, `ff3_date`, `lamp_ff1`, `lamp_ff2`, `lamp_ff3`, `status_tm`, `tm_date`, `sla_tm`, `status_hot`, `hot_date`, `sla_hot`, `catatan_tm`, `catatan_hot`, `catatan_ff1`, `catatan_ff2`, `catatan_ff3`, `persen_ff1`, `persen_ff2`, `persen_ff3`, `persen_hot`, `status_fl`, `catatan_fl`, `fl_date`, `lamp_fl`, `sla_fl`, `fl`) VALUES
-(18, 'MLG-001', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-08-09', '2024-09-03', '2024-09-28', 'In Process', 'In Process', 'In Process', NULL, NULL, NULL, NULL, NULL, NULL, 'In Process', NULL, '2024-11-19', 'In Process', NULL, '2024-09-23', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'In Process', NULL, NULL, NULL, '2024-11-19', NULL);
+(18, 'MLG-001', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2024-08-09', '2024-09-03', '2024-09-28', 'In Process', 'In Process', 'In Process', NULL, NULL, NULL, NULL, NULL, NULL, 'In Process', NULL, '2024-11-19', 'In Process', NULL, '2024-09-23', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'In Process', NULL, NULL, NULL, '2024-11-19', NULL),
+(19, 'CIMH-001', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'In Process', NULL, '2024-11-20', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'In Process', NULL, NULL, NULL, '2024-11-20', NULL);
 
 -- --------------------------------------------------------
 
@@ -1632,13 +1679,13 @@ ALTER TABLE `doc_legal`
 -- AUTO_INCREMENT for table `dokumen_loacd`
 --
 ALTER TABLE `dokumen_loacd`
-  MODIFY `id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT for table `draft`
 --
 ALTER TABLE `draft`
-  MODIFY `id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT for table `equipment`
@@ -1668,7 +1715,7 @@ ALTER TABLE `konstruksi`
 -- AUTO_INCREMENT for table `land`
 --
 ALTER TABLE `land`
-  MODIFY `id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+  MODIFY `id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
 
 --
 -- AUTO_INCREMENT for table `master_sla`
@@ -1710,25 +1757,25 @@ ALTER TABLE `obs_sdg`
 -- AUTO_INCREMENT for table `procurement`
 --
 ALTER TABLE `procurement`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `re`
 --
 ALTER TABLE `re`
-  MODIFY `id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=77;
+  MODIFY `id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=78;
 
 --
 -- AUTO_INCREMENT for table `resto`
 --
 ALTER TABLE `resto`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `sdg_desain`
 --
 ALTER TABLE `sdg_desain`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `sdg_pk`
@@ -1740,7 +1787,7 @@ ALTER TABLE `sdg_pk`
 -- AUTO_INCREMENT for table `sdg_rab`
 --
 ALTER TABLE `sdg_rab`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT for table `sign`
@@ -1764,7 +1811,7 @@ ALTER TABLE `socdate_fat`
 -- AUTO_INCREMENT for table `socdate_hr`
 --
 ALTER TABLE `socdate_hr`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `socdate_ir`

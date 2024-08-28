@@ -78,97 +78,97 @@ if(isset($_GET['id'])) {
                             <form method="post" action="monitoring-edit.php" enctype="multipart/form-data">
                             <input type="hidden" name="kode_lahan" value="<?php echo $row['kode_lahan']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="week_1">Week 1</label>
+                                    <label class="col-sm-3 col-form-label" for="week_1">Week 1<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="week_1" name="week_1" type="number" step="0.01" placeholder="Progress Wee" value="<?php echo $row['week_1']; ?>"/>
+                                        <input class="form-control" id="week_1" name="week_1" type="number" step="0.01" placeholder="Progress Week" value="<?php echo $row['week_1']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="week_2">Week 2</label>
+                                    <label class="col-sm-3 col-form-label" for="week_2">Week 2<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="week_2" name="week_2" type="number" step="0.01" placeholder="Progress Wee" value="<?php echo $row['week_2']; ?>"/>
+                                        <input class="form-control" id="week_2" name="week_2" type="number" step="0.01" placeholder="Progress Week" value="<?php echo $row['week_2']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="week_3">Week 3</label>
+                                    <label class="col-sm-3 col-form-label" for="week_3">Week 3<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="week_3" name="week_3" type="number" step="0.01" placeholder="Progress Wee" value="<?php echo $row['week_3']; ?>"/>
+                                        <input class="form-control" id="week_3" name="week_3" type="number" step="0.01" placeholder="Progress Week" value="<?php echo $row['week_3']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="week_4">Week 4</label>
+                                    <label class="col-sm-3 col-form-label" for="week_4">Week 4<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="week_4" name="week_4" type="number" step="0.01" placeholder="Progress Wee" value="<?php echo $row['week_4']; ?>"/>
+                                        <input class="form-control" id="week_4" name="week_4" type="number" step="0.01" placeholder="Progress Week" value="<?php echo $row['week_4']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="week_5">Week 5</label>
+                                    <label class="col-sm-3 col-form-label" for="week_5">Week 5<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="week_5" name="week_5" type="number" step="0.01" placeholder="Progress Wee" value="<?php echo $row['week_5']; ?>"/>
+                                        <input class="form-control" id="week_5" name="week_5" type="number" step="0.01" placeholder="Progress Week" value="<?php echo $row['week_5']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="week_6">Week 6</label>
+                                    <label class="col-sm-3 col-form-label" for="week_6">Week 6<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="week_6" name="week_6" type="number" step="0.01" placeholder="Progress Wee" value="<?php echo $row['week_6']; ?>"/>
+                                        <input class="form-control" id="week_6" name="week_6" type="number" step="0.01" placeholder="Progress Week" value="<?php echo $row['week_6']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="week_7">Week 7</label>
+                                    <label class="col-sm-3 col-form-label" for="week_7">Week 7<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="week_7" name="week_7" type="number" step="0.01" placeholder="Progress Wee" value="<?php echo $row['week_7']; ?>"/>
+                                        <input class="form-control" id="week_7" name="week_7" type="number" step="0.01" placeholder="Progress Week" value="<?php echo $row['week_7']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="week_8">Week 8</label>
+                                    <label class="col-sm-3 col-form-label" for="week_8">Week 8<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="week_8" name="week_8" type="number" step="0.01" placeholder="Progress Wee" value="<?php echo $row['week_8']; ?>"/>
+                                        <input class="form-control" id="week_8" name="week_8" type="number" step="0.01" placeholder="Progress Week" value="<?php echo $row['week_8']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="week_9">Week 9</label>
+                                    <label class="col-sm-3 col-form-label" for="week_9">Week 9<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="week_9" name="week_9" type="number" step="0.01" placeholder="Progress Wee" value="<?php echo $row['week_9']; ?>"/>
+                                        <input class="form-control" id="week_9" name="week_9" type="number" step="0.01" placeholder="Progress Week" value="<?php echo $row['week_9']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="week_10">Week 10</label>
+                                    <label class="col-sm-3 col-form-label" for="week_10">Week 10<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="week_10" name="week_10" type="number" step="0.010" placeholder="Progress Wee" value="<?php echo $row['week_10']; ?>"/>
+                                        <input class="form-control" id="week_10" name="week_10" type="number" step="0.010" placeholder="Progress Week" value="<?php echo $row['week_10']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="week_11">Week 11</label>
+                                    <label class="col-sm-3 col-form-label" for="week_11">Week 11<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="week_11" name="week_11" type="number" step="0.01" placeholder="Progress Wee" value="<?php echo $row['week_11']; ?>"/>
+                                        <input class="form-control" id="week_11" name="week_11" type="number" step="0.01" placeholder="Progress Week" value="<?php echo $row['week_11']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="week_12">Week 12</label>
+                                    <label class="col-sm-3 col-form-label" for="week_12">Week 12<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="week_12" name="week_12" type="number" step="0.01" placeholder="Progress Wee" value="<?php echo $row['week_12']; ?>"/>
+                                        <input class="form-control" id="week_12" name="week_12" type="number" step="0.01" placeholder="Progress Week" value="<?php echo $row['week_12']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="week_13">Week 13</label>
+                                    <label class="col-sm-3 col-form-label" for="week_13">Week 13<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="week_13" name="week_13" type="number" step="0.01" placeholder="Progress Wee" value="<?php echo $row['week_13']; ?>"/>
+                                        <input class="form-control" id="week_13" name="week_13" type="number" step="0.01" placeholder="Progress Week" value="<?php echo $row['week_13']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="week_14">Week 14</label>
+                                    <label class="col-sm-3 col-form-label" for="week_14">Week 14<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="week_14" name="week_14" type="number" step="0.01" placeholder="Progress Wee" value="<?php echo $row['week_14']; ?>"/>
+                                        <input class="form-control" id="week_14" name="week_14" type="number" step="0.01" placeholder="Progress Week" value="<?php echo $row['week_14']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="week_15">Week 15</label>
+                                    <label class="col-sm-3 col-form-label" for="week_15">Week 15<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="week_15" name="week_15" type="number" step="0.01" placeholder="Progress Wee" value="<?php echo $row['week_15']; ?>"/>
+                                        <input class="form-control" id="week_15" name="week_15" type="number" step="0.01" placeholder="Progress Week" value="<?php echo $row['week_15']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label">Lampiran Sebelumnya</label>
+                                    <label class="col-sm-3 col-form-label">Lampiran Sebelumnya<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <?php echo $row['lamp_monitoring']; ?>
                                     </div>
@@ -176,7 +176,7 @@ if(isset($_GET['id'])) {
                                 </div>
                                 <!-- Tambahkan pertanyaan apakah ingin mengganti lampiran -->
                                 <!-- <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label">Mau Tambah Lampiran?</label>
+                                    <label class="col-sm-3 col-form-label">Mau Tambah Lampiran?<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input type="radio" name="tambah_lampiran" value="ya"> Ya
                                         <input type="radio" name="tambah_lampiran" value="tidak" checked> Tidak
@@ -184,7 +184,7 @@ if(isset($_GET['id'])) {
                                 </div> -->
                                 <!-- Jika pengguna ingin mengganti lampiran, tampilkan input untuk unggah file -->
                                 <div class="form-group row" id="lampiran_baru">
-                                    <label class="col-sm-3 col-form-label" for="lamp_monitoring">Upload Baru</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_monitoring">Upload Baru<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_monitoring[]" type="file" multiple="multiple" />
@@ -201,6 +201,21 @@ if(isset($_GET['id'])) {
                             </div>
                         </div>
                     </div>
+                            <div class="col-md-4">
+                                <div class="card mb-5">
+                                    <div class="card-body">
+                                        <div class="form-group row">
+                                            <p class="col-sm-12" style="margin-bottom: 4px;">Perlu Diperhatikan !<strong><span style="color: red;">*</span></strong></p>
+                                            <p class="col-sm-12" style="margin-bottom: 4px;">Jika dalam 1 bulan terdapat 4 minggu harap masukkan data sesuai range nya, misalkan sebagai berikut :</p>
+                                            <p class="col-sm-12" style="margin-bottom: 4px;">- Bulan pertama (5 minggu) week 1-5</p>
+                                            <p class="col-sm-12" style="margin-bottom: 4px;">- Bulan kedua (4 minggu) week 6-9</p>
+                                            <p class="col-sm-12" style="margin-bottom: 4px;">- Bulan ketiga (5 minggu) week 11-15</p>
+                                            <p class="col-sm-12" style="margin-bottom: 15px;">Sesuaikan dengan kebutuhan.</p>
+                                            <p class="col-sm-12" style="margin-bottom: 4px;">Wajib upload file setiap week, agar tetap terrecord<strong><span style="color: red;">*</span></strong></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                 </div>
 				<!-- end of main-content -->
                 <!-- Footer Start -->

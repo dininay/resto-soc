@@ -70,37 +70,37 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="nama_lokasi">Nama Lahan</label>
+                                    <label class="col-sm-3 col-form-label" for="nama_lokasi">Nama Lahan<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="nama_lokasi" name="nama_lahan" type="text" value="<?php echo $row['nama_lahan']; ?>" placeholder="Example : Malang Sukun" />
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lokasi">Lokasi</label>
+                                    <label class="col-sm-3 col-form-label" for="lokasi">Alamat PBB<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="lokasi" name="lokasi" type="text" value="<?php echo $row['lokasi']; ?>" placeholder="Example : Jl. Raya S.Supriadi Kec.Sukun Kota Malang Jawa Timur, No. XX Kode Pos : XXXXX" />
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="nama_pemilik">Nama Pemilik</label>
+                                    <label class="col-sm-3 col-form-label" for="nama_pemilik">Nama Pemilik<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="nama_pemilik" name="nama_pemilik" value="<?php echo $row['nama_pemilik']; ?>" type="text" placeholder="Example : Pak Abadi" />
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="alamat_pemilik">Alamat Pemilik</label>
+                                    <label class="col-sm-3 col-form-label" for="alamat_pemilik">Alamat Pemilik<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="alamat_pemilik" name="alamat_pemilik" value="<?php echo $row['alamat_pemilik']; ?>" type="text" placeholder="Example : Jl. Raya S.Supriadi Kec.Sukun Kota Malang Jawa Timur, No. XX Kode Pos : XXXXX" />
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="no_telepon">No Telepon</label>
+                                    <label class="col-sm-3 col-form-label" for="no_telepon">No Telepon<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="no_telepon" name="no_tlp" type="number" value="<?php echo $row['no_tlp']; ?>" placeholder="Example : 08XXXXXXXXXX" maxlength="13" oninput="validatePhoneNumber(this)"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="luas_area">Luas Area (m3)</label>
+                                    <label class="col-sm-3 col-form-label" for="luas_area">Luas Area (m2)<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="luas_area" name="luas_area" type="text" value="<?php echo $row['luas_area']; ?>" placeholder="Example : 10000" />
                                     </div>
@@ -121,7 +121,7 @@ if(isset($_GET['id'])) {
                                 </div> -->
                                 <!-- Jika pengguna ingin mengganti lampiran, tampilkan input untuk unggah file -->
                                 <div class="form-group row" id="lampiran_baru">
-                                    <label class="col-sm-3 col-form-label" for="lamp_land">Upload Baru</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_land">Upload Baru<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_land[]" type="file" multiple="multiple" />
@@ -129,31 +129,31 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="maps">Link Maps</label>
+                                    <label class="col-sm-3 col-form-label" for="maps">Link Maps<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="maps" name="maps" type="text" value="<?php echo $row['maps']; ?>" placeholder="Example : https://google.com/maps/......." />
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="latitude">Latitude</label>
+                                    <label class="col-sm-3 col-form-label" for="latitude">Latitude<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="latitude" name="latitude" type="text" value="<?php echo $row['latitude']; ?>" placeholder="-X.XXXXXXX" step="0.0000001" min="-9" max="9" title="Format: -X.XXXXXXX" oninput="validateLatitude(this)"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="longitude">Longitude</label>
+                                    <label class="col-sm-3 col-form-label" for="longitude">Longitude<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="longitude" name="longitude" type="text" value="<?php echo $row['longitude']; ?>" placeholder="XXX.XXXXXXX" pattern="^-?\d{1,3}\.\d{1,7}$" title="Format: XXX.XXXXXXX" oninput="validateLongitude(this)" required />
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="harga_sewa">Harga Sewa</label>
+                                    <label class="col-sm-3 col-form-label" for="harga_sewa">Harga Sewa<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="harga_sewa" name="harga_sewa" type="text" value="<?php echo $row['harga_sewa']; ?>" placeholder="Masukkan angka saja" oninput="formatRupiah(this)"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="mintahun_sewa">Minimum Tahun Sewa</label>
+                                    <label class="col-sm-3 col-form-label" for="mintahun_sewa">Minimum Tahun Sewa<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="mintahun_sewa" name="mintahun_sewa" type="text" value="<?php echo $row['mintahun_sewa']; ?>" placeholder="Example : 5" />
                                     </div>

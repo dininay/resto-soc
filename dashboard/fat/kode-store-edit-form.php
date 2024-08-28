@@ -66,7 +66,7 @@ if(isset($_GET['id'])) {
                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                             <input type="hidden" name="kode_lahan" value="<?php echo $row['kode_lahan']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="kode_store">Kode Store</label>
+                                    <label class="col-sm-3 col-form-label" for="kode_store">Kode Store<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="kode_store" name="kode_store" type="text" value="<?php echo $row['kode_store']; ?>">
                                     </div>

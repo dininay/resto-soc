@@ -78,7 +78,7 @@ if ($status_approvlegal == "In Process") {
                             <form method="post" action="validasi-legal-edit.php" enctype="multipart/form-data">
                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label" for="status_approvlegal">Status Approval Legal</label>
+                                    <label class="col-sm-2 col-form-label" for="status_approvlegal">Status Approval Legal<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-10">
                                         <select class="form-control" id="status_approvlegal" name="status_approvlegal">
                                             <?php echo $options; ?>

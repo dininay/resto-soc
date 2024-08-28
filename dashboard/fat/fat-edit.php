@@ -34,29 +34,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // // Periksa apakah kunci 'lampiran' ada dalam $_FILES
-    // $lamp_st = "";
+    $lamp_st = "";
 
-    // if(isset($_FILES["lamp_st"])) {
-    //     $lamp_st_paths = array();
+    if(isset($_FILES["lamp_st"])) {
+        $lamp_st_paths = array();
 
-    //     // Loop through each file
-    //     foreach($_FILES['lamp_st']['name'] as $key => $filename) {
-    //         $file_tmp = $_FILES['lamp_st']['tmp_name'][$key];
-    //         $file_name = $_FILES['lamp_st']['name'][$key];
-    //         $target_dir = "../uploads/";
-    //         $target_file = $target_dir . basename($file_name);
+        // Loop through each file
+        foreach($_FILES['lamp_st']['name'] as $key => $filename) {
+            $file_tmp = $_FILES['lamp_st']['tmp_name'][$key];
+            $file_name = $_FILES['lamp_st']['name'][$key];
+            $target_dir = "../uploads/";
+            $target_file = $target_dir . basename($file_name);
 
-    //         // Attempt to move the uploaded file to the target directory
-    //         if (move_uploaded_file($file_tmp, $target_file)) {
-    //             $lamp_st_paths[] = $file_name;
-    //         } else {
-    //             echo "Gagal mengunggah file " . $file_name . "<br>";
-    //         }
-    //     }
+            // Attempt to move the uploaded file to the target directory
+            if (move_uploaded_file($file_tmp, $target_file)) {
+                $lamp_st_paths[] = $file_name;
+            } else {
+                echo "Gagal mengunggah file " . $file_name . "<br>";
+            }
+        }
 
-    //     // Join all file paths into a comma-separated string
-    //     $lamp_st = implode(",", $lamp_st_paths);
-    // }
+        // Join all file paths into a comma-separated string
+        $lamp_st = implode(",", $lamp_st_paths);
+    }
 
     $atm_bank = "";
 
@@ -83,7 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Update data di database
-    $sql = "UPDATE socdate_fat SET lamp_qris = '$lamp_qris', atm_bank = '$atm_bank', email = '$email' WHERE id = '$id'";
+    $sql = "UPDATE socdate_fat SET lamp_qris = '$lamp_qris', lamp_st = '$lamp_st', atm_bank = '$atm_bank', email = '$email' WHERE id = '$id'";
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
         header("Location: " . $base_url . "/datatables-fat.php");

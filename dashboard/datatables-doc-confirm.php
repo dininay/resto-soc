@@ -147,7 +147,7 @@ $conn->close();
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Datatables Approval Draft Table Sewa</h1>
+                    <h1>Datatables Approval Table Sewa & PSM </h1>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
                 <!-- end of row-->
@@ -354,9 +354,12 @@ $conn->close();
                                                     <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
                                                         <?php echo $row['confirm_bod']; ?>
                                                     </span>
-                                                </td>   
+                                                </td>  
                                                 <td>
                                                     <?php
+                                                    // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
+                                                    date_default_timezone_set('Asia/Jakarta');
+
                                                     $start_date = $row['bod_date'];
                                                     $sla_date = $row['slabod_date'];
                                                     $confirm_bod = $row['confirm_bod'];
@@ -364,6 +367,14 @@ $conn->close();
                                                     // Menghitung scoring
                                                     $scoring = calculateScoring($start_date, $sla_date, $sla_value);
                                                     $remarks = getRemarks($scoring);
+
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
 
                                                     if ($confirm_bod === 'Approve') {
                                                         // Menentukan label berdasarkan remarks
@@ -382,22 +393,24 @@ $conn->close();
 
                                                         echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
-                                                        // Mendapatkan tanggal hari ini
-                                                        $today = new DateTime();
-
-                                                        // Convert $sla_date to DateTime object
-                                                        $sla_date_obj = new DateTime($sla_date);
-
-                                                        // Menghitung jumlah hari menuju SLA date
-                                                        $diff = $today->diff($sla_date_obj);
-                                                        $daysDifference = (int)$diff->format('%R%a'); // Menyertakan tanda plus atau minus
-
-                                                        if ($daysDifference < 0) {
-                                                            // SLA telah terlewat, hitung sebagai hari terlambat
-                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . abs($daysDifference) . ' hari</button>';
+                                                        // Memeriksa apakah waktu sekarang di luar jam kerja
+                                                        if ($current_time < $work_start || $current_time > $work_end) {
+                                                            echo '<button type="button" class="btn btn-sm btn-info">Di Luar Jam Kerja</button>';
                                                         } else {
-                                                            // SLA belum tercapai, hitung mundur
-                                                            echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $daysDifference . '</button>';
+                                                            // Convert $sla_date to DateTime object
+                                                            $sla_date_obj = new DateTime($sla_date);
+
+                                                            // Menghitung jumlah hari menuju SLA date
+                                                            $diff = $now->diff($sla_date_obj);
+                                                            $daysDifference = (int)$diff->format('%R%a'); // Menyertakan tanda plus atau minus
+
+                                                            if ($daysDifference < 0) {
+                                                                // SLA telah terlewat, hitung sebagai hari terlambat
+                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . abs($daysDifference) . ' hari</button>';
+                                                            } else {
+                                                                // SLA belum tercapai, hitung mundur
+                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $daysDifference . '</button>';
+                                                            }
                                                         }
                                                     }
                                                     ?>
@@ -405,14 +418,24 @@ $conn->close();
                                                 <td>
                                                     <!-- Tombol Edit -->
                                                     <?php if ($row['confirm_bod'] != "Approve"): ?>
-                                                        <div>
-                                                        <!-- <a href="owner/draft-sewa-owner-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
-                                                            <i class="nav-icon i-Pen-2"></i>
-                                                        </a> -->
-                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['confirm_bod'] ?>">
+                                                    <?php
+                                                    // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
+                                                    date_default_timezone_set('Asia/Jakarta');
+
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
+
+                                                    if ($row['confirm_bod'] != "Approve" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                        echo '<button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="'. $row['id'] .'" data-status="'. $row['confirm_bod'] .'">
                                                             <i class="nav-icon i-Book"></i>
-                                                        </button>
-                                                    </div>
+                                                        </button>';
+                                                    }
+                                                    ?>
                                                     <?php endif; ?>
 
                                                 <!-- Modal -->
@@ -429,7 +452,7 @@ $conn->close();
                                                                 <form id="statusForm" method="post" action="owner/draft-sewa-owner-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" id="modalId" value="<?= $row['id']; ?>">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve Draft</label>
+                                                                        <label for="statusSelect">Status Approve Draft<strong><span style="color: red;">*</span></strong></label>
                                                                         <select class="form-control" id="statusSelect" name="confirm_bod">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
@@ -442,11 +465,11 @@ $conn->close();
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">
                                                                         <div class="form-group">
-                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <label for="issue_detail">Issue Detail<strong><span style="color: red;">*</span></strong></label>
                                                                             <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="pic">PIC</label>
+                                                                            <label for="pic">PIC<strong><span style="color: red;">*</span></strong></label>
                                                                             <select class="form-control" id="pic" name="pic">
                                                                                 <option value="">Pilih PIC</option>
                                                                                 <option value="Legal">Legal</option>
@@ -467,11 +490,11 @@ $conn->close();
                                                                             </select>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <label for="action_plan">Action Plan<strong><span style="color: red;">*</span></strong></label>
                                                                             <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <label for="kronologi">Upload File Kronologi<strong><span style="color: red;">*</span></strong></label>
                                                                             <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
                                                                         </div>
                                                                     </div>

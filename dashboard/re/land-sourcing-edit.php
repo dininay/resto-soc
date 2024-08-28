@@ -1,4 +1,12 @@
 <?php
+// Include PHPMailer library files
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require '../../vendor/autoload.php'; // Hanya jika menggunakan Composer
+
+// Inisialisasi PHPMailer
+$mail = new PHPMailer(true);
 // Koneksi ke database tracking_resto
 include "../../koneksi.php";
 
@@ -20,6 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $mintahun_sewa = $_POST["mintahun_sewa"];
     $status_approvre = "Approve";
     $id = $_POST['id'];
+    $re_date = date('Y-m-d');
 
     $lamp_land = "";
     if(isset($_FILES["lamp_land"])) {
@@ -45,17 +54,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Update data di tabel land
-    $sql_update_land = "UPDATE land SET kode_lahan = ?, nama_lahan = ?, lokasi = ?, nama_pemilik = ?, alamat_pemilik = ?, no_tlp = ?, luas_area = ?, lamp_land = ?, maps = ?, latitude = ?, longitude = ?, harga_sewa = ?, mintahun_sewa = ?, status_approvre = ? WHERE id = ?";
+    $sql_update_land = "UPDATE land SET kode_lahan = ?, re_date = ?, nama_lahan = ?, lokasi = ?, nama_pemilik = ?, alamat_pemilik = ?, no_tlp = ?, luas_area = ?, lamp_land = ?, maps = ?, latitude = ?, longitude = ?, harga_sewa = ?, mintahun_sewa = ?, status_approvre = ? WHERE id = ?";
     $stmt_update_land = $conn->prepare($sql_update_land);
-    $stmt_update_land->bind_param("ssssssssssssssi", $kode_lahan, $nama_lahan, $lokasi, $nama_pemilik, $alamat_pemilik, $no_tlp, $luas_area, $lamp_land, $maps, $latitude, $longitude, $harga_sewa, $mintahun_sewa, $status_approvre, $id);
+    $stmt_update_land->bind_param("sdsssssssssssssi", $kode_lahan, $re_date, $nama_lahan, $lokasi, $nama_pemilik, $alamat_pemilik, $no_tlp, $luas_area, $lamp_land, $maps, $latitude, $longitude, $harga_sewa, $mintahun_sewa, $status_approvre, $id);
 
     if ($stmt_update_land->execute() === TRUE) {
         // Cek jika kode_lahan sudah ada di tabel re
-        $sql_check_re = "SELECT kode_lahan FROM re WHERE kode_lahan = ?";
+        $sql_check_re = "SELECT status_approvowner, status_vl FROM re WHERE kode_lahan = ?";
         $stmt_check_re = $conn->prepare($sql_check_re);
         $stmt_check_re->bind_param("s", $kode_lahan);
         $stmt_check_re->execute();
         $stmt_check_re->store_result();
+        $stmt_check_re->bind_result($existing_status_approvowner, $existing_status_vl);
+        $stmt_check_re->fetch();
 
         if ($stmt_check_re->num_rows === 0) {
             // Jika kode_lahan tidak ada di tabel re dan status_approvre adalah 'Approve'
@@ -72,17 +83,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $result_sla_qs = $conn->query($sql_select_sla_qs);
 
                     if ($row_sla_qs = $result_sla_qs->fetch_assoc()) {
-                        $sla_days_qs = $row_sla_qs['sla'];
-                        $end_date_obj = new DateTime($row['re_date']);
-                        $end_date_obj->modify("+$sla_days_qs days");
-                        $sla_bod_date = $end_date_obj->format("Y-m-d");
-                        $sla_vl_date = $end_date_obj->format("Y-m-d");
+                        $sql_sla_vl = "SELECT sla FROM master_sla WHERE divisi = 'VL'";
+                        $result_sla_vl = $conn->query($sql_sla_vl);
+                        if ($result_sla_vl->num_rows > 0) {
+                            $row_sla_vl = $result_sla_vl->fetch_assoc();
+                            $hari_sla_vl = $row_sla_vl['sla'];
+                            $slavl_date = date("Y-m-d", strtotime($re_date . ' + ' . $hari_sla_vl . ' days'));
+                        } else {
+                            $conn->rollback();
+                            echo "Error: Data SLA tidak ditemukan untuk divisi VL";
+                            exit;
+                        }
+                        $sql_sla_steqp = "SELECT sla FROM master_sla WHERE divisi = 'Owner Surveyor'";
+                        $result_sla_steqp = $conn->query($sql_sla_steqp);
+                        if ($result_sla_steqp->num_rows > 0) {
+                            $row_sla_steqp = $result_sla_steqp->fetch_assoc();
+                            $hari_sla_steqp = $row_sla_steqp['sla'];
+                            $sla_date = date("Y-m-d", strtotime($re_date . ' + ' . $hari_sla_steqp . ' days'));
+                        } else {
+                            $conn->rollback();
+                            echo "Error: Data SLA tidak ditemukan untuk divisi BoD";
+                            exit;
+                        }
+
+                        $status_approvowner = 'In Process';
+                        $status_vl = 'In Process';
 
                         $sql_insert_re = "INSERT INTO re (kode_lahan, status_approvowner, sla_date, status_vl, slavl_date) VALUES (?,?,?,?,?)";
                         $stmt_insert_re = $conn->prepare($sql_insert_re);
-                        $status_approvowner = 'In Process';
-                        $status_vl = 'In Process';
-                        $stmt_insert_re->bind_param("sssss", $row['kode_lahan'], $status_approvowner, $sla_bod_date, $status_vl, $sla_vl_date);
+                        $stmt_insert_re->bind_param("sssss", $row['kode_lahan'], $status_approvowner, $sla_date, $status_vl, $slavl_date);
                         $stmt_insert_re->execute();
                     }
 
@@ -101,30 +130,66 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     }
                 }
             }
-        } elseif ($status_approvre == 'Pending') {
-            $status_hold = "In Process";
-            $due_date = date("Y-m-d H:i:s");
+            try {
+                // Pengaturan server SMTP
+                $mail->isSMTP();
+                $mail->Host = 'sandbox.smtp.mailtrap.io';  // Ganti dengan SMTP server Anda
+                $mail->SMTPAuth = true;
+                $mail->Username = 'ff811f556f5d12'; // Ganti dengan email Anda
+                $mail->Password = 'c60c92868ce0f8'; // Ganti dengan password email Anda
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                $mail->Port = 2525;
+                
+                // Pengaturan pengirim dan penerima
+                $mail->setFrom('resto-soc@gacoan.com', 'Resto SOC');
 
-            $sql_hold = "INSERT INTO hold_project (kode_lahan, issue_detail, pic, action_plan, due_date, status_hold, kronologi) VALUES (?, ?, ?, ?, ?, ?, ?)";
-            $stmt_hold = $conn->prepare($sql_hold);
-            $stmt_hold->bind_param("sssssss", $kode_lahan, $_POST["issue_detail"], $_POST["pic"], $_POST["action_plan"], $due_date, $status_hold, $_POST["kronologi"]);
-            $stmt_hold->execute();
-        } elseif ($status_approvre == 'Reject') {
-            $sql_reject_land = "UPDATE land SET status_land = 'Reject' WHERE id = ?";
-            $stmt_reject_land = $conn->prepare($sql_reject_land);
-            $stmt_reject_land->bind_param("i", $id);
-            $stmt_reject_land->execute();
+                // Query untuk mendapatkan email pengguna dengan level "Real Estate"
+                $sql = "SELECT email FROM user WHERE level IN ('Legal','BoD')";
+                $result = $conn->query($sql);
+
+                if ($result->num_rows > 0) {
+                    while($row = $result->fetch_assoc()) {
+                        $mail->addAddress($row['email']); // Tambahkan setiap penerima email
+
+                        // Konten email
+                        $mail->isHTML(true);
+                        $mail->Subject = 'Notification: 1 New Active Resto SOC Ticket';
+                        $mail->Body    = '
+                        <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                            <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
+                                <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Team,</h2>
+                                <p>You have 1 new active ticket in the Resto SOC system. Please log in to the SOC application to review the details.</p>
+                                <p>Thank you for your prompt attention to this matter.</p>
+                                <p></p>
+                                <p>Best regards,</p>
+                                <p>Resto - SOC</p>
+                            </div>
+                        </div>';
+                        $mail->AltBody = 'Dear Team,'
+                                       . 'You have 1 new active ticket in the Resto SOC system. Please log in to the SOC application to review the details.'
+                                       . 'Thank you for your prompt attention to this matter.'
+                                       . 'Best regards,'
+                                       . 'Resto - SOC';
+
+                        // Kirim email
+                        $mail->send();
+                        $mail->clearAddresses(); // Hapus semua penerima sebelum loop berikutnya
+                    }
+                }
+                $mail->smtpClose(); 
+                // Redirect setelah email dikirim
+                header("Location: " . $base_url . "/datatables-land-sourcing.php");
+                exit();
+
+            } catch (Exception $e) {
+                echo "Email tidak dapat dikirim. Error: {$mail->ErrorInfo}";
+            }
         }
-        
-        echo "<script>
-                alert('Status berhasil diperbarui.');
-                window.location.href = window.location.href;
-             </script>";
     } else {
         echo "Error: " . $stmt_update_land->error;
     }
-    header("Location: ../datatables-land-sourcing.php");
-exit;
+
+    // Tutup koneksi dan statement
     $stmt_update_land->close();
     $conn->close();
 }

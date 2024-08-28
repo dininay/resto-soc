@@ -249,15 +249,26 @@ function getBadgeColor($remarks) {
                                                 </td>
                                                 <td>
                                                     <?php
+                                                    // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
+                                                    date_default_timezone_set('Asia/Jakarta');
+
                                                     $start_date = $row['woeqp_date'];
                                                     $sla_date = $row['sla_steqp'];
-                                                    $status_woeqp = $row['status_woeqp'];
+                                                    $status_steqp = $row['status_woeqp'];
 
                                                     // Menghitung scoring
                                                     $scoring = calculateScoring($start_date, $sla_date, $sla_value);
                                                     $remarks = getRemarks($scoring);
 
-                                                    if ($status_woeqp === 'Approve') {
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
+
+                                                    if ($status_steqp === 'Approve') {
                                                         // Menentukan label berdasarkan remarks
                                                         $status_label = '';
                                                         switch ($remarks) {
@@ -274,20 +285,23 @@ function getBadgeColor($remarks) {
 
                                                         echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
-                                                        // Mendapatkan tanggal hari ini
-                                                        $today = new DateTime();
-                                                        
-                                                        // Menghitung jumlah hari terlambat
-                                                        $lateDays = $sla_date < $today ? $today->diff($sla_date)->days : 0;
-                                                        
-                                                        if ($lateDays > 0) {
-                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+                                                        // Memeriksa apakah waktu sekarang di luar jam kerja
+                                                        if ($current_time < $work_start || $current_time > $work_end) {
+                                                            echo '<button type="button" class="btn btn-sm btn-info">Di Luar Jam Kerja</button>';
                                                         } else {
-                                                            $diff = $sla_date->diff($today);
-                                                            if ($diff->days <= 5) {
-                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
+                                                            // Convert $sla_date to DateTime object
+                                                            $sla_date_obj = new DateTime($sla_date);
+
+                                                            // Menghitung jumlah hari menuju SLA date
+                                                            $diff = $now->diff($sla_date_obj);
+                                                            $daysDifference = (int)$diff->format('%R%a'); // Menyertakan tanda plus atau minus
+
+                                                            if ($daysDifference < 0) {
+                                                                // SLA telah terlewat, hitung sebagai hari terlambat
+                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . abs($daysDifference) . ' hari</button>';
                                                             } else {
-                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
+                                                                // SLA belum tercapai, hitung mundur
+                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $daysDifference . '</button>';
                                                             }
                                                         }
                                                     }
@@ -304,9 +318,9 @@ function getBadgeColor($remarks) {
                                                     $interval = $today->diff($sla_steqp)->format("%r%a");
 
                                                     // Menampilkan tombol jika status bukan Approve dan sudah mendekati H-21 dari deadline
-                                                    if ($row['status_woeqp'] !== 'Approve' && $interval <= 100 && $interval >= 0) : ?>
+                                                    if ($row['status_woeqp'] !== 'Approve') : ?>
                                                         <div>
-                                                            <a href="sdg-pk/eqp-wo-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                            <a href="sdg-pk/eqp-wo-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mr-2">
                                                                 <i class="i-Pen-2"></i>
                                                             </a>
                                                             <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_woeqp'] ?>">
@@ -329,7 +343,7 @@ function getBadgeColor($remarks) {
                                                                     <form id="statusForm" method="post" action="sdg-pk/eqp-wo-process.php"  enctype="multipart/form-data">
                                                                         <input type="hidden" name="id" id="modalId" value="<?= $row['id']; ?>">
                                                                         <div class="form-group">
-                                                                            <label for="statusSelect">Status WO EQP</label>
+                                                                            <label for="statusSelect">Status WO EQP<strong><span style="color: red;">*</span></strong></label>
                                                                             <select class="form-control" id="statusSelect" name="status_woeqp">
                                                                                 <option value="In Process">In Process</option>
                                                                                 <option value="Pending">Pending</option>

@@ -64,13 +64,13 @@ if(isset($_GET['id'])) {
                             <form method="post" action="obstacle-land-edit.php" enctype="multipart/form-data">
                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="note_survey">Result Survey</label>
+                                    <label class="col-sm-3 col-form-label" for="note_survey">Result Survey<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <textarea class="form-control" id="note_survey" name="note_survey" rows="4" cols="50"><?php echo $row['note_survey']; ?></textarea>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_survey">Upload Dokumen Pendukung</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_survey">Upload Dokumen Pendukung<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_survey[]" type="file" multiple="multiple" />
@@ -79,7 +79,7 @@ if(isset($_GET['id'])) {
                                 </div>
                                 
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="urugan">Apakah ada temuan urugan ?</label>
+                                    <label class="col-sm-3 col-form-label" for="urugan">Apakah ada temuan urugan ?<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="urugan" name="urugan" onchange="toggleUruganDetail()">
                                         <option>Pilih</option>
@@ -90,7 +90,7 @@ if(isset($_GET['id'])) {
                                 </div>
 
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="obstacle">Obstacle</label>
+                                    <label class="col-sm-3 col-form-label" for="obstacle">Obstacle<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="obstacle" name="obstacle" onchange="toggleObstacleDetail()">
                                         <option>Pilih</option>
@@ -101,7 +101,7 @@ if(isset($_GET['id'])) {
                                 </div>
 
                                 <div class="form-group row" id="obstacle-detail" style="display: none;">
-                                    <label class="col-sm-3 col-form-label" for="obs_detail">Detail Obstacle</label>
+                                    <label class="col-sm-3 col-form-label" for="obs_detail">Detail Obstacle<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="obs_detail" name="obs_detail" type="text" value="<?php echo $row['obs_detail']; ?>">
                                     </div>
@@ -113,7 +113,7 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row" id="lamp-survey" style="display: none;">
-                                    <label class="col-sm-3 col-form-label" for="lamp_layouting">Upload WO Obstacle</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_layouting">Upload WO Obstacle<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_layouting[]" type="file" multiple="multiple" />

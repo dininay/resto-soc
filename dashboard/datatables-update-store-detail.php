@@ -15,16 +15,6 @@ if (isset($_GET['kode_lahan'])) {
         land.nama_lahan,
         land.lokasi,
         land.maps,
-        soc_fat.*, 
-        soc_hrga.*, 
-        soc_it.*, 
-        soc_legal.*, 
-        soc_marketing.*, 
-        soc_rto.*, 
-        soc_sdg.*, 
-        note_ba.*, 
-        note_legal.*,
-        doc_legal.*,
         socdate_academy.kpt_1,
         socdate_academy.kpt_2,
         socdate_academy.kpt_3,
@@ -59,46 +49,20 @@ if (isset($_GET['kode_lahan'])) {
         socdate_marketing.email_resto,
         socdate_marketing.lamp_merchant,
         socdate_scm.lamp_sj,
-        socdate_sdg.sumber_air,
-        socdate_sdg.kesesuaian_ujilab,
-        socdate_sdg.filter_air,
+        socdate_sdg.lamp_sumberair,
         socdate_sdg.lamp_filterair,
         socdate_sdg.lamp_ujilab,
-        socdate_sdg.debit_airsumur,
-        socdate_sdg.debit_airpdam,
-        socdate_sdg.id_pdam,
-        socdate_sdg.sumber_listrik,
-        socdate_sdg.form_pengajuanlistrik,
-        socdate_sdg.hasil_va,
-        socdate_sdg.id_pln,
-        socdate_sdg.biaya_perkwh,
         socdate_sdg.lampwo_reqipal,
+        socdate_sdg.lamp_slo,
+        socdate_sdg.lamp_nidi,
         sdg_desain.lamp_permit,
         sdg_desain.lamp_pbg,
         dokumen_loacd.kode_store,
-        socdate_academy.*,
-        soc_rto.*,
-        soc_it.*,
-        soc_fat.*,
-        soc_hrga.*,
-        soc_legal.*,
-        soc_marketing.*,
-        soc_sdg.*
+        socdate_academy.*
         FROM resto
         LEFT JOIN land ON resto.kode_lahan = land.kode_lahan
         LEFT JOIN summary_soc ON resto.kode_lahan = summary_soc.kode_lahan
         LEFT JOIN equipment ON resto.kode_lahan = equipment.kode_lahan
-        LEFT JOIN soc_fat ON summary_soc.kode_lahan = soc_fat.kode_lahan
-        LEFT JOIN soc_hrga ON soc_fat.kode_lahan = soc_hrga.kode_lahan
-        LEFT JOIN soc_it ON soc_fat.kode_lahan = soc_it.kode_lahan
-        LEFT JOIN soc_legal ON soc_fat.kode_lahan = soc_legal.kode_lahan
-        LEFT JOIN soc_marketing ON soc_fat.kode_lahan = soc_marketing.kode_lahan
-        LEFT JOIN soc_rto ON soc_fat.kode_lahan = soc_rto.kode_lahan
-        LEFT JOIN soc_sdg ON soc_fat.kode_lahan = soc_sdg.kode_lahan
-        LEFT JOIN note_ba ON soc_fat.kode_lahan = note_ba.kode_lahan
-        LEFT JOIN note_legal ON soc_fat.kode_lahan = note_legal.kode_lahan
-        LEFT JOIN doc_legal ON note_legal.kode_lahan = doc_legal.kode_lahan
-        LEFT JOIN sign ON soc_fat.kode_lahan = sign.kode_lahan
         LEFT JOIN socdate_academy ON land.kode_lahan = socdate_academy.kode_lahan
         LEFT JOIN socdate_fat ON land.kode_lahan = socdate_fat.kode_lahan
         LEFT JOIN socdate_hr ON land.kode_lahan = socdate_hr.kode_lahan
@@ -240,7 +204,7 @@ $sql = "SELECT
             draft.slalegal_date AS draft_slalegal_date,
             draft.sla_date AS draft_sla_date,
             draft.end_date AS draft_end_date,
-            draft.fatpsm_date AS draft_fat_date,
+            draft.psmfat_date AS draft_fat_date,
             draft.slafatpsm_date AS draft_slafat_date,
             procurement.start_date AS procurement_start_date,
             procurement.sla_date AS procurement_sla_date
@@ -516,7 +480,11 @@ if ($result->num_rows > 0) {
         }
 
         // Hitung scoring dan remarks untuk masing-masing data
-        $scoring1_2 = ($row['month_1'] + $row['month_2'] + $row['month_3']) - 100;
+        $month_1 = !empty($row['month_1']) ? $row['month_1'] : 0;
+        $month_2 = !empty($row['month_2']) ? $row['month_2'] : 0;
+        $month_3 = !empty($row['month_3']) ? $row['month_3'] : 0;
+
+        $scoring1_2 = ($month_1 + $month_2 + $month_3) - 100;
         $scoring2_2 = (!empty($row['lamp_steqp']) ? 100 : 0) - 100;
         $scoring3_2 = $row['bangunan_mural']-100;
         $scoring4_2 = ($row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) / 5 - 100;
@@ -683,128 +651,150 @@ WHERE land.kode_lahan = '$kode_lahan'
 GROUP BY land.kode_lahan";
 $phaseResult = $conn->query($phaseQuery);
 
-$dates = [];
+// $dates = [];
 $phases = [];
+$currentDate = date('Y-m-d'); // Tanggal hari ini
+
 while ($row = $phaseResult->fetch_assoc()) {
     // Menambahkan tanggal ke array $dates
     $dates[] = ['status_date' => $row['status_date']];
-    
-    // Menambahkan fase ke array $phases
+
+    // RE Submit Lahan
     $phases[] = [
         'start' => $row['status_date'],
-        'end' => $row['re_date'],
+        'end' => $row['re_date'] ?: $currentDate,
         'phase_name' => 'RE Submit Lahan'
     ];
-    
+
+    // BoD Validation
     $phases[] = [
-        'start' => $row['re_date'],
-        'end' => $row['re_start_date'],
+        'start' => $row['re_date'] ?: $currentDate,
+        'end' => $row['re_start_date'] ?: $currentDate,
         'phase_name' => 'BoD Validation'
     ];
-    
+
+    // Negosiasi
     $phases[] = [
-        'start' => $row['re_start_date'],
-        'end' => $row['nego_date'],
+        'start' => $row['re_start_date'] ?: $currentDate,
+        'end' => $row['nego_date'] ?: $currentDate,
         'phase_name' => 'Negosiasi'
     ];
-    
+
+    // Validasi Lahan
     $phases[] = [
-        'start' => $row['re_date'],
-        'end' => $row['vl_date'],
+        'start' => $row['re_date'] ?: $currentDate,
+        'end' => $row['vl_date'] ?: $currentDate,
         'phase_name' => 'Validasi Lahan'
     ];
-    
+
+    // LOA CD
     $phases[] = [
-        'start' => $row['vl_date'],
-        'end' => $row['loa_start_date'],
+        'start' => $row['vl_date'] ?: $currentDate,
+        'end' => $row['loa_start_date'] ?: $currentDate,
         'phase_name' => 'LOA CD'
     ];
-    
+
+    // Validasi Data
     $phases[] = [
-        'start' => $row['vl_date'],
-        'end' => $row['loa_end_date'],
+        'start' => $row['vl_date'] ?: $currentDate,
+        'end' => $row['loa_end_date'] ?: $currentDate,
         'phase_name' => 'Validasi Data'
     ];
-    
+
+    // Draft Sewa
     $phases[] = [
-        'start' => $row['loa_end_date'],
-        'end' => $row['draft_start_date'],
+        'start' => $row['loa_end_date'] ?: $currentDate,
+        'end' => $row['draft_start_date'] ?: $currentDate,
         'phase_name' => 'Draft Sewa'
     ];
-    
+
+    // TTD Sewa
     $phases[] = [
-        'start' => $row['draft_start_date'],
-        'end' => $row['draft_end_date'],
+        'start' => $row['draft_start_date'] ?: $currentDate,
+        'end' => $row['draft_end_date'] ?: $currentDate,
         'phase_name' => 'TTD Sewa'
     ];
-    
+
+    // DED
     $phases[] = [
-        'start' => $row['nego_date'],
-        'end' => $row['ded_start_date'],
+        'start' => $row['nego_date'] ?: $currentDate,
+        'end' => $row['ded_start_date'] ?: $currentDate,
         'phase_name' => 'DED'
     ];
-    
+
+    // Permit
     $phases[] = [
-        'start' => $row['ded_start_date'],
-        'end' => $row['ded_end_date'],
+        'start' => $row['ded_start_date'] ?: $currentDate,
+        'end' => $row['ded_end_date'] ?: $currentDate,
         'phase_name' => 'Permit'
     ];
-    
+
+    // QS
     $phases[] = [
-        'start' => $row['ded_start_date'],
-        'end' => $row['qs_start_date'],
+        'start' => $row['ded_start_date'] ?: $currentDate,
+        'end' => $row['qs_start_date'] ?: $currentDate,
         'phase_name' => 'QS'
     ];
-    
+
+    // Tender
     $phases[] = [
-        'start' => $row['qs_start_date'],
-        'end' => $row['procur_start_date'],
+        'start' => $row['qs_start_date'] ?: $currentDate,
+        'end' => $row['procur_start_date'] ?: $currentDate,
         'phase_name' => 'Tender'
     ];
-    
+
+    // SPK
     $phases[] = [
-        'start' => $row['procur_start_date'],
-        'end' => $row['spk_date'],
+        'start' => $row['procur_start_date'] ?: $currentDate,
+        'end' => $row['spk_date'] ?: $currentDate,
         'phase_name' => 'SPK'
     ];
-    
+
+    // Kick Off Meeting
     $phases[] = [
-        'start' => $row['spk_date'],
-        'end' => $row['kom_date'],
+        'start' => $row['spk_date'] ?: $currentDate,
+        'end' => $row['kom_date'] ?: $currentDate,
         'phase_name' => 'Kick Off Meeting'
     ];
-    
+
+    // Konstruksi
     $phases[] = [
-        'start' => $row['start_konstruksi'],
-        'end' => $row['consact_date'],
+        'start' => $row['start_konstruksi'] ?: $currentDate,
+        'end' => $row['consact_date'] ?: $currentDate,
         'phase_name' => 'Konstruksi'
     ];
-    
+
+    // ST Equipment
     $phases[] = [
-        'start' => $row['start_konstruksi'],
-        'end' => $row['steqp_date'],
+        'start' => $row['start_konstruksi'] ?: $currentDate,
+        'end' => $row['steqp_date'] ?: $currentDate,
         'phase_name' => 'ST Equipment'
     ];
-    
+
+    // ST Kontraktor
     $phases[] = [
-        'start' => $row['steqp_date'],
-        'end' => $row['stkonstruksi_date'],
+        'start' => $row['steqp_date'] ?: $currentDate,
+        'end' => $row['stkonstruksi_date'] ?: $currentDate,
         'phase_name' => 'ST Kontraktor'
     ];
-    
+
+    // RTO
     $phases[] = [
-        'start' => $row['stkonstruksi_date'],
-        'end' => $row['rto_act'],
+        'start' => $row['stkonstruksi_date'] ?: $currentDate,
+        'end' => $row['rto_act'] ?: $currentDate,
         'phase_name' => 'RTO'
     ];
-    
+
+    // GO
     $phases[] = [
-        'start' => $row['rto_act'],
-        'end' => $row['go_fix'],
+        'start' => $row['rto_act'] ?: $currentDate,
+        'end' => $row['go_fix'] ?: $currentDate,
         'phase_name' => 'GO'
     ];
 }
 
+// Konversi $phases ke JSON untuk digunakan di JavaScript
+$phasesJSON = json_encode($phases);
 // Tentukan tanggal mulai dari data, gunakan tanggal pertama dari data jika ada
 $startDate = isset($dates[0]['status_date']) ? $dates[0]['status_date'] : date('d M y');
 
@@ -837,7 +827,13 @@ $conn->close();
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.3.8/echarts.min.js"></script>
     <style>
+        #phaseChart {
+            width: 100%;
+            height: 500px;
+        }
         body {
         margin: 0;
         padding: 0;
@@ -1010,13 +1006,13 @@ $conn->close();
                     </div>
                 </div> -->
                 <div class="row justify-content-center">
-                                <div class="col-lg-4 col-md-6 col-sm-6">
+                <div class="col-lg-4 col-md-6 col-sm-6">
                                     <div class="card card-icon-bg card-icon-bg-primary o-hidden mb-4">
                                         <div class="card-body">
-                                            <i class="i-Add-User mr-3"></i>
+                                            <!-- <i class="i-Add-User mr-3"></i> -->
                                             <h5 class="text-muted mt-2 mb-2">Inventory Code</h5>
                                             <div class="content">
-                                                <p class="text-primary text-24 line-height-1 mb-2"><?php echo $kode_lahan; ?></p>
+                                                <p class="text-primary text-20 line-height-1 mb-2"><?php echo $kode_lahan; ?></p>
                                             </div>
                                         </div>
                                     </div>
@@ -1024,10 +1020,10 @@ $conn->close();
                                 <div class="col-lg-4 col-md-6 col-sm-6">
                                     <div class="card card-icon-bg card-icon-bg-primary o-hidden mb-4">
                                         <div class="card-body">
-                                            <i class="i-Add-User mr-3"></i>
+                                            <!-- <i class="i-Add-User mr-3"></i> -->
                                             <h5 class="text-muted mt-2 mb-2">Nama Lahan</h5>
                                             <div class="content">
-                                                <p class="text-primary text-24 line-height-1 mb-2"><?php echo $nama_lahan; ?></p>
+                                                <p class="text-primary text-20 line-height-1 mb-2"><?php echo $nama_lahan; ?></p>
                                             </div>
                                         </div>
                                     </div>
@@ -1035,44 +1031,54 @@ $conn->close();
                                 <div class="col-lg-4 col-md-6 col-sm-6">
                                     <div class="card card-icon-bg card-icon-bg-primary o-hidden mb-4">
                                         <div class="card-body">
-                                            <i class="i-Add-User mr-3"></i>
+                                            <!-- <i class="i-Add-User mr-3"></i> -->
                                             <h5 class="text-muted mt-2 mb-2">Lokasi</h5>
                                             <div class="content">
-                                                <p class="text-primary text-24 line-height-1 mb-2"><?php echo $lokasi; ?></p>
+                                                <p class="text-primary text-20 line-height-1 mb-2"><?php echo $lokasi; ?></p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                <div class="row justify-content-center">
-                    <div class="col-lg-8 col-md-12">
-                        <div class="card mb-4">
-                            <div class="card-body">
-                                <div class="card-title">All Dept Tracking</div>
-                                <div id="teamChart" style="height: 300px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row justify-content-center">
-                    <div class="col-lg-4 col-sm-12">
-                            <div class="card mb-4">
-                                <div class="card-body">
-                                    <div class="card-title">Status In Preparation</div>
-                                    <div id="echartGo" style="height: 300px;"></div>
+                            <div class="row justify-content-center">
+                                <div class="col-lg-8 col-md-12">
+                                    <div class="card mb-4">
+                                        <div class="card-body">
+                                            <div class="card-title">All Dept Tracking</div>
+                                            <div id="teamChart" style="height: 300px;"></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    <div class="col-lg-4 col-sm-12">
-                            <div class="card mb-4">
-                                <div class="card-body">
-                                    <div class="card-title">Status In Progress</div>
-                                    <div id="echartGo2" style="height: 300px;"></div>
+                            <div class="row justify-content-center">
+                                <div class="col-lg-4 col-sm-12">
+                                        <div class="card mb-4">
+                                            <div class="card-body">
+                                                <div class="card-title">Status In Preparation</div>
+                                                <div id="echartGo" style="height: 300px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <div class="col-lg-4 col-sm-12">
+                                        <div class="card mb-4">
+                                            <div class="card-body">
+                                                <div class="card-title">Status In Progress</div>
+                                                <div id="echartGo2" style="height: 300px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                            </div>
+                            <div class="row justify-content-center">
+                                <div class="col-lg-12 col-md-12">
+                                    <div class="card mb-4">
+                                        <div class="card-body">
+                                            <div class="card-title">Project Phase Tracking</div>
+                                            <div id="phaseChart" style="height: 500px;"></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                </div>
-                <div class="row">
+                <!-- <div class="row">
                     <div class="container">
                         <div class="scroll-container">
                             <div class="timeline-header">
@@ -1116,9 +1122,8 @@ $conn->close();
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> -->
 
-                
 							  <div class="table-responsive">
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
@@ -1715,12 +1720,12 @@ $conn->close();
                                                 }
                                                 ?>
                                                 
-                                                <td><span class="badge badge-<?= getBadgeColor('good') ?>">Total Good</span></td>
-                                                <td><?= $good_count ?></td>
-                                                <td><span class="badge badge-<?= getBadgeColor('poor') ?>">Total Poor</span></td>
-                                                <td><?= $poor_count ?></td>
-                                                <td><span class="badge badge-<?= getBadgeColor('failed') ?>">Total Failed</span></td>
-                                                <td><?= $failed_count ?></td>
+                                                <td colspan="2"><span class="badge badge-<?= getBadgeColor('good') ?>">Total Good</span></td>
+                                                <td colspan="1"><?= $good_count ?></td>
+                                                <td colspan="2"><span class="badge badge-<?= getBadgeColor('poor') ?>">Total Poor</span></td>
+                                                <td colspan="1"><?= $poor_count ?></td>
+                                                <td colspan="2"><span class="badge badge-<?= getBadgeColor('failed') ?>">Total Failed</span></td>
+                                                <td colspan="1"><?= $failed_count ?></td>
                                                 <td></td>
                                                 <?php endforeach; ?>
                                             </tr>
@@ -1775,7 +1780,12 @@ $conn->close();
                                                 <?php
                                                 // Mendefinisikan variabel untuk SLA
                                                 $sla_cons_date = !empty($row['start_konstruksi']) ? date('d M y', strtotime($row['start_konstruksi'] . ' +' . ($master_sla['Konstruksi'] ?? 0) . ' days')) : '';
-                                                $cons = $row['month_1'] + $row['month_2'] + $row['month_3'];
+                                                $month_1 = !empty($row['month_1']) ? $row['month_1'] : 0;
+                                                $month_2 = !empty($row['month_2']) ? $row['month_2'] : 0;
+                                                $month_3 = !empty($row['month_3']) ? $row['month_3'] : 0;
+
+                                                $scoring1_2 = ($month_1 + $month_2 + $month_3) - 100;
+                                                $cons = ($month_1 + $month_2 + $month_3) - 100;
                                                 $deviasi_cons = $cons - 100;
                                                 ?>
                                                 <td><?= isset($row['start_konstruksi']) && !empty($row['start_konstruksi']) ? date('d M y', strtotime($row['start_konstruksi'])) : '0' ?></td>
@@ -2651,13 +2661,13 @@ $conn->close();
                                                 }
                                                 ?>
                                                 
-                                                <td><span class="badge badge-<?= getBadgeColor('good') ?>">Total Good</span></td>
-                                                <td><?= $good_count2 ?></td>
-                                                <td><span class="badge badge-<?= getBadgeColor('poor') ?>">Total Poor</span></td>
-                                                <td><?= $poor_count2 ?></td>
-                                                <td><span class="badge badge-<?= getBadgeColor('failed') ?>">Total Failed</span></td>
-                                                <td><?= $failed_count2 ?></td>
-                                                <td></td>
+                                                <td colspan="2"><span class="badge badge-<?= getBadgeColor('good') ?>">Total Good</span></td>
+                                                <td colspan="1"><?= $good_count2 ?></td>
+                                                <td colspan="2"><span class="badge badge-<?= getBadgeColor('poor') ?>">Total Poor</span></td>
+                                                <td colspan="1"><?= $poor_count2 ?></td>
+                                                <td colspan="2"><span class="badge badge-<?= getBadgeColor('failed') ?>">Total Failed</span></td>
+                                                <td colspan="1"><?= $failed_count2 ?></td>
+                                                <td colspan="2"></td>
                                                 <?php endforeach; ?>
                                             </tr>
                                         </tbody>
@@ -3250,6 +3260,97 @@ $conn->close();
             });
         }
     </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Data from PHP
+        var phases = <?php echo $phasesJSON; ?>;
+        
+        // Configure chart
+        var phaseChart = echarts.init(document.getElementById('phaseChart'));
+
+        // Convert phase data to chart data format
+        var chartData = phases.map(function(phase) {
+            return {
+                name: phase.phase_name,
+                value: [new Date(phase.start).getTime(), new Date(phase.end).getTime()],
+                itemStyle: {
+                    color: '#69B578'
+                }
+            };
+        });
+
+        var option = {
+            tooltip: {
+                trigger: 'item',
+                axisPointer: {
+                    type: 'shadow'
+                },
+                formatter: function (params) {
+                    var start = new Date(params.value[0]).toISOString().split('T')[0];
+                    var end = new Date(params.value[1]).toISOString().split('T')[0];
+                    return params.name + '<br>' + 'Start: ' + start + '<br>' + 'End: ' + end;
+                }
+            },
+            xAxis: {
+                type: 'time',
+                axisLabel: {
+                    formatter: function (value) {
+                        var date = new Date(value);
+                        return date.getDate() + '/' + (date.getMonth() + 1);
+                    }
+                }
+            },
+            yAxis: {
+                type: 'category',
+                data: [
+                    'RE Submit Lahan', 'BoD Validation', 'Negosiasi', 'Validasi Lahan', 'LOA CD',
+                    'Validasi Data', 'Draft Sewa', 'TTD Sewa', 'DED', 'Permit', 'QS', 'Tender',
+                    'SPK', 'Kick Off Meeting', 'Konstruksi', 'ST Equipment', 'ST Kontraktor',
+                    'RTO', 'GO'
+                ]
+            },
+            series: [
+                {
+                    name: 'Phases',
+                    type: 'bar',
+                    barWidth: 20,
+                    data: chartData
+                },
+                {
+                    name: 'Phase Lines',
+                    type: 'line',
+                    data: chartData,
+                    itemStyle: {
+                        color: '#69B578'
+                    },
+                    lineStyle: {
+                        width: 2,
+                        type: 'solid'
+                    },
+                    markLine: {
+                        data: chartData.map(function(phase) {
+                            return {
+                                name: phase.name,
+                                xAxis: phase.value[0],
+                                yAxis: phase.name
+                            };
+                        })
+                    }
+                }
+            ]
+        };
+        
+        // Render chart
+        phaseChart.setOption(option);
+
+        // Resize chart on window resize
+        window.addEventListener("resize", function () {
+            setTimeout(function () {
+                phaseChart.resize();
+            }, 500);
+        });
+    });
+</script>
 </body>
 
 </html>

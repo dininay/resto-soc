@@ -66,7 +66,7 @@ if(isset($_GET['id'])) {
                             <form method="post" action="spkfa-procur-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_spkwofilterair">Upload Lampiran SPK Filter Air</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_spkwofilterair">Upload Lampiran SPK Filter Air<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multiple-file-upload">
                                             <input name="lamp_spkwofilterair[]" type="file" multiple="multiple" />

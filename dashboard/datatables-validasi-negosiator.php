@@ -426,7 +426,7 @@ $conn->close();
                                                     <!-- Tombol Edit -->
                                                     <?php if ($row['confirm_negovaldoc'] != "Done"): ?>
                                                         <div>
-                                                        <a href="negosiator/sign-finaldoc-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                        <a href="negosiator/sign-finaldoc-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>
                                                         <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['confirm_negovaldoc'] ?>">
@@ -449,7 +449,7 @@ $conn->close();
                                                                 <form id="statusForm" method="post" action="negosiator/sign-finaldoc-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" value="<?=$row["id"]?>"  id="modalId">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve Sign Nego</label>
+                                                                        <label for="statusSelect">Status Approve Sign Nego<strong><span style="color: red;">*</span></strong></label>
                                                                         <select class="form-control" id="statusSelect" name="confirm_negovaldoc">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
@@ -462,11 +462,11 @@ $conn->close();
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">
                                                                         <div class="form-group">
-                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <label for="issue_detail">Issue Detail<strong><span style="color: red;">*</span></strong></label>
                                                                             <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="pic">PIC</label>
+                                                                            <label for="pic">PIC<strong><span style="color: red;">*</span></strong></label>
                                                                             <select class="form-control" id="pic" name="pic">
                                                                                 <option value="">Pilih PIC</option>
                                                                                 <option value="Legal">Legal</option>
@@ -487,11 +487,11 @@ $conn->close();
                                                                             </select>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <label for="action_plan">Action Plan<strong><span style="color: red;">*</span></strong></label>
                                                                             <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <label for="kronologi">Upload File Kronologi<strong><span style="color: red;">*</span></strong></label>
                                                                             <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
                                                                         </div>
                                                                     </div>

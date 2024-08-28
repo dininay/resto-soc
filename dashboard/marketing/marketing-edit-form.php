@@ -66,13 +66,13 @@ if(isset($_GET['id'])) {
                             <form method="post" action="marketing-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="gmaps">Link GMaps</label>
+                                    <label class="col-sm-3 col-form-label" for="gmaps">Link Maps<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="gmaps" name="gmaps" type="text" placeholder="GMAPS" value="<?php echo $row['gmaps']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_gmaps">Upload Lampiran GMaps</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_gmaps">Upload Lampiran GMaps<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_gmaps[]" type="file" multiple="multiple" />
@@ -80,31 +80,31 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="id_m_gojek">ID Merchant Gojek</label>
+                                    <label class="col-sm-3 col-form-label" for="id_m_gojek">ID Merchant Gojek<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="id_m_gojek" name="id_m_gojek" type="text" placeholder="ID Merchant Gojek" value="<?php echo $row['id_m_gojek']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="id_m_shopee">ID Merchant Shopee</label>
+                                    <label class="col-sm-3 col-form-label" for="id_m_shopee">ID Merchant Shopee<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="id_m_shopee" name="id_m_shopee" type="text" placeholder="ID Merchant Shopee" value="<?php echo $row['id_m_shopee']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="id_m_grab">ID Merchant Grab</label>
+                                    <label class="col-sm-3 col-form-label" for="id_m_grab">ID Merchant Grab<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="id_m_grab" name="id_m_grab" type="text" placeholder="ID Merchant Grab" value="<?php echo $row['id_m_grab']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="email_resto">Email Resto</label>
+                                    <label class="col-sm-3 col-form-label" for="email_resto">Email Resto<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="email_resto" name="email_resto" type="text" placeholder="Email Resto" value="<?php echo $row['email_resto']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_content">Status Content & Promo</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_content">Status Content & Promo<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="lamp_content" name="lamp_content"  onchange="toggleContentDetail()">
                                         <option>Pilih</option>
@@ -114,7 +114,7 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row" style="display: none;" id="lamp_merchant">
-                                    <label class="col-sm-3 col-form-label" for="lamp_merchant">Upload Lampiran Pendukung Content & Promo</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_merchant">Upload Lampiran Pendukung Content & Promo<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_merchant[]" type="file" multiple="multiple" />
@@ -122,7 +122,7 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="issue_marketing">Apakah ada issue?</label>
+                                    <label class="col-sm-3 col-form-label" for="issue_marketing">Apakah ada issue?<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="issue_marketing" name="issue_marketing" onchange="toggleIssueDetail()">
                                         <option>Pilih</option>
@@ -132,7 +132,7 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row" id="note_issuemarketing" style="display: none;">
-                                    <label class="col-sm-3 col-form-label" for="note_issuemarketing">Catatan</label>
+                                    <label class="col-sm-3 col-form-label" for="note_issuemarketing">Catatan<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <textarea class="form-control" id="note_issuemarketing" name="note_issuemarketing" rows="4" cols="50"><?php echo $row['note_issuemarketing']; ?></textarea>
                                     </div>

@@ -3,7 +3,7 @@
 include "../koneksi.php";
 $confirm_qsurugan = "";
 // Query untuk mengambil data dari tabel land
-$sql = "SELECT d.kode_lahan, d.nama_lahan, d.lokasi, s.lamp_urugan, r.keterangan, p.lamp_vendorurugan, p.nama_vendorurugan,
+$sql = "SELECT d.kode_lahan, d.nama_lahan, d.lokasi, s.lamp_urugan, r.keterangan, p.lamp_vendorurugan, p.nama_vendorurugan, p.lamp_spkurugan,
 r.*,t.lamp_vd, t.kode_store
 FROM land d
 INNER JOIN dokumen_loacd t ON d.kode_lahan = t.kode_lahan
@@ -170,6 +170,7 @@ function getBadgeColor($remarks) {
                                                 <th>Lampiran RAB</th>
                                                 <th>Nama Vendor</th>
                                                 <th>Lampiran Pendukung Vendor</th>
+                                                <th>Lampiran SPK</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -273,6 +274,28 @@ function getBadgeColor($remarks) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_spkurugan_files = explode(",", $row['lamp_spkurugan']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_spkurugan'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_spkurugan_files as $vendor) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $vendor . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -301,6 +324,9 @@ function getBadgeColor($remarks) {
                                                 </td>
                                                 <td>
                                                     <?php
+                                                    // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
+                                                    date_default_timezone_set('Asia/Jakarta');
+
                                                     $start_date = $row['qsurugan_date'];
                                                     $sla_date = $row['slaurugan_date'];
                                                     $confirm_qsurugan = $row['confirm_qsurugan'];
@@ -308,6 +334,14 @@ function getBadgeColor($remarks) {
                                                     // Menghitung scoring
                                                     $scoring = calculateScoring($start_date, $sla_date, $sla_value);
                                                     $remarks = getRemarks($scoring);
+
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
 
                                                     if ($confirm_qsurugan === 'Approve') {
                                                         // Menentukan label berdasarkan remarks
@@ -326,34 +360,53 @@ function getBadgeColor($remarks) {
 
                                                         echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
-                                                        // Mendapatkan tanggal hari ini
-                                                        $today = new DateTime();
-
-                                                        // Convert $sla_date to DateTime object
-                                                        $sla_date_obj = new DateTime($sla_date);
-
-                                                        // Menghitung jumlah hari menuju SLA date
-                                                        $diff = $today->diff($sla_date_obj);
-                                                        $daysDifference = (int)$diff->format('%R%a'); // Menyertakan tanda plus atau minus
-
-                                                        if ($daysDifference < 0) {
-                                                            // SLA telah terlewat, hitung sebagai hari terlambat
-                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . abs($daysDifference) . ' hari</button>';
+                                                        // Memeriksa apakah waktu sekarang di luar jam kerja
+                                                        if ($current_time < $work_start || $current_time > $work_end) {
+                                                            echo '<button type="button" class="btn btn-sm btn-info">Di Luar Jam Kerja</button>';
                                                         } else {
-                                                            // SLA belum tercapai, hitung mundur
-                                                            echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $daysDifference . '</button>';
+                                                            // Convert $sla_date to DateTime object
+                                                            $sla_date_obj = new DateTime($sla_date);
+
+                                                            // Menghitung jumlah hari menuju SLA date
+                                                            $diff = $now->diff($sla_date_obj);
+                                                            $daysDifference = (int)$diff->format('%R%a'); // Menyertakan tanda plus atau minus
+
+                                                            if ($daysDifference < 0) {
+                                                                // SLA telah terlewat, hitung sebagai hari terlambat
+                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . abs($daysDifference) . ' hari</button>';
+                                                            } else {
+                                                                // SLA belum tercapai, hitung mundur
+                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $daysDifference . '</button>';
+                                                            }
                                                         }
                                                     }
                                                     ?>
                                                 </td>
+                                                
                                                 <td>
-                                                    <?php if ($row['confirm_qsurugan'] !== 'Approve') : ?>
-                                                        <a href="sdg-qs/urugan-qs-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                    <!-- Tombol Edit -->
+                                                    <?php if ($row['confirm_qsurugan'] != "Approve"): ?>
+                                                    <?php
+                                                    // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
+                                                    date_default_timezone_set('Asia/Jakarta');
+
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
+
+                                                    if ($row['confirm_qsurugan'] != "Approve" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                        echo '<a href="sdg-qs/urugan-qs-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
-                                                        </a>
-                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['confirm_qsurugan'] ?>">
+                                                        </a>';
+                                                        echo '<button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="'. $row['id'] .'" data-status="'.$row['confirm_qsurugan'] .'">
                                                             <i class="nav-icon i-Book"></i>
-                                                        </button>
+                                                        </button>';
+                                                    }
+                                                    ?>
                                                     <?php endif; ?>
                                                 </td>
 
@@ -371,7 +424,7 @@ function getBadgeColor($remarks) {
                                                             <form id="statusForm" method="post" action="sdg-qs/raburugan-process.php" enctype="multipart/form-data">
                                                                 <input type="hidden" name="id" id="modalKodeLahan">
                                                                 <div class="form-group">
-                                                                    <label for="statusSelect">Status Approve SDG QS</label>
+                                                                    <label for="statusSelect">Status Approve SDG QS<strong><span style="color: red;">*</span></strong></label>
                                                                     <select class="form-control" id="statusSelect" name="confirm_qsurugan" Placeholder="Pilih">
                                                                         <option value="In Process">In Process</option>
                                                                         <option value="Pending">Pending</option>
@@ -423,6 +476,7 @@ function getBadgeColor($remarks) {
                                                 <th>Lampiran RAB</th>
                                                 <th>Nama Vendor</th>
                                                 <th>Lampiran Pendukung Vendor</th>
+                                                <th>Lampiran SPK</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>

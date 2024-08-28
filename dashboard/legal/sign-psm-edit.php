@@ -66,11 +66,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!$stmt_update_dokumen_loacd->execute()) {
         echo "Error updating dokumen_loacd: " . $stmt_update_dokumen_loacd->error;
     }
-
+    $confirm_nego = "In Process";
     // Update data di tabel draft
-    $sql_update_draft = "UPDATE draft SET lamp_signpsm = ?, lamp_draf = ? WHERE id = ?";
+    $sql_update_draft = "UPDATE draft SET lamp_signpsm = ?, lamp_draf = ?, confirm_nego = ? WHERE id = ?";
     $stmt_update_draft = $conn->prepare($sql_update_draft);
-    $stmt_update_draft->bind_param("ssi", $lamp_signpsm, $lamp_draf, $id);
+    $stmt_update_draft->bind_param("sssi", $lamp_signpsm, $lamp_draf, $confirm_nego, $id);
 
     if (!$stmt_update_draft->execute()) {
         echo "Error updating draft: " . $stmt_update_draft->error;

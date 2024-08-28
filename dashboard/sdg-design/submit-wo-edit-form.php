@@ -64,7 +64,7 @@ if(isset($_GET['id'])) {
                             <form method="post" action="submit-wo-edit.php" enctype="multipart/form-data">
                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="submit_wo">Submit WO</label>
+                                    <label class="col-sm-3 col-form-label" for="submit_wo">Submit WO<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="submit_wo" name="submit_wo" onchange="toggleObstacleDetail()">
                                         <option>Pilih</option>
@@ -74,7 +74,7 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row" id="lamp_wo" style="display: none;">
-                                    <label class="col-sm-3 col-form-label" for="lamp_wo">Upload Dokumen Pendukung</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_wo">Upload Dokumen Pendukung<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_wo[]" type="file" multiple="multiple" />

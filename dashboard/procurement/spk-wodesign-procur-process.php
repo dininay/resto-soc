@@ -1,4 +1,12 @@
 <?php
+// Include PHPMailer library files
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require '../../vendor/autoload.php'; // Hanya jika menggunakan Composer
+
+// Inisialisasi PHPMailer
+$mail = new PHPMailer(true);
 // Koneksi ke database
 include "../../koneksi.php";
 
@@ -48,28 +56,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
         // Eksekusi query update
         if ($stmt_update->execute() === TRUE) {
             // Jika status_spkwo diubah menjadi 'Approve'
-            if ($status_spkwo == 'In Review By TAF') {
+            if ($status_spkwo == 'Approve') {
                 $spkwo_date = date("Y-m-d");
 
                 // Ambil SLA dari tabel master_sla untuk divisi SPK
-                $sql_sla_spk = "SELECT sla FROM master_sla WHERE divisi = 'SPK-FAT'";
-                $result_sla_spk = $conn->query($sql_sla_spk);
-                if ($result_sla_spk->num_rows > 0) {
-                    $row_sla_spk = $result_sla_spk->fetch_assoc();
-                    $hari_sla_spk = $row_sla_spk['sla'];
+                // $sql_sla_spk = "SELECT sla FROM master_sla WHERE divisi = 'SPK-FAT'";
+                // $result_sla_spk = $conn->query($sql_sla_spk);
+                // if ($result_sla_spk->num_rows > 0) {
+                //     $row_sla_spk = $result_sla_spk->fetch_assoc();
+                //     $hari_sla_spk = $row_sla_spk['sla'];
 
-                    // Hitung sla_spkwo berdasarkan wo_date + SLA dari divisi SPK
-                    $sla_spkwofat = date("Y-m-d", strtotime($spkwo_date . ' + ' . $hari_sla_spk . ' days'));
-                } else {
-                    echo "Error: Data SLA tidak ditemukan untuk divisi SPK.";
-                    exit;
-                }
-                $status_spkwofat = "In Process";
+                //     // Hitung sla_spkwo berdasarkan wo_date + SLA dari divisi SPK
+                //     $sla_spkwofat = date("Y-m-d", strtotime($spkwo_date . ' + ' . $hari_sla_spk . ' days'));
+                // } else {
+                //     echo "Error: Data SLA tidak ditemukan untuk divisi SPK.";
+                //     exit;
+                // }
+                // $status_spkwofat = "In Process";
                 // Tentukan spkwo_date
                 // Query untuk memperbarui submit_legal dan catatan_owner di tabel sdg_desain
-                $sql_update_pending = "UPDATE sdg_desain SET status_spkwo = ?, catatan_spkwo = ?, spkwo_date = ?, status_spkwofat = ?, sla_spkwofat = ? WHERE id = ?";
+                $sql_update_pending = "UPDATE sdg_desain SET status_spkwo = ?, catatan_spkwo = ?, spkwo_date = ? WHERE id = ?";
                 $stmt_update_pending = $conn->prepare($sql_update_pending);
-                $stmt_update_pending->bind_param("sssssi", $status_spkwo, $catatan_spkwo, $spkwo_date, $status_spkwofat, $sla_spkwofat, $id);
+                $stmt_update_pending->bind_param("sssi", $status_spkwo, $catatan_spkwo, $spkwo_date, $id);
                 $stmt_update_pending->execute();
                     
                 // Periksa apakah kode_lahan ada di tabel hold_project
@@ -90,6 +98,66 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                 // Komit transaksi
                 $conn->commit();
                 echo "Status berhasil diperbarui.";
+                
+                try {
+                    // Pengaturan server SMTP
+                    $mail->isSMTP();
+                    $mail->Host = 'sandbox.smtp.mailtrap.io';  // Ganti dengan SMTP server Anda
+                    $mail->SMTPAuth = true;
+                    $mail->Username = 'ff811f556f5d12'; // Ganti dengan email Anda
+                    $mail->Password = 'c60c92868ce0f8'; // Ganti dengan password email Anda
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                    $mail->Port = 2525;
+                    
+                    // Pengaturan pengirim dan penerima
+                    $mail->setFrom('resto-soc@gacoan.com', 'Resto SOC');
+            
+                    // Query untuk mendapatkan email pengguna dengan level "Real Estate"
+                    $sql = "SELECT email FROM user WHERE level IN ('SDG-Design')";
+                    $result = $conn->query($sql);
+            
+                    if ($result->num_rows > 0) {
+                        while($row = $result->fetch_assoc()) {
+                            $email = $row['email'];
+                    
+                            // Validasi format email sebelum menambahkannya sebagai penerima
+                            if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                                $mail->addAddress($email); // Tambahkan setiap penerima email
+                                
+                                // Konten email
+                                $mail->isHTML(true);
+                                $mail->Subject = 'Notification: 1 New SPK Done by Procurement Resto SOC Ticket';
+                                $mail->Body    = '
+                                <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                                    <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
+                                        <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Team,</h2>
+                                        <p>You have 1 New SPK Done by Procurement Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.</p>
+                                        <p>Thank you for your prompt attention to this matter.</p>
+                                        <p></p>
+                                        <p>Best regards,</p>
+                                        <p>Resto - SOC</p>
+                                    </div>
+                                </div>';
+                                $mail->AltBody = 'Dear Team,'
+                                               . 'You have 1 New SPK Done by Procurement Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.'
+                                               . 'Thank you for your prompt attention to this matter.'
+                                               . 'Best regards,'
+                                               . 'Resto - SOC';
+                    
+                                // Kirim email
+                                $mail->send();
+                                $mail->clearAddresses(); // Hapus semua penerima sebelum loop berikutnya
+                            } else {
+                                echo "Invalid email format: " . $email;
+                            }
+                            }
+                        } else {
+                            echo "No emails found.";
+                        }
+            
+                    } catch (Exception $e) {
+                        echo "Email tidak dapat dikirim. Error: {$mail->ErrorInfo}";
+                    }
             } elseif ($status_spkwo == 'Pending') {
                 // Ambil kode_lahan dari tabel sdg_desain
                 $sql_get_kode_lahan = "SELECT kode_lahan FROM sdg_desain WHERE id = ?";

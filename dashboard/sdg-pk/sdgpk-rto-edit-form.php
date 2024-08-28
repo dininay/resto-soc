@@ -66,7 +66,7 @@ if(isset($_GET['id'])) {
                             <form method="post" action="sdgpk-rto-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="sumber_air">Sumber Air</label>
+                                    <label class="col-sm-3 col-form-label" for="sumber_air">Sumber Air<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="sumber_air" name="sumber_air">
                                             <option value="">Select Sumber Air</option>
@@ -78,7 +78,7 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_sumberair">Upload Lampiran Form Pengajuan Sumber Air</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_sumberair">Upload Lampiran Form Pengajuan Sumber Air<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_sumberair[]" type="file" multiple="multiple" />
@@ -86,7 +86,7 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="kesesuaian_ujilab">Kesesuaian Uji Lab Air sudah sesuai no 2 tahun 2023</label>
+                                    <label class="col-sm-3 col-form-label" for="kesesuaian_ujilab">Kesesuaian Uji Lab Air sudah sesuai PERMENKES no 2 tahun 2023<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="kesesuaian_ujilab" name="kesesuaian_ujilab" onchange="toggleUjilabDetail()">
                                             <option value="">Select Kesesuaian Uji Lab</option>
@@ -97,7 +97,7 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row" id="uji-lab" style="display: none;">
-                                    <label class="col-sm-3 col-form-label" for="lamp_ujilab">Upload Lampiran Kesesuaian Uji Lab</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_ujilab">Upload Lampiran Kesesuaian Uji Lab<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multiple-file-upload">
                                             <input name="lamp_ujilab[]" type="file" multiple="multiple" />
@@ -105,7 +105,7 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="filter_air">Filter Air</label>
+                                    <label class="col-sm-3 col-form-label" for="filter_air">Filter Air<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="filter_air" name="filter_air" onchange="toggleFilterDetail()">
                                             <option value="">Select Filter Air</option>
@@ -116,7 +116,7 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row" id="filter-air" style="display: none;">
-                                    <label class="col-sm-3 col-form-label" for="lamp_filterair">Upload Lampiran Filter Air</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_filterair">Upload Lampiran Filter Air<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_filterair[]" type="file" multiple="multiple" />
@@ -124,19 +124,19 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="debit_airsumur">Debit Air Sumur</label>
+                                    <label class="col-sm-3 col-form-label" for="debit_airsumur">Debit Air Sumur<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="debit_airsumur" name="debit_airsumur" type="text" placeholder="Debit Air Sumur" value="<?php echo $row['debit_airsumur']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="debit_airpdam">Debit Air PDAM</label>
+                                    <label class="col-sm-3 col-form-label" for="debit_airpdam">Debit Air PDAM<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="debit_airpdam" name="debit_airpdam" type="text" placeholder="Debit Air PDAM" value="<?php echo $row['debit_airpdam']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="id_pdam">Nomor ID PDAM</label>
+                                    <label class="col-sm-3 col-form-label" for="id_pdam">Nomor ID PDAM<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="id_pdam" name="id_pdam" type="text" placeholder="Nomor ID PDAM" value="<?php echo $row['id_pdam']; ?>"/>
                                     </div>

@@ -70,6 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 $spk_date = date("Y-m-d H:i:s");
                 $status_legalizin = "In Process";
                 $status_gostore = 'In Process';
+                $status_land = 'In Process';
                 $status_spkwo = "Done";
                 $status_approvprocurement = "Done";
                 $status_procurspkwofa = "Done";
@@ -79,9 +80,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 $status_eqpdev = "Done";
 
                 // Update status_kom di tabel resto menjadi "In Process"
-                $sql_update_kom = "UPDATE resto SET status_schedule = 'In Process', lamp_signedtaf = ?, status_fat = ?, fat_date = ?, status_spk = 'Signed', spk_date = ?, status_legalizin = ?, status_gostore = ? WHERE id = ?";
+                $sql_update_kom = "UPDATE resto SET status_schedule = 'In Process', lamp_signedtaf = ?, status_fat = ?, fat_date = ?, status_spk = 'Signed', spk_date = ?, status_legalizin = ?, status_gostore = ?, status_land = ? WHERE id = ?";
                 $stmt_update_kom = $conn->prepare($sql_update_kom);
-                $stmt_update_kom->bind_param("ssssssi", $lamp_signedtaf, $status_fat, $fat_date, $spk_date, $status_legalizin, $status_gostore, $id);
+                $stmt_update_kom->bind_param("sssssssi", $lamp_signedtaf, $status_fat, $fat_date, $spk_date, $status_legalizin, $status_gostore, $status_land, $id);
                 $stmt_update_kom->execute();
                 
                 $sql_get_kode_lahan = "SELECT kode_lahan FROM resto WHERE id = ?";

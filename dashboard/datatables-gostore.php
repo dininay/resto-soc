@@ -177,7 +177,7 @@ if ($result && $result->num_rows > 0) {
                                                                 <form id="statusForm" method="post" action="">
                                                                     <input type="hidden" name="id" id="modalId" value="<?= $row['id']; ?>">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve Draft</label>
+                                                                        <label for="statusSelect">Status Approve Draft<strong><span style="color: red;">*</span></strong></label>
                                                                         <select class="form-control" id="statusSelect" name="status_gostore">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>

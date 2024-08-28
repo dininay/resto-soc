@@ -169,7 +169,7 @@ if ($result && $result->num_rows > 0) {
                                                 <!-- Tombol Edit -->
                                                         <div>
                                                             <?php if ($row['status_obslegal'] !== 'Done') : ?>
-                                                            <a href="legal/obstacle-legal-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                            <a href="legal/obstacle-legal-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mr-2">
                                                             <i class="i-Pen-2"></i>
                                                             </a>
                                                             <?php endif; ?>

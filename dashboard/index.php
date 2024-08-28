@@ -117,7 +117,6 @@ socdate_it.akun_gis,
         socdate_sdg.form_pengajuanlistrik,
         socdate_sdg.hasil_va,
         socdate_sdg.id_pln,
-        socdate_sdg.biaya_perkwh,
         socdate_sdg.lampwo_reqipal,
         sdg_desain.lamp_permit,
         sdg_desain.lamp_pbg,
@@ -139,7 +138,7 @@ socdate_it.akun_gis,
             (CASE WHEN socdate_legal.mou_parkirsampah IS NOT NULL AND sdg_desain.lamp_pbg IS NOT NULL AND sdg_desain.lamp_permit IS NOT NULL THEN 100 ELSE 0 END) AS legal,
             (CASE WHEN socdate_marketing.gmaps IS NOT NULL AND socdate_marketing.lamp_gmaps IS NOT NULL AND socdate_marketing.id_m_shopee IS NOT NULL AND socdate_marketing.id_m_gojek IS NOT NULL AND socdate_marketing.id_m_grab IS NOT NULL AND socdate_marketing.email_resto IS NOT NULL AND socdate_marketing.lamp_merchant IS NOT NULL THEN 100 ELSE 0 END) AS marketing,
             (CASE WHEN socdate_scm.lamp_sj IS NOT NULL THEN 100 ELSE 0 END) AS scm,
-            (CASE WHEN socdate_sdg.sumber_air IS NOT NULL AND socdate_sdg.kesesuaian_ujilab IS NOT NULL AND socdate_sdg.filter_air IS NOT NULL AND socdate_sdg.debit_airsumur IS NOT NULL AND socdate_sdg.debit_airpdam IS NOT NULL AND socdate_sdg.id_pdam IS NOT NULL AND socdate_sdg.sumber_listrik IS NOT NULL AND socdate_sdg.form_pengajuanlistrik IS NOT NULL AND socdate_sdg.hasil_va IS NOT NULL AND socdate_sdg.id_pln IS NOT NULL AND socdate_sdg.biaya_perkwh IS NOT NULL AND socdate_sdg.lampwo_reqipal IS NOT NULL THEN 100 ELSE 0 END) AS sdg
+            (CASE WHEN socdate_sdg.sumber_air IS NOT NULL AND socdate_sdg.kesesuaian_ujilab IS NOT NULL AND socdate_sdg.filter_air IS NOT NULL AND socdate_sdg.debit_airsumur IS NOT NULL AND socdate_sdg.debit_airpdam IS NOT NULL AND socdate_sdg.id_pdam IS NOT NULL AND socdate_sdg.sumber_listrik IS NOT NULL AND socdate_sdg.form_pengajuanlistrik IS NOT NULL AND socdate_sdg.hasil_va IS NOT NULL AND socdate_sdg.id_pln IS NOT NULL AND socdate_sdg.lampwo_reqipal IS NOT NULL THEN 100 ELSE 0 END) AS sdg
         FROM land
         JOIN resto ON land.kode_lahan = resto.kode_lahan
         JOIN equipment ON land.kode_lahan = equipment.kode_lahan
@@ -309,7 +308,7 @@ while ($row = $result_existing_store->fetch_assoc()) {
 // Ambil total ready to go store (In Preparation) per bulan dari tabel resto
 $sql_ready_to_go = "SELECT COUNT(*) as total, MONTH(kom_date) as month 
                    FROM resto 
-                   WHERE status_kom = 'Approve' 
+                   WHERE status_kom = 'Done' 
                    GROUP BY MONTH(kom_date)";
 $result_ready_to_go = $conn->query($sql_ready_to_go);
 $ready_to_go_data = array();

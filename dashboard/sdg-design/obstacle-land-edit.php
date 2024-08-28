@@ -1,4 +1,12 @@
 <?php
+// Include PHPMailer library files
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require '../../vendor/autoload.php'; // Hanya jika menggunakan Composer
+
+// Inisialisasi PHPMailer
+$mail = new PHPMailer(true);
 // Koneksi ke database
 include "../../koneksi.php";
 
@@ -76,7 +84,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Ambil SLA dari tabel master_sla dengan divisi = Design
-    $sql_select_sla_sdgd = "SELECT sla FROM master_sla WHERE divisi = 'Design'";
+    $sql_select_sla_sdgd = "SELECT sla FROM master_sla WHERE divisi = 'Urugan'";
     $result_select_sla_sdgd = $conn->query($sql_select_sla_sdgd);
 
     if ($result_select_sla_sdgd && $result_select_sla_sdgd->num_rows > 0) {
@@ -86,10 +94,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         throw new Exception("Tidak dapat mengambil data SLA dari tabel master_sla.");
     }
     
-    $sla_date = date('Y-m-d', strtotime($obs_date . ' + ' . $sla_sdgd . ' days'));
+    $sla_urugan = date('Y-m-d', strtotime($obs_date . ' + ' . $sla_sdgd . ' days'));
     $confirm_sdgurugan = "In Process";
     // Update data di database
-    $sql = "UPDATE sdg_desain SET obstacle = '$obstacle', urugan = '$urugan', confirm_sdgurugan = '$confirm_sdgurugan', note = '$note', obs_detail = '$obs_detail', note_survey = '$note_survey', lamp_layouting = '$lamp_layouting', lamp_survey = '$lamp_survey', obs_date = '$obs_date', sla_date = '$sla_date' WHERE id = '$id'";
+    $sql = "UPDATE sdg_desain SET status_obslegal = '$status_obslegal', obstacle = '$obstacle', urugan = '$urugan', sla_urugan = '$sla_urugan', confirm_sdgurugan = '$confirm_sdgurugan', note = '$note', obs_detail = '$obs_detail', note_survey = '$note_survey', lamp_layouting = '$lamp_layouting', lamp_survey = '$lamp_survey', obs_date = '$obs_date' WHERE id = '$id'";
     var_dump($sql);
     if ($conn->query($sql) === TRUE) {
         header("Location: " . $base_url . "/datatables-obstacle-sdg.php");

@@ -4,9 +4,8 @@ include "../koneksi.php";
 
 $confirm_nego = "";
 // Query untuk mengambil data dari tabel land
-$sql = "SELECT d.*, 
+$sql = "SELECT dl.*,
                l.nama_lahan, l.lokasi, l.lamp_land,
-               dl.lamp_loacd, dl.lamp_vd, dl.kode_store,
                r.lamp_vl
         FROM draft d
         LEFT JOIN land l ON d.kode_lahan = l.kode_lahan
@@ -42,46 +41,29 @@ if ($result && $result->num_rows > 0) {
 //     }
 // }
 
-$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'Final PSM'";
-$sla_result = $conn->query($sla_query);
-
-$sla_value = 0; // Default SLA value
-
-if ($sla_result->num_rows > 0) {
-    $row = $sla_result->fetch_assoc();
-    $sla_value = $row['sla'];
-} else {
-    echo "No SLA value found for 'Owner Surveyor'";
-}
-
-function calculateScoring($start_date, $end_date, $sla) {
-    $today = new DateTime();
-    $start_date = $start_date ?: $today->format('Y-m-d');
-    $end_date = $end_date ?: $today->format('Y-m-d');
-    $sla_days = $sla ?: 0;
-
+function calculateScoring($start_date, $sla_date) {
     $start_date_obj = new DateTime($start_date);
-    $end_date_obj = new DateTime($end_date);
-
-    $date_diff = $end_date_obj->diff($start_date_obj)->days + 1;
-
-    if ($sla_days != 0) {
-        if ($date_diff > $sla_days) {
-            $scoring = -((($date_diff - $sla_days) / $sla_days) * 100);
-        } else {
-            $scoring = ((($sla_days - $date_diff) / $sla_days) * 100);
-        }
-    } else {
-        $scoring = 0;
+    $sla_date_obj = new DateTime($sla_date);
+    
+    // Jika start_date tidak melebihi sla_date, berikan skor 100
+    if ($start_date_obj <= $sla_date_obj) {
+        return 100;
     }
 
+    // Menghitung selisih hari antara start_date dan sla_date
+    $date_diff = $start_date_obj->diff($sla_date_obj)->days;
+    
+    // Skor dikurangi dengan selisih hari keterlambatan
+    $scoring = max(0, 100 - ($date_diff * 10)); // Penyesuaian sesuai logika bisnis
+    
     return round($scoring, 2);
 }
+
 // Fungsi untuk menentukan remarks berdasarkan scoring
 function getRemarks($scoring) {
-    if ($scoring >= 0) {
+    if ($scoring >= 75) {
         return "good";
-    } elseif ($scoring >= -30) {
+    } elseif ($scoring >= 0) {
         return "poor";
     } else {
         return "bad";
@@ -180,6 +162,8 @@ $conn->close();
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
                                                 <th>Lampiran VD</th>
+                                                <th>Status</th>
+                                                <th>SLA</th>
 												<th>Action</th>
                                             </tr>
                                         </thead>
@@ -212,17 +196,134 @@ $conn->close();
                                                     echo '<td></td>';
                                                 }
                                                 ?>  
-                                                
+                                                <td>
+                                                    <?php
+                                                        // Tentukan warna badge berdasarkan status approval owner
+                                                        $badge_color = '';
+                                                        switch ($row['status_tafkode']) {
+                                                            case 'Done':
+                                                                $badge_color = 'success';
+                                                                break;
+                                                            case 'Pending':
+                                                                $badge_color = 'danger';
+                                                                break;
+                                                            case 'In Process':
+                                                                $badge_color = 'primary';
+                                                                break;
+                                                            default:
+                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
+                                                                break;
+                                                        }
+                                                    ?>
+                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
+                                                        <?php echo $row['status_tafkode']; ?>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <?php
+                                                    // Mengatur timezone ke Asia/Jakarta
+                                                    date_default_timezone_set('Asia/Jakarta');
+
+                                                    $start_date = $row['tafkode_date'];
+                                                    $sla_date = $row['sla_tafkode'];
+                                                    $status_tafkode = $row['status_tafkode'];
+
+                                                    // Menghitung scoring
+                                                    $scoring = calculateScoring($start_date, $sla_date);
+                                                    $remarks = getRemarks($scoring);
+
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+                                                    $current_day = $now->format('N'); // 1 (Senin) hingga 7 (Minggu)
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
+
+                                                    // Cek apakah hari ini adalah hari kerja (Senin-Jumat)
+                                                    if ($current_day >= 1 && $current_day <= 5) {
+                                                        // Memeriksa apakah waktu sekarang di luar jam kerja
+                                                        if ($current_time < $work_start || $current_time > $work_end) {
+                                                            echo '<button type="button" class="btn btn-sm btn-info">Di Luar Jam Kerja</button>';
+                                                        } else {
+                                                            if ($status_tafkode === 'Done') {
+                                                                // Menentukan label berdasarkan remarks
+                                                                $status_label = '';
+                                                                switch ($remarks) {
+                                                                    case 'good':
+                                                                        $status_label = 'Done Good';
+                                                                        break;
+                                                                    case 'poor':
+                                                                        $status_label = 'Done Poor';
+                                                                        break;
+                                                                    case 'bad':
+                                                                        $status_label = 'Done Bad';
+                                                                        break;
+                                                                }
+
+                                                                echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
+                                                            } else {
+                                                                // Convert $sla_date to DateTime object
+                                                                $sla_date_obj = new DateTime($sla_date);
+
+                                                                // Menghitung jumlah hari menuju SLA date
+                                                                $diff = $now->diff($sla_date_obj);
+                                                                $daysDifference = (int)$diff->format('%R%a'); // Menyertakan tanda plus atau minus
+
+                                                                if ($daysDifference < 0) {
+                                                                    // SLA telah terlewat, hitung sebagai hari terlambat
+                                                                    echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . abs($daysDifference) . ' hari</button>';
+                                                                } else {
+                                                                    // SLA belum tercapai, hitung mundur
+                                                                    echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $daysDifference . '</button>';
+                                                                }
+                                                            }
+                                                        }
+                                                    } else {
+                                                        // Jika hari ini adalah Sabtu atau Minggu
+                                                        echo '<button type="button" class="btn btn-sm btn-info">Sedang Libur</button>';
+                                                    }
+                                                    ?>
+                                                </td>
                                                 <td>
                                                     <!-- Tombol Edit -->
-                                                        <div>
-                                                        <a href="fat/kode-store-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                    <?php if ($row['status_tafkode'] != "Done"): ?>
+                                                    <?php
+                                                    // Mengatur timezone ke Asia/Jakarta
+                                                    date_default_timezone_set('Asia/Jakarta');
+
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+                                                    $current_day = $now->format('N'); // 1 (Senin) hingga 7 (Minggu)
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
+
+                                                    // Cek apakah hari ini adalah hari kerja dan waktu kerja
+                                                    if ($row['status_tafkode'] != "Done" && $current_time >= $work_start && $current_time <= $work_end && $current_day >= 1 && $current_day <= 5) {
+                                                        echo '<a href="fat/kode-store-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
-                                                        </a>
+                                                        </a>';
+                                                        echo '<button class="btn btn-sm btn-primary edit-btn mr-2" data-toggle="modal" data-target="#editModal" data-id="'. $row['id'] .'" data-status="'.$row['status_tafkode'] .'">
+                                                            <i class="nav-icon i-Book"></i>
+                                                        </button>';
+                                                    }
+                                                    ?>
+                                                    <?php endif; ?>
+                                                </td>
+                                            
+                                                    <!-- Tombol Edit -->
+                                                        <!-- <div>
+                                                         <a href="fat/kode-store-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mr-2">
+                                                            <i class="nav-icon i-Pen-2"></i>
+                                                        </a> -->
                                                         <!-- <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['confirm_nego'] ?>">
                                                             <i class="nav-icon i-Book"></i>
-                                                        </button> -->
-                                                    </div>
+                                                        </button> 
+                                                    </div> -->
 
                                                 <!-- Modal -->
                                                 <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
@@ -238,24 +339,20 @@ $conn->close();
                                                                 <form id="statusForm" method="post" action="fat/kode-store-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" id="modalId" value="<?= $row['id']; ?>">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Draft PSM </label>
-                                                                        <select class="form-control" id="statusSelect" name="confirm_nego">
+                                                                        <label for="statusSelect">Status TAF<strong><span style="color: red;">*</span></strong></label>
+                                                                        <select class="form-control" id="statusSelect" name="status_tafkode">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
-                                                                            <option value="In Review By TAF">In Review By TAF</option>
+                                                                            <option value="Done">Done</option>
                                                                         </select>
-                                                                    </div>
-                                                                    <div class="form-group">
-                                                                        <label for="catatan_psm">Catatan Draft PSM</label>
-                                                                        <input type="text" class="form-control" id="catatan_psm" name="catatan_psm">
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">
                                                                         <div class="form-group">
-                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <label for="issue_detail">Issue Detail<strong><span style="color: red;">*</span></strong></label>
                                                                             <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="pic">PIC</label>
+                                                                            <label for="pic">PIC<strong><span style="color: red;">*</span></strong></label>
                                                                             <select class="form-control" id="pic" name="pic">
                                                                                 <option value="">Pilih PIC</option>
                                                                                 <option value="Legal">Legal</option>
@@ -276,11 +373,11 @@ $conn->close();
                                                                             </select>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <label for="action_plan">Action Plan<strong><span style="color: red;">*</span></strong></label>
                                                                             <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <label for="kronologi">Upload File Kronologi<strong><span style="color: red;">*</span></strong></label>
                                                                             <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
                                                                         </div>
                                                                     </div>
@@ -301,6 +398,8 @@ $conn->close();
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
                                                 <th>Lampiran VD</th>
+                                                <th>Status</th>
+                                                <th>SLA</th>
 												<th>Action</th>
                                             </tr>
                                         </tfoot>

@@ -117,31 +117,31 @@ if(isset($_GET['kode_lahan'])) {
                                     <div class="col-md-4">
                                     <h5 style="color: #538392; font-weight: bold;">Deadline</h5>
                                         <div class="form-group row">
-                                            <label class="col-sm-5 col-form-label" for="cons_date">Construction</label>
+                                            <label class="col-sm-5 col-form-label" for="cons_date">Construction<strong><span style="color: red;">*</span></strong></label>
                                             <div class="col-sm-5">
                                                 <p class="form-control-plaintext" id="cons_date" name=""><?php echo $construction_date; ?></p>
                                             </div>
                                         </div>
                                         <div class="form-group row">
-                                            <label class="col-sm-5 col-form-label" for="debitair_date">Debit</label>
+                                            <label class="col-sm-5 col-form-label" for="debitair_date">Debit<strong><span style="color: red;">*</span></strong></label>
                                             <div class="col-sm-5">
                                                 <p class="form-control-plaintext" id="debitair_date" name=""><?php echo $debitair_date; ?></p>
                                             </div>
                                         </div>
                                         <div class="form-group row">
-                                            <label class="col-sm-5 col-form-label" for="kualitasair_date">Kualitas</label>
+                                            <label class="col-sm-5 col-form-label" for="kualitasair_date">Kualitas<strong><span style="color: red;">*</span></strong></label>
                                             <div class="col-sm-5">
                                                 <p class="form-control-plaintext" id="kualitasair_date" name=""><?php echo $kualitasair_date; ?></p>
                                             </div>
                                         </div>
                                         <div class="form-group row">
-                                            <label class="col-sm-5 col-form-label" for="listrik_date">Listrik KWH</label>
+                                            <label class="col-sm-5 col-form-label" for="listrik_date">Listrik KWH<strong><span style="color: red;">*</span></strong></label>
                                             <div class="col-sm-5">
                                                 <p class="form-control-plaintext" id="listrik_date" name=""><?php echo $listrik_date; ?></p>
                                             </div>
                                         </div>
                                         <div class="form-group row">
-                                            <label class="col-sm-5 col-form-label" for="ipal_date">Saluran Kota IPAL</label>
+                                            <label class="col-sm-5 col-form-label" for="ipal_date">Saluran Kota IPAL<strong><span style="color: red;">*</span></strong></label>
                                             <div class="col-sm-5">
                                                 <p class="form-control-plaintext" id="ipal_date" name=""><?php echo $ipal_date; ?></p>
                                             </div>
@@ -150,7 +150,7 @@ if(isset($_GET['kode_lahan'])) {
                                     <div class="col-md-4">
                                     <h5 style="color: #538392; font-weight: bold;">Done Date</h5>
                                         <div class="form-group row">
-                                            <label class="col-sm-4 col-form-label" for="cons_date">Construction</label>
+                                            <label class="col-sm-4 col-form-label" for="cons_date">Construction<strong><span style="color: red;">*</span></strong></label>
                                             <div class="col-sm-8">
                                                 <input class="form-control" id="cons_date" name="cons_date" type="date" placeholder=""/>
                                             </div>

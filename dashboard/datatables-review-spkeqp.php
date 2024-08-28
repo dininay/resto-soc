@@ -359,7 +359,7 @@ function getBadgeColor($remarks) {
                                                     // Menampilkan tombol jika status bukan Approve dan sudah mendekati H-21 dari deadline
                                                     if ($row['status_eqptaf'] !== 'Approve') : ?>
                                                         <div>
-                                                            <!-- <a href="procurement/eqpdev-procur-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                            <!-- <a href="procurement/eqpdev-procur-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mr-2">
                                                                 <i class="i-Pen-2"></i>
                                                             </a> -->
                                                             <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_eqptaf'] ?>">
@@ -382,7 +382,7 @@ function getBadgeColor($remarks) {
                                                                     <form id="statusForm" method="post" action="fat/spk-eqp-fat-process.php"  enctype="multipart/form-data">
                                                                         <input type="hidden" name="id" id="modalId" value="<?= $row['id']; ?>">
                                                                         <div class="form-group">
-                                                                            <label for="statusSelect">Status Approve SPK EQP</label>
+                                                                            <label for="statusSelect">Status Approve SPK EQP<strong><span style="color: red;">*</span></strong></label>
                                                                             <select class="form-control" id="statusSelect" name="status_eqptaf">
                                                                                 <option value="In Process">In Process</option>
                                                                                 <option value="Pending">Pending</option>

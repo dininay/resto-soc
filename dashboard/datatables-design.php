@@ -15,7 +15,7 @@ $sql = "SELECT
             land ON sdg_desain.kode_lahan = land.kode_lahan
         LEFT JOIN 
             dokumen_loacd ON sdg_desain.kode_lahan = dokumen_loacd.kode_lahan
-            WHERE sdg_desain.confirm_sdgdesain IN ('In Process','Approve','Pending')";
+            WHERE sdg_desain.confirm_sdgdesain IN ('In Process','Approve','Pending','In Design Revision')";
 $result = $conn->query($sql);
 
 
@@ -258,7 +258,7 @@ function getBadgeColor($remarks) {
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
-                                                        switch ($row['status_survey']) {
+                                                        switch ($row['status_obssdg']) {
                                                             case 'Done':
                                                                 $badge_color = 'success';
                                                                 break;
@@ -274,7 +274,7 @@ function getBadgeColor($remarks) {
                                                         }
                                                     ?>
                                                     <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_survey']; ?>
+                                                        <?php echo $row['status_obssdg']; ?>
                                                     </span>
                                                 </td>
                                                 <td>
@@ -417,6 +417,9 @@ function getBadgeColor($remarks) {
                                                 </td>
                                                 <td>
                                                     <?php
+                                                    // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
+                                                    date_default_timezone_set('Asia/Jakarta');
+
                                                     $start_date = $row['start_date'];
                                                     $sla_date = $row['sla_date'];
                                                     $confirm_sdgdesain = $row['confirm_sdgdesain'];
@@ -424,6 +427,14 @@ function getBadgeColor($remarks) {
                                                     // Menghitung scoring
                                                     $scoring = calculateScoring($start_date, $sla_date, $sla_value);
                                                     $remarks = getRemarks($scoring);
+
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
 
                                                     if ($confirm_sdgdesain === 'Approve') {
                                                         // Menentukan label berdasarkan remarks
@@ -442,36 +453,53 @@ function getBadgeColor($remarks) {
 
                                                         echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
-                                                        // Mendapatkan tanggal hari ini
-                                                        $today = new DateTime();
-
-                                                        // Convert $sla_date to DateTime object
-                                                        $sla_date_obj = new DateTime($sla_date);
-
-                                                        // Menghitung jumlah hari menuju SLA date
-                                                        $diff = $today->diff($sla_date_obj);
-                                                        $daysDifference = (int)$diff->format('%R%a'); // Menyertakan tanda plus atau minus
-
-                                                        if ($daysDifference < 0) {
-                                                            // SLA telah terlewat, hitung sebagai hari terlambat
-                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . abs($daysDifference) . ' hari</button>';
+                                                        // Memeriksa apakah waktu sekarang di luar jam kerja
+                                                        if ($current_time < $work_start || $current_time > $work_end) {
+                                                            echo '<button type="button" class="btn btn-sm btn-info">Di Luar Jam Kerja</button>';
                                                         } else {
-                                                            // SLA belum tercapai, hitung mundur
-                                                            echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $daysDifference . '</button>';
+                                                            // Convert $sla_date to DateTime object
+                                                            $sla_date_obj = new DateTime($sla_date);
+
+                                                            // Menghitung jumlah hari menuju SLA date
+                                                            $diff = $now->diff($sla_date_obj);
+                                                            $daysDifference = (int)$diff->format('%R%a'); // Menyertakan tanda plus atau minus
+
+                                                            if ($daysDifference < 0) {
+                                                                // SLA telah terlewat, hitung sebagai hari terlambat
+                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . abs($daysDifference) . ' hari</button>';
+                                                            } else {
+                                                                // SLA belum tercapai, hitung mundur
+                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $daysDifference . '</button>';
+                                                            }
                                                         }
                                                     }
                                                     ?>
                                                 </td>
+                                                
                                                 <td>
+                                                    <!-- Tombol Edit -->
                                                     <?php if ($row['confirm_sdgdesain'] != "Approve"): ?>
-                                                        <a href="sdg-design/design-edit-form.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning">
+                                                    <?php
+                                                    // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
+                                                    date_default_timezone_set('Asia/Jakarta');
+
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
+
+                                                    if ($row['confirm_sdgdesain'] != "Approve" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                        echo '<a href="sdg-design/design-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
-                                                        </a>
-                                                    <?php endif; ?>
-                                                    <?php if ($row['confirm_sdgdesain'] != "Approve"): ?>
-                                                        <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['confirm_sdgdesain'] ?>">
+                                                        </a>';
+                                                        echo '<button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="'. $row['id'] .'" data-status="'.$row['confirm_sdgdesain'] .'">
                                                             <i class="nav-icon i-Book"></i>
-                                                        </button>
+                                                        </button>';
+                                                    }
+                                                    ?>
                                                     <?php endif; ?>
                                                 </td>
 
@@ -489,7 +517,7 @@ function getBadgeColor($remarks) {
                                                                 <form id="statusForm" method="post" action="sdg-design/formval-process.php" enctype="multipart/form-data">
                                                                     <input type="hidden" name="id" value=<?=$row["id"]?> id="modalKodeLahan">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Approve SDG Design</label>
+                                                                        <label for="statusSelect">Status Approve SDG Design<strong><span style="color: red;">*</span></strong></label>
                                                                         <select class="form-control" id="statusSelect" name="confirm_sdgdesain" Placeholder="Pilih">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
@@ -502,11 +530,11 @@ function getBadgeColor($remarks) {
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">
                                                                         <div class="form-group">
-                                                                            <label for="issue_detail">Issue Detail</label>
+                                                                            <label for="issue_detail">Issue Detail<strong><span style="color: red;">*</span></strong></label>
                                                                             <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="pic">PIC</label>
+                                                                            <label for="pic">PIC<strong><span style="color: red;">*</span></strong></label>
                                                                             <select class="form-control" id="pic" name="pic">
                                                                                 <option value="">Pilih PIC</option>
                                                                                 <option value="Legal">Legal</option>
@@ -527,11 +555,11 @@ function getBadgeColor($remarks) {
                                                                             </select>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="action_plan">Action Plan</label>
+                                                                            <label for="action_plan">Action Plan<strong><span style="color: red;">*</span></strong></label>
                                                                             <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
                                                                         </div>
                                                                         <div class="form-group">
-                                                                            <label for="kronologi">Upload File Kronologi</label>
+                                                                            <label for="kronologi">Upload File Kronologi<strong><span style="color: red;">*</span></strong></label>
                                                                             <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
                                                                         </div>
                                                                     </div>

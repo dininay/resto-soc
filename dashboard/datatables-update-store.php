@@ -10,16 +10,6 @@ $sql = "SELECT
         land.nama_lahan,
         land.lokasi,
         land.maps,
-        soc_fat.*, 
-        soc_hrga.*, 
-        soc_it.*, 
-        soc_legal.*, 
-        soc_marketing.*, 
-        soc_rto.*, 
-        soc_sdg.*, 
-        note_ba.*, 
-        note_legal.*,
-        doc_legal.*,
         socdate_academy.kpt_1,
         socdate_academy.kpt_2,
         socdate_academy.kpt_3,
@@ -54,38 +44,23 @@ $sql = "SELECT
         socdate_marketing.email_resto,
         socdate_marketing.lamp_merchant,
         socdate_scm.lamp_sj,
-        socdate_sdg.sumber_air,
-        socdate_sdg.kesesuaian_ujilab,
-        socdate_sdg.filter_air,
+        socdate_sdg.lamp_sumberair,
         socdate_sdg.lamp_filterair,
         socdate_sdg.lamp_ujilab,
-        socdate_sdg.debit_airsumur,
-        socdate_sdg.debit_airpdam,
-        socdate_sdg.id_pdam,
-        socdate_sdg.sumber_listrik,
-        socdate_sdg.form_pengajuanlistrik,
-        socdate_sdg.hasil_va,
-        socdate_sdg.id_pln,
-        socdate_sdg.biaya_perkwh,
         socdate_sdg.lampwo_reqipal,
+        socdate_sdg.lamp_slo,
+        socdate_sdg.lamp_nidi,
         sdg_desain.lamp_permit,
         sdg_desain.lamp_pbg,
+        sdg_pk.month_1,
+        sdg_pk.month_2,
+        sdg_pk.month_3,
         dokumen_loacd.kode_store
         FROM resto
          JOIN land ON resto.kode_lahan = land.kode_lahan
          JOIN summary_soc ON resto.kode_lahan = summary_soc.kode_lahan
+         JOIN sdg_pk ON resto.kode_lahan = sdg_pk.kode_lahan
          JOIN equipment ON resto.kode_lahan = equipment.kode_lahan
-         JOIN soc_fat ON summary_soc.kode_lahan = soc_fat.kode_lahan
-         JOIN soc_hrga ON soc_fat.kode_lahan = soc_hrga.kode_lahan
-         JOIN soc_it ON soc_fat.kode_lahan = soc_it.kode_lahan
-         JOIN soc_legal ON soc_fat.kode_lahan = soc_legal.kode_lahan
-         JOIN soc_marketing ON soc_fat.kode_lahan = soc_marketing.kode_lahan
-         JOIN soc_rto ON soc_fat.kode_lahan = soc_rto.kode_lahan
-         JOIN soc_sdg ON soc_fat.kode_lahan = soc_sdg.kode_lahan
-         JOIN note_ba ON soc_fat.kode_lahan = note_ba.kode_lahan
-         JOIN note_legal ON soc_fat.kode_lahan = note_legal.kode_lahan
-         JOIN doc_legal ON note_legal.kode_lahan = doc_legal.kode_lahan
-         JOIN sign ON soc_fat.kode_lahan = sign.kode_lahan
          JOIN socdate_academy ON land.kode_lahan = socdate_academy.kode_lahan
          JOIN socdate_fat ON land.kode_lahan = socdate_fat.kode_lahan
          JOIN socdate_hr ON land.kode_lahan = socdate_hr.kode_lahan
@@ -301,21 +276,8 @@ $conn->close();
 
                                                                 $scm = (( !is_null($row['lamp_sj']) ? 100 : 0 ));
 
-                                                                $sdg = (
-                                                                    (!is_null($row['sumber_air']) ? 100 : 0) +
-                                                                    (!is_null($row['kesesuaian_ujilab']) ? 100 : 0) +
-                                                                    (!is_null($row['filter_air']) ? 100 : 0) +
-                                                                    (!is_null($row['debit_airsumur']) ? 100 : 0) +
-                                                                    (!is_null($row['debit_airpdam']) ? 100 : 0) +
-                                                                    (!is_null($row['id_pdam']) ? 100 : 0) +
-                                                                    (!is_null($row['sumber_listrik']) ? 100 : 0) +
-                                                                    (!is_null($row['form_pengajuanlistrik']) ? 100 : 0) +
-                                                                    (!is_null($row['hasil_va']) ? 100 : 0) +
-                                                                    (!is_null($row['id_pln']) ? 100 : 0) +
-                                                                    (!is_null($row['biaya_perkwh']) ? 100 : 0) +
-                                                                    (!is_null($row['lampwo_reqipal']) ? 100 : 0)
-                                                                ) / 12;
-
+                                                                $sdg = (( !is_null($row['lamp_ujilab']) ? 100 : 0 ) + ( !is_null($row['lamp_sumberair']) ? 100 : 0 ) + ( !is_null($row['lamp_filterair']) ? 100 : 0 ) + ( !is_null($row['lamp_slo']) ? 100 : 0 ) + ( !is_null($row['lamp_nidi']) ? 100 : 0 ) + ( !is_null($row['lampwo_reqipal']) ? 100 : 0 )) / 6;
+        
                                                                 $total = ($fat + $academy + $hr + $ir + $it + $legal + $marketing + $scm + $sdg) / 9;
                                                                 $fix = round($total, 2);
                                                                 echo $fix; 

@@ -1,4 +1,12 @@
 <?php
+// Include PHPMailer library files
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require '../../vendor/autoload.php'; // Hanya jika menggunakan Composer
+
+// Inisialisasi PHPMailer
+$mail = new PHPMailer(true);
 // Koneksi ke database
 include "../../koneksi.php";
 
@@ -90,12 +98,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                     }
 
                     // Update sla_steqp, sla_stkonstruksi, status_steqp, status_stkonstruksi, status_land, status_gostore di tabel resto
-                    $sql_update_resto = "UPDATE resto SET status_stkonstruksi = ?, sla_stkonstruksi = ?, status_land = ?, status_gostore = ? WHERE id = ?";
+                    $sql_update_resto = "UPDATE resto SET status_stkonstruksi = ?, sla_stkonstruksi = ? WHERE id = ?";
                     $stmt_update_resto = $conn->prepare($sql_update_resto);
                     $status_stkonstruksi = "In Process";
-                    $status_land = "In Process";
-                    $status_gostore = "In Process";
-                    $stmt_update_resto->bind_param("ssssi", $status_stkonstruksi, $sla_stkonstruksi, $status_land, $status_gostore, $id);
+                    $stmt_update_resto->bind_param("ssi", $status_stkonstruksi, $sla_stkonstruksi, $id);
 
                     // Execute update for resto
                     if ($stmt_update_resto->execute() === TRUE) {
@@ -106,7 +112,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                         $status_eqpdev = "In Process";
                         $status_eqpsite = "In Process";
                         $status_woeqp = "In Process";
-                        $stmt_update_eqp->bind_param("ssssssss", $kode_lahan, $sla_steqp, $status_steqp, $status_eqpdev, $sla_eqpdev, $sla_eqpdevprocur, $sla_eqpsite, $status_woeqp, $status_eqpsite);
+                        $stmt_update_eqp->bind_param("sssssssss", $kode_lahan, $sla_steqp, $status_steqp, $status_eqpdev, $sla_eqpdev, $sla_eqpdevprocur, $sla_eqpsite, $status_woeqp, $status_eqpsite);
                         $stmt_update_eqp->execute();
 
                         // Insert into summary_soc table
@@ -139,10 +145,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                             $sla_consact = $start_konstruksi_date->format('Y-m-d');
 
                             // Insert data ke tabel sdg_pk
-                            $sql_insert_sdg_pk = "INSERT INTO sdg_pk (kode_lahan, sla_consact, status_consact) VALUES (?, ?, ?)";
+                            $sql_insert_sdg_pk = "UPDATE sdg_pk set status_consact = ? WHERE kode_lahan = ?";
                             $stmt_insert_sdg_pk = $conn->prepare($sql_insert_sdg_pk);
                             $status_consact = "In Process";
-                            $stmt_insert_sdg_pk->bind_param("sss", $kode_lahan, $sla_consact, $status_consact);
+                            $stmt_insert_sdg_pk->bind_param("ss", $status_consact, $kode_lahan);
 
                             if ($stmt_insert_sdg_pk->execute() === TRUE) {
                             $sql_insert_konstruksi = "INSERT INTO konstruksi (kode_lahan) VALUES (?)";
@@ -563,6 +569,65 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                     echo "Error: " . $stmt_update->error;
                 }
             
+                try {
+                    // Pengaturan server SMTP
+                    $mail->isSMTP();
+                    $mail->Host = 'sandbox.smtp.mailtrap.io';  // Ganti dengan SMTP server Anda
+                    $mail->SMTPAuth = true;
+                    $mail->Username = 'ff811f556f5d12'; // Ganti dengan email Anda
+                    $mail->Password = 'c60c92868ce0f8'; // Ganti dengan password email Anda
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                    $mail->Port = 2525;
+                    
+                    // Pengaturan pengirim dan penerima
+                    $mail->setFrom('resto-soc@gacoan.com', 'Resto SOC');
+            
+                    // Query untuk mendapatkan email pengguna dengan level "Real Estate"
+                    $sql = "SELECT email FROM user WHERE level IN ('SDG-Project','SDG-Equipment','PMO','HR','Academy','SCM','IT','Marketing','TAF','IR')";
+                    $result = $conn->query($sql);
+            
+                    if ($result->num_rows > 0) {
+                        while($row = $result->fetch_assoc()) {
+                            $email = $row['email'];
+                    
+                            // Validasi format email sebelum menambahkannya sebagai penerima
+                            if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                                $mail->addAddress($email); // Tambahkan setiap penerima email
+                                
+                                // Konten email
+                                $mail->isHTML(true);
+                                $mail->Subject = 'Notification: 1 New Active Resto SOC Ticket';
+                                $mail->Body    = '
+                                <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                                    <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
+                                        <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Team,</h2>
+                                        <p>You have 1 New Active Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.</p>
+                                        <p>Thank you for your prompt attention to this matter.</p>
+                                        <p></p>
+                                        <p>Best regards,</p>
+                                        <p>Resto - SOC</p>
+                                    </div>
+                                </div>';
+                                $mail->AltBody = 'Dear Team,'
+                                               . 'You have 1 New Active Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.'
+                                               . 'Thank you for your prompt attention to this matter.'
+                                               . 'Best regards,'
+                                               . 'Resto - SOC';
+                    
+                                // Kirim email
+                                $mail->send();
+                                $mail->clearAddresses(); // Hapus semua penerima sebelum loop berikutnya
+                            } else {
+                                echo "Invalid email format: " . $email;
+                            }
+                            }
+                        } else {
+                            echo "No emails found.";
+                        }
+            
+                    } catch (Exception $e) {
+                        echo "Email tidak dapat dikirim. Error: {$mail->ErrorInfo}";
+                    }
 
         } elseif ($status_kom == 'Pending') {
             // Ambil kode_lahan dari tabel procurement

@@ -66,25 +66,25 @@ if(isset($_GET['id'])) {
                             <form method="post" action="itconfig-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="kode_dvr">Kode DVR</label>
+                                    <label class="col-sm-3 col-form-label" for="kode_dvr">Kode DVR<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="kode_dvr" name="kode_dvr" type="text" placeholder="Kode DVR" value="<?php echo $row['kode_dvr']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="web_report">Web Report</label>
+                                    <label class="col-sm-3 col-form-label" for="web_report">Web Report<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="web_report" name="web_report" type="text" placeholder="Web Report" value="<?php echo $row['web_report']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="akun_gis">Akun GIS</label>
+                                    <label class="col-sm-3 col-form-label" for="akun_gis">Akun GIS<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="akun_gis" name="akun_gis" type="text" placeholder="Akun GIS" value="<?php echo $row['akun_gis']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_config">Upload Lampiran Dekstop</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_config">Upload Lampiran Dekstop<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_config[]" type="file" multiple="multiple" />
@@ -92,7 +92,7 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_printer">Upload Lampiran Printer</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_printer">Upload Lampiran Printer<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_printer[]" type="file" multiple="multiple" />

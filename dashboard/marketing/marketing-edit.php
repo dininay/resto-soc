@@ -68,7 +68,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 
     // Update data di database
-    $sql = "UPDATE socdate_marketing SET lamp_gmaps = '$lamp_gmaps', gmaps = '$gmaps', id_m_gojek = '$id_m_gojek', id_m_grab = '$id_m_grab', id_m_shopee = '$id_m_shopee', email_resto = '$email_resto', lamp_merchant = '$lamp_merchant', lamp_content = '$lamp_content' WHERE id = '$id'";
+    $sql = "UPDATE socdate_marketing SET lamp_gmaps = '$lamp_gmaps', gmaps = '$gmaps', id_m_gojek = '$id_m_gojek', id_m_grab = '$id_m_grab', id_m_shopee = '$id_m_shopee', email_resto = '$email_resto', lamp_merchant = '$lamp_merchant', lamp_content = '$lamp_content', issue_marketing = '$issue_marketing', note_issuemarketing = '$note_issuemarketing', catatan_marketing  = '$catatan_marketing ' WHERE id = '$id'";
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
         header("Location:" . $base_url . "/datatables-marketing.php");

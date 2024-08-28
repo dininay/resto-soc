@@ -1,4 +1,12 @@
 <?php
+// Include PHPMailer library files
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require '../../vendor/autoload.php'; // Hanya jika menggunakan Composer
+
+// Inisialisasi PHPMailer
+$mail = new PHPMailer(true);
 // Koneksi ke database
 include "../../koneksi.php";
 
@@ -40,45 +48,119 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         // Jika status_approvlegalvd diubah menjadi Approve
         if ($confirm_re == 'Done') {
             $draftre_date = date("Y-m-d H:i:s");
+            
+            // Ambil SLA dari tabel master_sla untuk divisi ST-EQP
+            $sql_sla_steqp = "SELECT sla FROM master_sla WHERE divisi = 'Legal'";
+            $result_sla_steqp = $conn->query($sql_sla_steqp);
+            if ($result_sla_steqp->num_rows > 0) {
+                $row_sla_steqp = $result_sla_steqp->fetch_assoc();
+                $hari_sla_steqp = $row_sla_steqp['sla'];
+                $sla_kondisilahan = date("Y-m-d", strtotime($draftre_date . ' + ' . $hari_sla_steqp . ' days'));
+            } else {
+                $conn->rollback();
+                echo "Error: Data SLA tidak ditemukan untuk divisi FAT-Sewa.";
+                exit;
+            }
+            $status_kondisilahan = "In Process";
 
-                        // Query untuk memperbarui status confirm_re di tabel draft
-                        $sql_update = "UPDATE draft SET confirm_re = ?, catatan_re = ?, draftre_date = ? WHERE id = ?";
-                        $stmt_update = $conn->prepare($sql_update);
-                        $stmt_update->bind_param("sssi", $confirm_re, $catatan_re, $draftre_date, $id);
-                        $stmt_update->execute();
+            // Query untuk memperbarui status confirm_re di tabel draft
+            $sql_update = "UPDATE draft SET confirm_re = ?, catatan_re = ?, draftre_date = ?, status_kondisilahan = ?, sla_kondisilahan = ? WHERE id = ?";
+            $stmt_update = $conn->prepare($sql_update);
+            $stmt_update->bind_param("sssssi", $confirm_re, $catatan_re, $draftre_date, $status_kondisilahan, $sla_kondisilahan, $id);
+            $stmt_update->execute();
 
-                        if ($stmt_update->affected_rows > 0) {
-                            echo "Status berhasil diperbarui.";
+            if ($stmt_update->affected_rows > 0) {
+                echo "Status berhasil diperbarui.";
+            } else {
+                echo "Gagal memperbarui status.";
+            }
+            
+            // Ambil kode_lahan dari tabel re
+            $sql_get_kode_lahan = "SELECT kode_lahan FROM draft WHERE id = ?";
+            $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+            $stmt_get_kode_lahan->bind_param("i", $id);
+            $stmt_get_kode_lahan->execute();
+            $stmt_get_kode_lahan->bind_result($kode_lahan);
+            $stmt_get_kode_lahan->fetch();
+            $stmt_get_kode_lahan->free_result();
+
+            // Periksa apakah kode_lahan ada di tabel hold_project
+            $sql_check_hold = "SELECT kode_lahan FROM hold_project WHERE kode_lahan = ?";
+            $stmt_check_hold = $conn->prepare($sql_check_hold);
+            $stmt_check_hold->bind_param("s", $kode_lahan);
+            $stmt_check_hold->execute();
+            $stmt_check_hold->store_result();
+
+            if ($stmt_check_hold->num_rows > 0) {
+                // Jika kode_lahan ada di hold_project, update status_hold menjadi 'Done'
+                $status_hold = 'Done';
+                $sql_update_hold = "UPDATE hold_project SET status_hold = ? WHERE kode_lahan = ?";
+                $stmt_update_hold = $conn->prepare($sql_update_hold);
+                $stmt_update_hold->bind_param("ss", $status_hold, $kode_lahan);
+                $stmt_update_hold->execute();
+            }
+            // Komit transaksi
+            $conn->commit();
+            echo "Status berhasil diperbarui.";
+            try {
+                // Pengaturan server SMTP
+                $mail->isSMTP();
+                $mail->Host = 'sandbox.smtp.mailtrap.io';  // Ganti dengan SMTP server Anda
+                $mail->SMTPAuth = true;
+                $mail->Username = 'ff811f556f5d12'; // Ganti dengan email Anda
+                $mail->Password = 'c60c92868ce0f8'; // Ganti dengan password email Anda
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                $mail->Port = 2525;
+                
+                // Pengaturan pengirim dan penerima
+                $mail->setFrom('resto-soc@gacoan.com', 'Resto SOC');
+        
+                // Query untuk mendapatkan email pengguna dengan level "Real Estate"
+                $sql = "SELECT email FROM user WHERE level IN ('Bod','Legal')";
+                $result = $conn->query($sql);
+        
+                if ($result->num_rows > 0) {
+                    while($row = $result->fetch_assoc()) {
+                        $email = $row['email'];
+                
+                        // Validasi format email sebelum menambahkannya sebagai penerima
+                        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                            $mail->addAddress($email); // Tambahkan setiap penerima email
+                            
+                            // Konten email
+                            $mail->isHTML(true);
+                            $mail->Subject = 'Notification: 1 New Information Draft PSM Resto SOC Ticket';
+                            $mail->Body    = '
+                            <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                                <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
+                                    <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Team,</h2>
+                                    <p>You have 1 New Information Draft PSM Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.</p>
+                                    <p>Thank you for your prompt attention to this matter.</p>
+                                    <p></p>
+                                    <p>Best regards,</p>
+                                    <p>Resto - SOC</p>
+                                </div>
+                            </div>';
+                            $mail->AltBody = 'Dear Team,'
+                                           . 'You have 1 New Information Draft PSM Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.'
+                                           . 'Thank you for your prompt attention to this matter.'
+                                           . 'Best regards,'
+                                           . 'Resto - SOC';
+                
+                            // Kirim email
+                            $mail->send();
+                            $mail->clearAddresses(); // Hapus semua penerima sebelum loop berikutnya
                         } else {
-                            echo "Gagal memperbarui status.";
+                            echo "Invalid email format: " . $email;
                         }
-                        // Ambil kode_lahan dari tabel re
-                        $sql_get_kode_lahan = "SELECT kode_lahan FROM draft WHERE id = ?";
-                        $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
-                        $stmt_get_kode_lahan->bind_param("i", $id);
-                        $stmt_get_kode_lahan->execute();
-                        $stmt_get_kode_lahan->bind_result($kode_lahan);
-                        $stmt_get_kode_lahan->fetch();
-                        $stmt_get_kode_lahan->free_result();
-
-                        // Periksa apakah kode_lahan ada di tabel hold_project
-                        $sql_check_hold = "SELECT kode_lahan FROM hold_project WHERE kode_lahan = ?";
-                        $stmt_check_hold = $conn->prepare($sql_check_hold);
-                        $stmt_check_hold->bind_param("s", $kode_lahan);
-                        $stmt_check_hold->execute();
-                        $stmt_check_hold->store_result();
-
-                        if ($stmt_check_hold->num_rows > 0) {
-                            // Jika kode_lahan ada di hold_project, update status_hold menjadi 'Done'
-                            $status_hold = 'Done';
-                            $sql_update_hold = "UPDATE hold_project SET status_hold = ? WHERE kode_lahan = ?";
-                            $stmt_update_hold = $conn->prepare($sql_update_hold);
-                            $stmt_update_hold->bind_param("ss", $status_hold, $kode_lahan);
-                            $stmt_update_hold->execute();
-                        }
-                        // Komit transaksi
-                        $conn->commit();
-                        echo "Status berhasil diperbarui.";
+                    }
+                } else {
+                    echo "No emails found.";
+                }
+        
+            } catch (Exception $e) {
+                echo "Email tidak dapat dikirim. Error: {$mail->ErrorInfo}";
+            }
         } elseif ($confirm_re == 'Pending') {
             
                 // Ambil kode_lahan dari tabel re

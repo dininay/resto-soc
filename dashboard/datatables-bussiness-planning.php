@@ -143,7 +143,7 @@ if ($result && $result->num_rows > 0) {
                                                                 <form id="statusForm" method="post" action="re/bussiness-plan-edit.php">
                                                                     <input type="hidden" name="id" id="modalKodeLahan">
                                                                     <div class="form-group">
-                                                                        <label for="statusSelect">Status Land<span style="color: red;">*</span></label>
+                                                                        <label for="statusSelect">Status Land<strong><span style="color: red;">*</span></strong></label>
                                                                         <select class="form-control" id="statusSelect" name="status_land">
                                                                             <option value="On Planning">On Planning</option>
                                                                             <option value="Aktif">Aktif</option>

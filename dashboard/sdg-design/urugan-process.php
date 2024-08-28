@@ -1,4 +1,12 @@
 <?php
+// Include PHPMailer library files
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require '../../vendor/autoload.php'; // Hanya jika menggunakan Composer
+
+// Inisialisasi PHPMailer
+$mail = new PHPMailer(true);
 // Koneksi ke database
 include "../../koneksi.php";
 
@@ -110,14 +118,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                         $sla_date = $end_date_obj->format("Y-m-d");
                         $slaurugan_date = $end_date_obj->format("Y-m-d");
 
-                        // Masukkan data ke tabel sdg_rab
-                        $sql_insert = "INSERT INTO sdg_rab (kode_lahan, confirm_sdgqs, sla_date, confirm_qsurugan, slaurugan_date) VALUES (?,?,?,?,?)";
-                        $stmt_insert = $conn->prepare($sql_insert);
-                        // Tambahkan 'In Process' untuk kolom confirm_sdgqs
-                        $confirm_sdgqs = 'In Process';
-                        $confirm_qsurugan = 'In Process';
-                        $stmt_insert->bind_param("sssss", $row['kode_lahan'], $confirm_sdgqs, $sla_date, $confirm_qsurugan, $slaurugan_date);
-                        $stmt_insert->execute();
+                        // Cek apakah kode_lahan sudah ada di tabel sdg_rab
+                        $sql_check = "SELECT kode_lahan FROM sdg_rab WHERE kode_lahan = ?";
+                        $stmt_check = $conn->prepare($sql_check);
+                        $stmt_check->bind_param("s", $row['kode_lahan']);
+                        $stmt_check->execute();
+                        $stmt_check->store_result();
+
+                        if ($stmt_check->num_rows > 0) {
+                            // Jika ada, lakukan update
+                            $sql_update = "UPDATE sdg_rab SET 
+                                        confirm_sdgqs = ?, 
+                                        sla_date = ?, 
+                                        confirm_qsurugan = ?, 
+                                        slaurugan_date = ? 
+                                        WHERE kode_lahan = ?";
+                            $confirm_qsurugan = "In Process";
+                            $stmt_update = $conn->prepare($sql_update);
+                            $stmt_update->bind_param("sssss", $confirm_sdgqs, $sla_date, $confirm_qsurugan, $slaurugan_date, $row['kode_lahan']);
+                            $stmt_update->execute();
+                        } else {
+                            // Jika tidak ada, lakukan insert
+                            $sql_insert = "INSERT INTO sdg_rab (kode_lahan, confirm_sdgqs, sla_date, confirm_qsurugan, slaurugan_date) 
+                                        VALUES (?, ?, ?, ?, ?)";
+                            $stmt_insert = $conn->prepare($sql_insert);
+                            $confirm_qsurugan = "In Process";
+                            $stmt_insert->bind_param("sssss", $row['kode_lahan'], $confirm_sdgqs, $sla_date, $confirm_qsurugan, $slaurugan_date);
+                            $stmt_insert->execute();
+                        }
+
+                        $stmt_check->close();
                     } 
                     
                     // Ambil kode_lahan dari tabel re
@@ -148,6 +178,65 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                     $conn->commit();
                     echo "Status berhasil diperbarui.";
                 } 
+                try {
+                    // Pengaturan server SMTP
+                    $mail->isSMTP();
+                    $mail->Host = 'sandbox.smtp.mailtrap.io';  // Ganti dengan SMTP server Anda
+                    $mail->SMTPAuth = true;
+                    $mail->Username = 'ff811f556f5d12'; // Ganti dengan email Anda
+                    $mail->Password = 'c60c92868ce0f8'; // Ganti dengan password email Anda
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                    $mail->Port = 2525;
+                    
+                    // Pengaturan pengirim dan penerima
+                    $mail->setFrom('resto-soc@gacoan.com', 'Resto SOC');
+            
+                    // Query untuk mendapatkan email pengguna dengan level "Real Estate"
+                    $sql = "SELECT email FROM user WHERE level IN ('SDG-QS')";
+                    $result = $conn->query($sql);
+            
+                    if ($result->num_rows > 0) {
+                        while($row = $result->fetch_assoc()) {
+                            $email = $row['email'];
+                    
+                            // Validasi format email sebelum menambahkannya sebagai penerima
+                            if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                                $mail->addAddress($email); // Tambahkan setiap penerima email
+                                
+                                // Konten email
+                                $mail->isHTML(true);
+                                $mail->Subject = 'Notification: 1 New Active Resto SOC Ticket';
+                                $mail->Body    = '
+                                <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                                    <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
+                                        <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Team,</h2>
+                                        <p>You have 1 New Active Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.</p>
+                                        <p>Thank you for your prompt attention to this matter.</p>
+                                        <p></p>
+                                        <p>Best regards,</p>
+                                        <p>Resto - SOC</p>
+                                    </div>
+                                </div>';
+                                $mail->AltBody = 'Dear Team,'
+                                               . 'You have 1 New Active Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.'
+                                               . 'Thank you for your prompt attention to this matter.'
+                                               . 'Best regards,'
+                                               . 'Resto - SOC';
+                    
+                                // Kirim email
+                                $mail->send();
+                                $mail->clearAddresses(); // Hapus semua penerima sebelum loop berikutnya
+                            } else {
+                                echo "Invalid email format: " . $email;
+                            }
+                            }
+                        } else {
+                            echo "No emails found.";
+                        }
+            
+                    } catch (Exception $e) {
+                        echo "Email tidak dapat dikirim. Error: {$mail->ErrorInfo}";
+                    }
             } elseif ($confirm_sdgurugan == 'Pending') {
                 // Ambil kode_lahan dari tabel sdg_desain
                 $sql_get_kode_lahan = "SELECT kode_lahan FROM sdg_desain WHERE id = ?";

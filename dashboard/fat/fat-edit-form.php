@@ -66,29 +66,29 @@ if(isset($_GET['id'])) {
                             <form method="post" action="fat-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="email">Email</label>
+                                    <label class="col-sm-3 col-form-label" for="email">Email<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="email" name="email" type="text" placeholder="Email" value="<?php echo $row['email']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_qris">Upload Lampiran QRIS & EDC</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_qris">Upload Lampiran QRIS<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_qris[]" type="file" multiple="multiple" />
                                         </div>
                                     </div>
                                 </div>
-                                <!-- <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_st">Upload Lampiran Serah Terima</label>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="lamp_st">Upload Lampiran Serah Terima EDC<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_st[]" type="file" multiple="multiple" />
                                         </div>
                                     </div>
-                                </div> -->
+                                </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="atm_bank">Upload Lampiran ATM & Bank Account</label>
+                                    <label class="col-sm-3 col-form-label" for="atm_bank">Upload Lampiran ATM & Bank Account<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="atm_bank[]" type="file" multiple="multiple" />

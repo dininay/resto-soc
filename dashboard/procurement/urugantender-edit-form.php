@@ -98,31 +98,31 @@ $conn->close();
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="city">Kota</label>
+                                    <label class="col-sm-3 col-form-label" for="city">Kota<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input type="text" class="form-control" id="city" name="city" value="<?php echo $city_name; ?>" readonly>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="nama_vendorurugan">Nama Vendor</label>
+                                    <label class="col-sm-3 col-form-label" for="nama_vendorurugan">Nama Vendor<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="nama_vendorurugan" name="nama_vendorurugan" type="text" placeholder="Nama Vendor" value="<?php echo $row['nama_vendorurugan']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="alamat_vendorurugan">Alamat Vendor</label>
+                                    <label class="col-sm-3 col-form-label" for="alamat_vendorurugan">Alamat Vendor<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="alamat_vendorurugan" name="alamat" type="text" placeholder="Alamat Vendor" value="<?php echo $row['alamat_vendorurugan']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="detail_vendorurugan">Detail</label>
+                                    <label class="col-sm-3 col-form-label" for="detail_vendorurugan">Detail<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <textarea class="form-control" id="detail_vendorurugan" name="detail" rows="4" cols="50"><?php echo $row['detail_vendorurugan']; ?></textarea>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_profilurugan">Upload Lampiran Company Profile</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_profilurugan">Upload Lampiran Company Profile<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_profilurugan[]" type="file" multiple="multiple" />
@@ -130,7 +130,7 @@ $conn->close();
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_vendorurugan">Upload Lampiran Pendukung</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_vendorurugan">Upload Lampiran Pendukung<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_vendorurugan[]" type="file" multiple="multiple" />

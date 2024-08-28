@@ -45,27 +45,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         // Eksekusi query update
         if ($stmt_update->execute() === TRUE) {
             // Jika status_finallegal diubah menjadi Approve
-            if ($status_eqpdevprocur == 'In Review By TAF') {
-                $status_eqptaf = "In Process";
+            if ($status_eqpdevprocur == 'Approve') {
+                // $status_eqptaf = "In Process";
                 $eqpdevprocur_date = date("Y-m-d H:i:s");
 
-                // Ambil SLA dari tabel master_sla untuk divisi SPK
-                $sql_sla_spk = "SELECT sla FROM master_sla WHERE divisi = 'SPK-FAT'";
-                $result_sla_spk = $conn->query($sql_sla_spk);
-                if ($result_sla_spk->num_rows > 0) {
-                    $row_sla_spk = $result_sla_spk->fetch_assoc();
-                    $hari_sla_spk = $row_sla_spk['sla'];
+                // // Ambil SLA dari tabel master_sla untuk divisi SPK
+                // $sql_sla_spk = "SELECT sla FROM master_sla WHERE divisi = 'SPK-FAT'";
+                // $result_sla_spk = $conn->query($sql_sla_spk);
+                // if ($result_sla_spk->num_rows > 0) {
+                //     $row_sla_spk = $result_sla_spk->fetch_assoc();
+                //     $hari_sla_spk = $row_sla_spk['sla'];
 
-                    // Hitung sla_spkwo berdasarkan wo_date + SLA dari divisi SPK
-                    $sla_eqptaf = date("Y-m-d", strtotime($eqpdevprocur_date . ' + ' . $hari_sla_spk . ' days'));
-                } else {
-                    echo "Error: Data SLA tidak ditemukan untuk divisi SPK.";
-                    exit;
-                }
+                //     // Hitung sla_spkwo berdasarkan wo_date + SLA dari divisi SPK
+                //     $sla_eqptaf = date("Y-m-d", strtotime($eqpdevprocur_date . ' + ' . $hari_sla_spk . ' days'));
+                // } else {
+                //     echo "Error: Data SLA tidak ditemukan untuk divisi SPK.";
+                //     exit;
+                // }
                 // Update status_kom di tabel resto menjadi "In Process"
-                $sql_update_kom = "UPDATE equipment SET status_eqpdevprocur = ?, eqpdevprocur_date = ?, status_eqptaf = ?, sla_eqptaf = ? WHERE id = ?";
+                $sql_update_kom = "UPDATE equipment SET status_eqpdevprocur = ?, eqpdevprocur_date = ? WHERE id = ?";
                 $stmt_update_kom = $conn->prepare($sql_update_kom);
-                $stmt_update_kom->bind_param("ssssi", $status_eqpdevprocur, $eqpdevprocur_date, $status_eqptaf, $sla_eqptaf, $id);
+                $stmt_update_kom->bind_param("ssi", $status_eqpdevprocur, $eqpdevprocur_date, $id);
                 $stmt_update_kom->execute();
 
                 // Ambil kode_lahan dari tabel re

@@ -77,26 +77,27 @@ if ($status_obslegal == "In Process") {
                             <div class="card-body">
                             <form method="post" action="obstacle-legal-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
+                                
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_legal">Upload Lampiran Pendukung Obstacle</label>
+                                    <label class="col-sm-3 col-form-label">Lampiran Sebelumnya</label>
+                                    <div class="col-sm-9">
+                                        <?php echo $row['lamp_legal']; ?>
+                                    </div>
+                                    <input type="hidden" name="existing_files" value="<?php echo $row['lamp_legal']; ?>">
+                                </div>
+                                <!-- Jika pengguna ingin mengganti lampiran, tampilkan input untuk unggah file -->
+                                <div class="form-group row" id="lampiran_baru">
+                                    <label class="col-sm-3 col-form-label" for="lamp_legal">Upload Baru<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_legal[]" type="file" multiple="multiple" />
                                         </div>
                                     </div>
                                 </div>
-                                <!-- <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="status_obslegal">Status Obstacle Legal</label>
-                                    <div class="col-sm-9">
-                                        <select class="form-control" id="status_obslegal" name="status_obslegal">
-                                            <?php echo $options; ?>
-                                        </select>
-                                    </div>
-                                </div> -->
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="obslegal_date">Tgl Surat Obstacle</label>
+                                    <label class="col-sm-3 col-form-label" for="catatan_obslegal">Catatan Legal</label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="obslegal_date" type="date" name="obslegal_date" value="<?php echo $row['obslegal_date']; ?>">
+                                        <textarea class="form-control" id="catatan_obslegal" name="catatan_obslegal" rows="4" cols="50"><?php echo $row['catatan_obslegal']; ?></textarea>
                                     </div>
                                 </div>
                                 <div class="form-group row">

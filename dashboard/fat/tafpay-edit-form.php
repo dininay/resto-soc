@@ -66,7 +66,7 @@ if(isset($_GET['id'])) {
                             <form method="post" action="tafpay-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_paylistrik">Upload Lampiran Bukti Pembayaran Listrik</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_paylistrik">Upload Lampiran Bukti Pembayaran Listrik<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_paylistrik[]" type="file" multiple="multiple" />
@@ -74,7 +74,7 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_paypdam">Upload Lampiran Bukti Pembayaran PDAM</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_paypdam">Upload Lampiran Bukti Pembayaran PDAM<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_paypdam[]" type="file" multiple="multiple" />

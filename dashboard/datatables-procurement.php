@@ -329,7 +329,7 @@ if ($result && $result->num_rows > 0) {
                                                 <td>
                                                     <!-- Tombol Edit -->
                                                     <?php if ($row['status_approvprocurement'] !== 'Approve') : ?>
-                                                        <a href="procurement/procurement-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                        <a href="procurement/procurement-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mr-2">
                                                             <i class="i-Pen-2"></i>
                                                         </a>
                                                     <?php endif; ?>

@@ -46,6 +46,7 @@ if ($city_code) {
     $stmt->bind_param("sssss", $city, $kode_lahan, $nama_lahan, $status_land, $bp_date);
 
     if ($stmt->execute()) {
+        
         // Redirect ke halaman datatable-land-sourcing
         header("Location: " . $base_url . "/datatables-bussiness-planning.php");
         exit();

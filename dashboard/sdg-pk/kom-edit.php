@@ -8,6 +8,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $id = $_POST['id'];
     $kode_lahan = $_POST['kode_lahan'];
     $start_konstruksi = $_POST['start_konstruksi']; // Assuming this value is posted from form
+    $sla_consact = $_POST['sla_consact']; // Assuming this value is posted from form
     $obstacle_kom = $_POST['obstacle_kom']; // Assuming this value is posted from form
     $note_kom = isset($_POST["note_kom"]) ? $_POST["note_kom"] : null;// Assuming this value is posted from form
     $status_consact = "In Process";
@@ -90,10 +91,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Update data di database untuk tabel resto
     $sql1 = "UPDATE resto SET lamp_kom = ?, start_konstruksi = ?, obstacle_kom = ?, note_kom = ?, lamp_obskom = ? WHERE id = ?";
     $stmt1 = $conn->prepare($sql1);
-    $stmt1->bind_param("sssssi", $lamp_kom, $start_konstruksi, $obstacle_kom, $note_kom, $lamp_obskom, $id);
+    $stmt1->bind_param("sssssi",$lamp_kom, $start_konstruksi, $obstacle_kom, $note_kom, $lamp_obskom, $id);
+    
+    $sql2 = "INSERT INTO sdg_pk (kode_lahan, sla_consact) VALUES (?,?)";
+    $stmt2 = $conn->prepare($sql2);
+    $stmt2->bind_param("ss", $kode_lahan, $sla_consact);
 
     // Execute both queries
-    if ($stmt1->execute()) {
+    if ($stmt1->execute() && $stmt2->execute()) {
         header("Location:  " . $base_url . "/datatables-kom-sdgpk.php");
         exit();
     } else {

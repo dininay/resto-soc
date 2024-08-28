@@ -9,7 +9,7 @@ if(isset($_GET['id'])) {
     $id = $_GET['id'];
 
     // Query untuk mendapatkan data resep berdasarkan ID
-    $result = $conn->query("SELECT * from resto where id = $id");
+    $result = $conn->query("SELECT resto.*, sdg_pk.sla_consact from resto LEFT JOIN sdg_pk ON sdg_pk.kode_lahan = resto.kode_lahan where resto.id = $id");
 
     // Periksa apakah data ditemukan
     if ($result->num_rows > 0) {
@@ -80,14 +80,29 @@ if(isset($_GET['id'])) {
                                     <input class="form-control" id="kode_lahan" name="kode_lahan" type="text" placeholder="Kode Lahan" value="<?php echo $row['kode_lahan']; ?>" readonly/>
                                 </div>
                             </div>
+                            <div class="form-group row">
+                                <label class="col-sm-3 col-form-label" for="jadwal_kickoff">Tgl Kick Off Meeting<strong><span style="color: red;">*</span></strong></label>
+                                <div class="col-sm-9">
+                                    <input class="form-control" id="jadwal_kickoff" name="sla_kom" type="date" placeholder="Jadwal Kick Off Meeting"
+                                        min="<?php echo date('Y-m-d'); ?>"
+                                        max="<?php echo date('Y-m-d', strtotime('+6 days')); ?>"
+                                        value="<?php echo $row['sla_kom']; ?>"/>
+                                </div>
+                            </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="start_konstruksi">Tgl Start Konstruksi</label>
+                                    <label class="col-sm-3 col-form-label" for="start_konstruksi">Tgl Start Konstruksi<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="start_konstruksi" name="start_konstruksi" type="date" placeholder="Tgl Start Konstruksi" value="<?php echo $row['start_konstruksi']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_kom">Upload Lampiran Kick Off Meeting</label>
+                                    <label class="col-sm-3 col-form-label" for="sla_consact">Tgl End Konstruksi<strong><span style="color: red;">*</span></strong></label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="sla_consact" name="sla_consact" type="date" placeholder="Tgl Start Konstruksi" value="<?php echo $row['sla_consact']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="lamp_kom">Upload Lampiran Kick Off Meeting<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_kom[]" type="file" multiple="multiple" />
@@ -95,7 +110,7 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="obstacle_kom">Obstacle</label>
+                                    <label class="col-sm-3 col-form-label" for="obstacle_kom">Obstacle<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="obstacle_kom" name="obstacle_kom" onchange="toggleObstacleDetail()">
                                         <option>Pilih</option>
@@ -105,13 +120,13 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row" id="note_kom" style="display: none;">
-                                    <label class="col-sm-3 col-form-label" for="note_kom">Catatan</label>
+                                    <label class="col-sm-3 col-form-label" for="note_kom">Catatan<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <textarea class="form-control" id="note_kom" name="note_kom" rows="4" cols="50"><?php echo $row['note_kom']; ?></textarea>
                                     </div>
                                 </div>
                                 <div class="form-group row" id="lamp_obskom" style="display: none;">
-                                    <label class="col-sm-3 col-form-label" for="lamp_obskom">Upload Lampiran Pendukung Obstacle</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_obskom">Upload Lampiran Pendukung Obstacle<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_obskom[]" type="file" multiple="multiple" />

@@ -78,7 +78,7 @@ if ($submit_legal == "In Process") {
                             <form method="post" action="design-legal-edit.php" enctype="multipart/form-data">
                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                             <div class="form-group row">
-                                    <label class="col-sm-2 col-form-label" for="submit_legal">Status Submit Legal</label>
+                                    <label class="col-sm-2 col-form-label" for="submit_legal">Status Submit Legal<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-10">
                                         <select class="form-control" id="submit_legal" name="submit_legal">
                                             <?php echo $options; ?>

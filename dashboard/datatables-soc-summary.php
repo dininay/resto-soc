@@ -11,16 +11,6 @@ $sql = "
         land.kode_lahan,
         land.nama_lahan,
         land.lokasi,
-        soc_fat.*, 
-        soc_hrga.*, 
-        soc_it.*, 
-        soc_legal.*, 
-        soc_marketing.*, 
-        soc_rto.*, 
-        soc_sdg.*, 
-        note_ba.*, 
-        note_legal.*,
-        doc_legal.*,
         socdate_academy.kpt_1,
         socdate_academy.kpt_2,
         socdate_academy.kpt_3,
@@ -59,24 +49,18 @@ $sql = "
         socdate_sdg.lamp_filterair,
         socdate_sdg.lamp_ujilab,
         socdate_sdg.lampwo_reqipal,
+        socdate_sdg.lamp_slo,
+        socdate_sdg.lamp_nidi,
         sdg_desain.lamp_permit,
         sdg_desain.lamp_pbg,
+        sdg_pk.month_1,
+        sdg_pk.month_2,
+        sdg_pk.month_3,
         dokumen_loacd.kode_store
         FROM resto
          JOIN land ON resto.kode_lahan = land.kode_lahan
          JOIN equipment ON resto.kode_lahan = equipment.kode_lahan
-         JOIN summary_soc ON resto.kode_lahan = summary_soc.kode_lahan
-         JOIN soc_fat ON summary_soc.kode_lahan = soc_fat.kode_lahan
-         JOIN soc_hrga ON soc_fat.kode_lahan = soc_hrga.kode_lahan
-         JOIN soc_it ON soc_fat.kode_lahan = soc_it.kode_lahan
-         JOIN soc_legal ON soc_fat.kode_lahan = soc_legal.kode_lahan
-         JOIN soc_marketing ON soc_fat.kode_lahan = soc_marketing.kode_lahan
-         JOIN soc_rto ON soc_fat.kode_lahan = soc_rto.kode_lahan
-         JOIN soc_sdg ON soc_fat.kode_lahan = soc_sdg.kode_lahan
-         JOIN note_ba ON soc_fat.kode_lahan = note_ba.kode_lahan
-         JOIN note_legal ON soc_fat.kode_lahan = note_legal.kode_lahan
-         JOIN doc_legal ON note_legal.kode_lahan = doc_legal.kode_lahan
-         JOIN sign ON soc_fat.kode_lahan = sign.kode_lahan
+         JOIN sdg_pk ON resto.kode_lahan = sdg_pk.kode_lahan
          JOIN socdate_academy ON land.kode_lahan = socdate_academy.kode_lahan
          JOIN socdate_fat ON land.kode_lahan = socdate_fat.kode_lahan
          JOIN socdate_hr ON land.kode_lahan = socdate_hr.kode_lahan
@@ -88,6 +72,18 @@ $sql = "
          JOIN socdate_sdg ON land.kode_lahan = socdate_sdg.kode_lahan
          JOIN dokumen_loacd ON land.kode_lahan = dokumen_loacd.kode_lahan
          JOIN sdg_desain ON land.kode_lahan = sdg_desain.kode_lahan
+         JOIN summary_soc ON resto.kode_lahan = summary_soc.kode_lahan
+         LEFT JOIN soc_fat ON summary_soc.kode_lahan = soc_fat.kode_lahan
+         LEFT JOIN soc_hrga ON soc_fat.kode_lahan = soc_hrga.kode_lahan
+         LEFT JOIN soc_it ON soc_fat.kode_lahan = soc_it.kode_lahan
+         LEFT JOIN soc_legal ON soc_fat.kode_lahan = soc_legal.kode_lahan
+         LEFT JOIN soc_marketing ON soc_fat.kode_lahan = soc_marketing.kode_lahan
+         LEFT JOIN soc_rto ON soc_fat.kode_lahan = soc_rto.kode_lahan
+         LEFT JOIN soc_sdg ON soc_fat.kode_lahan = soc_sdg.kode_lahan
+         LEFT JOIN note_ba ON soc_fat.kode_lahan = note_ba.kode_lahan
+         LEFT JOIN note_legal ON soc_fat.kode_lahan = note_legal.kode_lahan
+         LEFT JOIN doc_legal ON note_legal.kode_lahan = doc_legal.kode_lahan
+         LEFT JOIN sign ON soc_fat.kode_lahan = sign.kode_lahan
          GROUP BY summary_soc.kode_lahan";
 $result = $conn->query($sql);
 
@@ -231,18 +227,40 @@ if ($result && $result->num_rows > 0) {
                                                         <!-- <span>Not Available</span> -->
                                                     <?php endif; ?>
                                                 </td>
+                                                <!-- <td>
+                                                    <?php 
+                                                        // Memeriksa apakah setiap nilai tidak kosong
+                                                        if (!is_null($row['bangunan_mural']) && !is_null($row['daya_listrik']) && !is_null($row['supply_air']) && 
+                                                            !is_null($row['aliran_air']) && !is_null($row['kualitas_keramik']) && !is_null($row['paving_loading']) && 
+                                                            !is_null($row['perijinan']) && !is_null($row['sampah_parkir']) && !is_null($row['akses_jkm']) && 
+                                                            !is_null($row['pkl']) && !is_null($row['cctv']) && !is_null($row['audio_system']) && 
+                                                            !is_null($row['lan_infra']) && !is_null($row['internet_cust']) && !is_null($row['internet_km']) && 
+                                                            !is_null($row['security']) && !is_null($row['cs']) && !is_null($row['post_content']) && 
+                                                            !is_null($row['ojol']) && !is_null($row['tikor_maps']) && !is_null($row['qris']) && !is_null($row['edc'])) {
+
+                                                            // Jika semua nilai ada, lakukan perhitungan
+                                                            $total1 = rtrim(50 * number_format(($row['bangunan_mural'] + $row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) / 6, 2) / 100, '0') . (number_format(50 * (($row['bangunan_mural'] + $row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) / 6 / 100), 2)[strlen(number_format(50 * (($row['bangunan_mural'] + $row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) / 6 / 100), 2)) - 1] == '.' ? '0' : '');
+                                                            $total2 = rtrim(25 * number_format(($row['perijinan'] + $row['sampah_parkir'] + $row['akses_jkm'] + $row['pkl']) / 4, 2) / 100, '0') . (number_format(25 * (($row['perijinan'] + $row['sampah_parkir'] + $row['akses_jkm'] + $row['pkl']) / 4 / 100), 2)[strlen(number_format(25 * (($row['perijinan'] + $row['sampah_parkir'] + $row['akses_jkm'] + $row['pkl']) / 4 / 100), 2)) - 1] == '.' ? '0' : '');
+                                                            $total3 = rtrim(6 * number_format(($row['cctv'] + $row['audio_system'] + $row['lan_infra'] + $row['internet_cust'] + $row['internet_km']) / 5, 2) / 100, '0') . (number_format(6 * (($row['cctv'] + $row['audio_system'] + $row['lan_infra'] + $row['internet_cust'] + $row['internet_km']) / 5 / 100), 2)[strlen(number_format(6 * (($row['cctv'] + $row['audio_system'] + $row['lan_infra'] + $row['internet_cust'] + $row['internet_km']) / 5 / 100), 2)) - 1] == '.' ? '0' : '');
+                                                            $total4 = rtrim(8 * number_format(($row['security'] + $row['cs']) / 2, 2) / 100, '0') . (number_format(8 * (($row['security'] + $row['cs']) / 2 / 100), 2)[strlen(number_format(8 * (($row['security'] + $row['cs']) / 2 / 100), 2)) - 1] == '.' ? '0' : '');
+                                                            $total5 = rtrim(5 * number_format(($row['post_content'] + $row['ojol'] + $row['tikor_maps']) / 3, 2) / 100, '0') . (number_format(5 * (($row['post_content'] + $row['ojol'] + $row['tikor_maps']) / 3 / 100), 2)[strlen(number_format(5 * (($row['post_content'] + $row['ojol'] + $row['tikor_maps']) / 3 / 100), 2)) - 1] == '.' ? '0' : '');
+                                                            $total6 = rtrim(6 * number_format(($row['qris'] + $row['edc']) / 2, 2) / 100, '0') . (number_format(6 * (($row['qris'] + $row['edc']) / 2 / 100), 2)[strlen(number_format(6 * (($row['qris'] + $row['edc']) / 2 / 100), 2)) - 1] == '.' ? '0' : '');
+
+                                                            $total = $total1 + $total2 + $total3 + $total4 + $total5 + $total6;
+                                                            echo $total . "%"; 
+                                                        } else {
+                                                            // Jika ada nilai yang kosong, tidak menampilkan apa-apa
+                                                            echo "-";
+                                                        }
+                                                    ?>
+                                                </td> -->
                                                 <td>
                                                     <?php 
-                                                        $total1 = rtrim(50 * number_format(($row['bangunan_mural'] + $row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) / 6, 2) / 100, '0') . (number_format(50 * (($row['bangunan_mural'] + $row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) / 6 / 100), 2)[strlen(number_format(50 * (($row['bangunan_mural'] + $row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) / 6 / 100), 2)) - 1] == '.' ? '0' : '');
-                                                        $total2 = rtrim(25 * number_format(($row['perijinan'] + $row['sampah_parkir'] + $row['akses_jkm'] + $row['pkl']) / 4, 2) / 100, '0') . (number_format(25 * (($row['perijinan'] + $row['sampah_parkir'] + $row['akses_jkm'] + $row['pkl']) / 4 / 100), 2)[strlen(number_format(25 * (($row['perijinan'] + $row['sampah_parkir'] + $row['akses_jkm'] + $row['pkl']) / 4 / 100), 2)) - 1] == '.' ? '0' : '');
-                                                        $total3 = rtrim(6 * number_format(($row['cctv'] + $row['audio_system'] + $row['lan_infra'] + $row['internet_cust'] + $row['internet_km']) / 5, 2) / 100, '0') . (number_format(6 * (($row['cctv'] + $row['audio_system'] + $row['lan_infra'] + $row['internet_cust'] + $row['internet_km']) / 5 / 100), 2)[strlen(number_format(6 * (($row['cctv'] + $row['audio_system'] + $row['lan_infra'] + $row['internet_cust'] + $row['internet_km']) / 5 / 100), 2)) - 1] == '.' ? '0' : '');
-                                                        $total4 = rtrim(8 * number_format(($row['security'] + $row['cs']) / 2, 2) / 100, '0') . (number_format(8 * (($row['security'] + $row['cs']) / 2 / 100), 2)[strlen(number_format(8 * (($row['security'] + $row['cs']) / 2 / 100), 2)) - 1] == '.' ? '0' : '');
-                                                        $total5 = rtrim(5 * number_format(($row['post_content'] + $row['ojol'] + $row['tikor_maps']) / 3, 2) / 100, '0') . (number_format(5 * (($row['post_content'] + $row['ojol'] + $row['tikor_maps']) / 3 / 100), 2)[strlen(number_format(5 * (($row['post_content'] + $row['ojol'] + $row['tikor_maps']) / 3 / 100), 2)) - 1] == '.' ? '0' : '');
-                                                        $total6 = rtrim(6 * number_format(($row['qris'] + $row['edc']) / 2, 2) / 100, '0') . (number_format(6 * (($row['qris'] + $row['edc']) / 2 / 100), 2)[strlen(number_format(6 * (($row['qris'] + $row['edc']) / 2 / 100), 2)) - 1] == '.' ? '0' : '');
-
-                                                        $total = $total1 + $total2 + $total3 + $total4 + $total5 + $total6;
-                                                        echo $total; 
-                                                    ?>%
+                                                    if (!empty($row['month_1']) && !empty($row['month_2']) && !empty($row['month_3'])) {
+                                                        $total = $row['month_1'] + $row['month_2'] + $row['month_3']; 
+                                                        echo $total . "%";
+                                                    }
+                                                    ?>
                                                 </td>
                                                 <td>
                                                     <?php
@@ -262,7 +280,7 @@ if ($result && $result->num_rows > 0) {
 
                                                         $scm = (( !is_null($row['lamp_sj']) ? 100 : 0 ));
 
-                                                        $sdg = (( !is_null($row['no_listrik']) ? 100 : 0 ) + ( !is_null($row['lamp_listrik']) ? 100 : 0 ) + ( !is_null($row['lamp_ka']) ? 100 : 0 ) + ( !is_null($row['lamp_ipal']) ? 100 : 0 ) + ( !is_null($row['lamp_eqp']) ? 100 : 0 ) + ( !is_null($row['lamp_ba']) ? 100 : 0 )) / 6;
+                                                        $sdg = (( !is_null($row['lamp_ujilab']) ? 100 : 0 ) + ( !is_null($row['lamp_sumberair']) ? 100 : 0 ) + ( !is_null($row['lamp_filterair']) ? 100 : 0 ) + ( !is_null($row['lamp_slo']) ? 100 : 0 ) + ( !is_null($row['lamp_nidi']) ? 100 : 0 ) + ( !is_null($row['lampwo_reqipal']) ? 100 : 0 )) / 6;
 
                                                         $total = ($fat + $academy + $hr + $ir + $it + $legal + $marketing + $scm + $sdg) / 9;
                                                         $fix = number_format($total, 2);
@@ -300,7 +318,7 @@ if ($result && $result->num_rows > 0) {
                                                 <td>
                                                 <!-- Tombol Edit -->
                                                         <div>
-                                                            <a href="operation/summary-soc-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                            <a href="operation/summary-soc-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mr-2">
                                                             <i class="i-Pen-2"></i>
                                                             </a>
                                                         </div>

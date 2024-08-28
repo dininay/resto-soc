@@ -67,7 +67,7 @@ if(isset($_GET['id'])) {
                             <input type="hidden" name="kode_lahan" value="<?php echo $row['kode_lahan']; ?>">
                             
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_draf">Upload Draft Table Sewa</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_draf">Upload Draft Table Sewa<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_draf[]" type="file" multiple="multiple" />
@@ -75,7 +75,7 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_signpsm">Upload Sign PSM</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_signpsm">Upload Sign PSM<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_signpsm[]" type="file" multiple="multiple" />

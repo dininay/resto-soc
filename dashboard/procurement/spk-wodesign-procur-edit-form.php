@@ -76,7 +76,7 @@ $conn->close();
                             <form method="post" action="spk-wodesign-procur-edit.php" enctype="multipart/form-data">
                             <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_spkwo">Upload Lampiran SPK Design</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_spkwo">Upload Lampiran SPK Design<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_spkwo[]" type="file" multiple="multiple" />

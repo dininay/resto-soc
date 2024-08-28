@@ -86,7 +86,7 @@ if(isset($_GET['id'])) {
                                 </div>
                             </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="submit_gis">Apakah sudah submit GIS ?</label>
+                                    <label class="col-sm-3 col-form-label" for="submit_gis">Apakah sudah submit GIS ?<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="submit_gis" name="submit_gis">
                                         <option>Pilih</option>
@@ -97,7 +97,7 @@ if(isset($_GET['id'])) {
                                 </div>
                             
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_steqp">Upload Lampiran ST Equipment</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_steqp">Upload Lampiran ST Equipment<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_steqp[]" type="file" multiple="multiple" />
@@ -106,7 +106,7 @@ if(isset($_GET['id'])) {
                                 </div>
 
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_basteqp">Upload Lampiran BA</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_basteqp">Upload Lampiran BA<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_basteqp[]" type="file" multiple="multiple" />

@@ -29,7 +29,6 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
-
 $sla_query = "SELECT sla FROM master_sla WHERE divisi = 'SPK'";
 $sla_result = $conn->query($sla_query);
 
@@ -296,6 +295,9 @@ function getBadgeColor($remarks) {
                                                 </td>
                                                 <td>
                                                     <?php
+                                                    // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
+                                                    date_default_timezone_set('Asia/Jakarta');
+
                                                     $start_date = $row['eqpdevprocur_date'];
                                                     $sla_date = $row['sla_eqpdevprocur'];
                                                     $status_eqpdevprocur = $row['status_eqpdevprocur'];
@@ -304,7 +306,15 @@ function getBadgeColor($remarks) {
                                                     $scoring = calculateScoring($start_date, $sla_date, $sla_value);
                                                     $remarks = getRemarks($scoring);
 
-                                                    if ($status_eqpdevprocur === 'In Review By TAF' || $status_eqpdevprocur === 'Approve') {
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
+
+                                                    if ($status_eqpdevprocur === 'Approve') {
                                                         // Menentukan label berdasarkan remarks
                                                         $status_label = '';
                                                         switch ($remarks) {
@@ -321,45 +331,53 @@ function getBadgeColor($remarks) {
 
                                                         echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
                                                     } else {
-                                                        // Mendapatkan tanggal hari ini
-                                                        $today = new DateTime();
-                                                        
-                                                        // Menghitung jumlah hari terlambat
-                                                        $lateDays = $sla_date < $today ? $today->diff($sla_date)->days : 0;
-                                                        
-                                                        if ($lateDays > 0) {
-                                                            echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . $lateDays . ' hari</button>';
+                                                        // Memeriksa apakah waktu sekarang di luar jam kerja
+                                                        if ($current_time < $work_start || $current_time > $work_end) {
+                                                            echo '<button type="button" class="btn btn-sm btn-info">Di Luar Jam Kerja</button>';
                                                         } else {
-                                                            $diff = $sla_date->diff($today);
-                                                            if ($diff->days <= 5) {
-                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $diff->days . '</button>';
+                                                            // Convert $sla_date to DateTime object
+                                                            $sla_date_obj = new DateTime($sla_date);
+
+                                                            // Menghitung jumlah hari menuju SLA date
+                                                            $diff = $now->diff($sla_date_obj);
+                                                            $daysDifference = (int)$diff->format('%R%a'); // Menyertakan tanda plus atau minus
+
+                                                            if ($daysDifference < 0) {
+                                                                // SLA telah terlewat, hitung sebagai hari terlambat
+                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . abs($daysDifference) . ' hari</button>';
                                                             } else {
-                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#deadlineModal">H + ' . $diff->days . ' hari</button>';
+                                                                // SLA belum tercapai, hitung mundur
+                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $daysDifference . '</button>';
                                                             }
                                                         }
                                                     }
                                                     ?>
                                                 </td>
+                                                
                                                 <td>
                                                     <!-- Tombol Edit -->
+                                                    <?php if ($row['status_eqpdevprocur'] != "Approve"): ?>
                                                     <?php
-                                                    // Mendapatkan tanggal hari ini
-                                                    $today = new DateTime();
-                                                    // Mendapatkan tanggal sla_stkonstruksi
-                                                    $sla_steqp = new DateTime($row['sla_eqpdevprocur']);
-                                                    // Menghitung selisih hari
-                                                    $interval = $today->diff($sla_steqp)->format("%r%a");
+                                                    // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
+                                                    date_default_timezone_set('Asia/Jakarta');
 
-                                                    // Menampilkan tombol jika status bukan Approve dan sudah mendekati H-21 dari deadline
-                                                    if ($row['status_eqpdevprocur'] !== 'Approve') : ?>
-                                                        <div>
-                                                            <a href="procurement/eqpdev-procur-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
-                                                                <i class="i-Pen-2"></i>
-                                                            </a>
-                                                            <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_eqpdevprocur'] ?>">
-                                                                <i class="nav-icon i-Book"></i>
-                                                            </button>
-                                                        </div>
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
+
+                                                    if ($row['status_eqpdevprocur'] != "Approve" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                        echo '<a href="procurement/eqpdev-procur-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
+                                                            <i class="nav-icon i-Pen-2"></i>
+                                                        </a>';
+                                                        echo '<button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="'. $row['id'] .'" data-status="'.$row['status_eqpdevprocur'] .'">
+                                                            <i class="nav-icon i-Book"></i>
+                                                        </button>';
+                                                    }
+                                                    ?>
                                                     <?php endif; ?>
 
                                                     <!-- Modal -->
@@ -376,11 +394,11 @@ function getBadgeColor($remarks) {
                                                                     <form id="statusForm" method="post" action="procurement/eqpdev-procur-process.php"  enctype="multipart/form-data">
                                                                         <input type="hidden" name="id" id="modalId" value="<?= $row['id']; ?>">
                                                                         <div class="form-group">
-                                                                            <label for="statusSelect">Status Approve EQP Delivery</label>
+                                                                            <label for="statusSelect">Status Approve EQP Delivery<strong><span style="color: red;">*</span></strong></label>
                                                                             <select class="form-control" id="statusSelect" name="status_eqpdevprocur">
                                                                                 <option value="In Process">In Process</option>
                                                                                 <option value="Pending">Pending</option>
-                                                                                <option value="In Review By TAF">In Review By TAF</option>
+                                                                                <option value="Approve">Approve</option>
                                                                             </select>
                                                                         </div>
                                                                         <div id="issueDetailSection" class="hidden">

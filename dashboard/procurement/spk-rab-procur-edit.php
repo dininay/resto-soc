@@ -30,9 +30,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Join all file paths into a comma-separated string
         $lamp_spkrabcons = implode(",", $lamp_spkrabcons_paths);
     }
-
+    $status_approvprocurement = "In Process";
     // Update data di database
-    $sql = "UPDATE procurement SET lamp_spkrabcons = '$lamp_spkrabcons' WHERE id = '$id'";
+    $sql = "UPDATE procurement SET lamp_spkrabcons = '$lamp_spkrabcons', status_approvprocurement = '$status_approvprocurement' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
         header("Location: " . $base_url . "/datatables-checkval-rab-from-sdg.php");

@@ -81,13 +81,13 @@ if(isset($_GET['id'])) {
                                 </div>
                             </div>
                             <div class="form-group row">
-                                <label class="col-sm-3 col-form-label" for="progress_eqpsite">Progress Equipment On Site</label>
+                                <label class="col-sm-3 col-form-label" for="progress_eqpsite">Progress Equipment On Site<strong><span style="color: red;">*</span></strong></label>
                                 <div class="col-sm-9">
                                     <input class="form-control" id="progress_eqpsite" name="progress_eqpsite" type="text" placeholder="Progress Equipment On Site" value="<?php echo $row['progress_eqpsite']; ?>"/>
                                 </div>
                             </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="defect_eqpsite">Apakah ada defect?</label>
+                                    <label class="col-sm-3 col-form-label" for="defect_eqpsite">Apakah ada defect?<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="defect_eqpsite" name="defect_eqpsite" onchange="toggleIssueDetail()">
                                         <option>Pilih</option>
@@ -97,13 +97,13 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row" id="notedefect_eqpsite" style="display: none;">
-                                    <label class="col-sm-3 col-form-label" for="notedefect_eqpsite">Catatan</label>
+                                    <label class="col-sm-3 col-form-label" for="notedefect_eqpsite">Catatan<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <textarea class="form-control" id="notedefect_eqpsite" name="notedefect_eqpsite" rows="4" cols="50"><?php echo $row['notedefect_eqpsite']; ?></textarea>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_eqpsite">Upload Lampiran Equipment On Site</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_eqpsite">Upload Lampiran Equipment On Site<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_eqpsite[]" type="file" multiple="multiple" />

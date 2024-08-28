@@ -81,7 +81,7 @@ if(isset($_GET['id'])) {
                                 </div>
                             </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_stkonstruksi">Upload Lampiran SPK</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_stkonstruksi">Upload Lampiran ST Kontraktor<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_stkonstruksi[]" type="file" multiple="multiple" />
@@ -89,7 +89,7 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="obstacle_stkons">Obstacle</label>
+                                    <label class="col-sm-3 col-form-label" for="obstacle_stkons">Obstacle<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="obstacle_stkons" name="obstacle_stkons" onchange="toggleObstacleDetail()">
                                         <option>Pilih</option>
@@ -99,7 +99,7 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row" style="display: none;">
-                                    <label class="col-sm-3 col-form-label" for="lamp_obsstkons">Upload Lampiran Obstacle</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_obsstkons">Upload Lampiran Obstacle<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_obsstkons[]" type="file" multiple="multiple" />
@@ -107,13 +107,13 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row" id="note_stkons" style="display: none;">
-                                    <label class="col-sm-3 col-form-label" for="note_stkons">Catatan</label>
+                                    <label class="col-sm-3 col-form-label" for="note_stkons">Catatan<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <textarea class="form-control" id="note_stkons" name="note_stkons" rows="4" cols="50"><?php echo $row['note_stkons']; ?></textarea>
                                     </div>
                                 </div>
                                 <div class="form-group row" id="lamp_obsstkons" style="display: none;">
-                                    <label class="col-sm-3 col-form-label" for="lamp_obsstkons">Upload Lampiran Pendukung Obstacle</label>
+                                    <label class="col-sm-3 col-form-label" for="lamp_obsstkons">Upload Lampiran Pendukung Obstacle<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_obsstkons[]" type="file" multiple="multiple" />

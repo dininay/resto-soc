@@ -159,7 +159,7 @@ if ($result && $result->num_rows > 0) {
                                                 </td>
                                             <td>
                                             <!-- Tombol Edit -->
-                                                    <a href="procurement/vendor-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning">
+                                                    <a href="procurement/vendor-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mr-2">
                                                     <i class="i-Pen-2"></i>
                                                     </a>
                                                 <!-- Tombol Hapus -->
