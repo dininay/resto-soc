@@ -1,4 +1,15 @@
 <?php
+// Include PHPMailer library files
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require '../../PHPMailer-6.8.1/src/Exception.php';
+require '../../PHPMailer-6.8.1/src/PHPMailer.php';
+require '../../PHPMailer-6.8.1/src/SMTP.php';
+require '../../vendor/autoload.php'; // Hanya jika menggunakan Composer
+
+// Inisialisasi PHPMailer
+$mail = new PHPMailer(true);
 // Koneksi ke database
 include "../../koneksi.php";
 // Proses jika ada pengiriman data dari formulir untuk memperbarui status
@@ -77,6 +88,70 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 // Komit transaksi
                 $conn->commit();
                 echo "Status berhasil diperbarui.";
+                
+                $queryIR = "SELECT email FROM user WHERE level IN ('SDG-Project','PMO')";
+                $resultIR = mysqli_query($conn, $queryIR);
+
+                if ($resultIR && mysqli_num_rows($resultIR) > 0) {
+                    while ($rowIR = mysqli_fetch_assoc($resultIR)) {
+                        if (!empty($rowIR['email'])) {
+                            $toEmails[] = $rowIR['email'];
+                        }
+                    }
+                }
+                var_dump($toEmails);
+                if (!empty($toEmails)) {
+
+                    try {
+                        // SMTP configuration
+                        $mail = new PHPMailer(true);
+                        $mail->isSMTP();
+                        // $mail->SMTPDebug = 2;
+                        $mail->SMTPAuth = true;
+                        $mail->SMTPSecure = 'ssl';
+                        $mail->Host = 'miegacoan.co.id';
+                        $mail->Port = 465;
+                        $mail->Username = 'resto-soc@miegacoan.co.id';
+                        $mail->Password = '9)5X]*hjB4sh';
+                        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+                        $mail->setFrom('resto-soc@miegacoan.co.id', 'Pesta Pora Abadi');
+
+                        foreach ($toEmails as $toEmail) {
+                            $mail->addAddress($toEmail);
+                        }
+
+                        // Email content
+                        $mail->Subject = 'Notification: 1 New Information Resto SOC Ticket';
+                                        $mail->Body    = '
+                                        <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                                            <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
+                                                <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Team,</h2>
+                                                <p>You have 1 New Information Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.</p>
+                                                <p>Thank you for your prompt attention to this matter.</p>
+                                                <p></p>
+                                                <p>Best regards,</p>
+                                                <p>Resto - SOC</p>
+                                            </div>
+                                        </div>';
+                                        $mail->AltBody = 'Dear Team,'
+                                                    . 'You have 1 New Information Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.'
+                                                    . 'Thank you for your prompt attention to this matter.'
+                                                    . 'Best regards,'
+                                                    . 'Resto - SOC';
+
+                        // Send email
+                        if ($mail->send()) {
+                            echo "Email sent successfully!<br>";
+                        } else {
+                            echo "Failed to send email. Error: {$mail->ErrorInfo}<br>";
+                        }
+
+                    } catch (Exception $e) {
+                        echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+                    }
+                } else {
+                    echo "No email found for the selected resto or IR users.";
+                }
             } elseif ($status_stkonstruksi == 'Pending') {
             
                 // Ambil kode_lahan dari tabel re

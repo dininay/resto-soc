@@ -31,7 +31,7 @@ if ($sla_result->num_rows > 0) {
     $row = $sla_result->fetch_assoc();
     $sla_value = $row['sla'];
 } else {
-    echo "No SLA value found for 'payment-taf'";
+    echo "No SLA value found for 'Tender'";
 }
 
 // Fungsi untuk menghitung scoring
@@ -255,7 +255,7 @@ function getBadgeColor($remarks) {
                                                 </td>
                                                 <td>
                                                     <?php
-                                                    // Mengatur timezone ke Asia/Jakarta
+                                                    // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
                                                     date_default_timezone_set('Asia/Jakarta');
 
                                                     $start_date = $row['tafpay_date'];
@@ -263,60 +263,53 @@ function getBadgeColor($remarks) {
                                                     $status_tafpay = $row['status_tafpay'];
 
                                                     // Menghitung scoring
-                                                    $scoring = calculateScoring($start_date, $sla_date);
+                                                    $scoring = calculateScoring($start_date, $sla_date, $sla_value);
                                                     $remarks = getRemarks($scoring);
 
                                                     // Mendapatkan waktu sekarang
                                                     $now = new DateTime();
                                                     $current_time = $now->format('H:i');
-                                                    $current_day = $now->format('N'); // 1 (Senin) hingga 7 (Minggu)
 
                                                     // Jam kerja
                                                     $work_start = '08:00';
                                                     $work_end = '17:00';
 
-                                                    // Cek apakah hari ini adalah hari kerja (Senin-Jumat)
-                                                    if ($current_day >= 1 && $current_day <= 5) {
+                                                    if ($status_tafpay === 'Paid') {
+                                                        // Menentukan label berdasarkan remarks
+                                                        $status_label = '';
+                                                        switch ($remarks) {
+                                                            case 'good':
+                                                                $status_label = 'Done Good';
+                                                                break;
+                                                            case 'poor':
+                                                                $status_label = 'Done Poor';
+                                                                break;
+                                                            case 'bad':
+                                                                $status_label = 'Done Bad';
+                                                                break;
+                                                        }
+
+                                                        echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
+                                                    } else {
                                                         // Memeriksa apakah waktu sekarang di luar jam kerja
                                                         if ($current_time < $work_start || $current_time > $work_end) {
                                                             echo '<button type="button" class="btn btn-sm btn-info">Di Luar Jam Kerja</button>';
                                                         } else {
-                                                            if ($status_tafpay === 'Paid') {
-                                                                // Menentukan label berdasarkan remarks
-                                                                $status_label = '';
-                                                                switch ($remarks) {
-                                                                    case 'good':
-                                                                        $status_label = 'Done Good';
-                                                                        break;
-                                                                    case 'poor':
-                                                                        $status_label = 'Done Poor';
-                                                                        break;
-                                                                    case 'bad':
-                                                                        $status_label = 'Done Bad';
-                                                                        break;
-                                                                }
+                                                            // Convert $sla_date to DateTime object
+                                                            $sla_date_obj = new DateTime($sla_date);
 
-                                                                echo '<button type="button" class="btn btn-sm btn-' . getBadgeColor($remarks) . '" data-toggle="modal" data-target="#approvalModal">' . $status_label . '</button>';
+                                                            // Menghitung jumlah hari menuju SLA date
+                                                            $diff = $now->diff($sla_date_obj);
+                                                            $daysDifference = (int)$diff->format('%R%a'); // Menyertakan tanda plus atau minus
+
+                                                            if ($daysDifference < 0) {
+                                                                // SLA telah terlewat, hitung sebagai hari terlambat
+                                                                echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . abs($daysDifference) . ' hari</button>';
                                                             } else {
-                                                                // Convert $sla_date to DateTime object
-                                                                $sla_date_obj = new DateTime($sla_date);
-
-                                                                // Menghitung jumlah hari menuju SLA date
-                                                                $diff = $now->diff($sla_date_obj);
-                                                                $daysDifference = (int)$diff->format('%R%a'); // Menyertakan tanda plus atau minus
-
-                                                                if ($daysDifference < 0) {
-                                                                    // SLA telah terlewat, hitung sebagai hari terlambat
-                                                                    echo '<button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#lateApprovalModal">Terlewat ' . abs($daysDifference) . ' hari</button>';
-                                                                } else {
-                                                                    // SLA belum tercapai, hitung mundur
-                                                                    echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $daysDifference . '</button>';
-                                                                }
+                                                                // SLA belum tercapai, hitung mundur
+                                                                echo '<button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#deadlineModal">H - ' . $daysDifference . '</button>';
                                                             }
                                                         }
-                                                    } else {
-                                                        // Jika hari ini adalah Sabtu atau Minggu
-                                                        echo '<button type="button" class="btn btn-sm btn-info">Sedang Libur</button>';
                                                     }
                                                     ?>
                                                 </td>
