@@ -3,15 +3,15 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require '../../PHPMailer-6.8.1/src/Exception.php';
-require '../../PHPMailer-6.8.1/src/PHPMailer.php';
-require '../../PHPMailer-6.8.1/src/SMTP.php';
-require '../../vendor/autoload.php'; // Hanya jika menggunakan Composer
+require 'PHPMailer-6.8.1/src/Exception.php';
+require 'PHPMailer-6.8.1/src/PHPMailer.php';
+require 'PHPMailer-6.8.1/src/SMTP.php';
+require 'vendor/autoload.php'; // Hanya jika menggunakan Composer
 
 // Inisialisasi PHPMailer
 $mail = new PHPMailer(true);
 
-include "../../koneksi.php";
+include "koneksi.php";
 
 // Query untuk menghitung jumlah tiket per divisi untuk hari ini
 // Tanggal hari ini

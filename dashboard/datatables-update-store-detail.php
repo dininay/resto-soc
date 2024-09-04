@@ -632,6 +632,7 @@ $phaseQuery = "SELECT
     draft.end_date AS draft_end_date,
     sdg_rab.start_date AS qs_start_date,
     procurement.start_date AS procur_start_date,
+    procurement.end_date AS procur_end_date,
     resto.*,
     equipment.*,
     summary_soc.*,
@@ -660,11 +661,14 @@ while ($row = $phaseResult->fetch_assoc()) {
     $dates[] = ['status_date' => $row['status_date']];
 
     // RE Submit Lahan
-    $phases[] = [
-        'start' => $row['status_date'],
-        'end' => $row['re_date'] ?: $currentDate,
-        'phase_name' => 'RE Submit Lahan'
-    ];
+    if ($row['status_date'] && $row['re_date']) {
+        $phases[] = [
+            'start' => $row['status_date'],
+            'end' => $row['re_date'],
+            'phase_name' => 'RE Submit Lahan'
+        ];
+    }
+    
 
     // BoD Validation
     $phases[] = [
@@ -689,7 +693,7 @@ while ($row = $phaseResult->fetch_assoc()) {
 
     // LOA CD
     $phases[] = [
-        'start' => $row['vl_date'] ?: $currentDate,
+        'start' => $row['nego_date'] ?: $currentDate,
         'end' => $row['loa_start_date'] ?: $currentDate,
         'phase_name' => 'LOA CD'
     ];
@@ -739,20 +743,20 @@ while ($row = $phaseResult->fetch_assoc()) {
     // Tender
     $phases[] = [
         'start' => $row['qs_start_date'] ?: $currentDate,
-        'end' => $row['procur_start_date'] ?: $currentDate,
-        'phase_name' => 'Tender'
+        'end' => $row['procur_end_date'] ?: $currentDate,
+        'phase_name' => 'Tender Konstruksi'
     ];
 
     // SPK
     $phases[] = [
-        'start' => $row['procur_start_date'] ?: $currentDate,
-        'end' => $row['spk_date'] ?: $currentDate,
-        'phase_name' => 'SPK'
+        'start' => $row['procur_end_date'] ?: $currentDate,
+        'end' => $row['procur_start_date'] ?: $currentDate,
+        'phase_name' => 'SPK Konstruksi'
     ];
 
     // Kick Off Meeting
     $phases[] = [
-        'start' => $row['spk_date'] ?: $currentDate,
+        'start' => $row['procur_start_date'] ?: $currentDate,
         'end' => $row['kom_date'] ?: $currentDate,
         'phase_name' => 'Kick Off Meeting'
     ];
@@ -793,26 +797,24 @@ while ($row = $phaseResult->fetch_assoc()) {
     ];
 }
 
-// Konversi $phases ke JSON untuk digunakan di JavaScript
-$phasesJSON = json_encode($phases);
-// Tentukan tanggal mulai dari data, gunakan tanggal pertama dari data jika ada
-$startDate = isset($dates[0]['status_date']) ? $dates[0]['status_date'] : date('d M y');
-
-// Fungsi untuk menghasilkan tanggal-tanggal untuk timeline
-function generateTimeline($startDate, $days) {
-    $timeline = [];
-    for ($i = 0; $i < $days; $i++) {
-        $timeline[] = date('d M y', strtotime($startDate . " +$i days"));
-    }
-    return $timeline;
-}
-
-
-
-// Generate timeline untuk 180 hari ke depan
-$timeline = generateTimeline($startDate, 180);
-// Close the database connection
 $conn->close();
+
+    // Convert $phases to JSON for use in JavaScript
+    $phasesJSON = json_encode($phases);
+
+    // Determine the start date from data
+    $startDate = isset($dates[0]['status_date']) ? $dates[0]['status_date'] : date('d M y');
+
+    // Generate timeline for 180 days
+    function generateTimeline($startDate, $days) {
+        $timeline = [];
+        for ($i = 0; $i < $days; $i++) {
+            $timeline[] = date('d M y', strtotime($startDate . " +$i days"));
+        }
+        return $timeline;
+    }
+
+    $timeline = generateTimeline($startDate, 180);
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="">
@@ -937,6 +939,10 @@ $conn->close();
             height: 15px; /* Height of the bar */
             background-color: #4CAF50;
             z-index: 1;
+        }
+        #lineChart {
+            width: 100%;
+            height: 500px; /* Adjust as needed */
         }
     </style>
 </head>
@@ -1068,7 +1074,29 @@ $conn->close();
                                         </div>
                                     </div>
                             </div>
-                            <div class="row justify-content-center">
+
+    <!-- <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-12">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="card-title">Timeline Tracking</div>
+                    <div id="lineChart"></div>
+                </div>
+            </div>
+        </div>
+    </div> -->
+    
+                                <div class="row justify-content-center">
+                                <div class="col-lg-12 col-md-12">
+                                    <div class="card mb-4">
+                                        <div class="card-body">
+                                            <div class="card-title">Project Phase Tracking</div>
+                                            <div id="chart_div"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- <div class="row justify-content-center">
                                 <div class="col-lg-12 col-md-12">
                                     <div class="card mb-4">
                                         <div class="card-body">
@@ -1077,7 +1105,7 @@ $conn->close();
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> -->
                 <!-- <div class="row">
                     <div class="container">
                         <div class="scroll-container">
@@ -3351,6 +3379,143 @@ $conn->close();
         });
     });
 </script>
+<script>
+        document.addEventListener('DOMContentLoaded', function () {
+    const phases = <?php echo $phasesJSON; ?>;
+    console.log('Phases Data:', phases);
+
+    // Initialize ECharts
+    const chart = echarts.init(document.getElementById('lineChart'));
+
+    // Convert dates to timestamps
+    const convertToTimestamp = date => new Date(date).getTime();
+
+    // Prepare the data for the chart
+    const seriesData = phases.map(phase => ({
+        name: phase.phase_name,
+        type: 'line',
+        symbol: 'none',
+        data: [
+            [convertToTimestamp(phase.start), convertToTimestamp(phase.end)]
+        ]
+    }));
+
+    console.log('Series Data:', seriesData);
+
+    // Chart configuration
+    const option = {
+        tooltip: {
+            formatter: function (params) {
+                const startDate = new Date(params.value[0]);
+                const endDate = new Date(params.value[1]);
+                return `${params.seriesName}<br/>${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
+            }
+        },
+        legend: {
+            data: phases.map(phase => phase.phase_name),
+            top: 'bottom'
+        },
+        xAxis: {
+            type: 'time',
+            name: 'Date',
+            axisLabel: {
+                formatter: function (value) {
+                    const date = new Date(value);
+                    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+                }
+            }
+        },
+        yAxis: {
+            type: 'category',
+            data: phases.map(phase => phase.phase_name)
+        },
+        series: seriesData,
+        dataZoom: [
+            {
+                type: 'inside',
+                xAxisIndex: 0
+            },
+            {
+                show: true,
+                type: 'slider',
+                xAxisIndex: 0,
+                height: 20,
+                bottom: 10
+            }
+        ],
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '10%',
+            top: '10%',
+            containLabel: true
+        }
+    };
+
+    // Render the chart
+    chart.setOption(option);
+});
+    </script>
+    
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+google.charts.load('current', {'packages':['gantt']});
+google.charts.setOnLoadCallback(function() {
+    setTimeout(drawChart, 100); // Slight delay to ensure rendering
+});
+
+function drawChart() {
+    var data = new google.visualization.DataTable();
+    data.addColumn('string', 'Task ID');
+    data.addColumn('string', 'Task Name');
+    data.addColumn('date', 'Start Date');
+    data.addColumn('date', 'End Date');
+    data.addColumn('number', 'Duration');
+    data.addColumn('number', 'Percent Complete');
+    data.addColumn('string', 'Dependencies');
+
+    var phases = <?php echo $phasesJSON; ?>;
+
+    var rows = phases.map(function(phase, index) {
+        // Pastikan tanggal dalam format yyyy-mm-dd diubah ke objek Date
+        var startDateParts = phase.start ? phase.start.split('-') : null;
+        var endDateParts = phase.end ? phase.end.split('-') : null;
+
+        var startDate = startDateParts ? new Date(startDateParts[0], startDateParts[1] - 1, startDateParts[2]) : new Date();
+        var endDate = endDateParts ? new Date(endDateParts[0], endDateParts[1] - 1, endDateParts[2]) : new Date();
+
+        return [
+            'Phase' + (index + 1),  // Task ID
+            phase.phase_name,       // Task Name
+            startDate,              // Start Date
+            endDate,                // End Date
+            null,                   // Duration
+            100,                    // Percent Complete
+            null                    // Dependencies
+        ];
+    });
+
+    data.addRows(rows);
+
+    phases.forEach(function(phase, index) {
+        if (!phase.start || !phase.end) {
+            console.error('Missing date field in phase:', phase);
+        }
+    });
+
+    var chartHeight = rows.length * 35;  // Adjust height based on the number of rows
+    var options = {
+        height: chartHeight,
+        gantt: {
+            trackHeight: 30
+        }
+    };
+
+    var chart = new google.visualization.Gantt(document.getElementById('chart_div'));
+    chart.draw(data, options);
+}
+</script>
+
 </body>
 
 </html>

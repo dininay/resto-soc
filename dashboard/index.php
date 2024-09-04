@@ -10,7 +10,7 @@ if ($result_existing_store->num_rows > 0) {
     $total_existing_store = $row_existing_store['total_existing_store'];
 }
 // Filter kode_lahan yang memiliki status_kom = 'Approve' di tabel resto
-$sql_filter_approve_kom = "SELECT COUNT(*) as total_approve_kom FROM resto WHERE status_kom = 'Approve'";
+$sql_filter_approve_kom = "SELECT COUNT(*) as total_approve_kom FROM resto WHERE status_kom = 'Done'";
 $result_filter_approve_kom = $conn->query($sql_filter_approve_kom);
 $total_approve_kom = 0;
 if ($result_filter_approve_kom->num_rows > 0) {
@@ -49,7 +49,7 @@ if ($result_in_progress->num_rows > 0) {
 }
 
 // Count data for In Preparation (Approve) from resto table
-$sql_in_preparation = "SELECT COUNT(*) as in_preparation_count FROM resto WHERE status_kom = 'Approve'";
+$sql_in_preparation = "SELECT COUNT(*) as in_preparation_count FROM resto WHERE status_kom = 'Done'";
 $result_in_preparation = $conn->query($sql_in_preparation);
 $in_preparation_count = 0;
 if ($result_in_preparation->num_rows > 0) {
@@ -476,139 +476,107 @@ function getStatusBadgeColor($status) {
                     </div> -->
                 </div>
                 <div class="row" style="width: 80%; margin: 0 auto;">
-                    <div class="card mb-3">
-                        <div class="card-body p-2">
-                            <div class="card-title border-bottom d-flex align-items-center m-0 p-3">
-                                <span>Monthly Schedule - <?php echo date('F Y'); ?></span>
-                                <span class="flex-grow-1"></span>
-                            <div class="p-3 justify-content-center">
-                                <form method="get" action="" class="form-inline">
-                                    <div class="form-group mr-2">
-                                        <label for="month">Select Month:</label>
-                                        <select name="month" id="month" class="form-control ml-2">
-                                            <?php
-                                            for ($m = 1; $m <= 12; $m++) {
-                                                $month = date('F', mktime(0, 0, 0, $m, 1));
-                                                $selected = ($m == (isset($_GET['month']) ? $_GET['month'] : date('m'))) ? 'selected' : '';
-                                                echo "<option value='$m' $selected>$month</option>";
-                                            }
-                                            ?>
-                                        </select>
-                                    </div>
-                                    <div class="form-group mr-2">
-                                        <label for="year"style="font-size: 12px;">Select Year:</label>
-                                        <select name="year" id="year" class="form-control ml-2">
-                                            <?php
-                                            $currentYear = date('Y');
-                                            for ($y = $currentYear - 5; $y <= $currentYear + 5; $y++) {
-                                                $selected = ($y == (isset($_GET['year']) ? $_GET['year'] : $currentYear)) ? 'selected' : '';
-                                                echo "<option value='$y' $selected>$y</option>";
-                                            }
-                                            ?>
-                                        </select>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">Filter</button>
-                                </form>
-                            </div>
-                                <span class="badge badge-pill badge-warning">Updated daily</span>
-                            </div>
-                            <div class="d-flex flex-wrap p-2">
+    <div class="card mb-3">
+        <div class="card-body p-2">
+            <div class="card-title border-bottom d-flex align-items-center m-0 p-3">
+                <span>Monthly Schedule - <?php echo date('F Y'); ?></span>
+                <span class="flex-grow-1"></span>
+                <div class="p-3 justify-content-center">
+                    <form method="get" action="" class="form-inline">
+                        <div class="form-group mr-2">
+                            <label for="month">Select Month:</label>
+                            <select name="month" id="month" class="form-control ml-2">
                                 <?php
-                                // Get selected month and year from the form, or use current month and year as default
-                                $selectedMonth = isset($_GET['month']) ? $_GET['month'] : date('m');
-                                $selectedYear = isset($_GET['year']) ? $_GET['year'] : date('Y');
-                                
-                                // Get the number of days in the selected month
-                                $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $selectedMonth, $selectedYear);
-                                
-                                // Loop through each day of the month
-                                for ($day = 1; $day <= $daysInMonth; $day++) {
-                                    // Create a DateTime object for the current day
-                                    $date = new DateTime("$selectedYear-$selectedMonth-$day");
-                                    $dateString = $date->format('Y-m-d');
-                                    
-                                    echo "<div class='col-6 col-sm-4 col-md-2 mb-2'>";
-                                    echo "<div class='card border p-2' style='height: 100px; max-width: 100%; overflow: hidden;'>";
-                                    echo "<p class='m-0' style='font-size: 12px;'>{$date->format('d')}</p>"; // Display only the day of the month
-
-                                    // Initialize the event content as an empty string
-                                    $eventContent = '';
-
-                                    // Check for sla_spk
-                                    foreach ($schedule as $event) {
-                                        if ($event['sla_spk'] == $dateString) {
-                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Deadline SPK</p>";
-                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                                            break;
-                                        }
-                                    }
-
-                                    // Check for sla_kom
-                                    foreach ($schedule as $event) {
-                                        if ($event['sla_kom'] == $dateString) {
-                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Kick Off Meeting</p>";
-                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                                            break;
-                                        }
-                                    }
-
-                                    // Check for sla_steqp
-                                    foreach ($schedule as $event) {
-                                        if ($event['sla_steqp'] == $dateString) {
-                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>ST EQuipment</p>";
-                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                                            break;
-                                        }
-                                    }
-
-                                    // Check for sla_stkonstruksi
-                                    foreach ($schedule as $event) {
-                                        if ($event['sla_stkonstruksi'] == $dateString) {
-                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>ST Kontraktor</p>";
-                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                                            break;
-                                        }
-                                    }
-
-                                    // Check for gostore_date
-                                    foreach ($schedule as $event) {
-                                        if ($event['gostore_date'] == $dateString) {
-                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>GO</p>";
-                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                                            break;
-                                        }
-                                    }
-
-                                    // Check for rto_act
-                                    foreach ($schedule as $event) {
-                                        if ($event['rto_act'] == $dateString) {
-                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>RTO</p>";
-                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                            $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                                            break;
-                                        }
-                                    }
-
-                                    // Display the event content or an empty message
-                                    if ($eventContent) {
-                                        echo $eventContent;
-                                    } else {
-                                        echo "<p class='text-truncate' style='font-size: 10px; margin: 0; color: transparent;'>No Events</p>";
-                                    }
-                                    
-                                    echo "</div>";
-                                    echo "</div>";
+                                for ($m = 1; $m <= 12; $m++) {
+                                    $month = date('F', mktime(0, 0, 0, $m, 1));
+                                    $selected = ($m == (isset($_GET['month']) ? $_GET['month'] : date('m'))) ? 'selected' : '';
+                                    echo "<option value='$m' $selected>$month</option>";
                                 }
                                 ?>
-                            </div>
+                            </select>
                         </div>
-                    </div>
+                        <div class="form-group mr-2">
+                            <label for="year" style="font-size: 12px;">Select Year:</label>
+                            <select name="year" id="year" class="form-control ml-2">
+                                <?php
+                                $currentYear = date('Y');
+                                for ($y = $currentYear - 5; $y <= $currentYear + 5; $y++) {
+                                    $selected = ($y == (isset($_GET['year']) ? $_GET['year'] : $currentYear)) ? 'selected' : '';
+                                    echo "<option value='$y' $selected>$y</option>";
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                    </form>
                 </div>
+                <span class="badge badge-pill badge-warning">Updated daily</span>
+            </div>
+            <div class="d-flex flex-wrap p-2">
+                <?php
+                // Get selected month and year from the form, or use current month and year as default
+                $selectedMonth = isset($_GET['month']) ? $_GET['month'] : date('m');
+                $selectedYear = isset($_GET['year']) ? $_GET['year'] : date('Y');
+                
+                // Get the number of days in the selected month
+                $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $selectedMonth, $selectedYear);
+                
+                // Loop through each day of the month
+                for ($day = 1; $day <= $daysInMonth; $day++) {
+                    // Create a DateTime object for the current day
+                    $date = new DateTime("$selectedYear-$selectedMonth-$day");
+                    $dateString = $date->format('Y-m-d');
+                    
+                    // Count the number of deadlines for the current date
+                    $eventCount = 0;
+                    $eventContent = '';
+
+                    foreach ($schedule as $event) {
+                        if ($event['sla_spk'] == $dateString || $event['sla_kom'] == $dateString ||
+                            $event['sla_steqp'] == $dateString || $event['sla_stkonstruksi'] == $dateString ||
+                            $event['gostore_date'] == $dateString || $event['rto_act'] == $dateString) {
+                            $eventCount++;
+                        }
+                    }
+
+                    // Display the date card with the count of deadlines
+                    echo "<div class='col-6 col-sm-4 col-md-2 mb-2'>";
+                    echo "<div class='card border p-2' style='height: 100px; max-width: 100%; overflow: hidden;' data-date='$dateString' onclick='showModal(\"$dateString\")'>";
+                    echo "<p class='m-0' style='font-size: 12px;'>{$date->format('d')}</p>";
+                    if ($eventCount > 0) {
+                        echo "<p class='text-truncate' style='font-size: 10px; margin: 0;'>$eventCount Event(s)</p>";
+                    } else {
+                        echo "<p class='text-truncate' style='font-size: 10px; margin: 0; color: transparent;'>No Events</p>";
+                    }
+                    echo "</div>";
+                    echo "</div>";
+                }
+                ?>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal for detailed events -->
+<div class="modal fade" id="eventModal" tabindex="-1" role="dialog" aria-labelledby="eventModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventModalLabel">Deadline Schedule on <span id="modalDate"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <ul id="eventList" class="list-unstyled">
+                    <!-- Event list will be injected here -->
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
                     <div class="row">
                         <div class="col-md-12">
                             <div class="card o-hidden mb-4">
@@ -1670,6 +1638,60 @@ function getStatusBadgeColor($status) {
         existingStore: <?php echo json_encode($existing_store_chart_data); ?>,
         readyToGoStore: <?php echo json_encode($ready_to_go_chart_data); ?>
     });
+</script>
+<script>
+    function showModal(date) {
+    const modalDate = document.getElementById('modalDate');
+    const eventList = document.getElementById('eventList');
+
+    // Format the date
+    const formattedDate = formatDate(new Date(date));
+
+    // Set the modal date
+    modalDate.textContent = formattedDate;
+
+    // Clear previous event list
+    eventList.innerHTML = '';
+
+    // Example data - replace with actual data fetching logic
+    const events = <?php echo json_encode($schedule); ?>;
+
+    // Filter events for the selected date
+    const filteredEvents = events.filter(event => 
+        event.sla_spk === date || event.sla_kom === date || 
+        event.sla_steqp === date || event.sla_stkonstruksi === date || 
+        event.gostore_date === date || event.rto_act === date
+    );
+
+    // Add events to the list
+    filteredEvents.forEach(event => {
+        const li = document.createElement('li');
+        li.className = 'mb-2';
+        let type;
+        if (event.sla_spk === date) type = 'Deadline SPK';
+        else if (event.sla_kom === date) type = 'Kick Off Meeting';
+        else if (event.sla_steqp === date) type = 'ST EQuipment';
+        else if (event.sla_stkonstruksi === date) type = 'ST Kontraktor';
+        else if (event.gostore_date === date) type = 'GO';
+        else if (event.rto_act === date) type = 'RTO';
+        
+        li.innerHTML = `
+            <p class='text-truncate' style='font-size: 10px; margin: 0;'>${type}</p>
+            <p class='text-truncate' style='font-size: 10px; margin: 0;'>${event.nama_lahan}</p>
+            <p class='text-truncate' style='font-size: 10px; margin: 0;'>${event.kode_store}</p>
+        `;
+        eventList.appendChild(li);
+    });
+
+    // Show the modal
+    $('#eventModal').modal('show');
+}
+
+// Function to format date
+function formatDate(date) {
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    return new Intl.DateTimeFormat('id-ID', options).format(date);
+}
 </script>
 </body>
 

@@ -1,33 +1,6 @@
 <?php
 // Koneksi ke database
 include "../koneksi.php";
-// Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["status_land"])) {
-    $id = $_POST["id"];
-    $status_land = $_POST["status_land"];
-    
-    // Mulai transaksi
-    $conn->begin_transaction();
-
-    try {
-        // Query untuk memperbarui status_finallegal berdasarkan id
-        $sql_update = "UPDATE resto SET status_land = ? WHERE id = ?";
-        $stmt_update = $conn->prepare($sql_update);
-        $stmt_update->bind_param("si", $status_land, $id);
-        // Eksekusi query update
-        if ($stmt_update->execute() === TRUE) {
-            
-        } else {
-            // Rollback transaksi jika terjadi kesalahan pada update
-            $conn->rollback();
-            echo "Error: " . $sql_update . "<br>" . $conn->error;
-        }
-    } catch (Exception $e) {
-        // Rollback transaksi jika terjadi kesalahan
-        $conn->rollback();
-        echo "Error: " . $e->getMessage();
-    }
-}
 
 // Ambil total existing store dari tabel land dengan status_land = 'Aktif'
 $sql_existing_store = "SELECT COUNT(*) as total_existing_store FROM land WHERE status_land = 'Aktif'";
@@ -49,64 +22,80 @@ if ($result_filter_approve_kom->num_rows > 0) {
 // Jumlah total store yang tidak memiliki kode_lahan dengan status_kom = 'Approve'
 $total_existing_store_without_approve_kom = $total_existing_store - $total_approve_kom;
 // Query untuk mengambil data dari tabel land
+
+// Query untuk mengambil data dari tabel land
 $sql = "SELECT 
-land.kode_lahan,
-land.*,
-resto.*,
-soc_sdg.*,
-sdg_pk.*,
-socdate_hr.*,
-draft.*,
-socdate_academy.*,
-socdate_scm.*,
-socdate_it.*,
-socdate_marketing.*,
-socdate_fat.*,
-equipment.*,
-summary_soc.*,
-    dokumen_loacd.kode_store,
             land.kode_lahan AS land_kode_lahan,
-            draft.end_date AS draft_end_date
-FROM land
-JOIN resto ON resto.kode_lahan = land.kode_lahan
-JOIN soc_sdg ON soc_sdg.kode_lahan = land.kode_lahan
-JOIN dokumen_loacd ON dokumen_loacd.kode_lahan = land.kode_lahan
-LEFT JOIN sdg_pk ON sdg_pk.kode_lahan = land.kode_lahan
-LEFT JOIN equipment ON equipment.kode_lahan = land.kode_lahan
-LEFT JOIN socdate_hr ON socdate_hr.kode_lahan = land.kode_lahan
-LEFT JOIN draft ON draft.kode_lahan = land.kode_lahan
-LEFT JOIN socdate_academy ON socdate_academy.kode_lahan = land.kode_lahan
-LEFT JOIN socdate_scm ON socdate_scm.kode_lahan = land.kode_lahan
-LEFT JOIN socdate_it ON socdate_it.kode_lahan = land.kode_lahan
-LEFT JOIN socdate_marketing ON socdate_marketing.kode_lahan = land.kode_lahan
-LEFT JOIN socdate_fat ON socdate_fat.kode_lahan = land.kode_lahan
-LEFT JOIN summary_soc ON summary_soc.kode_lahan = land.kode_lahan
-WHERE resto.status_kom = 'Done'";
+            land.nama_lahan,
+            land.lokasi,
+            land.*,
+            re.*,
+            dokumen_loacd.*,
+            sdg_desain.*,
+            sdg_rab.*,
+            draft.*,
+            procurement.*,
+            resto.*,
+            socdate_hr.*,
+            socdate_it.*,
+            socdate_ir.*,
+            socdate_scm.*,
+            socdate_fat.*,
+            socdate_marketing.*,
+            socdate_academy.*,
+            socdate_legal.*,
+            socdate_sdg.*,
+            sdg_pk.*,
+            soc_sdg.*,
+            summary_soc.*,
+            sign.*,
+            equipment.*,
+            re.start_date AS re_start_date,
+            dokumen_loacd.start_date AS dokumen_loacd_start_date,
+            dokumen_loacd.end_date AS dokumen_loacd_end_date,
+            sdg_desain.start_date AS sdg_desain_start_date,
+            sdg_desain.sla_date AS sdg_desain_sla_date,
+            sdg_desain.submit_date AS sdg_desain_submit_date,
+            sdg_desain.slalegal_date AS sdg_desain_slalegal_date,
+            sdg_rab.start_date AS sdg_qs_start_date,
+            sdg_rab.sla_date AS sdg_qs_sla_date,
+            draft.start_date AS draft_start_date,
+            draft.slalegal_date AS draft_slalegal_date,
+            draft.sla_date AS draft_sla_date,
+            draft.end_date AS draft_end_date,
+            draft.psmfat_date AS draft_fat_date,
+            draft.slafatpsm_date AS draft_slafat_date,
+            procurement.start_date AS procurement_start_date,
+            procurement.sla_date AS procurement_sla_date
+        FROM land
+        INNER JOIN re ON re.kode_lahan = land.kode_lahan
+        INNER JOIN dokumen_loacd ON dokumen_loacd.kode_lahan = land.kode_lahan
+        INNER JOIN sdg_desain ON sdg_desain.kode_lahan = land.kode_lahan
+        INNER JOIN equipment ON equipment.kode_lahan = land.kode_lahan
+        INNER JOIN sdg_rab ON sdg_rab.kode_lahan = land.kode_lahan
+        INNER JOIN draft ON draft.kode_lahan = land.kode_lahan
+        INNER JOIN procurement ON procurement.kode_lahan = land.kode_lahan
+        INNER JOIN resto ON resto.kode_lahan = land.kode_lahan
+        INNER JOIN socdate_hr ON socdate_hr.kode_lahan = land.kode_lahan
+        INNER JOIN socdate_marketing ON socdate_marketing.kode_lahan = land.kode_lahan
+        INNER JOIN socdate_it ON socdate_it.kode_lahan = land.kode_lahan
+        INNER JOIN socdate_ir ON socdate_ir.kode_lahan = land.kode_lahan
+        INNER JOIN socdate_legal ON socdate_legal.kode_lahan = land.kode_lahan
+        INNER JOIN socdate_scm ON socdate_scm.kode_lahan = land.kode_lahan
+        INNER JOIN socdate_fat ON socdate_fat.kode_lahan = land.kode_lahan
+        INNER JOIN socdate_academy ON socdate_academy.kode_lahan = land.kode_lahan
+        INNER JOIN socdate_sdg ON socdate_sdg.kode_lahan = land.kode_lahan
+        INNER JOIN sdg_pk ON sdg_pk.kode_lahan = land.kode_lahan
+        LEFT JOIN soc_sdg ON soc_sdg.kode_lahan = land.kode_lahan
+        LEFT JOIN summary_soc ON summary_soc.kode_lahan = land.kode_lahan
+        LEFT JOIN sign ON sign.kode_lahan = land.kode_lahan
+        GROUP BY land.kode_lahan";
 $result = $conn->query($sql);
 
 
-// Fungsi untuk menambahkan nilai ke total remarks
-function addToTotal(&$total_array, $remarks, $kode_lahan) {
-    if (!isset($total_array[$kode_lahan])) {
-        $total_array[$kode_lahan] = ['good' => 0, 'poor' => 0, 'failed' => 0];
-    }
+$total_remarks = ['good' => 0, 'poor' => 0, 'failed' => 0];
+$total_remarks_2 = ['good' => 0, 'poor' => 0, 'failed' => 0];
 
-    switch ($remarks) {
-        case 'good':
-            $total_array[$kode_lahan]['good']++;
-            break;
-        case 'poor':
-            $total_array[$kode_lahan]['poor']++;
-            break;
-        case 'failed':
-            $total_array[$kode_lahan]['failed']++;
-            break;
-        default:
-            // Tambahkan logika jika terdapat remarks lainnya, jika diperlukan
-            break;
-    }
-}
-$data = [];
 
 // Query untuk mengambil nilai SLA dari master_sla
 $sla_query = "SELECT sla, divisi FROM master_sla";
@@ -121,7 +110,7 @@ if ($sla_result->num_rows > 0) {
     echo "0 results";
 }
 
-// Query untuk mengambil nilai SLA dari master_sla
+// Query untuk mengambil nilai SLA dari master_slacons
 $slacons_query = "SELECT sla, divisi FROM master_slacons";
 $slacons_result = $conn->query($slacons_query);
 
@@ -137,8 +126,8 @@ if ($slacons_result->num_rows > 0) {
 // Fungsi untuk menghitung scoring
 function calculateScoring($start_date, $end_date, $sla) {
     $today = new DateTime();
-    $start_date = $start_date ?: $today->format('Y-m-d');
-    $end_date = $end_date ?: $today->format('Y-m-d');
+    $start_date = $start_date ?: $today->format('d M y');
+    $end_date = $end_date ?: $today->format('d M y');
     $sla_days = $sla ?: 0;
 
     $start_date_obj = new DateTime($start_date);
@@ -159,16 +148,16 @@ function calculateScoring($start_date, $end_date, $sla) {
     return round($scoring, 2);
 }
 
-// Fungsi untuk menentukan remarks
+// Fungsi untuk menentukan remarks berdasarkan scoring
 function getRemarks($scoring) {
     if ($scoring >= 0) {
         return "good";
     } elseif ($scoring >= -30) {
         return "poor";
     } elseif ($scoring >= -50) {
-        return "bad";
-    } else {
         return "failed";
+    } else {
+        return "failed"; // Kembalikan "failed" untuk skenario lain yang tidak tertangani
     }
 }
 
@@ -179,8 +168,6 @@ function getBadgeColor($remarks) {
             return 'success';
         case 'poor':
             return 'warning';
-        case 'bad':
-            return 'orange';
         case 'failed':
             return 'danger';
         default:
@@ -188,13 +175,102 @@ function getBadgeColor($remarks) {
     }
 }
 
-$total_remarks_2 = [];
+// Fungsi untuk menambahkan nilai ke total remarks
+function addToTotal(&$total_array, $remarks, $kode_lahan) {
+    if (!isset($total_array)) {
+        $total_array = ['good' => 0, 'poor' => 0, 'failed' => 0];
+    }
+
+    switch ($remarks) {
+        case 'good':
+            $total_array['good']++;
+            break;
+        case 'poor':
+            $total_array['poor']++;
+            break;
+        case 'failed':
+            $total_array['failed']++;
+            break;
+        default:
+            // Tambahkan logika jika terdapat remarks lainnya, jika diperlukan
+            break;
+    }
+}
+
+
 
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
-        // ... (lanjutkan untuk semua remarks yang diperlukan)
         
-        $kode_lahan = $row['kode_lahan'];
+        // Hitung scoring dan remarks untuk masing-masing data
+        $scoring1 = calculateScoring($row['status_date'], $row['re_date'], $master_sla['RE']);
+        $scoring2 = calculateScoring($row['re_date'], $row['re_start_date'], $master_sla['Owner Surveyor']);
+        $scoring3 = calculateScoring($row['re_start_date'], $row['vl_date'], $master_sla['VL']);
+        $scoring4 = calculateScoring($row['end_date'], $row['nego_date'], $master_sla['Negosiator']);
+        $scoring5 = calculateScoring($row['nego_date'], $row['dokumen_loacd_start_date'], $master_sla['LOA-CD']);
+        $scoring6 = calculateScoring($row['vl_date'], $row['dokumen_loacd_end_date'], $master_sla['VD']);
+        $scoring7 = calculateScoring($row['nego_date'], $row['survey_date'], $master_sla['Land Survey']);
+        $scoring8 = calculateScoring($row['survey_date'], $row['layout_date'], $master_sla['Layouting']);
+        $scoring9 = calculateScoring($row['layout_date'], $row['sdg_desain_start_date'], $master_sla['Design']);
+        $scoring10 = calculateScoring($row['sdg_desain_start_date'], $row['sdg_qs_start_date'], $master_sla['QS']);
+        $scoring11 = calculateScoring($row['dokumen_loacd_end_date'], $row['draft_start_date'], $master_sla['Draft-Sewa']);
+        $scoring12 = calculateScoring($row['draft_start_date'], $row['draft_fat_date'], $master_sla['FAT-Sewa']);
+        $scoring13 = calculateScoring($row['draft_start_date'], $row['draft_end_date'], $master_sla['TTD-Sewa']);
+        $scoring14 = calculateScoring($row['sdg_desain_start_date'], $row['sdg_desain_submit_date'], $master_sla['Legal']);
+        $scoring15 = calculateScoring($row['sdg_desain_start_date'], $row['procurement_start_date'], $master_sla['Tender']);
+        $scoring16 = calculateScoring($row['procurement_start_date'], $row['spk_date'], $master_sla['SPK']);
+        $scoring17 = calculateScoring($row['spk_date'], $row['fat_date'], $master_sla['SPK-FAT']);
+        $scoring18 = calculateScoring($row['fat_date'], $row['kom_date'], $master_sla['KOM']);
+        $scoring19 = calculateScoring($row['kom_date'], $row['ff3_date'], $master_slacons['hrga_tm']);
+        $scoring20 = calculateScoring($row['kom_date'], $row['ff3_date'], $master_slacons['hrga_tm']);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
+        // ... (lanjutkan untuk semua scoring yang diperlukan)
+
+        // Tentukan remarks untuk masing-masing scoring
+        $remarks1 = getRemarks($scoring1);
+        $remarks2 = getRemarks($scoring2);
+        $remarks3 = getRemarks($scoring3);
+        $remarks4 = getRemarks($scoring4);
+        $remarks5 = getRemarks($scoring5);
+        $remarks6 = getRemarks($scoring6);
+        $remarks7 = getRemarks($scoring7);
+        $remarks8 = getRemarks($scoring8);
+        $remarks9 = getRemarks($scoring9);
+        $remarks10 = getRemarks($scoring10);
+        $remarks11 = getRemarks($scoring11);
+        $remarks12 = getRemarks($scoring12);
+        $remarks13 = getRemarks($scoring13);
+        $remarks14 = getRemarks($scoring14);
+        $remarks15 = getRemarks($scoring15);
+        $remarks16 = getRemarks($scoring16);
+        $remarks17 = getRemarks($scoring17);
+        $remarks18 = getRemarks($scoring18);
+        $remarks19 = getRemarks($scoring19);
+        $remarks20 = getRemarks($scoring20);
+        // ... (lanjutkan untuk semua remarks yang diperlukan)
+
+        // Tambahkan ke total remarks berdasarkan kode_lahan
+        addToTotal($total_remarks, $remarks1, $row['kode_lahan']);
+        addToTotal($total_remarks, $remarks2, $row['kode_lahan']);
+        addToTotal($total_remarks, $remarks3, $row['kode_lahan']);
+        addToTotal($total_remarks, $remarks4, $row['kode_lahan']);
+        addToTotal($total_remarks, $remarks5, $row['kode_lahan']);
+        addToTotal($total_remarks, $remarks6, $row['kode_lahan']);
+        addToTotal($total_remarks, $remarks7, $row['kode_lahan']);
+        addToTotal($total_remarks, $remarks8, $row['kode_lahan']);
+        addToTotal($total_remarks, $remarks9, $row['kode_lahan']);
+        addToTotal($total_remarks, $remarks10, $row['kode_lahan']);
+        addToTotal($total_remarks, $remarks11, $row['kode_lahan']);
+        addToTotal($total_remarks, $remarks12, $row['kode_lahan']);
+        addToTotal($total_remarks, $remarks13, $row['kode_lahan']);
+        addToTotal($total_remarks, $remarks14, $row['kode_lahan']);
+        addToTotal($total_remarks, $remarks15, $row['kode_lahan']);
+        addToTotal($total_remarks, $remarks16, $row['kode_lahan']);
+        addToTotal($total_remarks, $remarks17, $row['kode_lahan']);
+        addToTotal($total_remarks, $remarks18, $row['kode_lahan']);
+        addToTotal($total_remarks, $remarks19, $row['kode_lahan']);
+        addToTotal($total_remarks, $remarks20, $row['kode_lahan']);
+        // ... (lanjutkan untuk semua remarks yang diperlukan)
 
         $dev_ff1 = 0; // default jika tidak ada nilai yang valid
         if (is_numeric($row['ff_1'])) {
@@ -262,7 +338,11 @@ if ($result->num_rows > 0) {
         }
 
         // Hitung scoring dan remarks untuk masing-masing data
-        $scoring1_2 = ($row['month_1'] + $row['month_2'] + $row['month_3']) - 100;
+        $month_1 = !empty($row['month_1']) ? $row['month_1'] : 0;
+        $month_2 = !empty($row['month_2']) ? $row['month_2'] : 0;
+        $month_3 = !empty($row['month_3']) ? $row['month_3'] : 0;
+
+        $scoring1_2 = ($month_1 + $month_2 + $month_3) - 100;
         $scoring2_2 = (!empty($row['lamp_steqp']) ? 100 : 0) - 100;
         $scoring3_2 = $row['bangunan_mural']-100;
         $scoring4_2 = ($row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) / 5 - 100;
@@ -353,24 +433,28 @@ if ($result->num_rows > 0) {
 
         // Tambahkan data ke dalam array $data jika diperlukan
         $data[] = $row;
+        $dates[] = $row;
     }
 } else {
     echo "0 results";
 }
 
-$statusData2 = [
-    'good' => 0,
-    'poor' => 0,
-    'failed' => 0,
-];
+if (isset($total_remarks_2)) {
+    $good_count2 = $total_remarks_2['good'];
+    $poor_count2 = $total_remarks_2['poor'];
+    $failed_count2 = $total_remarks_2['failed'];
 
-// Loop untuk setiap kode lahan yang ada dalam $total_remarks_2
-foreach ($total_remarks_2 as $totals) {
-    // Ambil jumlah good, poor, dan failed dari total_remarks_2
-    $statusData2['good'] += $totals['good'] ?? 0;
-    $statusData2['poor'] += $totals['poor'] ?? 0;
-    $statusData2['failed'] += $totals['failed'] ?? 0;
+    // echo "Good: $good_count<br>";
+    // echo "Poor: $poor_count<br>";
+    // echo "Failed: $failed_count<br>";
+} else {
+    echo "Kode lahan '$kode_lahan' tidak ditemukan atau tidak memiliki data remarks.";
 }
+$statusData2 = json_encode([
+    'good2' => $good_count2,
+    'poor2' => $poor_count2,
+    'failed2' => $failed_count2
+]);
 
 // Encode statusData2 ke dalam format JSON
 $statusData2 = json_encode($statusData2);
@@ -527,7 +611,7 @@ $departmentDataJSON = json_encode($departmentData);
         table {
             font-size: 10px; /* Sesuaikan dengan ukuran font yang diinginkan */
         }
-
+        
         /* Mengatur padding sel tabel */
         table th, table td {
             padding: 4px; /* Sesuaikan dengan padding yang diinginkan */
@@ -578,7 +662,6 @@ $departmentDataJSON = json_encode($departmentData);
         #zero_configuration_table th, #zero_configuration_table td {
             width: 100%; /* Atur lebar sesuai kebutuhan */
         }
-
     </style>
 </head>
 
@@ -664,33 +747,35 @@ $departmentDataJSON = json_encode($departmentData);
                                                 <tr>
                                                     <th colspan="1" class="sticky" style="background-color: #6c757d; color: white;">Store</th>
                                                     <?php foreach ($data as $row): ?>
-                                                    <th colspan="13" style="background-color: #6c757d; color: white;"><?= $row['kode_store'] ?></th>
+                                                    <th colspan="9" style="background-color: #6c757d; color: white;"><?= $row['kode_store'] ?></th>
                                                     <?php endforeach; ?>
                                                 </tr>
                                                 <tr>
                                                     <th colspan="" rowspan="" class="sticky" style="background-color: #6c757d; color: white;">Target GO</th>
                                                     <?php foreach ($data as $row): ?>
-                                                    <th colspan="13" style="background-color: #6c757d; color: white;"><?= $row['gostore_date'] ?></th>
+                                                        <th colspan="9" style="background-color: #6c757d; color: white;">
+                                                            <?= !empty($row['gostore_date']) ? date('d M y', strtotime($row['gostore_date'])) : 'N/A' ?>
+                                                        </th>
                                                     <?php endforeach; ?>
                                                 </tr>
                                                 <tr>
                                                     <th colspan="" rowspan="2" class="sticky" style="background-color: #6c757d; color: white;">PIC</th>
                                                 <?php foreach ($data as $row): ?>
-                                                <th colspan="4" style="background-color: #6c757d; color: white;">Plan</th>
+                                                <th colspan="2" style="background-color: #6c757d; color: white;">Plan</th>
                                                 <th rowspan="3" style="background-color: #6c757d; color: white;">SLA (d)</th>
-                                                <th colspan="6" style="background-color: #6c757d; color: white;">Actual</th>
+                                                <th colspan="4" style="background-color: #6c757d; color: white;">Actual</th>
                                                 <th rowspan="3" style="background-color: #6c757d; color: white;">Scoring</th>
                                                 <th rowspan="3" style="background-color: #6c757d; color: white;">Remarks</th>
                                                 <?php endforeach; ?>
                                             </tr>
                                             <tr>
                                                 <?php foreach ($data as $row): ?>
-                                                <th rowspan="3" colspan="2" style="background-color: #6c757d; color: white;">Start</th>
-                                                <th rowspan="3" colspan="2" style="background-color: #6c757d; color: white;">End</th>
-                                                <th rowspan="3" colspan="2" style="background-color: #6c757d; color: white;">Start</th>
+                                                <th rowspan="3" style="background-color: #6c757d; color: white;">Start</th>
+                                                <th rowspan="3" style="background-color: #6c757d; color: white;">End</th>
+                                                <th rowspan="3" style="background-color: #6c757d; color: white;">Start</th>
                                                 <th rowspan="3" style="background-color: #6c757d; color: white;">Progress</th>
                                                 <th rowspan="3" style="background-color: #6c757d; color: white;">Deviasi</th>
-                                                <th rowspan="3" colspan="2" style="background-color: #6c757d; color: white;">End</th>
+                                                <th rowspan="3" style="background-color: #6c757d; color: white;">End</th>
                                                 <?php endforeach; ?>
                                             </tr>
                                         </thead>
@@ -703,16 +788,21 @@ $departmentDataJSON = json_encode($departmentData);
                                                 <?php
                                                 // Mendefinisikan variabel untuk SLA
                                                 $sla_cons_date = !empty($row['start_konstruksi']) ? date('d M y', strtotime($row['start_konstruksi'] . ' +' . ($master_sla['Konstruksi'] ?? 0) . ' days')) : '';
-                                                $cons = $row['month_1'] + $row['month_2'] + $row['month_3'];
+                                                $month_1 = !empty($row['month_1']) ? $row['month_1'] : 0;
+                                                $month_2 = !empty($row['month_2']) ? $row['month_2'] : 0;
+                                                $month_3 = !empty($row['month_3']) ? $row['month_3'] : 0;
+
+                                                $scoring1_2 = ($month_1 + $month_2 + $month_3) - 100;
+                                                $cons = ($month_1 + $month_2 + $month_3) - 100;
                                                 $deviasi_cons = $cons - 100;
                                                 ?>
-                                                <td colspan="2"><?= isset($row['start_konstruksi']) && !empty($row['start_konstruksi']) ? date('d M y', strtotime($row['start_konstruksi'])) : '0' ?></td>
-                                                <td colspan="2"><?= $sla_cons_date ?></td>
+                                                <td><?= isset($row['start_konstruksi']) && !empty($row['start_konstruksi']) ? date('d M y', strtotime($row['start_konstruksi'])) : '0' ?></td>
+                                                <td><?= $sla_cons_date ?></td>
                                                 <td><?= $master_sla['Konstruksi'] ?? 'N/A' ?></td>
-                                                <td colspan="2"><?= isset($row['start_konstruksi']) && !empty($row['start_konstruksi']) ? date('d M y', strtotime($row['start_konstruksi'])) : '0' ?></td>
+                                                <td><?= isset($row['start_konstruksi']) && !empty($row['start_konstruksi']) ? date('d M y', strtotime($row['start_konstruksi'])) : '0' ?></td>
                                                 <td><?= $cons ?>%</td>
                                                 <td><?= $deviasi_cons ?>%</td>
-                                                <td colspan="2"><?= $row['stkonstruksi_date'] ?></td>
+                                                <td><?= $row['stkonstruksi_date'] ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($deviasi_cons);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -737,13 +827,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $steqp = !empty($row['lamp_steqp']) ? 100 : 0; 
                                                         $dev_steqp = $steqp - 100 ;
                                                     ?>
-                                                <td colspan="2"><?= $start_steqp_date ?></td>
-                                                <td colspan="2"><?= $sla_steqp_date ?></td>
+                                                <td><?= $start_steqp_date ?></td>
+                                                <td><?= $sla_steqp_date ?></td>
                                                 <td>2</td>
-                                                <td colspan="2"><?= isset($row['steqp_date']) && !empty($row['steqp_date']) ? date('d M y', strtotime($row['steqp_date'])) : '' ?></td>
+                                                <td><?= isset($row['steqp_date']) && !empty($row['steqp_date']) ? date('d M y', strtotime($row['steqp_date'])) : '' ?></td>
                                                 <td><?= $steqp ?>%</td>
                                                 <td><?= $dev_steqp?>%</td>
-                                                <td colspan="2"><?= isset($row['steqp_date']) && !empty($row['steqp_date']) ? date('d M y', strtotime($row['steqp_date'])) : '' ?></td>
+                                                <td><?= isset($row['steqp_date']) && !empty($row['steqp_date']) ? date('d M y', strtotime($row['steqp_date'])) : '' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_steqp);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -764,13 +854,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                     $sla_pylon_date = !empty($start_pylon_date) ? date('d M y', strtotime($start_pylon_date . ' +' . 1 . ' days')) : '';
                                                     $bangunan_mural = $row['bangunan_mural']-100;
                                                     ?>
-                                                <td colspan="2"><?= $start_pylon_date ?></td>
-                                                <td colspan="2"><?= $sla_pylon_date?></td>
+                                                <td><?= $start_pylon_date ?></td>
+                                                <td><?= $sla_pylon_date?></td>
                                                 <td>1</td>
-                                                <td colspan="2"><?= isset($row['steqp_date']) && !empty($row['steqp_date']) ? date('d M y', strtotime($row['steqp_date'])) : '0' ?></td>
+                                                <td><?= isset($row['steqp_date']) && !empty($row['steqp_date']) ? date('d M y', strtotime($row['steqp_date'])) : '0' ?></td>
                                                 <td><?= $row['bangunan_mural'] ?>%</td>
                                                 <td><?= $bangunan_mural ?>%</td>
-                                                <td colspan="2"><?= isset($row['steqp_date']) && !empty($row['steqp_date']) ? date('d M y', strtotime($row['steqp_date'])) : '0' ?></td>
+                                                <td><?= isset($row['steqp_date']) && !empty($row['steqp_date']) ? date('d M y', strtotime($row['steqp_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($bangunan_mural);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -793,13 +883,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                     $total = ($row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) /5;
                                                     $scoring = ($row['daya_listrik'] + $row['supply_air'] + $row['aliran_air'] + $row['kualitas_keramik'] + $row['paving_loading']) / 5 - 100;
                                                     ?>
-                                                <td colspan="2"><?= $start_ffeqp_date ?></td>
-                                                <td colspan="2"><?= $sla_ffeqp_date?></td>
+                                                <td><?= $start_ffeqp_date ?></td>
+                                                <td><?= $sla_ffeqp_date?></td>
                                                 <td>1</td>
-                                                <td colspan="2"><?= isset($row['steqp_date']) && !empty($row['steqp_date']) ? date('d M y', strtotime($row['steqp_date'])) : '0' ?></td>
+                                                <td><?= isset($row['steqp_date']) && !empty($row['steqp_date']) ? date('d M y', strtotime($row['steqp_date'])) : '0' ?></td>
                                                 <td><?= $total ?>%</td>
                                                 <td><?= $scoring ?>%</td>
-                                                <td colspan="2"><?= isset($row['steqp_date']) && !empty($row['steqp_date']) ? date('d M y', strtotime($row['steqp_date'])) : '0' ?></td>
+                                                <td><?= isset($row['steqp_date']) && !empty($row['steqp_date']) ? date('d M y', strtotime($row['steqp_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($scoring);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -824,13 +914,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $tm = !empty($row['lamp_tm']) ? 100 : 0; 
                                                         $dev_tm = $tm - 100 ;
                                                     ?>
-                                                <td colspan="2"><?= isset($row['draft_end_date']) && !empty($row['draft_end_date']) ? date('d M y', strtotime($row['draft_end_date'])) : '0' ?></td>
-                                                <td colspan="2"><?= $sla_tm_date ?></td>
+                                                <td><?= isset($row['draft_end_date']) && !empty($row['draft_end_date']) ? date('d M y', strtotime($row['draft_end_date'])) : '0' ?></td>
+                                                <td><?= $sla_tm_date ?></td>
                                                 <td><?= $master_slacons['hrga_tm']?></td>
-                                                <td colspan="2"><?= isset($row['draft_end_date']) && !empty($row['draft_end_date']) ? date('d M y', strtotime($row['draft_end_date'])) : '0' ?></td>
+                                                <td><?= isset($row['draft_end_date']) && !empty($row['draft_end_date']) ? date('d M y', strtotime($row['draft_end_date'])) : '0' ?></td>
                                                 <td><?= $tm ?>%</td>
                                                 <td><?= $dev_tm?>%</td>
-                                                <td colspan="2"><?= isset($row['tm_date']) && !empty($row['tm_date']) ? date('d M y', strtotime($row['tm_date'])) : '0' ?></td>
+                                                <td><?= isset($row['tm_date']) && !empty($row['tm_date']) ? date('d M y', strtotime($row['tm_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_tm);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -855,13 +945,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_ff1 = (int)$row['ff_1'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
-                                                <td colspan="2"><?= $sla_ff1_date?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= $sla_ff1_date?></td>
                                                 <td><?= $master_slacons['hrga_ff1'] ?></td>
-                                                <td colspan="2"><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $ff1 ?>%</td>
                                                 <td><?= $dev_ff1 ?>%</td>
-                                                <td colspan="2"><?= isset($row['ff1_date']) && !empty($row['ff1_date']) ? date('d M y', strtotime($row['ff1_date'])) : '0' ?></td>
+                                                <td><?= isset($row['ff1_date']) && !empty($row['ff1_date']) ? date('d M y', strtotime($row['ff1_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_ff1);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -887,13 +977,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_ff2 = (int)$row['ff_2'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
-                                                <td colspan="2"><?= $sla_ff2_date?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= $sla_ff2_date?></td>
                                                 <td><?= $master_slacons['hrga_ff2'] ?></td>
-                                                <td colspan="2"><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $ff2 ?>%</td>
                                                 <td><?= $dev_ff2 ?>%</td>
-                                                <td colspan="2"><?= isset($row['ff2_date']) && !empty($row['ff2_date']) ? date('d M y', strtotime($row['ff2_date'])) : '0' ?></td>
+                                                <td><?= isset($row['ff2_date']) && !empty($row['ff2_date']) ? date('d M y', strtotime($row['ff2_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_ff2);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -919,13 +1009,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_ff3 = (int)$row['ff_3'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
-                                                <td colspan="2"><?= $sla_ff3_date?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= $sla_ff3_date?></td>
                                                 <td><?= $master_slacons['hrga_ff3'] ?></td>
-                                                <td colspan="2"><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $ff3 ?>%</td>
                                                 <td><?= $dev_ff3 ?>%</td>
-                                                <td colspan="2"><?= isset($row['ff3_date']) && !empty($row['ff3_date']) ? date('d M y', strtotime($row['ff3_date'])) : '0' ?></td>
+                                                <td><?= isset($row['ff3_date']) && !empty($row['ff3_date']) ? date('d M y', strtotime($row['ff3_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_ff3);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -952,13 +1042,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_kpt1 = (int)$row['kpt_1'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
-                                                <td colspan="2"><?= $sla_kpt1_date?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= $sla_kpt1_date?></td>
                                                 <td><?= $master_slacons['kpt1'] ?></td>
-                                                <td colspan="2"><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $kpt1 ?>%</td>
                                                 <td><?= $dev_kpt1 ?>%</td>
-                                                <td colspan="2"><?= isset($row['kpt_date1']) && !empty($row['kpt_date1']) ? date('d M y', strtotime($row['kpt_date1'])) : '0' ?></td>
+                                                <td><?= isset($row['kpt_date1']) && !empty($row['kpt_date1']) ? date('d M y', strtotime($row['kpt_date1'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_kpt1);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -984,13 +1074,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_kpt2 = (int)$row['kpt_2'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
-                                                <td colspan="2"><?= $sla_kpt2_date?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= $sla_kpt2_date?></td>
                                                 <td><?= $master_slacons['kpt2'] ?></td>
-                                                <td colspan="2"><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $kpt2 ?>%</td>
                                                 <td><?= $dev_kpt2 ?>%</td>
-                                                <td colspan="2"><?= isset($row['kpt_date2']) && !empty($row['kpt_date2']) ? date('d M y', strtotime($row['kpt_date2'])) : '0' ?></td>
+                                                <td><?= isset($row['kpt_date2']) && !empty($row['kpt_date2']) ? date('d M y', strtotime($row['kpt_date2'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_kpt2);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1016,13 +1106,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_kpt3 = (int)$row['kpt_3'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
-                                                <td colspan="2"><?= $sla_kpt3_date?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= $sla_kpt3_date?></td>
                                                 <td><?= $master_slacons['kpt3'] ?></td>
-                                                <td colspan="2"><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $kpt3 ?>%</td>
                                                 <td><?= $dev_kpt3 ?>%</td>
-                                                <td colspan="2"><?= isset($row['kpt_date3']) && !empty($row['kpt_date3']) ? date('d M y', strtotime($row['kpt_date3'])) : '0' ?></td>
+                                                <td><?= isset($row['kpt_date3']) && !empty($row['kpt_date3']) ? date('d M y', strtotime($row['kpt_date3'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_kpt3);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1049,13 +1139,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_scm = (int)$row['lamp_sj'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
-                                                <td colspan="2"><?= $sla_scm_date?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= $sla_scm_date?></td>
                                                 <td><?= $master_slacons['scm'] ?></td>
-                                                <td colspan="2"><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $scm ?>%</td>
                                                 <td><?= $dev_scm ?>%</td>
-                                                <td colspan="2"><?= isset($row['sj_date']) && !empty($row['sj_date']) ? date('d M y', strtotime($row['sj_date'])) : '0' ?></td>
+                                                <td><?= isset($row['sj_date']) && !empty($row['sj_date']) ? date('d M y', strtotime($row['sj_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_scm);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1080,13 +1170,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_scm = (int)$row['lamp_sj'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
-                                                <td colspan="2"><?= $sla_scm_date?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= $sla_scm_date?></td>
                                                 <td><?= $master_slacons['scm'] ?></td>
-                                                <td colspan="2"><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $scm ?>%</td>
                                                 <td><?= $dev_scm ?>%</td>
-                                                <td colspan="2"><?= isset($row['sj_date']) && !empty($row['sj_date']) ? date('d M y', strtotime($row['sj_date'])) : '0' ?></td>
+                                                <td><?= isset($row['sj_date']) && !empty($row['sj_date']) ? date('d M y', strtotime($row['sj_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_scm);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1111,13 +1201,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_scm = (int)$row['lamp_sj'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
-                                                <td colspan="2"><?= $sla_scm_date?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= $sla_scm_date?></td>
                                                 <td><?= $master_slacons['scm'] ?></td>
-                                                <td colspan="2"><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
+                                                <td><?= isset($row['kom_date']) && !empty($row['kom_date']) ? date('d M y', strtotime($row['kom_date'])) : '0' ?></td>
                                                 <td><?= $scm ?>%</td>
                                                 <td><?= $dev_scm ?>%</td>
-                                                <td colspan="2"><?= isset($row['sj_date']) && !empty($row['sj_date']) ? date('d M y', strtotime($row['sj_date'])) : '0' ?></td>
+                                                <td><?= isset($row['sj_date']) && !empty($row['sj_date']) ? date('d M y', strtotime($row['sj_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_scm);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1146,13 +1236,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_it = (int)$row['lamp_config'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= $start_it_date ?></td>
-                                                <td colspan="2"><?= $sla_it_date?></td>
+                                                <td><?= $start_it_date ?></td>
+                                                <td><?= $sla_it_date?></td>
                                                 <td>1</td>
-                                                <td colspan="2"><?= $start_act_it_date ?></td>
+                                                <td><?= $start_act_it_date ?></td>
                                                 <td><?= $it ?>%</td>
                                                 <td><?= $dev_it ?>%</td>
-                                                <td colspan="2"><?= isset($row['it_date']) && !empty($row['it_date']) ? date('d M y', strtotime($row['it_date'])) : '0' ?></td>
+                                                <td><?= isset($row['it_date']) && !empty($row['it_date']) ? date('d M y', strtotime($row['it_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_it);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1179,13 +1269,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_it = (int)$row['lamp_printer'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= $start_it_date ?></td>
-                                                <td colspan="2"><?= $sla_it_date?></td>
+                                                <td><?= $start_it_date ?></td>
+                                                <td><?= $sla_it_date?></td>
                                                 <td>1</td>
-                                                <td colspan="2"><?= $start_act_it_date ?></td>
+                                                <td><?= $start_act_it_date ?></td>
                                                 <td><?= $it ?>%</td>
                                                 <td><?= $dev_it ?>%</td>
-                                                <td colspan="2"><?= isset($row['it_date']) && !empty($row['it_date']) ? date('d M y', strtotime($row['it_date'])) : '0' ?></td>
+                                                <td><?= isset($row['it_date']) && !empty($row['it_date']) ? date('d M y', strtotime($row['it_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_it);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1212,13 +1302,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_it = (int)$row['lamp_printer'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= $start_it_date ?></td>
-                                                <td colspan="2"><?= $sla_it_date?></td>
+                                                <td><?= $start_it_date ?></td>
+                                                <td><?= $sla_it_date?></td>
                                                 <td>1</td>
-                                                <td colspan="2"><?= $start_act_it_date ?></td>
+                                                <td><?= $start_act_it_date ?></td>
                                                 <td><?= $it ?>%</td>
                                                 <td><?= $dev_it ?>%</td>
-                                                <td colspan="2"><?= isset($row['it_date']) && !empty($row['it_date']) ? date('d M y', strtotime($row['it_date'])) : '0' ?></td>
+                                                <td><?= isset($row['it_date']) && !empty($row['it_date']) ? date('d M y', strtotime($row['it_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_it);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1245,13 +1335,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_it = (int)$row['lamp_cctv'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= $start_it_date ?></td>
-                                                <td colspan="2"><?= $sla_it_date?></td>
+                                                <td><?= $start_it_date ?></td>
+                                                <td><?= $sla_it_date?></td>
                                                 <td>1</td>
-                                                <td colspan="2"><?= $start_act_it_date ?></td>
+                                                <td><?= $start_act_it_date ?></td>
                                                 <td><?= $it ?>%</td>
                                                 <td><?= $dev_it ?>%</td>
-                                                <td colspan="2"><?= isset($row['it_date']) && !empty($row['it_date']) ? date('d M y', strtotime($row['it_date'])) : '0' ?></td>
+                                                <td><?= isset($row['it_date']) && !empty($row['it_date']) ? date('d M y', strtotime($row['it_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_it);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1278,13 +1368,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_it = (int)$row['lamp_internet'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= $start_it_date ?></td>
-                                                <td colspan="2"><?= $sla_it_date?></td>
+                                                <td><?= $start_it_date ?></td>
+                                                <td><?= $sla_it_date?></td>
                                                 <td>1</td>
-                                                <td colspan="2"><?= $start_act_it_date ?></td>
+                                                <td><?= $start_act_it_date ?></td>
                                                 <td><?= $it ?>%</td>
                                                 <td><?= $dev_it ?>%</td>
-                                                <td colspan="2"><?= isset($row['it_date']) && !empty($row['it_date']) ? date('d M y', strtotime($row['it_date'])) : '0' ?></td>
+                                                <td><?= isset($row['it_date']) && !empty($row['it_date']) ? date('d M y', strtotime($row['it_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_it);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1312,13 +1402,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_marketing = (int)$row['lamp_merchant'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= $start_marketing_date ?></td>
-                                                <td colspan="2"><?= $sla_marketing_date?></td>
+                                                <td><?= $start_marketing_date ?></td>
+                                                <td><?= $sla_marketing_date?></td>
                                                 <td>1</td>
-                                                <td colspan="2"><?= $start_marketing_date ?></td>
+                                                <td><?= $start_marketing_date ?></td>
                                                 <td><?= $marketing ?>%</td>
                                                 <td><?= $dev_marketing ?>%</td>
-                                                <td colspan="2"><?= isset($row['merchant_date']) && !empty($row['merchant_date']) ? date('d M y', strtotime($row['merchant_date'])) : '0' ?></td>
+                                                <td><?= isset($row['merchant_date']) && !empty($row['merchant_date']) ? date('d M y', strtotime($row['merchant_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_marketing);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1344,13 +1434,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_marketing = (int)$row['lamp_merchant'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= $start_marketing_date ?></td>
-                                                <td colspan="2"><?= $sla_marketing_date?></td>
+                                                <td><?= $start_marketing_date ?></td>
+                                                <td><?= $sla_marketing_date?></td>
                                                 <td>1</td>
-                                                <td colspan="2"><?= $start_marketing_date ?></td>
+                                                <td><?= $start_marketing_date ?></td>
                                                 <td><?= $marketing ?>%</td>
                                                 <td><?= $dev_marketing ?>%</td>
-                                                <td colspan="2"><?= isset($row['merchant_date']) && !empty($row['merchant_date']) ? date('d M y', strtotime($row['merchant_date'])) : '0' ?></td>
+                                                <td><?= isset($row['merchant_date']) && !empty($row['merchant_date']) ? date('d M y', strtotime($row['merchant_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_marketing);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1376,13 +1466,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_marketing = (int)$row['lamp_merchant'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= $start_marketing_date ?></td>
-                                                <td colspan="2"><?= $sla_marketing_date?></td>
+                                                <td><?= $start_marketing_date ?></td>
+                                                <td><?= $sla_marketing_date?></td>
                                                 <td>1</td>
-                                                <td colspan="2"><?= $start_marketing_date ?></td>
+                                                <td><?= $start_marketing_date ?></td>
                                                 <td><?= $marketing ?>%</td>
                                                 <td><?= $dev_marketing ?>%</td>
-                                                <td colspan="2"><?= isset($row['merchant_date']) && !empty($row['merchant_date']) ? date('d M y', strtotime($row['merchant_date'])) : '0' ?></td>
+                                                <td><?= isset($row['merchant_date']) && !empty($row['merchant_date']) ? date('d M y', strtotime($row['merchant_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_marketing);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1410,13 +1500,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_taf = (int)$row['lamp_qris'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= $start_taf_date ?></td>
-                                                <td colspan="2"><?= $sla_taf_date?></td>
+                                                <td><?= $start_taf_date ?></td>
+                                                <td><?= $sla_taf_date?></td>
                                                 <td>1</td>
-                                                <td colspan="2"><?= $start_taf_date ?></td>
+                                                <td><?= $start_taf_date ?></td>
                                                 <td><?= $taf ?>%</td>
                                                 <td><?= $dev_taf ?>%</td>
-                                                <td colspan="2"><?= isset($row['merchant_date']) && !empty($row['merchant_date']) ? date('d M y', strtotime($row['merchant_date'])) : '0' ?></td>
+                                                <td><?= isset($row['merchant_date']) && !empty($row['merchant_date']) ? date('d M y', strtotime($row['merchant_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_taf);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1442,13 +1532,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_taf = (int)$row['lamp_qris'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= $start_taf_date ?></td>
-                                                <td colspan="2"><?= $sla_taf_date?></td>
+                                                <td><?= $start_taf_date ?></td>
+                                                <td><?= $sla_taf_date?></td>
                                                 <td>1</td>
-                                                <td colspan="2"><?= $start_taf_date ?></td>
+                                                <td><?= $start_taf_date ?></td>
                                                 <td><?= $taf ?>%</td>
                                                 <td><?= $dev_taf ?>%</td>
-                                                <td colspan="2"><?= isset($row['merchant_date']) && !empty($row['merchant_date']) ? date('d M y', strtotime($row['merchant_date'])) : '0' ?></td>
+                                                <td><?= isset($row['merchant_date']) && !empty($row['merchant_date']) ? date('d M y', strtotime($row['merchant_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_taf);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1476,13 +1566,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_ho = (int)$row['lamp_qris'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= $start_ho_date ?></td>
-                                                <td colspan="2"><?= $sla_ho_date?></td>
+                                                <td><?= $start_ho_date ?></td>
+                                                <td><?= $sla_ho_date?></td>
                                                 <td>1</td>
-                                                <td colspan="2"><?= $start_ho_date ?></td>
+                                                <td><?= $start_ho_date ?></td>
                                                 <td><?= $ho ?>%</td>
                                                 <td><?= $dev_ho ?>%</td>
-                                                <td colspan="2"><?= isset($row['soc_date']) && !empty($row['soc_date']) ? date('d M y', strtotime($row['soc_date'])) : '0' ?></td>
+                                                <td><?= isset($row['soc_date']) && !empty($row['soc_date']) ? date('d M y', strtotime($row['soc_date'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_ho);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1510,13 +1600,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_rto = (int)$row['lamp_qris'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= $start_rto_date ?></td>
-                                                <td colspan="2"><?= $sla_rto_date?></td>
+                                                <td><?= $start_rto_date ?></td>
+                                                <td><?= $sla_rto_date?></td>
                                                 <td>1</td>
-                                                <td colspan="2"><?= $start_rto_date ?></td>
+                                                <td><?= $start_rto_date ?></td>
                                                 <td><?= $rto ?>%</td>
                                                 <td><?= $dev_rto ?>%</td>
-                                                <td colspan="2"><?= isset($row['rto_act']) && !empty($row['rto_act']) ? date('d M y', strtotime($row['rto_act'])) : '0' ?></td>
+                                                <td><?= isset($row['rto_act']) && !empty($row['rto_act']) ? date('d M y', strtotime($row['rto_act'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_rto);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1544,13 +1634,13 @@ $departmentDataJSON = json_encode($departmentData);
                                                         $dev_go = (int)$row['lamp_qris'] - 100;
                                                     }
                                                     ?>
-                                                <td colspan="2"><?= $start_go_date ?></td>
-                                                <td colspan="2"><?= $sla_go_date?></td>
+                                                <td><?= $start_go_date ?></td>
+                                                <td><?= $sla_go_date?></td>
                                                 <td>1</td>
-                                                <td colspan="2"><?= $start_go_date ?></td>
+                                                <td><?= $start_go_date ?></td>
                                                 <td><?= $go ?>%</td>
                                                 <td><?= $dev_go ?>%</td>
-                                                <td colspan="2"><?= isset($row['go_fix']) && !empty($row['go_fix']) ? date('d M y', strtotime($row['go_fix'])) : '0' ?></td>
+                                                <td><?= isset($row['go_fix']) && !empty($row['go_fix']) ? date('d M y', strtotime($row['go_fix'])) : '0' ?></td>
                                                 <?php 
                                                 $remarks = getRemarks($dev_go);
                                                 $badge_color = getBadgeColor($remarks);                        
@@ -1564,23 +1654,49 @@ $departmentDataJSON = json_encode($departmentData);
                                                 <?php endforeach; ?>
                                             </tr>
                                             <tr>
-                                                <td rowspan="1"  class="sticky" style="background-color: #b6c7aa; color: white;"></td>
-                                                <td  class="sticky" style="background-color: #b6c7aa; color: white;"></td>
-                                                <td rowspan="1"  class="sticky" style="background-color: #b6c7aa; color: white;"></td>
+                                                <td class="sticky" rowspan="1" style="background-color: white"></td>
+                                                <td class="sticky" style="background-color: white"></td>
+                                                <td class="sticky" style="background-color: white"></td>
                                                 <?php foreach ($data as $row): ?>
-                                                    <td colspan="4"><?= $row ['kode_lahan'] ?></td>
+                                                    <?php           
+                                                    $sla_re_date = !empty($row['status_date']) ? date('d M y', strtotime($row['status_date'] . ' +' . ($master_sla['RE'] ?? 0) . ' days')) : '';
+                                                                                       
+                                                    $sla_bod_date = $sla_re_date != 'N/A' ? date('d M y', strtotime($sla_re_date . ' +' . ($master_sla['Owner Surveyor'] ?? 0) . ' days')) : 'N/A';
+                                                                                               
+                                                    $sla_legal_date = $sla_bod_date != 'N/A' ? date('d M y', strtotime($sla_bod_date . ' +' . ($master_sla['Legal'] ?? 0) . ' days')) : 'N/A';
+                                                                                                  
+                                                    $sla_nego_date = $sla_legal_date != 'N/A' ? date('d M y', strtotime($sla_legal_date . ' +' . ($master_sla['Negosiator'] ?? 0) . ' days')) : 'N/A';
+                                                                                                         
+                                                    $sla_survey_date = $sla_nego_date != 'N/A' ? date('d M y', strtotime($sla_nego_date . ' +' . ($master_sla['Land Survey'] ?? 0) . ' days')) : 'N/A';
+                                                                                                     
+                                                    $sla_layout_date = $sla_survey_date != 'N/A' ? date('d M y', strtotime($sla_survey_date . ' +' . ($master_sla['Layouting'] ?? 0) . ' days')) : 'N/A';
+                                                                                        
+                                                    $sla_sdgded_date = $sla_layout_date != 'N/A' ? date('d M y', strtotime($sla_layout_date . ' +' . ($master_sla['Design'] ?? 0) . ' days')) : 'N/A';
+                                                                                  
+                                                    $sla_rab_date = $sla_sdgded_date != 'N/A' ? date('d M y', strtotime($sla_sdgded_date . ' +' . ($master_sla['QS'] ?? 0) . ' days')) : 'N/A';
+                                                                                                     
+                                                    $sla_tender_date = $sla_rab_date != 'N/A' ? date('d M y', strtotime($sla_rab_date . ' +' . ($master_sla['Tender'] ?? 0) . ' days')) : 'N/A';
+                                                                                                            
+                                                    $sla_spk_date = $sla_tender_date != 'N/A' ? date('d M y', strtotime($sla_tender_date . ' +' . ($master_sla['SPK'] ?? 0) . ' days')) : 'N/A';
+                                                                                      
+                                                    $sla_kom_date = $sla_spk_date != 'N/A' ? date('d M y', strtotime($sla_spk_date . ' +' . ($master_sla['KOM'] ?? 0) . ' days')) : 'N/A';
+                                                                                  
+                                                    $sla_ff_date = $sla_kom_date != 'N/A' ? date('d M y', strtotime($sla_kom_date . ' +' . ($master_slacons['hrga_tm'] ?? 0) . ' days')) : 'N/A';
+                                                    ?>
                                                 <?php
-                                                // Ambil total remarks untuk kode lahan saat ini
-                                                $good_count2 = isset($total_remarks_2[$row['kode_lahan']]['good']) ? $total_remarks_2[$row['kode_lahan']]['good'] : 0;
-                                                $poor_count2 = isset($total_remarks_2[$row['kode_lahan']]['poor']) ? $total_remarks_2[$row['kode_lahan']]['poor'] : 0;
-                                                $failed_count2 = isset($total_remarks_2[$row['kode_lahan']]['failed']) ? $total_remarks_2[$row['kode_lahan']]['failed'] : 0;
+                                                $goodTotals = [];
+                                                foreach ($goodTotals as $kode_lahan => $total) {
+                                                    $totalGood = $total['good'];
+                                                    echo "Total Good for kode_lahan $kode_lahan: $totalGood<br>";
+                                                }
                                                 ?>
+                                                
                                                 <td colspan="2"><span class="badge badge-<?= getBadgeColor('good') ?>">Total Good</span></td>
-                                                <td><?= $good_count2 ?></td>
+                                                <td colspan="1"><?= $good_count2 ?></td>
                                                 <td colspan="2"><span class="badge badge-<?= getBadgeColor('poor') ?>">Total Poor</span></td>
-                                                <td><?= $poor_count2 ?></td>
+                                                <td colspan="1"><?= $poor_count2 ?></td>
                                                 <td colspan="2"><span class="badge badge-<?= getBadgeColor('failed') ?>">Total Failed</span></td>
-                                                <td><?= $failed_count2 ?></td>
+                                                <td colspan="1"><?= $failed_count2 ?></td>
                                                 <?php endforeach; ?>
                                             </tr>
                                         </tbody>

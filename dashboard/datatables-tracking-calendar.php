@@ -10,7 +10,7 @@ if ($result_existing_store->num_rows > 0) {
     $total_existing_store = $row_existing_store['total_existing_store'];
 }
 // Filter kode_lahan yang memiliki status_kom = 'Approve' di tabel resto
-$sql_filter_approve_kom = "SELECT COUNT(*) as total_approve_kom FROM resto WHERE status_kom = 'Approve'";
+$sql_filter_approve_kom = "SELECT COUNT(*) as total_approve_kom FROM resto WHERE status_kom = 'Done'";
 $result_filter_approve_kom = $conn->query($sql_filter_approve_kom);
 $total_approve_kom = 0;
 if ($result_filter_approve_kom->num_rows > 0) {
@@ -66,7 +66,17 @@ dokumen_loacd.slavd_date,
 dokumen_loacd.slavdlegal_date,
 dokumen_loacd.sla_tafkode,
 dokumen_loacd.slaloa_date,
+dokumen_loacd.status_approvlegalvd,
+dokumen_loacd.status_approvloacd,
+dokumen_loacd.status_tafkode,
+draft.status_kondisilahan,
+draft.confirm_re,
+draft.confirm_nego,
+draft.confirm_bod,
+draft.confirm_fatpsm,
 re.slavllegal_date,
+re.status_approvowner,
+re.status_vl,
 draft.slapsm_date,
 draft.slafatpsm_date,
 draft.slabod_date,
@@ -74,9 +84,23 @@ draft.sladraftre_date,
 draft.sla_kondisilahan,
 sdg_desain.sla_spkwo,
 sdg_desain.sla_survey,
+sdg_desain.status_spkwo,
 sdg_desain.sla_obslegal,
+sdg_desain.status_survey,
+sdg_desain.confirm_sdgurugan,
+sdg_desain.confirm_sdgdesain,
 sdg_desain.sla_urugan,
+sdg_desain.status_obslegal,
 sdg_desain.sla_date as sdgdesain_sla_date,
+sdg_rab.slaurugan_date,
+procurement.sla_spkrab,
+procurement.sla_spkurugan,
+sdg_rab.sla_date as tenderkons_sla_date,
+procurement.slatenderurugan_date,
+procurement.status_approvprocurement,
+procurement.status_tender,
+socdate_sdg.sla_spkwofa,
+socdate_sdg.sla_spkwoipal,
 equipment.*,
 land.nama_lahan,
 land.lokasi,
@@ -135,6 +159,8 @@ socdate_it.akun_gis,
         socdate_sdg.hasil_va,
         socdate_sdg.id_pln,
         socdate_sdg.lampwo_reqipal,
+        socdate_sdg.status_procurspkwofa,
+        socdate_sdg.status_spkwoipal,
         sdg_desain.lamp_permit,
         sdg_desain.lamp_pbg,
         re.start_date AS re_start_date,
@@ -157,9 +183,9 @@ socdate_it.akun_gis,
             (CASE WHEN socdate_scm.lamp_sj IS NOT NULL THEN 100 ELSE 0 END) AS scm,
             (CASE WHEN socdate_sdg.sumber_air IS NOT NULL AND socdate_sdg.kesesuaian_ujilab IS NOT NULL AND socdate_sdg.filter_air IS NOT NULL AND socdate_sdg.debit_airsumur IS NOT NULL AND socdate_sdg.debit_airpdam IS NOT NULL AND socdate_sdg.id_pdam IS NOT NULL AND socdate_sdg.sumber_listrik IS NOT NULL AND socdate_sdg.form_pengajuanlistrik IS NOT NULL AND socdate_sdg.hasil_va IS NOT NULL AND socdate_sdg.id_pln IS NOT NULL AND socdate_sdg.lampwo_reqipal IS NOT NULL THEN 100 ELSE 0 END) AS sdg
         FROM land
-        JOIN resto ON land.kode_lahan = resto.kode_lahan
-        JOIN equipment ON land.kode_lahan = equipment.kode_lahan
-        JOIN dokumen_loacd ON land.kode_lahan = dokumen_loacd.kode_lahan
+        LEFT JOIN resto ON land.kode_lahan = resto.kode_lahan
+        LEFT JOIN equipment ON land.kode_lahan = equipment.kode_lahan
+        LEFT JOIN dokumen_loacd ON land.kode_lahan = dokumen_loacd.kode_lahan
         LEFT JOIN re ON land.kode_lahan = re.kode_lahan
         LEFT JOIN draft ON land.kode_lahan = draft.kode_lahan
         LEFT JOIN obs_sdg ON land.kode_lahan = obs_sdg.kode_lahan
@@ -175,7 +201,7 @@ socdate_it.akun_gis,
         INNER JOIN socdate_legal ON land.kode_lahan = socdate_legal.kode_lahan
         INNER JOIN socdate_scm ON land.kode_lahan = socdate_scm.kode_lahan
         INNER JOIN socdate_sdg ON land.kode_lahan = socdate_sdg.kode_lahan
-        INNER JOIN sdg_desain ON land.kode_lahan = sdg_desain.kode_lahan
+        LEFT JOIN sdg_desain ON land.kode_lahan = sdg_desain.kode_lahan
         GROUP BY land.kode_lahan";
         
 $result = $conn->query($sql);
@@ -410,6 +436,7 @@ function getStatusBadgeColor($status) {
     <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link rel="shortcut icon" href="../assets/images/favicon.ico">
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
     <style>
@@ -492,6 +519,7 @@ function getStatusBadgeColor($status) {
                         </div>
                     </div> -->
                 </div>
+                
                 <div class="row" style="width: 80%; margin: 0 auto;">
     <div class="card mb-3">
         <div class="card-body p-2">
@@ -540,149 +568,60 @@ function getStatusBadgeColor($status) {
                 
                 // Loop through each day of the month
                 for ($day = 1; $day <= $daysInMonth; $day++) {
+                    // Create a DateTime object for the current day
                     $date = new DateTime("$selectedYear-$selectedMonth-$day");
                     $dateString = $date->format('Y-m-d');
                     
-                    // Count the number of events for the current day
+                    // Count the number of deadlines for the current date
                     $eventCount = 0;
                     $eventContent = '';
+                    
                     foreach ($schedule as $event) {
-                        if ($event['re_sla_date'] == $dateString ||
-                            $event['slavl_date'] == $dateString ||
-                            $event['sla_spk'] == $dateString ||
-                            $event['sla_kom'] == $dateString ||
-                            $event['sla_steqp'] == $dateString ||
-                            $event['sla_stkonstruksi'] == $dateString ||
-                            $event['gostore_date'] == $dateString ||
-                            $event['rto_act'] == $dateString) {
-                            
-                            // Increment event count
+                        if (($event['re_sla_date'] == $dateString && $event['status_approvowner'] !== 'Approve') || 
+                            ($event['slavl_date'] == $dateString && $event['status_vl'] == 'In Process') ||
+                            ($event['slavllegal_date'] == $dateString && $event['status_vl'] == 'In Process') || 
+                            ($event['slavd_date'] == $dateString && $event['status_approvlegalvd'] == 'In Process') ||
+                            ($event['slavdlegal_date'] == $dateString && $event['status_approvlegalvd'] == 'In Process') || 
+                            ($event['slaloa_date'] == $dateString && $event['status_approvloacd'] !== 'Approve') || 
+                            ($event['sladraftre_date'] == $dateString && $event['confirm_re'] !== 'Done') || 
+                            ($event['sla_tafkode'] == $dateString && $event['status_tafkode'] !== 'Done') || 
+                            ($event['slapsm_date'] == $dateString && $event['confirm_nego'] !== 'Approve') || 
+                            ($event['slafatpsm_date'] == $dateString && $event['confirm_fatpsm'] !== 'Approve') || 
+                            ($event['slabod_date'] == $dateString && $event['confirm_bod'] !== 'Approve') || 
+                            ($event['sla_kondisilahan'] == $dateString && $event['status_kondisilahan'] !== 'Done') ||
+                            ($event['sla_spkwo'] == $dateString && $event['status_spkwo'] !== 'Approve') || 
+                            ($event['sla_survey'] == $dateString && $event['status_survey'] !== 'Approve')||
+                            ($event['sla_obslegal'] == $dateString && $event['status_obslegal'] !== 'Approve') || 
+                            ($event['sla_urugan'] == $dateString && $event['confirm_sdgurugan'] !== 'Approve') || 
+                            ($event['sdgdesain_sla_date'] == $dateString && $event['confirm_sdgdesain'] !== 'Approve') || 
+                            ($event['sla_kom'] == $dateString && $event['status_kom'] !== 'Done') || 
+                            ($event['sla_steqp'] == $dateString && $event['status_steqp'] !== 'Approve') || 
+                            ($event['sla_stkonstruksi'] == $dateString && $event['status_stkonstruksi'] !== 'Approve') || 
+                            $event['gostore_date'] == $dateString || 
+                            $event['rto_act'] == $dateString || 
+                            ($event['slaurugan_date'] == $dateString && $event['confirm_qsurugan'] !== 'Approve') ||
+                            ($event['sla_spkrab'] == $dateString && $event['status_approvprocurement'] !== 'Approve') || 
+                            ($event['sla_spkurugan'] == $dateString && $event['status_procururugan'] !== 'Approve') ||
+                            ($event['tenderkons_sla_date'] == $dateString && $event['status_tender'] !== 'Approve') || 
+                            ($event['slatenderurugan_date'] == $dateString && $event['status_tenderurugan'] !== 'Done') || 
+                            ($event['sla_spkwofa'] == $dateString && $event['status_procurspkwofa'] !== 'Approve') || 
+                            ($event['sla_spkwoipal'] == $dateString && $event['status_spkwoipal'] !== 'Approve') || 
+                            ($event['sla_eqpdevprocur'] == $dateString && $event['status_eqpdevprocur'] !== 'Approve') || 
+                            ($event['sla_eqpdev'] == $dateString && $event['status_eqpdev'] !== 'Approve')|| 
+                            ($event['sla_eqpsite'] == $dateString && $event['status_eqpsite'] !== 'Approve')) {
                             $eventCount++;
-
-                            // Add event to the content
-                            if ($event['re_sla_date'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Deadline BoD</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['slavl_date'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Deadline VL RE</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['slavllegal_date'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Deadline VL Legal</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['slavd_date'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Deadline VD RE</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['slavdlegal_date'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Deadline VD Legal</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['slaloa_date'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Deadline LOA CD RE</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['sla_tafkode'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Deadline TAF Kode Store</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['slapsm_date'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Deadline Draft PSM Legal</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['slafatpsm_date'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Deadline Draft PSM TAF</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['slabod_date'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Deadline BoD PSM Table Sewa</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['sladraftre_date'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Deadline Uploading PSM RE</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['sla_kondisilahan'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Deadline Pengondisian Lahan Legal</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['sla_spkwo'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Deadline SPK WO Design by Procurement</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['sla_survey'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Deadline Survey & Layouting SDG-Design</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['sla_obslegal'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Deadline Obstacle Legal</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['sla_urugan'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Deadline Urugan SDG-Design</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['sdgdesain_sla_date'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Deadline Desain Konstruksi SDG-Design</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['sla_spk'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Deadline SPK</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['sla_kom'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>Kick Off Meeting</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['sla_steqp'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>ST Equipment</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['sla_stkonstruksi'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>ST Kontraktor</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['gostore_date'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>GO</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
-                            if ($event['rto_act'] == $dateString) {
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>RTO</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['nama_lahan']}</p>";
-                                $eventContent .= "<p class='text-truncate' style='font-size: 10px; margin: 0;'>{$event['kode_store']}</p>";
-                            }
                         }
                     }
-                    
-                    // Display the card
+
+                    // Display the date card with the count of deadlines
                     echo "<div class='col-6 col-sm-4 col-md-2 mb-2'>";
-                    echo "<div class='card border p-2' style='height: 100px; max-width: 100%; overflow: hidden;' data-toggle='modal' data-target='#eventModal' data-date='$dateString' data-events='$eventContent'>";
+                    echo "<div class='card border p-2' style='height: 100px; max-width: 100%; overflow: hidden;' data-date='$dateString' onclick='showModal(\"$dateString\")'>";
                     echo "<p class='m-0' style='font-size: 12px;'>{$date->format('d')}</p>";
-                    echo "<p class='m-0 text-muted' style='font-size: 10px;'>$eventCount Events</p>";
+                    if ($eventCount > 0) {
+                        echo "<p class='text-truncate' style='font-size: 10px; margin: 0;'>$eventCount Event(s)</p>";
+                    } else {
+                        echo "<p class='text-truncate' style='font-size: 10px; margin: 0; color: transparent;'>No Events</p>";
+                    }
                     echo "</div>";
                     echo "</div>";
                 }
@@ -691,22 +630,20 @@ function getStatusBadgeColor($status) {
         </div>
     </div>
 </div>
-
 <!-- Modal for detailed events -->
 <div class="modal fade" id="eventModal" tabindex="-1" role="dialog" aria-labelledby="eventModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="eventModalLabel">Deadline Schedule on <span id="modalDate"></span></h5>
-                <div class="col-6">
-                    <ul></ul>
-                </div>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body" id="modalEvents">
-                <!-- Event details will be injected here -->
+            <div class="modal-body">
+                <ul id="eventList" class="list-unstyled">
+                    <!-- Event list will be injected here -->
+                </ul>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -1264,7 +1201,7 @@ function getStatusBadgeColor($status) {
         readyToGoStore: <?php echo json_encode($ready_to_go_chart_data); ?>
     });
 </script>
-<script>
+<!-- <script>
     // jQuery script to handle the click event on the card and show the modal with event details
     $(document).ready(function() {
         $('.card[data-toggle="modal"]').on('click', function() {
@@ -1275,6 +1212,117 @@ function getStatusBadgeColor($status) {
             $('#modalEvents').html(events);
         });
     });
+</script> -->
+
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Bootstrap JavaScript -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+        function showModal(date) {
+    const modalDate = document.getElementById('modalDate');
+    const eventList = document.getElementById('eventList');
+
+    // Format the date
+    const formattedDate = formatDate(new Date(date));
+
+    // Set the modal date
+    modalDate.textContent = formattedDate;
+
+    // Clear previous event list
+    eventList.innerHTML = '';
+
+    // Fetch events and filter
+    const events = <?php echo json_encode($schedule); ?>;
+    const filteredEvents = events.filter(event =>
+        event.re_sla_date === date || event.slavl_date === date || 
+        event.slavllegal_date === date || event.slavd_date === date || 
+        event.slavdlegal_date === date || event.slaloa_date === date || 
+        event.sla_tafkode === date || event.slapsm_date === date || 
+        event.slafatpsm_date === date || event.slabod_date === date || 
+        event.sladraftre_date === date || event.sla_kondisilahan === date || 
+        event.sla_spkwo === date || event.sla_survey === date || 
+        event.sla_obslegal === date || event.sla_urugan === date || 
+        event.sdgdesain_sla_date === date || event.sla_spk === date ||
+        event.sla_kom === date || event.sla_steqp === date || 
+        event.sla_stkonstruksi === date || event.gostore_date === date || 
+        event.rto_act === date || event.sla_eqpdev === date || 
+        event.sla_eqpsite === date || event.slaurugan_date === date ||
+        event.sla_spkrab === date || event.sla_spkurugan === date || 
+        event.tenderkons_sla_date === date || event.slatenderurugan_date === date || 
+        event.sla_spkwofa === date || event.sla_spkwoipal === date || 
+        event.sla_eqpdevprocur === date
+    );
+
+    // Add events to the list
+    filteredEvents.forEach(event => {
+        const li = document.createElement('li');
+        li.className = 'mb-2';
+        let type;
+        let status;
+        // Determine event type
+        if (event.re_sla_date === date) {
+            type = 'Deadline Approval Lahan BoD';
+            status = event.status_approvowner;
+        }
+        else if (event.slavl_date === date) {
+            type = 'Deadline VL Real Estate';
+            status = event.status_vl;
+        }
+            else if (event.slavllegal_date === date && event.status_vl === status) type = 'Deadline VL Legal';
+            else if (event.slavd_date === date && event.status_approvlegalvd === status) type = 'Deadline VD Real Estate';
+            else if (event.slavdlegal_date === date && event.status_approvlegalvd === status) type = 'Deadline VD Legal';
+            else if (event.slaloa_date === date) {type = 'Deadline LOA CD Real Estate'; status = event.status_approvloacd;}
+            else if (event.sla_tafkode === date) type = 'Deadline TAF Kode Store';
+            else if (event.slapsm_date === date) type = 'Deadline Legal Draft PSM Table Sewa';
+            else if (event.slafatpsm_date === date) type = 'Deadline Review TAF Draft PSM Table Sewa';
+            else if (event.slabod_date === date) type = 'Deadline BoD PSM Table Sewa';
+            else if (event.sladraftre_date === date) type = 'Deadline Uploading PSM Real Estate';
+            else if (event.sla_kondisilahan === date) type = 'Deadline Pengondisian Lahan';
+            else if (event.sla_spkwo === date) type = 'Deadline Procurement SPK WO Design';
+            else if (event.sla_survey === date) type = 'Deadline Survey & layouting SDG Design';
+            else if (event.sla_obslegal === date) type = 'Deadline Obstacle Legal';
+            else if (event.sla_urugan === date) type = 'Deadline SDG Desain Urugan';
+            else if (event.sdgdesain_sla_date === date) type = 'Deadline SDG Desain Konstruksi';
+
+            else if (event.slaurugan_date === date) type = 'Deadline SDG QS RAB Urugan';
+            else if (event.sla_spkrab === date) type = 'Deadline Procurement SPK RAB Konstruksi';
+            else if (event.sla_spkurugan === date) type = 'Deadline Procurement SPK RAB Urugan';
+            else if (event.tenderkons_sla_date === date) type = 'Deadline Procurement Tender Konstruksi';
+            else if (event.slatenderurugan_date === date) type = 'Deadline Procurement Tender Urugan';
+            else if (event.sla_spkwofa === date) type = 'Deadline Procurement SPK MEP Filter Air';
+            else if (event.sla_spkwoipal === date) type = 'Deadline Procurement SPK MEP IPAL';
+            else if (event.sla_eqpdevprocur === date) type = 'Deadline Procurement SPK Equipment';
+
+            else if (event.sla_spk === date) type = 'Deadline SPK Konstruksi';
+            else if (event.sla_kom === date) type = 'Deadline Kick Off Meeting';
+            else if (event.sla_steqp === date) type = 'Deadline ST Equipment';
+            else if (event.sla_steqp === date) type = 'Deadline WO Equipment';
+            else if (event.sla_eqpdev === date) type = 'Deadline Equipment Delivery';
+            else if (event.sla_eqpsite === date) type = 'Deadline Equipment Site';
+            else if (event.sla_stkonstruksi === date) type = 'Deadline ST Kontraktor';
+            else if (event.gostore_date === date) type = 'Deadline Go Store';
+            else if (event.rto_act === date) type = 'Deadline RTO';
+        // Continue with other types
+        // ...
+        
+        li.innerHTML = `
+            <p class='text-truncate' style='font-size: 10px; margin: 0;'>${type}</p>
+            <p class='text-truncate' style='font-size: 10px; margin: 0;'>${event.nama_lahan}</p>
+            <p class='text-truncate' style='font-size: 10px; margin: 0;'>${event.kode_store}</p>
+            
+        `;
+        eventList.appendChild(li);
+    });
+
+    // Show the modal
+    $('#eventModal').modal('show');
+}
+// Function to format date
+function formatDate(date) {
+    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+    return new Intl.DateTimeFormat('id-ID', options).format(date);
+}
 </script>
 </body>
 
