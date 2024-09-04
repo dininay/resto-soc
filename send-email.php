@@ -11,55 +11,76 @@ require 'PHPMailer-6.8.1/src/Exception.php';
 require 'PHPMailer-6.8.1/src/PHPMailer.php';
 require 'PHPMailer-6.8.1/src/SMTP.php';
 
-// Initialize PHPMailer
-$mail = new PHPMailer(true);
-function sendEmail() {
-    $mail = new PHPMailer(true);
+
+include "koneksi.php";
+
+$queryIR = "SELECT email FROM user WHERE level = 'Legal'";
+$resultIR = mysqli_query($conn, $queryIR);
+
+$toEmails = [];
+if ($resultIR && mysqli_num_rows($resultIR) > 0) {
+    while ($rowIR = mysqli_fetch_assoc($resultIR)) {
+        if (!empty($rowIR['email'])) {
+            $toEmails[] = $rowIR['email'];
+        }
+    }
+}
+
+if (!empty($toEmails)) {
     try {
-        // Server settings
-        $mail->isSMTP();
-        $mail->Host = 'sandbox.smtp.mailtrap.io';  // Replace with your SMTP server
-        $mail->SMTPAuth = true;
-        $mail->Username = 'ff811f556f5d12'; // Replace with your username
-        $mail->Password = 'c60c92868ce0f8'; // Replace with your password
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 2525;
+                    // SMTP configuration
+                    $mail = new PHPMailer(true);
+                    $mail->isSMTP();
+                    // $mail->SMTPDebug = 2;
+                    $mail->SMTPAuth = true;
+                    $mail->SMTPSecure = 'ssl';
+                    $mail->Host = 'miegacoan.co.id';
+                    $mail->Port = 465;
+                    $mail->Username = 'resto-soc@miegacoan.co.id';
+                    $mail->Password = '9)5X]*hjB4sh';
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+                    $mail->setFrom('resto-soc@miegacoan.co.id', 'Pesta Pora Abadi');
 
-        // Recipients
-        $mail->setFrom('from@example.com', 'Mailer');
-        $mail->addAddress('dininaylulizzah248@gmail.com', 'Recipient Name');
+                    foreach ($toEmails as $toEmail) {
+                        $mail->addAddress($toEmail);
+                    }
+                    $imagePath = 'assets/images/logo-email.png';
+                    $mail->addEmbeddedImage($imagePath, 'embedded_image', 'logo-email.png', 'base64', 'image/png');
 
-        // Content
-        $mail->isHTML(true);
-        $mail->Subject = 'Daily Report';
-        $mail->Body    = 'This is the daily report sent at 4:00 PM Jakarta time.';
+                    // Email content
+                    $mail->Subject = 'Notification: Daily Active Resto SOC Ticket';
+                                    $mail->Body    = '
+                                    <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333; margin: 0; padding: 0;">
+                                        <div style="background-color: #f7f7f7; border-radius: 8px; padding: 0; margin: 0; text-align: center;">
+                                            <img src="cid:embedded_image" alt="Header Image" style="display: block; width: 50%; height: auto; margin: 0 auto;">
+                                            <div style="padding: 20px; background-color: #f7f7f7; border-radius: 8px;">
+                                                <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Team,</h2>
+                                                <p>You have Daily Active Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.</p>
+                                                <p>Thank you for your prompt attention to this matter.</p>
+                                                <p>Best regards,</p>
+                                                <p>Resto - SOC</p>
+                                            </div>
+                                        </div>
+                                    </div>';
+                                    $mail->AltBody = 'Dear Team,'
+                                                . 'You have Daily Active Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.'
+                                                . 'Thank you for your prompt attention to this matter.'
+                                                . 'Best regards,'
+                                                . 'Resto - SOC';
 
-        // Send email
-        $mail->send();
-        echo 'Message has been sent';
-    } catch (Exception $e) {
-        echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
-    }
+                    // Send email
+                    if ($mail->send()) {
+                        echo "Email sent successfully!<br>";
+                    } else {
+                        echo "Failed to send email. Error: {$mail->ErrorInfo}<br>";
+                    }
+
+                } catch (Exception $e) {
+                    echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+                }
+} else {
+    echo "No email found for the Legal users.";
 }
 
-// Calculate the time until the next 4:00 PM
-function getSecondsUntilNextSchedule($hour = 16, $minute = 0) {
-    $now = new DateTime();
-    $nextSchedule = new DateTime();
-    $nextSchedule->setTime($hour, $minute);
-    
-    if ($now > $nextSchedule) {
-        // If it's already past the scheduled time today, schedule for the next day
-        $nextSchedule->modify('+1 day');
-    }
-    
-    return $nextSchedule->getTimestamp() - $now->getTimestamp();
-}
-
-// Main loop
-while (true) {
-    $interval = getSecondsUntilNextSchedule(); // Get the seconds until the next scheduled time
-    sleep($interval); // Wait until the next scheduled time
-    sendEmail(); // Send the email
-}
+$conn->close();
 ?>

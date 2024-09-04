@@ -155,6 +155,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                                 $mail->Body    = '
                                 <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
                                     <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
+                                            <img src="cid:header_image" alt="Header Image" style="max-width: 100%; height: auto; margin-bottom: 20px;">
                                         <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Team,</h2>
                                         <p>You have 1 New Active Done Urugan Tender Process Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.</p>
                                         <p>Thank you for your prompt attention to this matter.</p>

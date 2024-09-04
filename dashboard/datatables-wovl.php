@@ -59,7 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
 $sql = "SELECT r.*, l.kode_lahan, l.nama_lahan, l.lokasi, l.luas_area, l.lamp_land
         FROM re r
         JOIN land l ON r.kode_lahan = l.kode_lahan
-        WHERE r.status_vl IN ('In Process','Approve') AND r.lamp_vl IS NOT NULL";
+        WHERE r.status_vl IN ('In Process','Approve','In Revision') AND r.lamp_vl IS NOT NULL";
 
 $result = $conn->query($sql);
 

@@ -75,6 +75,7 @@ if (!empty($toEmails)) {
         $bodyContent = '
             <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
                 <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
+                                            <img src="cid:header_image" alt="Header Image" style="max-width: 100%; height: auto; margin-bottom: 20px;">
                     <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Team,</h2>
                     <p>You have the following ticket updates for today:</p>
                     <ul>';
