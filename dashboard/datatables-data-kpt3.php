@@ -164,8 +164,6 @@ function getBadgeColor($remarks) {
                                                 <th>Alamat</th>
                                                 <th>Usia</th>
                                                 <th>Status Lolos</th>
-                                                <th>Score OJE</th>
-                                                <th>Status OJE</th>
                                                 <th>Day 1 Onboarding</th>
                                                 <th>Completion Rate</th>
                                                 <th>SLA</th>
@@ -205,30 +203,6 @@ function getBadgeColor($remarks) {
                                                         <?php echo $row['status_lolos']; ?>
                                                     </span>
                                                 </td> 
-                                                <td><?= $row['score_oje'] ?></td>
-                                                <td>
-                                                    <?php
-                                                        // Tentukan warna badge berdasarkan status approval owner
-                                                        $badge_color = '';
-                                                        switch ($row['status_oje']) {
-                                                            case 'Lolos':
-                                                                $badge_color = 'success';
-                                                                break;
-                                                            case 'Tidak Lolos':
-                                                                $badge_color = 'danger';
-                                                                break;
-                                                            case 'In Process':
-                                                                $badge_color = 'primary';
-                                                                break;
-                                                            default:
-                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
-                                                                break;
-                                                        }
-                                                    ?>
-                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_oje']; ?>
-                                                    </span>
-                                                </td>    
                                                 <td>
                                                     <?= (!empty($row['onboarding_date']) && $row['onboarding_date'] != '0000-00-00') ? date('d M Y', strtotime($row['onboarding_date'])) : '' ?>
                                                 </td>
@@ -318,13 +292,12 @@ function getBadgeColor($remarks) {
                                                 </td>    
                                                 <td>
                                                 <!-- Tombol Edit -->
-                                                    <button class="btn btn-sm btn-warning edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_lolos'] ?>">
-                                                    <i class="nav-icon i-Pen-2"></i></button>
+                                                    <!-- <button class="btn btn-sm btn-warning edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_lolos'] ?>">
+                                                    <i class="nav-icon i-Pen-2"></i></button> -->
                                                     
-                                                    <?php if ($row['status_oje'] != "In Process"): ?>
+                                                    
                                                     <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal2" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_lolos'] ?>">
                                                     <i class="nav-icon i-Book"></i></button>
-                                                    <?php endif; ?>
                                                 </td>
                                                 <!-- Modal -->
                                                 <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
@@ -415,6 +388,7 @@ function getBadgeColor($remarks) {
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Done">Done</option>
                                                                             <option value="Resign">Resign</option>
+                                                                            <option value="Resign Before Onboarding">Resign Before Onboarding</option>
                                                                         </select>
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">
@@ -470,8 +444,6 @@ function getBadgeColor($remarks) {
                                                 <th>Alamat</th>
                                                 <th>Usia</th>
                                                 <th>Status Lolos</th>
-                                                <th>Score OJE</th>
-                                                <th>Status OJE</th>
                                                 <th>Day 1 Onboarding</th>
                                                 <th>Completion Rate</th>
                                                 <th>SLA</th>

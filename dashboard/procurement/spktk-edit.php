@@ -6,6 +6,7 @@ include "../../koneksi.php";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     $id = $_POST['id'];
+    $nominal_spkjobadd = $_POST['nominal_spkjobadd'];
             // Periksa apakah kunci 'lampiran' ada dalam $_FILES
     $lamp_jobadd = "";
 
@@ -31,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $lamp_jobadd = implode(",", $lamp_jobadd_paths);
     }
     // Update data di database
-    $sql = "UPDATE jobadd SET lamp_jobadd = '$lamp_jobadd' WHERE id = '$id'";
+    $sql = "UPDATE jobadd SET lamp_jobadd = '$lamp_jobadd', nominal_spkjobadd = '$nominal_spkjobadd' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
         header("Location: " . $base_url . "/datatables-tambahkurang.php");

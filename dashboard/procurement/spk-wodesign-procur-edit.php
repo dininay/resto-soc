@@ -6,6 +6,7 @@ include "../../koneksi.php";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     $id = $_POST['id'];
+    $nominal_spkdesign = $_POST['nominal_spkdesign'];
             // Periksa apakah kunci 'lampiran' ada dalam $_FILES
     $lamp_spkwo = "";
 
@@ -32,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Update data di database
-    $sql = "UPDATE sdg_desain SET lamp_spkwo = '$lamp_spkwo' WHERE id = '$id'";
+    $sql = "UPDATE sdg_desain SET lamp_spkwo = '$lamp_spkwo', nominal_spkdesign = '$nominal_spkdesign' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
         header("Location: " . $base_url . "/datatables-checkval-wo-from-sdg.php");

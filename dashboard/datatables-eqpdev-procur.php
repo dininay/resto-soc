@@ -169,6 +169,7 @@ function getBadgeColor($remarks) {
                                                 <th>Lampiran ST EQP</th>
                                                 <th>Lampiran Berita Acara</th>
                                                 <th>Lampiran WO EQP</th>
+                                                <th>Nominal</th>
                                                 <th>Lampiran SPK EQP</th>
                                                 <th>Status Procurement</th>
                                                 <th>SLA</th>
@@ -248,6 +249,7 @@ function getBadgeColor($remarks) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>     
+                                                <td><?= $row['nominal_spkeqp'] ?></td>  
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_spkeqpdev_files = explode(",", $row['lamp_spkeqpdev']); // Pisahkan nama file menjadi array
@@ -454,6 +456,7 @@ function getBadgeColor($remarks) {
                                                 <th>Lampiran ST EQP</th>
                                                 <th>Lampiran Berita Acara</th>
                                                 <th>Lampiran WO EQP</th>
+                                                <th>Nominal</th>
                                                 <th>Lampiran SPK EQP</th>
                                                 <th>Status Procurement</th>
                                                 <th>SLA</th>

@@ -176,6 +176,7 @@ function getBadgeColor($remarks) {
                                                 <th>Status Sign PSM</th>
                                                 <th>Nama Vendor</th>
                                                 <th>Alamat</th>
+                                                <th>Nominal</th>
                                                 <th>Lampiran Profil</th>
                                                 <th>Lampiran Pendukung</th>
                                                 <th>Status Tender</th>
@@ -370,6 +371,7 @@ function getBadgeColor($remarks) {
                                                 </td>
                                                 <td><?= $row['nama_vendor'] ?></td>
                                                 <td><?= $row['alamat'] ?></td>
+                                                <td><?= $row['dealnego_konstruksi'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_profil_files = explode(",", $row['lamp_profil']); // Pisahkan nama file menjadi array
@@ -619,6 +621,7 @@ function getBadgeColor($remarks) {
                                                 <th>Status Sign PSM</th>
                                                 <th>Nama Vendor</th>
                                                 <th>Alamat</th>
+                                                <th>Nominal</th>
                                                 <th>Lampiran Profil</th>
                                                 <th>Lampiran Pendukung</th>
                                                 <th>Status Tender</th>

@@ -167,6 +167,7 @@ function getBadgeColor($remarks) {
                                                 <th>Alamat Lokasi</th>
                                                 <th>Submit WO</th>
                                                 <th>Lampiran WO</th>
+                                                <th>Nominal</th>
                                                 <th>Lampiran SPK</th>
                                                 <th>Status SPK</th>
                                                 <th>SLA</th>
@@ -222,6 +223,7 @@ function getBadgeColor($remarks) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>
+                                                <td><?= $row['nominal_spkdesign'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_spkwo_files = explode(",", $row['lamp_spkwo']); // Pisahkan nama file menjadi array
@@ -432,6 +434,7 @@ function getBadgeColor($remarks) {
                                                 <th>Alamat Lokasi</th>
                                                 <th>Submit WO</th>
                                                 <th>Lampiran WO</th>
+                                                <th>Nominal</th>
                                                 <th>Lampiran SPK</th>
                                                 <th>Status SPK</th>
                                                 <th>SLA</th>

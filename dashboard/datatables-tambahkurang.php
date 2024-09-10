@@ -233,6 +233,7 @@ function getBadgeColor($remarks) {
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
+                                                <th>Nominal</th>
                                                 <th>Lampiran WO Pekerjaan Tambah Kurang</th>
                                                 <th>Lampiran RAB</th>
                                                 <th>Lampiran SPK</th>
@@ -248,6 +249,7 @@ function getBadgeColor($remarks) {
                                                 <td><?= $row['kode_store'] ?></td>
                                                 <td><?= $row['nama_lahan'] ?></td>
                                                 <td><?= $row['lokasi'] ?></td>
+                                                <td><?= $row['nominal_spkjobadd'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_wojobadd_files = explode(",", $row['lamp_wojobadd']); // Pisahkan nama file menjadi array
@@ -499,6 +501,7 @@ function getBadgeColor($remarks) {
                                                 <th>Kode Store</th>
                                                 <th>Nama Lokasi</th>
                                                 <th>Alamat Lokasi</th>
+                                                <th>Nominal</th>
                                                 <th>Lampiran WO Pekerjaan Tambah Kurang</th>
                                                 <th>Lampiran RAB</th>
                                                 <th>Lampiran SPK</th>

@@ -61,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         $stmt_update->execute();
 
         if ($stmt_update->affected_rows > 0) {
-            if ($status_last == 'Done' || $status_last == 'Resign') {
+            if ($status_last == 'Done' || $status_last == 'Resign' || $status_last == 'Resign Before Onboarding') {
                 if ($kode_lahan) {
                     $sql_check_hold = "SELECT kode_lahan FROM hold_project WHERE kode_lahan = ?";
                     $stmt_check_hold = $conn->prepare($sql_check_hold);
@@ -79,7 +79,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                     $stmt_check_hold->close();
                     
                     // Tambah atau kurangi angka 1 ke kolom crew_onboardkpt1 di tabel socdate_academy
-                    if ($prev_status_last == 'Done' && $status_last == 'Resign') {
+                    if ($prev_status_last == 'Done' && $status_last == 'Resign' && $status_last == 'Resign Before Onboarding') {
                         // Decrease crew_onboardkpt1 by 1
                         $sql_update_crew_onboard = "UPDATE socdate_academy SET crew_onboardkpt1 = COALESCE(crew_onboardkpt1, 0) - 1 WHERE kode_lahan = ?";
                         $stmt_update_crew_onboard = $conn->prepare($sql_update_crew_onboard);

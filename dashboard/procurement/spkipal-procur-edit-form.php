@@ -66,6 +66,12 @@ if(isset($_GET['id'])) {
                             <form method="post" action="spkipal-procur-edit.php" enctype="multipart/form-data">
                                 <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                 <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="nominal_spkipal">Nominal (include PPN)<strong><span style="color: red;">*</span></strong></label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="nominal_spkipal" name="nominal_spkipal" type="text" oninput="formatRupiah(this)" placeholder="Masukkan Angka Saja" value="<?php echo $row['nominal_spkipal']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
                                     <label class="col-sm-3 col-form-label" for="lamp_spkwoipal">Upload Lampiran SPK IPAL<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multiple-file-upload">
@@ -255,6 +261,23 @@ if(isset($_GET['id'])) {
     <script src="../../dist-assets/js/scripts/script.min.js"></script>
     <script src="../../dist-assets/js/scripts/sidebar.compact.script.min.js"></script>
     <script src="../../dist-assets/js/scripts/customizer.script.min.js"></script>
+    <script>
+        function formatRupiah(input) {
+            let value = input.value.replace(/[^,\d]/g, '').toString();
+            let split = value.split(',');
+            let sisa = split[0].length % 3;
+            let rupiah = split[0].substr(0, sisa);
+            let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if (ribuan) {
+                let separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+
+            rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+            input.value = 'Rp. ' + rupiah;
+        }
+    </script>
     <script>
     function toggleFilterDetail() {
         var filterAir = document.getElementById("filter_air");

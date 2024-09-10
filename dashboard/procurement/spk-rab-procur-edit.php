@@ -6,6 +6,7 @@ include "../../koneksi.php";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     $id = $_POST['id'];
+    $nominal_spkkonstruksi = $_POST['nominal_spkkonstruksi'];
             // Periksa apakah kunci 'lampiran' ada dalam $_FILES
     $lamp_spkrabcons = "";
 
@@ -32,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     $status_approvprocurement = "In Process";
     // Update data di database
-    $sql = "UPDATE procurement SET lamp_spkrabcons = '$lamp_spkrabcons', status_approvprocurement = '$status_approvprocurement' WHERE id = '$id'";
+    $sql = "UPDATE procurement SET lamp_spkrabcons = '$lamp_spkrabcons', status_approvprocurement = '$status_approvprocurement', nominal_spkkonstruksi = '$nominal_spkkonstruksi' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
         header("Location: " . $base_url . "/datatables-checkval-rab-from-sdg.php");

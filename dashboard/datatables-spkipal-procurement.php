@@ -167,6 +167,7 @@ function getBadgeColor($remarks) {
                                                 <th>Kode Store</th>
                                                 <th>Nama Lahan</th>
                                                 <th>Lampiran WO Req IPAL</th>
+                                                <th>Nominal</th>
                                                 <th>Lampiran SPK IPAL</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
@@ -201,6 +202,7 @@ function getBadgeColor($remarks) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>
+                                                <td><?= $row['nominal_spkipal'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_spkwoipal_files = explode(",", $row['lamp_spkwoipal']); // Pisahkan nama file menjadi array
@@ -408,6 +410,7 @@ function getBadgeColor($remarks) {
                                                 <th>Kode Store</th>
                                                 <th>Nama Lahan</th>
                                                 <th>Lampiran WO Req IPAL</th>
+                                                <th>Nominal</th>
                                                 <th>Lampiran SPK IPAL</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>

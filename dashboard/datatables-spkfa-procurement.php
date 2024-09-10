@@ -174,6 +174,7 @@ function getBadgeColor($remarks) {
                                                 <th>Debit Air Sumur</th>
                                                 <th>Debit Air PDAM</th>
                                                 <th>Nomor ID PDAM</th>
+                                                <th>Nominal</th>
                                                 <th>Lampiran SPK</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
@@ -258,6 +259,7 @@ function getBadgeColor($remarks) {
                                                 <td><?= $row['debit_airsumur'] ?></td>
                                                 <td><?= $row['debit_airpdam'] ?></td>
                                                 <td><?= $row['id_pdam'] ?></td>
+                                                <td><?= $row['nominal_spkfa'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_spkwofilterair_files = explode(",", $row['lamp_spkwofilterair']); // Pisahkan nama file menjadi array
@@ -473,6 +475,7 @@ function getBadgeColor($remarks) {
                                                 <th>Debit Air Sumur</th>
                                                 <th>Debit Air PDAM</th>
                                                 <th>Nomor ID PDAM</th>
+                                                <th>Nominal</th>
                                                 <th>Lampiran SPK</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>

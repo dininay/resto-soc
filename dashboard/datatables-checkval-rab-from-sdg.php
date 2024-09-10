@@ -244,6 +244,7 @@ function getBadgeColor($remarks) {
                                                 <th>Status VD</th>
                                                 <th>Lampiran VD</th>
                                                 <th>Status Final PSM & Table Sewa</th>
+                                                <th>Nominal</th>
                                                 <th>Lampiran SPK RAB</th>
                                                 <th>Status Procurement</th>
                                                 <th>Catatan TAF</th>
@@ -372,6 +373,7 @@ function getBadgeColor($remarks) {
                                                         <?php echo $row['confirm_bod']; ?>
                                                     </span>
                                                 </td>
+                                                <td><?= $row['nominal_spkkonstruksi'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_spkrabcons_files = explode(",", $row['lamp_spkrabcons']); // Pisahkan nama file menjadi array
@@ -586,6 +588,7 @@ function getBadgeColor($remarks) {
                                                 <th>Status VD</th>
                                                 <th>Lampiran VD</th>
                                                 <th>Status Final PSM & Table Sewa</th>
+                                                <th>Nominal</th>
                                                 <th>Lampiran SPK RAB</th>
                                                 <th>Status Procurement</th>
                                                 <th>Catatan TAF</th>

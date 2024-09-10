@@ -7,6 +7,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     // Ambil nilai tgl_berlaku dan penanggungjawab dari formulir
     $id = $_POST['id'];
+    $nominal_spkfa = $_POST['nominal_spkfa'];
     // Periksa apakah kunci 'lampiran' ada dalam $_FILES
     $lamp_spkwofilterair = "";
 
@@ -44,7 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Update data di database
-    $sql = "UPDATE socdate_sdg SET lamp_spkwofilterair = '$lamp_spkwofilterair' WHERE id = '$id'";
+    $sql = "UPDATE socdate_sdg SET lamp_spkwofilterair = '$lamp_spkwofilterair', nominal_spkfa = '$nominal_spkfa' WHERE id = '$id'";
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
         header("Location:  " . $base_url . "/datatables-spkfa-procurement.php");

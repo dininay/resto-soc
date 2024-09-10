@@ -10,6 +10,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $alamat = $_POST["alamat"];
     $nohp = $_POST["nohp"];
     $detail = $_POST["detail"];
+    $dealnego_konstruksi = $_POST["dealnego_konstruksi"];
     // $lamp_vendor = $_POST['lamp_vendor'];
     $id = $_POST['id'];
 
@@ -168,7 +169,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // }
 
     // Update data di database
-    $sql = "UPDATE procurement SET nama_vendor = '$nama_vendor', alamat = '$alamat', nohp = '$nohp', detail = '$detail', lamp_profil = '$lamp_profil', lamp_vendor = '$lamp_vendor' WHERE id = '$id'";
+    $sql = "UPDATE procurement SET nama_vendor = '$nama_vendor', alamat = '$alamat', nohp = '$nohp', detail = '$detail', lamp_profil = '$lamp_profil', dealnego_konstruksi = '$dealnego_konstruksi', lamp_vendor = '$lamp_vendor' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
         header("Location: " . $base_url . "/datatables-tender.php");

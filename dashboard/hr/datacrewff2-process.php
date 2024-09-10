@@ -40,12 +40,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         // Jika status_approvlegalvd diubah menjadi Approve
         if ($status_lolos == 'Siap Training') {
             $lolos_date = date("Y-m-d H:i:s");
-            $status_oje = "In Process";
-
             // Query untuk memperbarui status status_lolos di tabel draft
-            $sql_update = "UPDATE crew2 SET status_lolos = ?, lolos_date = ?, status_oje = ? WHERE id = ?";
+            $sql_update = "UPDATE crew2 SET status_lolos = ?, lolos_date = ? WHERE id = ?";
             $stmt_update = $conn->prepare($sql_update);
-            $stmt_update->bind_param("sssi", $status_lolos, $lolos_date, $status_oje, $id);
+            $stmt_update->bind_param("ssi", $status_lolos, $lolos_date, $id);
             $stmt_update->execute();
 
             if ($stmt_update->affected_rows > 0) {

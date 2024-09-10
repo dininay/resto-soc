@@ -6,6 +6,7 @@ include "../../koneksi.php";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     $id = $_POST['id'];
+    $nominal_spkurugan = $_POST['nominal_spkurugan'];
             // Periksa apakah kunci 'lampiran' ada dalam $_FILES
     $lamp_spkurugan = "";
 
@@ -32,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Update data di database
-    $sql = "UPDATE procurement SET lamp_spkurugan = '$lamp_spkurugan' WHERE id = '$id'";
+    $sql = "UPDATE procurement SET lamp_spkurugan = '$lamp_spkurugan', nominal_spkurugan = '$nominal_spkurugan' WHERE id = '$id'";
 
     if ($conn->query($sql) === TRUE) {
         header("Location: " . $base_url . "/datatables-checkval-rab-urugan.php");

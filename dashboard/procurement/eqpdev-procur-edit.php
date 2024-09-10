@@ -6,6 +6,7 @@ include "../../koneksi.php";
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Ambil nilai dari formulir
     $id = $_POST['id'];
+    $nominal_spkeqp = $_POST['nominal_spkeqp'];
     $kode_lahan = $_POST['kode_lahan'];
     
     $lamp_spkeqpdev = "";
@@ -37,9 +38,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $lamp_spkeqpdev = isset($_POST['existing_files']) ? $_POST['existing_files'] : "";
     }
     // Update data di database untuk tabel resto
-    $sql1 = "UPDATE equipment SET lamp_spkeqpdev = ? WHERE id = ?";
+    $sql1 = "UPDATE equipment SET lamp_spkeqpdev = ?, nominal_spkeqp = ? WHERE id = ?";
     $stmt1 = $conn->prepare($sql1);
-    $stmt1->bind_param("si", $lamp_spkeqpdev, $id);
+    $stmt1->bind_param("ssi", $lamp_spkeqpdev, $nominal_spkeqp, $id);
 
     // Execute both queries
     if ($stmt1->execute()) {

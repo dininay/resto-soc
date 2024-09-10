@@ -102,7 +102,6 @@ if (isset($_GET['id'])) {
                                                 <th>Alamat</th>
                                                 <th>Usia</th>
                                                 <th>Status Lolos</th>
-                                                <th>Status OJE</th>
                                                 <th>Action</th>
                                             </tr>
                                         </thead>
@@ -137,30 +136,7 @@ if (isset($_GET['id'])) {
                                                     <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
                                                         <?php echo $row['status_lolos']; ?>
                                                     </span>
-                                                </td>  
-                                                <td>
-                                                    <?php
-                                                        // Tentukan warna badge berdasarkan status approval owner
-                                                        $badge_color = '';
-                                                        switch ($row['status_oje']) {
-                                                            case 'Lolos':
-                                                                $badge_color = 'success';
-                                                                break;
-                                                            case 'Tidak Lolos':
-                                                                $badge_color = 'danger';
-                                                                break;
-                                                            case 'In Process':
-                                                                $badge_color = 'primary';
-                                                                break;
-                                                            default:
-                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
-                                                                break;
-                                                        }
-                                                    ?>
-                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_oje']; ?>
-                                                    </span>
-                                                </td>    
+                                                </td>     
                                                 <td>
                                                 <!-- Tombol Edit -->
                                                     <button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="<?= $row['id'] ?>" data-status="<?= $row['status_lolos'] ?>">
@@ -240,7 +216,6 @@ if (isset($_GET['id'])) {
                                                 <th>Alamat</th>
                                                 <th>Usia</th>
                                                 <th>Status Lolos</th>                                                
-                                                <th>Status OJE</th>
                                                 <th>Action</th>
                                             </tr>
                                         </tfoot>
