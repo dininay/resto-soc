@@ -11,6 +11,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sla_consact = $_POST['sla_consact']; // Assuming this value is posted from form
     $obstacle_kom = $_POST['obstacle_kom']; // Assuming this value is posted from form
     $note_kom = isset($_POST["note_kom"]) ? $_POST["note_kom"] : null;// Assuming this value is posted from form
+    $pm_cons = $_POST['pm_cons'];
+    $sm_cons = $_POST['sm_cons'];
+    $pm_ppa = $_POST['pm_ppa'];
+    $cons_manager = $_POST['cons_manager'];
+    $site_inspect = $_POST['site_inspect'];
+    $tgl_agendastkons = $_POST['tgl_agendastkons'];
     $status_consact = "In Process";
     $lamp_kom = "";
 
@@ -89,17 +95,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // }
 
     // Update data di database untuk tabel resto
-    $sql1 = "UPDATE resto SET lamp_kom = ?, start_konstruksi = ?, obstacle_kom = ?, note_kom = ?, lamp_obskom = ? WHERE id = ?";
+    $sql1 = "UPDATE resto SET lamp_kom = ?, start_konstruksi = ?, obstacle_kom = ?, note_kom = ?, lamp_obskom = ?, pm_cons = ?, sm_cons = ?, pm_ppa = ?, cons_manager = ?, site_inspect = ?, tgl_agendastkons = ? WHERE id = ?";
     $stmt1 = $conn->prepare($sql1);
-    $stmt1->bind_param("sssssi",$lamp_kom, $start_konstruksi, $obstacle_kom, $note_kom, $lamp_obskom, $id);
+    $stmt1->bind_param("sssssssssssi",$lamp_kom, $start_konstruksi, $obstacle_kom, $note_kom, $lamp_obskom, $pm_cons, $sm_cons, $pm_ppa, $cons_manager, $site_inspect, $tgl_agendastkons, $id);
     
-    $sql2 = "INSERT INTO sdg_pk (kode_lahan, sla_consact) VALUES (?,?)";
-    $stmt2 = $conn->prepare($sql2);
-    $stmt2->bind_param("ss", $kode_lahan, $sla_consact);
+    // Check if kode_lahan already exists in sdg_pk
+    $check_sql = "SELECT kode_lahan FROM sdg_pk WHERE kode_lahan = ?";
+    $stmt_check = $conn->prepare($check_sql);
+    $stmt_check->bind_param("s", $kode_lahan);
+    $stmt_check->execute();
+    $stmt_check->store_result();
 
-    // Execute both queries
-    if ($stmt1->execute() && $stmt2->execute()) {
-        header("Location:  " . $base_url . "/datatables-kom-sdgpk.php");
+    if ($stmt_check->num_rows == 0) {
+        // kode_lahan does not exist, proceed with insertion
+        $sql2 = "INSERT INTO sdg_pk (kode_lahan, sla_consact) VALUES (?, ?)";
+        $stmt2 = $conn->prepare($sql2);
+        $stmt2->bind_param("ss", $kode_lahan, $sla_consact);
+        $stmt2->execute();
+        $stmt2->close();
+    } else {
+        echo "Kode lahan already exists, skipping insertion.";
+    }
+
+    // Execute the update query for resto
+    if ($stmt1->execute()) {
+        header("Location: " . $base_url . "/datatables-kom-sdgpk.php");
         exit();
     } else {
         echo "Error: " . $stmt1->error;
@@ -107,7 +127,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Close statements
     $stmt1->close();
-    $stmt2->close();
+    $stmt_check->close();
 }
 
 // Menutup koneksi database

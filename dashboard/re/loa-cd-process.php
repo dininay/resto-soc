@@ -67,9 +67,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 $slavd_date = date('Y-m-d H:i:s', strtotime($start_date . ' + ' . $sla_negosiator_days . ' days'));
 
                 // Query untuk memperbarui status_approvloacd dan status_approvlegalvd
-                $sql = "UPDATE dokumen_loacd SET status_approvloacd = ?, status_approvlegalvd = CASE WHEN ? = 'Approve' THEN 'In Process' ELSE status_approvlegalvd END, start_date = ?, slavd_date = ? WHERE id = ?";
+                $sql = "UPDATE dokumen_loacd SET status_approvloacd = ?, start_date = ? WHERE id = ?";
                 $stmt = $conn->prepare($sql);
-                $stmt->bind_param("ssssi", $status_approvloacd, $status_approvloacd, $start_date, $slavd_date, $id);
+                $stmt->bind_param("ssi", $status_approvloacd, $start_date, $id);
                 $stmt->execute();
                 
                 // Ambil kode_lahan dari tabel dokumen_loacd

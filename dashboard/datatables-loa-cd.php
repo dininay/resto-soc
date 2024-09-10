@@ -7,9 +7,7 @@ $sql = "SELECT dokumen_loacd.*, land.kode_lahan, land.nama_lahan, land.lamp_land
         FROM dokumen_loacd
         INNER JOIN land ON dokumen_loacd.kode_lahan = land.kode_lahan
         INNER JOIN re ON dokumen_loacd.kode_lahan = re.kode_lahan
-        WHERE re.status_approvowner = 'Approve'
-          AND re.status_approvnego = 'Approve'
-          AND re.status_vl = 'Approve'";
+        WHERE dokumen_loacd.status_approvloacd IN ('In Process','Approve','Pending')";
 $result = $conn->query($sql);
 
 // Inisialisasi variabel $data dengan array kosong

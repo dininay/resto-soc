@@ -52,7 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
     try {
         $start_konstruksi = date("Y-m-d H:i:s");
 
-        if ($status_kom == 'Done') {
+        if ($status_kom == 'On Going Project') {
             // Query untuk memperbarui status_kom dan kom_date di tabel resto
             $sql_update = "UPDATE resto SET status_kom = ?, kom_date = ? WHERE id = ?";
             $stmt_update = $conn->prepare($sql_update);

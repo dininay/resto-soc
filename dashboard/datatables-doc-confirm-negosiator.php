@@ -390,7 +390,7 @@ $conn->close();
                                                     $work_start = '08:00';
                                                     $work_end = '17:00';
 
-                                                    if ($row['status_approvnego'] != "Approve" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                    if ($row['status_approvnego'] != "Approve") {
                                                         echo '<button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="'. $row['id'] .'" data-status="'.$row['status_approvnego'] .'">
                                                             <i class="nav-icon i-Book"></i>
                                                         </button>';

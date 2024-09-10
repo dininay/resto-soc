@@ -72,8 +72,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                         <p>You have 1 New Go Store Date Scheduled by BoD Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.</p>
                                         <p>Thank you for your prompt attention to this matter.</p>
                                         <p></p>
-                                        <p>Best regards,</p>
-                                        <p>Resto - SOC</p>
+                                        <p>Have a good day!</p>
                                     </div>
                                 </div>';
                                 $mail->AltBody = 'Dear Team,'

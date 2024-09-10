@@ -47,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
 
     try {
         // Query untuk memperbarui status_finallegal berdasarkan id
-        $sql_update = "UPDATE resto SET status_steqp = ?, steqp_date = ? WHERE id = ?";
+        $sql_update = "UPDATE equipment SET status_steqp = ?, steqp_date = ? WHERE id = ?";
         $stmt_update = $conn->prepare($sql_update);
         $stmt_update->bind_param("ssi", $status_steqp, $steqp_date, $id);
 
@@ -56,7 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             // Jika status_finallegal diubah menjadi Approve
             if ($status_steqp == 'Approve') {
                 // Update status_kom di tabel resto menjadi "In Process"
-                $sql_update_kom = "UPDATE resto SET status_steqp = ?, steqp_date = ? WHERE id = ?";
+                $sql_update_kom = "UPDATE equipment SET status_steqp = ?, steqp_date = ? WHERE id = ?";
                 $stmt_update_kom = $conn->prepare($sql_update_kom);
                 $stmt_update_kom->bind_param("ssi", $status_steqp, $steqp_date, $id);
                 $stmt_update_kom->execute();
@@ -160,7 +160,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             } elseif ($status_steqp == 'Pending') {
             
                 // Ambil kode_lahan dari tabel re
-                $sql_get_kode_lahan = "SELECT kode_lahan FROM resto WHERE id = ?";
+                $sql_get_kode_lahan = "SELECT kode_lahan FROM equipment WHERE id = ?";
                 $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
                 $stmt_get_kode_lahan->bind_param("i", $id);
                 $stmt_get_kode_lahan->execute();
@@ -169,7 +169,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 $stmt_get_kode_lahan->free_result();
     
                 // Query untuk memperbarui draft_legal, vl_date di tabel re dan memasukkan data ke dalam tabel hold_project
-                $sql_update_re = "UPDATE resto SET status_steqp = ?, steqp_date = ? WHERE id = ?";
+                $sql_update_re = "UPDATE equipment SET status_steqp = ?, steqp_date = ? WHERE id = ?";
                 $stmt_update_re = $conn->prepare($sql_update_re);
                 $stmt_update_re->bind_param("ssi", $status_steqp, $steqp_date, $id);
                 $stmt_update_re->execute();
@@ -188,7 +188,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 echo "Status berhasil diperbarui dan data ditahan.";
             } else {
                 // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_vl di tabel re
-                $sql = "UPDATE resto SET status_steqp = ?, steqp_date = ? WHERE id = ?";
+                $sql = "UPDATE equipment SET status_steqp = ?, steqp_date = ? WHERE id = ?";
                 $stmt = $conn->prepare($sql);
                 $stmt->bind_param("ssi", $status_steqp, $steqp_date, $id);
                 $stmt->execute();
@@ -211,7 +211,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             $conn->rollback();
             echo "Error: " . $sql_update . "<br>" . $conn->error;
         }
-        header("Location: ../datatables-st-eqp.php");
+        header("Location: ". $base_url ."/datatables-st-eqp.php");
         exit; // Pastikan tidak ada output lain setelah header redirect
     } catch (Exception $e) {
         // Rollback transaksi jika terjadi kesalahan

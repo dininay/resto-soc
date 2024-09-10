@@ -55,14 +55,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["kode_lahan"]) && isset
 }
 
 // Query untuk mengambil data dari tabel land
-$sql = "SELECT l.id, l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, l.status_approvre,
-o.status_approvlegalvd, o.lamp_loacd, o.status_approvloacd,  o.lamp_loacd, o.status_approvlegalvd, o.kode_store,
-e.status_approvowner, e.catatan_owner, e.status_approvlegal, e.catatan_legal, e.status_approvnego, e.catatan_nego, e.lamp_vl, e.status_vl, 
-t.lamp_draf, t.draft_legal, t.jadwal_psm, t.lamp_signpsm, t.confirm_nego, s.lamp_desainplan, s.confirm_sdgdesain, s.submit_legal, 
-c.status_obssdg, c.obstacle, c.lamp_legal, c.status_obslegal, k.all_progress, 
-b.jumlah, b.lamp_rab, b.confirm_sdgqs, v.nama, p.nama_vendor, v.lamp_profil, v.lamp_vendor, p.status_approvprocurement, 
-r.lamp_spk, r.sla_kom, r.status_spk, r.gostore_date, r.lamp_kom, r.start_konstruksi, r.status_kom,
-q.lamp_steqp, q.lamp_basteqp, q.status_steqp, r.lamp_stkonstruksi, r.status_stkonstruksi
+$sql = "SELECT 
+land.*,
+re.*,
+dokumen_loacd.*,
+draft.*,
+sdg_desain.*,
+sdg_rab.*,
+procurement.*,
+
 FROM land l
 LEFT JOIN sdg_desain s ON l.kode_lahan = s.kode_lahan
 LEFT JOIN draft t ON s.kode_lahan = t.kode_lahan
@@ -104,7 +105,27 @@ if ($result && $result->num_rows > 0) {
     <link href="../dist-assets/css/plugins/datatables.min.css" rel="stylesheet"  />
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/icofont/1.0.1/css/icofont.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">   
+    <style>
+        .hidden {
+            display: none;
+        }
+        
+
+        .small-column {
+            max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */
+            overflow: hidden; /* Memotong konten yang meluas */
+            text-overflow: ellipsis; /* Menampilkan elipsis jika konten terlalu panjang */
+            white-space: nowrap; /* Mencegah teks membungkus ke baris baru */
+        }
+
+        th, td {
+                white-space: nowrap;
+            }
+        table.dataTable {
+            border-collapse:  collapse!important;
+        }
+    </style>
 </head>
 
 <body class="text-left">
@@ -134,6 +155,162 @@ if ($result && $result->num_rows > 0) {
 									  <span class="flex-grow-1"></span>
                                     </p>
 								</div>
+                            
+							  <div class="table-responsive">
+                                    <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                <th>Inventory Code</th>
+                                                <th>Kode Store</th>
+                                                <th>Nama Lokasi</th>
+                                                <th>Lampiran Lahan</th>
+                                                <th>Status Approval Lahan BoD</th>
+                                                <th>Status Approval Negotiator</th>
+                                                <th>Lampiran VL</th>
+                                                <th>Status VL</th>
+                                                <th>Lampiran VL Signed</th>
+                                                <th>Lampiran LOA CD</th>
+                                                <th>Status LOA CD</th>
+                                                <th>Lampiran VD</th>
+                                                <th>Status VD</th>
+                                                <th>Lampiran VD Signed</th>
+                                                <th>Lampiran WO Design</th>
+                                                <th>Status SPK Design</th>
+                                                <th>Lampiran land Survey</th>
+                                                <th>Status Obstacle Design</th>
+                                                <th>Lampiran Obstacle</th>
+                                                <th>Status Obstacle Legal</th>
+                                                <th>Lampiran SDG Design Urugan</th>
+                                                <th>Status SDG Design Urugan</th>
+                                                <th>Lampiran SDG Design</th>
+                                                <th>Status SDG Design</th>
+                                                <th>Lampiran RAB Urugan</th>
+                                                <th>Status RAB Urugan</th>
+                                                <th>Lampiran RAB Konstruksi</th>
+                                                <th>Status RAB Konstruksi</th>
+                                                <th>Lampiran Profil Tender Urugan</th>
+                                                <th>Lampiran Pendukung Tender Urugan</th>
+                                                <th>Status Tender Urugan</th>
+                                                <th>Lampiran SPK Urugan</th>
+                                                <th>Status SPK Urugan</th>
+                                                <th>Lampiran Profil Tender Konstruksi</th>
+                                                <th>Lampiran Pendukung Tender Konstruksi</th>
+                                                <th>Status Tender Konstruksi</th>
+                                                <th>Lampiran SPK Konstruksi</th>
+                                                <th>Status SPK Konstruksi</th>
+                                                <th>Lampiran Kick Off Meeting</th>
+                                                <th>Status Kick Off Meeting</th>
+                                                <th>Lampiran ST Equipment</th>
+                                                <th>Status ST Equipment</th>
+                                                <th>Lampiran ST Kontraktor</th>
+                                                <th>Status ST Kontraktor</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        <?php foreach ($data as $row): ?>
+                                            <tr>
+                                                <td><?= $row['kode_lahan'] ?></td>
+                                                <td><?= $row['kode_store'] ?></td>
+                                                <td><?= $row['nama_lahan']?></td>
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_land_files = explode(",", $row['lamp_land']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_land'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_land_files as $file) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $file . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>          
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th>Inventory Code</th>
+                                                <th>Kode Store</th>
+                                                <th>Nama Lokasi</th>
+                                                <th>Lampiran Lahan</th>
+                                                <th>Status Approval Lahan BoD</th>
+                                                <th>Status Approval Negotiator</th>
+                                                <th>Lampiran VL</th>
+                                                <th>Status VL</th>
+                                                <th>Lampiran VL Signed</th>
+                                                <th>Lampiran LOA CD</th>
+                                                <th>Status LOA CD</th>
+                                                <th>Lampiran VD</th>
+                                                <th>Status VD</th>
+                                                <th>Lampiran VD Signed</th>
+                                                <th>Lampiran WO Design</th>
+                                                <th>Status SPK Design</th>
+                                                <th>Lampiran land Survey</th>
+                                                <th>Status Obstacle Design</th>
+                                                <th>Lampiran Obstacle</th>
+                                                <th>Status Obstacle Legal</th>
+                                                <th>Lampiran SDG Design Urugan</th>
+                                                <th>Status SDG Design Urugan</th>
+                                                <th>Lampiran SDG Design</th>
+                                                <th>Status SDG Design</th>
+                                                <th>Lampiran RAB Urugan</th>
+                                                <th>Status RAB Urugan</th>
+                                                <th>Lampiran RAB Konstruksi</th>
+                                                <th>Status RAB Konstruksi</th>
+                                                <th>Lampiran Profil Tender Urugan</th>
+                                                <th>Lampiran Pendukung Tender Urugan</th>
+                                                <th>Status Tender Urugan</th>
+                                                <th>Lampiran SPK Urugan</th>
+                                                <th>Status SPK Urugan</th>
+                                                <th>Lampiran Profil Tender Konstruksi</th>
+                                                <th>Lampiran Pendukung Tender Konstruksi</th>
+                                                <th>Status Tender Konstruksi</th>
+                                                <th>Lampiran SPK Konstruksi</th>
+                                                <th>Status SPK Konstruksi</th>
+                                                <th>Lampiran Kick Off Meeting</th>
+                                                <th>Status Kick Off Meeting</th>
+                                                <th>Lampiran ST Equipment</th>
+                                                <th>Status ST Equipment</th>
+                                                <th>Lampiran ST Kontraktor</th>
+                                                <th>Status ST Kontraktor</th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                    <!-- Modal Konfirmasi Hapus -->
+                                    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="deleteModalLabel">Konfirmasi Hapus Data</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    Apakah Anda yakin ingin menghapus data ini?
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                                                    <form method="POST" action="draft-sewa-delete.php">
+                                                        <input type="hidden" name="id" id="delete" value="">
+                                                        <button type="submit" class="btn btn-danger">Hapus</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                         </div>
                     </div>
                     <!-- end of col-->

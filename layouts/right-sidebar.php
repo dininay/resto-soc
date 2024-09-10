@@ -54,6 +54,16 @@ function getCountByStatus($conn, $table, $statusField, $statusValues) {
     return $row['count'];
 }
 
+
+// Set status value for different queries
+$statusValues = ["In Process", "In Revision", "In Design Revision", "", "Yes", "Pending In IT", "Pending In Procurement", "Pending In HRGA"];
+
+// Khusus untuk countissueit, hanya menghitung status "Pending In IT"
+$countissueitStatus = ["Pending In IT"];
+$countissueprocurStatus = ["Pending In Procurement"];
+$countissuehrgaStatus = ["Pending In HRGA"];
+
+
 $statusQueries = [
     //re
     'countland' => ['table' => 'land', 'field' => 'status_approvre'],
@@ -82,12 +92,14 @@ $statusQueries = [
 
     //sdg-design
     'countsurveylayout' => ['table' => 'sdg_desain', 'field' => 'status_obssdg'],
+    'countwodesign' => ['table' => 'sdg_desain', 'field' => 'submit_wo'],
     'counturugan' => ['table' => 'sdg_desain', 'field' => 'confirm_sdgurugan'],
     'countdesign' => ['table' => 'sdg_desain', 'field' => 'confirm_sdgdesain'],
 
     //sdg-qs
     'countraburugan' => ['table' => 'sdg_rab', 'field' => 'confirm_qsurugan'],
     'countrabdesign' => ['table' => 'sdg_rab', 'field' => 'confirm_sdgqs'],
+    'countrabjobadd' => ['table' => 'jobadd', 'field' => 'status_rabjobadd'],
 
     //procurement
     'countspkdesign' => ['table' => 'sdg_desain', 'field' => 'status_spkwo'],
@@ -98,6 +110,9 @@ $statusQueries = [
     'countspkfa' => ['table' => 'socdate_sdg', 'field' => 'status_procurspkwofa'],
     'countspkipal' => ['table' => 'socdate_sdg', 'field' => 'status_spkwoipal'],
     'countspkeqp' => ['table' => 'equipment', 'field' => 'status_eqpdevprocur'],
+    'countjobadd' => ['table' => 'jobadd', 'field' => 'status_jobadd'],
+    'countfinalspkcons' => ['table' => 'procurement', 'field' => 'status_finalspk'],
+    'countissueprocur' => ['table' => 'utensil', 'field' => 'status_utensil', 'statusValues' => $countissueprocurStatus],
 
     //sdg-pk
     'countkom' => ['table' => 'resto', 'field' => 'status_kom'],
@@ -107,6 +122,7 @@ $statusQueries = [
     'countmepipal' => ['table' => 'socdate_sdg', 'field' => 'status_sdgipal'],
     'countstkons' => ['table' => 'resto', 'field' => 'status_stkonstruksi'],
     'countissue' => ['table' => 'issue', 'field' => 'status_defect'],
+    'countwojobadd' => ['table' => 'jobadd', 'field' => 'status_wojobadd'],
 
     //equipment
     'counteqp' => ['table' => 'equipment', 'field' => 'status_steqp'],
@@ -120,6 +136,8 @@ $statusQueries = [
     'counthrff1' => ['table' => 'socdate_hr', 'field' => 'status_ff1'],
     'counthrff2' => ['table' => 'socdate_hr', 'field' => 'status_ff2'],
     'counthrff3' => ['table' => 'socdate_hr', 'field' => 'status_ff3'],
+    'counthrhot' => ['table' => 'socdate_hr', 'field' => 'status_hot'],
+    'countissuehrga' => ['table' => 'utensil', 'field' => 'status_utensil', 'statusValues' => $countissuehrgaStatus],
 
     //academy
     'countacaqc' => ['table' => 'socdate_hraca', 'field' => 'status_tmaca'],
@@ -135,6 +153,7 @@ $statusQueries = [
     //it
     'countit' => ['table' => 'socdate_it', 'field' => 'status_it'],
     'countitconfig' => ['table' => 'socdate_it', 'field' => 'status_itconfig'],
+    'countissueit' => ['table' => 'utensil', 'field' => 'status_utensil', 'statusValues' => $countissueitStatus],
 
     //marketing
     'countmarketing' => ['table' => 'socdate_marketing', 'field' => 'status_marketing'],
@@ -145,6 +164,7 @@ $statusQueries = [
     'counttafrab' => ['table' => 'procurement', 'field' => 'status_spkfat'],
     'counttafqris' => ['table' => 'socdate_fat', 'field' => 'status_fat'],
     'counttafpay' => ['table' => 'socdate_sdg', 'field' => 'status_tafpay'],
+    'counttafpaylistrik' => ['table' => 'socdate_sdg', 'field' => 'status_tafpaylistrik'],
 
     //ir
     'countir' => ['table' => 'socdate_ir', 'field' => 'status_ir'],
@@ -152,13 +172,12 @@ $statusQueries = [
 
     // Tambahkan query lainnya di sini
 ];
-
-$statusValue = ["In Process", "In Revision", "In Design Revision"];
 $results = [];
 
 // Hitung jumlah untuk setiap status field
 foreach ($statusQueries as $key => $query) {
-    $results[$key] = getCountByStatus($conn, $query['table'], $query['field'], $statusValue);
+    $statusForQuery = isset($query['statusValues']) ? $query['statusValues'] : $statusValues;
+    $results[$key] = getCountByStatus($conn, $query['table'], $query['field'], $statusForQuery);
 }
 
 // Tutup koneksi
@@ -188,11 +207,13 @@ $countrestoname = isset($results['countrestoname']) ? $results['countrestoname']
 $countnego = isset($results['countnego']) ? $results['countnego'] : 0;
 //sdg-design
 $countsurveylayout = isset($results['countsurveylayout']) ? $results['countsurveylayout'] : 0;
+$countwodesign = isset($results['countwodesign']) ? $results['countwodesign'] : 0;
 $counturugan = isset($results['counturugan']) ? $results['counturugan'] : 0;
 $countdesign = isset($results['countdesign']) ? $results['countdesign'] : 0;
 //sdg-rab
 $countraburugan = isset($results['countraburugan']) ? $results['countraburugan'] : 0;
 $countrabdesign = isset($results['countrabdesign']) ? $results['countrabdesign'] : 0;
+$countrabjobadd = isset($results['countrabjobadd']) ? $results['countrabjobadd'] : 0;
 //procurement
 $countspkdesign = isset($results['countspkdesign']) ? $results['countspkdesign'] : 0;
 $countspkurugan = isset($results['countspkurugan']) ? $results['countspkurugan'] : 0;
@@ -202,6 +223,9 @@ $counttendercons = isset($results['counttendercons']) ? $results['counttendercon
 $countspkfa = isset($results['countspkfa']) ? $results['countspkfa'] : 0;
 $countspkipal = isset($results['countspkipal']) ? $results['countspkipal'] : 0;
 $countspkeqp = isset($results['countspkeqp']) ? $results['countspkeqp'] : 0;
+$countjobadd = isset($results['countjobadd']) ? $results['countjobadd'] : 0;
+$countfinalspkcons = isset($results['countfinalspkcons']) ? $results['countfinalspkcons'] : 0;
+$countissueprocur = isset($results['countissueprocur']) ? $results['countissueprocur'] : 0;
 //sdg-pk
 $countkom = isset($results['countkom']) ? $results['countkom'] : 0;
 $countcons = isset($results['countcons']) ? $results['countcons'] : 0;
@@ -210,6 +234,7 @@ $countmeplistrik = isset($results['countmeplistrik']) ? $results['countmeplistri
 $countmepipal = isset($results['countmepipal']) ? $results['countmepipal'] : 0;
 $countstkons = isset($results['countstkons']) ? $results['countstkons'] : 0;
 $countissue = isset($results['countissue']) ? $results['countissue'] : 0;
+$countwojobadd = isset($results['countwojobadd']) ? $results['countwojobadd'] : 0;
 //equipment
 $counteqp = isset($results['counteqp']) ? $results['counteqp'] : 0;
 $countwoeqp = isset($results['countwoeqp']) ? $results['countwoeqp'] : 0;
@@ -221,6 +246,8 @@ $counthrff2 = isset($results['counthrff2']) ? $results['counthrff2'] : 0;
 $counthrff3 = isset($results['counthrff3']) ? $results['counthrff3'] : 0;
 $counthrfl = isset($results['counthrfl']) ? $results['counthrfl'] : 0;
 $counthrqc = isset($results['counthrqc']) ? $results['counthrqc'] : 0;
+$counthrhot = isset($results['counthrhot']) ? $results['counthrhot'] : 0;
+$countissuehrga = isset($results['countissuehrga']) ? $results['countissuehrga'] : 0;
 //academy
 $countkpt1 = isset($results['countkpt1']) ? $results['countkpt1'] : 0;
 $countkpt2 = isset($results['countkpt2']) ? $results['countkpt2'] : 0;
@@ -233,6 +260,7 @@ $countscmipal = isset($results['countscmipal']) ? $results['countscmipal'] : 0;
 //it
 $countit = isset($results['countit']) ? $results['countit'] : 0;
 $countitconfig = isset($results['countitconfig']) ? $results['countitconfig'] : 0;
+$countissueit = isset($results['countissueit']) ? $results['countissueit'] : 0;
 //marketing
 $countmarketing = isset($results['countmarketing']) ? $results['countmarketing'] : 0;
 //taf
@@ -241,6 +269,7 @@ $counttafpsm = isset($results['counttafpsm']) ? $results['counttafpsm'] : 0;
 $counttafrab = isset($results['counttafrab']) ? $results['counttafrab'] : 0;
 $counttafqris = isset($results['counttafqris']) ? $results['counttafqris'] : 0;
 $counttafpay = isset($results['counttafpay']) ? $results['counttafpay'] : 0;
+$counttafpaylistrik = isset($results['counttafpaylistrik']) ? $results['counttafpaylistrik'] : 0;
 //ir
 $countir = isset($results['countir']) ? $results['countir'] : 0;
 ?>
@@ -291,7 +320,7 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                     <?php endif; ?>
                     <!-- RE Head -->
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "Real-Estate") : ?>
-                    <li class="nav-item <?php echo ($current_page == 'datatables-land-sourcing' || $current_page == 'datatables-validasi-lahan' || $current_page == 'datatables-draft-sewa-legal'  || $current_page == 'datatables-loa-cd' || $current_page == 'datatables-validasi-data'|| $current_page == 'datatables-bussiness-planning'
+                    <li class="nav-item <?php echo ($current_page == 'datatables-land-sourcing' || $current_page == 'datatables-potensi-masalah-re' || $current_page == 'datatables-validasi-lahan' || $current_page == 'datatables-draft-sewa-legal'  || $current_page == 'datatables-loa-cd' || $current_page == 'datatables-validasi-data'|| $current_page == 'datatables-bussiness-planning'
                     || $current_page == 'datatables-submit-to-owner') ? 'active' : ''; ?>" data-item="uikits">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Library"></i>
@@ -313,7 +342,7 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
 
                     <!-- Legal Head -->
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "Legal") : ?>
-                    <li class="nav-item <?php echo ($current_page == 'datatables-validasi-lahan-legal' || $current_page == 'datatables-checkval-legal'|| $current_page == 'datatables-sign-psm-legal'|| $current_page == 'datatables-sp-submit-legal'|| $current_page == 'datatables-release-doc-legal' || $current_page == 'datatables-design-legal' || $current_page == 'datatables-valdoc-legal'|| $current_page == 'datatables-validasi-sp' || $current_page == 'datatables-obstacle-legal'|| $current_page == 'datatables-wovl'|| $current_page == 'datatables-wovd'|| $current_page == 'datatables-spk-legal'|| $current_page == 'datatables-mou-parkir'  || $current_page == 'datatables-resto-name' || $current_page == 'datatables-kondisi-lahan') ? 'active' : ''; ?>" data-item="extrakits">
+                    <li class="nav-item <?php echo ($current_page == 'datatables-validasi-lahan-legal' || $current_page == 'datatables-potensi-masalah-legal' || $current_page == 'datatables-checkval-legal'|| $current_page == 'datatables-sign-psm-legal'|| $current_page == 'datatables-sp-submit-legal'|| $current_page == 'datatables-release-doc-legal' || $current_page == 'datatables-design-legal' || $current_page == 'datatables-valdoc-legal'|| $current_page == 'datatables-validasi-sp' || $current_page == 'datatables-obstacle-legal'|| $current_page == 'datatables-wovl'|| $current_page == 'datatables-wovd'|| $current_page == 'datatables-spk-legal'|| $current_page == 'datatables-mou-parkir'  || $current_page == 'datatables-resto-name' || $current_page == 'datatables-kondisi-lahan') ? 'active' : ''; ?>" data-item="extrakits">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Suitcase"></i>
                             <span class="nav-text">Legal</span>
@@ -348,7 +377,7 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
 
                     <!-- SDG QS Head -->
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "SDG-QS") : ?>
-                    <li class="nav-item <?php echo ($current_page == 'datatables-data-picture' || $current_page == 'datatables-rab' || $current_page == 'datatables-rab-urugan' || $current_page == 'datatables-validation-rab') ? 'active' : ''; ?>" data-item="sessions">
+                    <li class="nav-item <?php echo ($current_page == 'datatables-data-picture' || $current_page == 'datatables-potensi-masalah-sdg-qs' || $current_page == 'datatables-rab' || $current_page == 'datatables-rab-urugan' || $current_page == 'datatables-rab-tambahkurang'|| $current_page == 'datatables-validation-rab') ? 'active' : ''; ?>" data-item="sessions">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Administrator"></i>
                             <span class="nav-text">SDG QS</span>
@@ -359,8 +388,8 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
 
                     <!-- Procurement Head -->
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "Procurement") : ?>
-                    <li class="nav-item <?php echo ($current_page == 'datatables-checkval-rab-from-sdg' || $current_page == 'datatables-checkval-wo-from-sdg' || $current_page == 'datatables-spkfa-procurement' || $current_page == 'datatables-checkval-rab-urugan' || $current_page == 'datatables-tender-urugan' ||  $current_page == 'datatables-procurement' || $current_page == 'datatables-vendor' || $current_page == 'datatables-spkipal-procurement' || 
-                    $current_page == 'datatables-tender'|| $current_page == 'datatables-spk-sdgpk'|| $current_page == 'datatables-eqpdev-procur') ? 'active' : ''; ?>" data-item="others">
+                    <li class="nav-item <?php echo ($current_page == 'datatables-checkval-rab-from-sdg' || $current_page == 'datatables-checkval-wo-from-sdg' || $current_page == 'datatables-spkfa-procurement' || $current_page == 'datatables-checkval-rab-urugan' || $current_page == 'datatables-tender-urugan' ||  $current_page == 'datatables-procurement' || $current_page == 'datatables-vendor' || $current_page == 'datatables-spkipal-procurement' || $current_page == 'datatables-tambahkurang'||$current_page == 'datatables-final-spkcons'||
+                    $current_page == 'datatables-tender'|| $current_page == 'datatables-spk-sdgpk'|| $current_page == 'datatables-eqpdev-procur'  || $current_page == 'datatables-issue-urgent-procur' || strpos($current_page, 'datatables-data-procurutensil')!== false) ? 'active' : ''; ?>" data-item="others">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Double-Tap"></i>
                             <span class="nav-text">Procurement</span>
@@ -371,7 +400,7 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
 
                     <!-- SDG PK Head -->
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "SDG-Project") : ?>
-                    <li class="nav-item <?php echo ($current_page == 'datatables-kom-sdgpk' || $current_page == 'datatables-monitoring-op'|| $current_page == 'datatables-construction-act-vendor'|| $current_page == 'datatables-kom-schedule'|| 
+                    <li class="nav-item <?php echo ($current_page == 'datatables-kom-sdgpk' || $current_page == 'datatables-potensi-masalah-sdg-project' || $current_page == 'datatables-monitoring-op'|| $current_page == 'datatables-construction-act-vendor'|| $current_page == 'datatables-kom-schedule'|| strpos($current_page, 'sdgpk-rto-edit-form') !== false || strpos($current_page, 'sdgpk-rto-ipal-edit-form') !== false || strpos($current_page, 'sdgpk-rto-listrik-edit-form') !== false || $current_page == 'datatables-wo-tambahkurang'||
                     $current_page == 'datatables-st-konstruksi'|| $current_page == 'datatables-sdgpk-rto' || $current_page == 'datatables-sdgpk-rto-listrik' || $current_page == 'datatables-sdgpk-rto-ipal' || $current_page == 'datatables-sdgpk-issue') ? 'active' : ''; ?>" data-item="datatables">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-File-Horizontal-Text"></i>
@@ -383,8 +412,8 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
 
                     <!-- SDG EQP Head -->
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "SDG-Equipment") : ?>
-                    <li class="nav-item <?php echo ( $current_page == 'datatables-st-eqp'  || $current_page == 'datatables-sdgpk-eqp-rto'  || $current_page == 'datatables-eqp-delivery' || $current_page == 'datatables-eqp-site' || $current_page == 'datatables-wo-eqp'
-                    ) ? 'active' : ''; ?>" data-item="eqp">
+                    <li class="nav-item <?php echo ( $current_page == 'datatables-st-eqp'  || $current_page == 'datatables-sdgpk-eqp-rto'  || $current_page == 'datatables-eqp-delivery' || $current_page == 'datatables-eqp-site' || $current_page == 'datatables-wo-eqp'  || strpos($current_page, 'eqp-edit-form') !== false  || strpos($current_page, 'eqpdev-edit-form') !== false  || strpos($current_page, 'eqpsite-edit-form') !== false
+                     || strpos($current_page, 'eqp-wo-edit-form') !== false) ? 'active' : ''; ?>" data-item="eqp">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Bell1"></i>
                             <span class="nav-text">SDG EQP</span>
@@ -407,7 +436,7 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                     <!-- HR Head -->
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "HR") : ?>
                     <li class="nav-item <?php echo ($current_page == 'datatables-hr-qs' || $current_page == 'datatables-hr-fl' || $current_page == 'datatables-hr-fulfillment' || $current_page == 'datatables-data-ff2' || $current_page == 'datatables-data-ff3' || strpos($current_page, 'datatables-data-ff1')!== false  || strpos($current_page, 'datatables-data-ff2')!== false  || strpos($current_page, 'datatables-data-ff3')!== false || $current_page == 'datatables-hr-fulfillment-2' || $current_page == 'datatables-hr-fulfillment-3' 
-                    || $current_page == 'datatables-hr-hot'  || strpos($current_page, 'datatables-data-qs')!== false  || strpos($current_page, 'datatables-data-fl')!== false) ? 'active' : ''; ?>" data-item="hr">
+                    || $current_page == 'datatables-hr-hot'  || strpos($current_page, 'datatables-data-qs')!== false  || strpos($current_page, 'datatables-data-fl')!== false || $current_page == 'datatables-ir' || strpos($current_page, 'ir-edit-form') !== false  || $current_page == 'datatables-issue-urgent-hrga' || strpos($current_page, 'datatables-data-hrgautensil')!== false) ? 'active' : ''; ?>" data-item="hr">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-File-Clipboard-Text--Image"></i>
                             <span class="nav-text">HR</span>
@@ -440,7 +469,7 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
 
                     <!-- IT Head -->
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "IT") : ?>
-                    <li class="nav-item <?php echo ($current_page == 'datatables-it' || $current_page == 'datatables-it-config') ? 'active' : ''; ?>" data-item="it">
+                    <li class="nav-item <?php echo ($current_page == 'datatables-it' || $current_page == 'datatables-it-config' || $current_page == 'datatables-issue-urgent-it' || strpos($current_page, 'datatables-data-itutensil')!== false) ? 'active' : ''; ?>" data-item="it">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Width-Window"></i>
                             <span class="nav-text">IT</span>
@@ -462,7 +491,7 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
 
                     <!-- FAT Head -->
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "TAF") : ?>
-                    <li class="nav-item <?php echo ($current_page == 'datatables-fat' || $current_page == 'datatables-review-rab-urugan' || $current_page == 'datatables-tender-fat' || $current_page == 'datatables-spk-fat' || $current_page == 'datatables-sign-psm-fat' || $current_page == 'datatables-tafpay-listrikair' || $current_page =='datatables-review-wo-from-sdg' || $current_page == 'datatables-review-spkfa-procurement' || $current_page == 'datatables-review-rab-from-sdg' || $current_page == 'datatables-review-spkipal-procurement' || $current_page == 'datatables-review-spkeqp' || $current_page == 'datatables-kode-store-taf') ? 'active' : ''; ?>" data-item="fat">
+                    <li class="nav-item <?php echo ($current_page == 'datatables-fat' || $current_page == 'datatables-review-rab-urugan' || $current_page == 'datatables-tender-fat' || $current_page == 'datatables-spk-fat' || $current_page == 'datatables-sign-psm-fat' || $current_page == 'datatables-tafpay-listrikair' || $current_page == 'datatables-tafpay-listrik' || $current_page =='datatables-review-wo-from-sdg' || $current_page == 'datatables-review-spkfa-procurement' || $current_page == 'datatables-review-rab-from-sdg' || $current_page == 'datatables-review-spkipal-procurement' || $current_page == 'datatables-review-spkeqp' || $current_page == 'datatables-kode-store-taf') ? 'active' : ''; ?>" data-item="fat">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Cursor-Click"></i>
                             <span class="nav-text">FAT</span>
@@ -472,7 +501,7 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                     <?php endif; ?>
 
                     <!-- IR Head -->
-                    <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "IR") : ?>
+                    <!-- <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "IR") : ?>
                     <li class="nav-item <?php echo ($current_page == 'datatables-ir') ? 'active' : ''; ?>" data-item="ir">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Split-Horizontal-2-Window"></i>
@@ -480,7 +509,7 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         </a>
                         <div class="triangle"></div>
                     </li>
-                    <?php endif; ?>
+                    <?php endif; ?> -->
                 </ul>
             </div>
             <div class="sidebar-left-secondary rtl-ps-none" data-perfect-scrollbar data-suppress-scroll-x="true">
@@ -516,13 +545,13 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         <li class="nav-item <?php echo $current_page == 'datatables-soc-date' ? 'active' : ''; ?>">
                             <a href="datatables-soc-date.php">
                                 <i class="nav-icon i-Width-Window"></i>
-                                <span class="item-name mr-2">In Progress Tracking</span>
+                                <span class="item-name mr-2">In Preparation Tracking</span>
                             </a>
                         </li>			
                         <li class="nav-item <?php echo $current_page == 'datatables-soc-date-act' ? 'active' : ''; ?>">
                             <a href="datatables-soc-date-act.php">
                                 <i class="nav-icon i-Speach-Bubble-3"></i>
-                                <span class="item-name mr-2">In Preparation Tracking</span>
+                                <span class="item-name mr-2">In Progress Tracking</span>
                             </a>
                         </li>		
                         <li class="nav-item <?php echo $current_page == 'datatables-soc-date-hold' ? 'active' : ''; ?>">
@@ -607,6 +636,12 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                             <span class="badge <?php echo ($countfinalpsm > 0) ? 'badge-danger' : 'badge-success'; ?>">
                                 <?php echo $countfinalpsm > 0 ? $countfinalpsm : '0'; ?>
                             </span>
+                            </a>
+                        </li>
+                        <li class="nav-item <?php echo $current_page == 'datatables-potensi-masalah-re' ? 'active' : ''; ?>">
+                            <a href="datatables-potensi-masalah-re.php">
+                                <i class="nav-icon i-Line-Chart-2"></i>
+                                <span class="item-name mr-2">List Potential Problems</span>
                             </a>
                         </li>
                     </ul>
@@ -708,6 +743,12 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                             </span>
                             </a>
                         </li>
+                        <li class="nav-item <?php echo $current_page == 'datatables-potensi-masalah-legal' ? 'active' : ''; ?>">
+                            <a href="datatables-potensi-masalah-legal.php">
+                                <i class="nav-icon i-Line-Chart-2"></i>
+                                <span class="item-name mr-2">List Potential Problems</span>
+                            </a>
+                        </li>
                         <li class="nav-item <?php echo $current_page == 'datatables-design-legal' ? 'active' : ''; ?>">
                             <a href="datatables-design-legal.php">
                                 <i class="nav-icon i-Tag-2"></i>
@@ -780,7 +821,7 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         <li class="nav-item <?php echo $current_page == 'datatables-doc-confirm-negosiator' ? 'active' : ''; ?>">
                             <a href="datatables-doc-confirm-negosiator.php">
                                 <i class="nav-icon i-Add-File"></i>
-                                <span class="item-name mr-2">Doc Receipt Confirm Owner & Legal Confirm</span>
+                                <span class="item-name mr-2">Commercial Negotiation</span>
                             <span class="badge <?php echo ($countnego > 0) ? 'badge-danger' : 'badge-success'; ?>">
                                 <?php echo $countnego > 0 ? $countnego : '0'; ?>
                             </span>
@@ -823,6 +864,9 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                             <a href="datatables-submit-wo.php">
                                 <i class="nav-icon i-Email"></i>
                                 <span class="item-name mr-2">Submit WO Design</span>
+                            <span class="badge <?php echo ($countwodesign > 0) ? 'badge-danger' : 'badge-success'; ?>">
+                                <?php echo $countwodesign > 0 ? $countwodesign : '0'; ?>
+                            </span>
                             </a>
                         </li>
                         <li class="nav-item <?php echo $current_page == 'datatables-obstacle-sdg' ? 'active' : ''; ?>">
@@ -885,6 +929,21 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                             </span>
                             </a>
                         </li>
+                            <li class="nav-item <?php echo $current_page == 'datatables-rab-tambahkurang' ? 'active' : ''; ?>">
+                                <a href="datatables-rab-tambahkurang.php">
+                                    <i class="nav-icon i-Width-Window"></i>
+                                    <span class="item-name mr-2">RAB Job Add Less</span>
+                                <span class="badge <?php echo ($countrabjobadd > 0) ? 'badge-danger' : 'badge-success'; ?>">
+                                    <?php echo $countrabjobadd > 0 ? $countrabjobadd : '0'; ?>
+                                </span>
+                                </a>
+                            </li>
+                        <li class="nav-item <?php echo $current_page == 'datatables-potensi-masalah-sdg-qs' ? 'active' : ''; ?>">
+                            <a href="datatables-potensi-masalah-sdg-qs.php">
+                                <i class="nav-icon i-Line-Chart-2"></i>
+                                <span class="item-name mr-2">List Potential Problems</span>
+                            </a>
+                        </li>
                         <!-- <li class="nav-item <?php echo $current_page == 'datatables-validation-rab' ? 'active' : ''; ?>">
                             <a href="datatables-validation-rab.php">
                                 <i class="nav-icon i-Medal-2"></i>
@@ -945,6 +1004,24 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                             </span>
                             </a>
                         </li>
+                        <li class="nav-item <?php echo $current_page == 'datatables-final-spkcons' ? 'active' : ''; ?>">
+                            <a href="datatables-final-spkcons.php">
+                                <i class="nav-icon i-Loading-2"></i>
+                                <span class="item-name mr-2">Final SPK Construction</span>
+                            <span class="badge <?php echo ($countfinalspkcons > 0) ? 'badge-danger' : 'badge-success'; ?>">
+                                <?php echo $countfinalspkcons > 0 ? $countfinalspkcons : '0'; ?>
+                            </span>
+                            </a>
+                        </li>
+                        <li class="nav-item <?php echo $current_page == 'datatables-tambahkurang' ? 'active' : ''; ?>">
+                                <a href="datatables-tambahkurang.php">
+                                    <i class="nav-icon i-Width-Window"></i>
+                                    <span class="item-name mr-2">SPK Job Add Less</span>
+                                <span class="badge <?php echo ($countjobadd > 0) ? 'badge-danger' : 'badge-success'; ?>">
+                                    <?php echo $countjobadd > 0 ? $countjobadd : '0'; ?>
+                                </span>
+                                </a>
+                            </li>
                         <li class="nav-item <?php echo $current_page == 'datatables-spkfa-procurement' ? 'active' : ''; ?>">
                             <a href="datatables-spkfa-procurement.php">
                                 <i class="nav-icon i-Email"></i>
@@ -996,6 +1073,15 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                                 <span class="item-name mr-2">SPK List</span>
                             </a>
                         </li>
+                        <li class="nav-item <?php echo ($current_page == 'datatables-issue-urgent-procur' || strpos($current_page, 'datatables-data-procurutensil')!== false) ? 'active' : ''; ?>">
+                            <a href="datatables-issue-urgent-procur.php">
+                                <i class="nav-icon i-Email"></i>
+                                <span class="item-name mr-2">Issue Urgent</span>
+                                <span class="badge <?php echo ($countissueprocur > 0) ? 'badge-danger' : 'badge-success'; ?>">
+                                    <?php echo $countissueprocur > 0 ? $countissueprocur : '0'; ?>
+                                </span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
                 <!-- SDG PK -->
@@ -1011,6 +1097,12 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                                 <span class="item-name mr-2">Scheduling Kick Off Meeting Construction</span>
                             </a>
                         </li> -->
+                        <li class="nav-item <?php echo $current_page == 'datatables-potensi-masalah-sdg-project' ? 'active' : ''; ?>">
+                            <a href="datatables-potensi-masalah-sdg-project.php">
+                                <i class="nav-icon i-Line-Chart-2"></i>
+                                <span class="item-name mr-2">List Potential Problems</span>
+                            </a>
+                        </li>
                         <li class="nav-item <?php echo $current_page == 'datatables-kom-sdgpk' ? 'active' : ''; ?>">
                             <a href="datatables-kom-sdgpk.php">
                                 <i class="nav-icon i-Speach-Bubble-3"></i>
@@ -1035,7 +1127,16 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                                 <span class="item-name mr-2">Construction Activity by Vendor per Month</span>
                             </a>
                         </li>
-                        <li class="nav-item <?php echo $current_page == 'datatables-sdgpk-rto' ? 'active' : ''; ?>">
+                            <li class="nav-item <?php echo $current_page == 'datatables-wo-tambahkurang' ? 'active' : ''; ?>">
+                                <a href="datatables-wo-tambahkurang.php">
+                                    <i class="nav-icon i-Width-Window"></i>
+                                    <span class="item-name mr-2">WO Job Add Less</span>
+                                <span class="badge <?php echo ($countwojobadd > 0) ? 'badge-danger' : 'badge-success'; ?>">
+                                    <?php echo $countwojobadd > 0 ? $countwojobadd : '0'; ?>
+                                </span>
+                                </a>
+                            </li>
+                        <li class="nav-item <?php echo ($current_page == 'datatables-sdgpk-rto' || strpos($current_page, 'sdgpk-rto-edit-form') !== false) ? 'active' : ''; ?>">
                             <a href="datatables-sdgpk-rto.php">
                                 <i class="nav-icon i-Clock-4"></i>
                                 <span class="item-name mr-2">MEP - Sumber Air</span>
@@ -1044,7 +1145,7 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                             </span>
                             </a>
                         </li>
-                        <li class="nav-item <?php echo $current_page == 'datatables-sdgpk-rto-listrik' ? 'active' : ''; ?>">
+                        <li class="nav-item <?php echo ($current_page == 'datatables-sdgpk-rto-listrik' || strpos($current_page, 'sdgpk-rto-listrik-edit-form') !== false) ? 'active' : ''; ?>">
                             <a href="datatables-sdgpk-rto-listrik.php">
                                 <i class="nav-icon i-Clock-4"></i>
                                 <span class="item-name mr-2">MEP - Listrik Evaluation</span>
@@ -1053,7 +1154,7 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                             </span>
                             </a>
                         </li>
-                        <li class="nav-item <?php echo $current_page == 'datatables-sdgpk-rto-ipal' ? 'active' : ''; ?>">
+                        <li class="nav-item <?php echo ($current_page == 'datatables-sdgpk-rto-ipal' || strpos($current_page, 'sdgpk-rto-ipal-edit-form') !== false) ? 'active' : ''; ?>">
                             <a href="datatables-sdgpk-rto-ipal.php">
                                 <i class="nav-icon i-Clock-4"></i>
                                 <span class="item-name mr-2">MEP - IPAL Evaluation</span>
@@ -1089,16 +1190,7 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         <p>SDG Equipment Division</p>
                     </header>
                     <ul class="childNav" data-parent="">
-                        <li class="nav-item <?php echo $current_page == 'datatables-st-eqp' ? 'active' : ''; ?>">
-                            <a href="datatables-st-eqp.php">
-                                <i class="nav-icon i-Crop-2"></i>
-                                <span class="item-name mr-2">ST Equipment</span>
-                            <span class="badge <?php echo ($counteqp > 0) ? 'badge-danger' : 'badge-success'; ?>">
-                                <?php echo $counteqp > 0 ? $counteqp : '0'; ?>
-                            </span>
-                            </a>
-                        </li>
-                        <li class="nav-item <?php echo $current_page == 'datatables-wo-eqp' ? 'active' : ''; ?>">
+                        <li class="nav-item <?php echo ($current_page == 'datatables-wo-eqp' || strpos($current_page, 'eqp-wo-edit-form') !== false) ? 'active' : ''; ?>">
                             <a href="datatables-wo-eqp.php">
                                 <i class="nav-icon i-Width-Window"></i>
                                 <span class="item-name mr-2">Submit WO Equipment</span>
@@ -1107,7 +1199,7 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                             </span>
                             </a>
                         </li>
-                        <li class="nav-item <?php echo $current_page == 'datatables-eqp-delivery' ? 'active' : ''; ?>">
+                        <li class="nav-item <?php echo ($current_page == 'datatables-eqp-delivery' || strpos($current_page, 'eqpdev-edit-form') !== false) ? 'active' : ''; ?>">
                             <a href="datatables-eqp-delivery.php">
                                 <i class="nav-icon i-File-Clipboard-Text--Image"></i>
                                 <span class="item-name mr-2">Equipment Delivery</span>
@@ -1116,12 +1208,21 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                             </span>
                             </a>
                         </li>
-                        <li class="nav-item <?php echo $current_page == 'datatables-eqp-site' ? 'active' : ''; ?>">
+                        <li class="nav-item <?php echo ($current_page == 'datatables-eqp-site' || strpos($current_page, 'eqpsite-edit-form') !== false) ? 'active' : ''; ?>">
                             <a href="datatables-eqp-site.php">
                                 <i class="nav-icon i-Bell1"></i>
                                 <span class="item-name mr-2">Equipment On Site</span>
                             <span class="badge <?php echo ($counteqpsite > 0) ? 'badge-danger' : 'badge-success'; ?>">
                                 <?php echo $counteqpsite > 0 ? $counteqpsite : '0'; ?>
+                            </span>
+                            </a>
+                        </li>
+                        <li class="nav-item <?php echo ($current_page == 'datatables-st-eqp' || strpos($current_page, 'eqp-edit-form') !== false) ? 'active' : ''; ?>">
+                            <a href="datatables-st-eqp.php">
+                                <i class="nav-icon i-Crop-2"></i>
+                                <span class="item-name mr-2">ST Equipment</span>
+                            <span class="badge <?php echo ($counteqp > 0) ? 'badge-danger' : 'badge-success'; ?>">
+                                <?php echo $counteqp > 0 ? $counteqp : '0'; ?>
                             </span>
                             </a>
                         </li>
@@ -1169,8 +1270,8 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                 <!-- HR -->
                 <div class="submenu-area" data-parent="hr">
                     <header>
-                        <h6><i class="i-Double-Tap"></i> HR</h6>
-                        <p>HR Division</p>
+                        <h6><i class="i-Double-Tap"></i> HR GA</h6>
+                        <p>HR GA Division</p>
                     </header>
                     <ul class="childNav" data-parent="">
                     <li class="nav-item <?php echo ($current_page == 'datatables-hr-qs' || strpos($current_page, 'datatables-data-qs') !== false) ? 'active' : ''; ?>">
@@ -1240,6 +1341,27 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                             <a href="datatables-hr-hot.php">
                                 <i class="nav-icon i-Medal-2"></i>
                                 <span class="item-name mr-2">Hand Over Training</span>
+                            <span class="badge <?php echo ($counthrhot > 0) ? 'badge-danger' : 'badge-success'; ?>">
+                                <?php echo $counthrhot > 0 ? $counthrhot : '0'; ?>
+                            </span>
+                            </a>
+                        </li>
+                        <li class="nav-item <?php echo $current_page == 'datatables-ir' ? 'active' : ''; ?>">
+                            <a href="datatables-ir.php">
+                                <i class="nav-icon i-Medal-2"></i>
+                                <span class="item-name mr-2">Pengamanan Reguler</span>
+                            <span class="badge <?php echo ($countir > 0) ? 'badge-danger' : 'badge-success'; ?>">
+                                <?php echo $countir > 0 ? $countir : '0'; ?>
+                            </span>
+                            </a>
+                        </li>
+                        <li class="nav-item <?php echo ($current_page == 'datatables-issue-urgent-hrga' || strpos($current_page, 'datatables-data-hrgautensil')!== false) ? 'active' : ''; ?>">
+                            <a href="datatables-issue-urgent-hrga.php">
+                                <i class="nav-icon i-Email"></i>
+                                <span class="item-name mr-2">Issue Urgent</span>
+                                <span class="badge <?php echo ($countissuehrga > 0) ? 'badge-danger' : 'badge-success'; ?>">
+                                    <?php echo $countissuehrga > 0 ? $countissuehrga : '0'; ?>
+                                </span>
                             </a>
                         </li>
                     </ul>
@@ -1350,6 +1472,15 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                             </span>
                             </a>
                         </li>
+                        <li class="nav-item <?php echo ($current_page == 'datatables-issue-urgent-it' || strpos($current_page, 'datatables-data-itutensil')!== false) ? 'active' : ''; ?>">
+                            <a href="datatables-issue-urgent-it.php">
+                                <i class="nav-icon i-Email"></i>
+                                <span class="item-name mr-2">Issue Urgent</span>
+                                <span class="badge <?php echo ($countissueit > 0) ? 'badge-danger' : 'badge-success'; ?>">
+                                    <?php echo $countissueit > 0 ? $countissueit : '0'; ?>
+                                </span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
                 <!-- Marketing -->
@@ -1377,24 +1508,6 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         <p>TAF Division</p>
                     </header>
                     <ul class="childNav" data-parent="">
-                        <li class="nav-item <?php echo $current_page == 'datatables-kode-store-taf' ? 'active' : ''; ?>">
-                            <a href="datatables-kode-store-taf.php">
-                                <i class="nav-icon i-Close-Window"></i>
-                                <span class="item-name mr-2">Penetapan Kode Store</span>
-                            <span class="badge <?php echo ($counttafkode > 0) ? 'badge-danger' : 'badge-success'; ?>">
-                                <?php echo $counttafkode > 0 ? $counttafkode : '0'; ?>
-                            </span>
-                            </a>
-                        </li>
-						<li class="nav-item <?php echo $current_page == 'datatables-sign-psm-fat' ? 'active' : ''; ?>">
-                            <a href="datatables-sign-psm-fat.php">
-                                <i class="nav-icon i-Checked-User"></i>
-                                <span class="item-name mr-2">PSM Review</span>
-                            <span class="badge <?php echo ($counttafpsm > 0) ? 'badge-danger' : 'badge-success'; ?>">
-                                <?php echo $counttafpsm > 0 ? $counttafpsm : '0'; ?>
-                            </span>
-                            </a>
-                        </li>
                         <!-- <li class="nav-item <?php echo $current_page == 'datatables-review-wo-from-sdg' ? 'active' : ''; ?>">
                             <a href="datatables-review-wo-from-sdg.php">
                                 <i class="nav-icon i-Add-File"></i>
@@ -1413,6 +1526,24 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                                 <span class="item-name mr-2">Review SPK for RAB Construction</span>
                             <span class="badge <?php echo ($counttafrab > 0) ? 'badge-danger' : 'badge-success'; ?>">
                                 <?php echo $counttafrab > 0 ? $counttafrab : '0'; ?>
+                            </span>
+                            </a>
+                        </li>
+						<li class="nav-item <?php echo $current_page == 'datatables-sign-psm-fat' ? 'active' : ''; ?>">
+                            <a href="datatables-sign-psm-fat.php">
+                                <i class="nav-icon i-Checked-User"></i>
+                                <span class="item-name mr-2">PSM Review</span>
+                            <span class="badge <?php echo ($counttafpsm > 0) ? 'badge-danger' : 'badge-success'; ?>">
+                                <?php echo $counttafpsm > 0 ? $counttafpsm : '0'; ?>
+                            </span>
+                            </a>
+                        </li>
+                        <li class="nav-item <?php echo $current_page == 'datatables-kode-store-taf' ? 'active' : ''; ?>">
+                            <a href="datatables-kode-store-taf.php">
+                                <i class="nav-icon i-Close-Window"></i>
+                                <span class="item-name mr-2">Penetapan Kode Store</span>
+                            <span class="badge <?php echo ($counttafkode > 0) ? 'badge-danger' : 'badge-success'; ?>">
+                                <?php echo $counttafkode > 0 ? $counttafkode : '0'; ?>
                             </span>
                             </a>
                         </li>
@@ -1452,32 +1583,32 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         <li class="nav-item <?php echo $current_page == 'datatables-tafpay-listrikair' ? 'active' : ''; ?>">
                             <a href="datatables-tafpay-listrikair.php">
                                 <i class="nav-icon i-Width-Window"></i>
-                                <span class="item-name mr-2">Payment - Listrik & Air PDAM</span>
+                                <span class="item-name mr-2">Payment - Air PDAM</span>
                             <span class="badge <?php echo ($counttafpay > 0) ? 'badge-danger' : 'badge-success'; ?>">
                                 <?php echo $counttafpay > 0 ? $counttafpay : '0'; ?>
+                            </span>
+                            </a>
+                        </li>
+                        <li class="nav-item <?php echo $current_page == 'datatables-listrik' ? 'active' : ''; ?>">
+                            <a href="datatables-listrik.php">
+                                <i class="nav-icon i-Pen-2"></i>
+                                <span class="item-name mr-2">Payment - Listrik</span>
+                            <span class="badge <?php echo ($counttafpaylistrik > 0) ? 'badge-danger' : 'badge-success'; ?>">
+                                <?php echo $counttafpaylistrik > 0 ? $counttafpaylistrik : '0'; ?>
                             </span>
                             </a>
                         </li>
                     </ul>
                 </div>
                 <!-- IR -->
-                <div class="submenu-area" data-parent="ir">
+                <!-- <div class="submenu-area" data-parent="ir">
                     <header>
                         <h6><i class="i-Double-Tap"></i> IR</h6>
                         <p>IR Division</p>
                     </header>
                     <ul class="childNav" data-parent="">
-                        <li class="nav-item <?php echo $current_page == 'datatables-ir' ? 'active' : ''; ?>">
-                            <a href="datatables-ir.php">
-                                <i class="nav-icon i-Medal-2"></i>
-                                <span class="item-name mr-2">Pengamanan Reguler</span>
-                            <span class="badge <?php echo ($countir > 0) ? 'badge-danger' : 'badge-success'; ?>">
-                                <?php echo $countir > 0 ? $countir : '0'; ?>
-                            </span>
-                            </a>
-                        </li>
                     </ul>
-                </div>
+                </div> -->
             </div>
         </div>
 

@@ -325,7 +325,7 @@ function getBadgeColor($remarks) {
                                                     $work_end = '17:00';
 
                                                     // Cek apakah hari ini adalah hari kerja dan waktu kerja
-                                                    if ($row['status_fat'] != "Done" && $current_time >= $work_start && $current_time <= $work_end && $current_day >= 1 && $current_day <= 5) {
+                                                    if ($row['status_fat'] != "Done" && $current_day >= 1 && $current_day <= 5) {
                                                         echo '<a href="fat/fat-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>';

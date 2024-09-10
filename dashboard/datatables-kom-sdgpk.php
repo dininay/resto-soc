@@ -13,7 +13,7 @@ $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, 
         INNER JOIN sdg_desain s ON d.kode_lahan = s.kode_lahan
         INNER JOIN resto r ON d.kode_lahan = r.kode_lahan
         INNER JOIN procurement p ON r.kode_lahan = p.kode_lahan
-        WHERE r.status_kom IN ('In Process', 'Done', 'Pending')
+        WHERE r.status_kom IN ('In Process', 'Done', 'Pending','On Going Project')
         GROUP BY l.kode_lahan";
 $result = $conn->query($sql);
 
@@ -505,7 +505,7 @@ function getBadgeColor($remarks) {
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['status_kom']) {
-                                                            case 'Done':
+                                                            case 'On Going Project':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -544,7 +544,7 @@ function getBadgeColor($remarks) {
                                                     $work_start = '08:00';
                                                     $work_end = '17:00';
 
-                                                    if ($status_kom === 'Done') {
+                                                    if ($status_kom === 'On Going Project') {
                                                         // Menentukan label berdasarkan remarks
                                                         $status_label = '';
                                                         switch ($remarks) {
@@ -586,7 +586,7 @@ function getBadgeColor($remarks) {
                                                 
                                                 <td>
                                                     <!-- Tombol Edit -->
-                                                    <?php if ($row['status_kom'] != "Done"): ?>
+                                                    <?php if ($row['status_kom'] != "On Going Project"): ?>
                                                     <?php
                                                     // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
                                                     date_default_timezone_set('Asia/Jakarta');
@@ -599,7 +599,7 @@ function getBadgeColor($remarks) {
                                                     $work_start = '08:00';
                                                     $work_end = '17:00';
 
-                                                    if ($row['status_kom'] != "Done" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                    if ($row['status_kom'] != "On Going Project") {
                                                         echo '<a href="sdg-pk/kom-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>';
@@ -628,7 +628,7 @@ function getBadgeColor($remarks) {
                                                                         <select class="form-control" id="statusSelect" name="status_kom">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
-                                                                            <option value="Done">Done</option>
+                                                                            <option value="On Going Project">On Going Project</option>
                                                                         </select>
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">

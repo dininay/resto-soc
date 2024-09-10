@@ -13,7 +13,7 @@ d.jadwal_psm, s.lamp_desainplan, c.kode_store, e.*
         INNER JOIN resto r ON d.kode_lahan = r.kode_lahan
         INNER JOIN procurement p ON p.kode_lahan = r.kode_lahan
         INNER JOIN equipment e ON e.kode_lahan = r.kode_lahan
-        WHERE r.status_kom = 'Done'
+        WHERE r.status_kom = 'On Going Project'
         GROUP BY l.kode_lahan";
 $result = $conn->query($sql);
 
@@ -376,7 +376,7 @@ function getBadgeColor($remarks) {
                                                     // Menghitung selisih hari
                                                     $interval = $today->diff($sla_steqp)->format("%r%a");
 
-                                                    if ($row['status_steqp'] != "Approve" && $current_time >= $work_start && $current_time <= $work_end && $interval <= 100 && $interval >= 0) {
+                                                    if ($row['status_steqp'] != "Approve" && $interval <= 100 && $interval >= 0) {
                                                         echo '<a href="sdg-pk/eqp-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>';

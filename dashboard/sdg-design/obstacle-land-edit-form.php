@@ -88,6 +88,17 @@ if(isset($_GET['id'])) {
                                         </select>
                                     </div>
                                 </div>
+                                
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="potensi_masalah">Apakah ada potensi masalah ?<strong><span style="color: red;">*</span></strong></label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="potensi_masalah" name="potensi_masalah" onchange="togglePotensiMasalahDetail()">
+                                        <option>Pilih</option>
+                                            <option value="Yes" <?php echo ($row['potensi_masalah'] == 'Yes') ? 'selected' : ''; ?>>Ya</option>
+                                            <option value="No" <?php echo ($row['potensi_masalah'] == 'No') ? 'selected' : ''; ?>>Tidak</option>
+                                        </select>
+                                    </div>
+                                </div>
 
                                 <div class="form-group row">
                                     <label class="col-sm-3 col-form-label" for="obstacle">Obstacle<strong><span style="color: red;">*</span></strong></label>

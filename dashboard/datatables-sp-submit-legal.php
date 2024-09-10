@@ -7,10 +7,10 @@ $submit_legal = "";
 $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, d.lamp_draf, d.jadwal_psm, s.lamp_desainplan, r.gostore_date,
         r.id, r.lamp_splegal, r.catatan_legal, r.submit_date, c.kode_store, s.lamp_pbg, s.lamp_permit, s.submit_legal, s.kode_lahan, s.id
         FROM draft d
-        INNER JOIN land l ON d.kode_lahan = l.kode_lahan
-        INNER JOIN dokumen_loacd c ON d.kode_lahan = c.kode_lahan
-        INNER JOIN sdg_desain s ON d.kode_lahan = s.kode_lahan
-        INNER JOIN resto r ON d.kode_lahan = r.kode_lahan
+        LEFT JOIN land l ON d.kode_lahan = l.kode_lahan
+        LEFT JOIN dokumen_loacd c ON d.kode_lahan = c.kode_lahan
+        LEFT JOIN sdg_desain s ON d.kode_lahan = s.kode_lahan
+        LEFT JOIN resto r ON d.kode_lahan = r.kode_lahan
         WHERE s.submit_legal IN ('In Process', 'Done', 'Pending')
         GROUP BY l.kode_lahan";
 $result = $conn->query($sql);

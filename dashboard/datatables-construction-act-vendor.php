@@ -102,7 +102,7 @@ LEFT JOIN (
         vendor v1
 ) v ON p.nama_vendor = v.kode_vendor
 WHERE 
-    r.status_kom = 'Done'
+    r.status_kom IN ('Done','On Going Project')
 GROUP BY 
     l.kode_lahan";
 $result = $conn->query($sql);
@@ -120,6 +120,67 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
+$sla_query = "SELECT sla FROM master_sla WHERE divisi = 'Konstruksi'";
+$sla_result = $conn->query($sla_query);
+
+$sla_value = 0; // Default SLA value
+
+if ($sla_result->num_rows > 0) {
+    $row = $sla_result->fetch_assoc();
+    $sla_value = $row['sla'];
+} else {
+    echo "No SLA value found for 'Konstruksi'";
+}
+
+// Fungsi untuk menghitung scoring
+function calculateScoring($start_date, $sla_date, $sla) {
+    $start_date_obj = new DateTime($start_date);
+    $sla_date_obj = new DateTime($sla_date);
+    
+    if ($start_date_obj <= $sla_date_obj) {
+        return 100; // Skor 100 jika start_date tidak melebihi sla_date
+    }
+
+    $date_diff = $start_date_obj->diff($sla_date_obj)->days;
+    $sla_days = $sla ?: 0;
+
+    if ($sla_days != 0) {
+        if ($date_diff > $sla_days) {
+            $scoring = -((($date_diff - $sla_days) / $sla_days) * 100);
+        } else {
+            $scoring = ((($sla_days - $date_diff) / $sla_days) * 100);
+        }
+    } else {
+        $scoring = 0;
+    }
+
+    return round($scoring, 2);
+}
+
+// Fungsi untuk menentukan remarks berdasarkan scoring
+function getRemarks($scoring) {
+    if ($scoring >= 75) {
+        return "good";
+    } elseif ($scoring >= 0) {
+        return "poor";
+    } else {
+        return "bad";
+    }
+}
+
+// Fungsi untuk menentukan warna badge berdasarkan remarks
+function getBadgeColor($remarks) {
+    switch ($remarks) {
+        case 'good':
+            return 'success'; // Hijau
+        case 'poor':
+            return 'warning'; // Kuning
+        case 'bad':
+            return 'danger'; // Merah
+        default:
+            return 'secondary'; // Default jika remarks tidak dikenali
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="">
@@ -434,7 +495,7 @@ if ($result && $result->num_rows > 0) {
                                                     $work_start = '08:00';
                                                     $work_end = '17:00';
 
-                                                    if ($row['status_consact'] != "Approve" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                    if ($row['status_consact'] != "Approve") {
                                                         echo '<button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="'. $row['id'] .'" data-status="'.$row['status_consact'] .'">
                                                             <i class="nav-icon i-Book"></i>
                                                         </button>';

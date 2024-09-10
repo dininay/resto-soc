@@ -742,7 +742,7 @@ $conn->close();
                                         </div>
                                     </div>
                                 </div>
-                                <div class="form-group">
+                                <!-- <div class="form-group">
                                     <label for="kode_lahan_filter">Filter by Kode Lahan:</label>
                                     <select id="kode_lahan_filter" class="form-control">
                                         <option value="">-- Select Kode Lahan --</option>
@@ -751,7 +751,7 @@ $conn->close();
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
-                                <input type="text" id="namaLahanFilter" placeholder="Filter by Nama Lahan" style="margin-bottom: 10px;">
+                                <input type="text" id="namaLahanFilter" placeholder="Filter by Nama Lahan" style="margin-bottom: 10px;"> -->
 							  <div class="table-responsive">
                                     <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>

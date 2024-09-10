@@ -81,7 +81,14 @@ if(isset($_GET['id'])) {
                                 </div>
                             </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_spkeqpdev">Upload Lampiran SPK Equipment Delivery<strong><span style="color: red;">*</span></strong></label>
+                                    <label class="col-sm-3 col-form-label">Lampiran Sebelumnya<strong><span style="color: red;">*</span></strong></label>
+                                    <div class="col-sm-9">
+                                        <?php echo $row['lamp_spkeqpdev']; ?>
+                                    </div>
+                                    <input type="hidden" name="existing_files" value="<?php echo $row['lamp_spkeqpdev']; ?>">
+                                </div>
+                            <div class="form-group row" id="lampiran_baru">
+                                    <label class="col-sm-3 col-form-label" for="lamp_spkeqpdev">Upload Lampiran WO Equipment<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_spkeqpdev[]" type="file" multiple="multiple" />

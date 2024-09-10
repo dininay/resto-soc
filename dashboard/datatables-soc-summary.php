@@ -99,6 +99,31 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
+// Fungsi untuk menentukan remarks berdasarkan perbandingan tanggal
+function getStatusRemarks($spk_date, $sla_spk) {
+    if ($spk_date === $sla_spk) {
+        return "meet";
+    } elseif ($spk_date > $sla_spk) {
+        return "delayed";
+    } else {
+        return "good";
+    }
+}
+
+// Fungsi untuk menentukan warna badge berdasarkan remarks
+function getStatusBadgeColor($remarks) {
+    switch ($remarks) {
+        case 'good':
+            return 'success'; // hijau
+        case 'delayed':
+            return 'danger'; // merah
+        case 'meet':
+            return 'warning'; // kuning
+        default:
+            return 'secondary';
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="">
@@ -209,10 +234,22 @@ if ($result && $result->num_rows > 0) {
                                                         <!-- <span>Not Available</span> -->
                                                     <?php endif; ?>
                                                 </td>
-                                                <td><?= $row['sla_steqp'] ?></td>
+                                                <td>
+                                                    <?php if (!empty($row['sla_steqp'])): ?>
+                                                        <?php
+                                                        $date = new DateTime($row['sla_steqp']);
+                                                        $formattedDate = $date->format('d M y');
+                                                        ?>
+                                                        <?= $formattedDate ?>
+                                                    <?php else: ?>
+                                                        <!-- Jika kosong, tampilkan pesan atau biarkan kosong -->
+                                                        <!-- Misalnya, <span>-</span> atau <span>Not Available</span> -->
+                                                        <!-- <span>Not Available</span> -->
+                                                    <?php endif; ?>
+                                                </td>
                                                 <td><?= $row['type_kitchen'] ?></td>
                                                 <td><?= $row['jam_ops'] ?></td>
-                                                <td>Rp. <?= $row['project_sales'] ?></td>
+                                                <td><?= $row['project_sales'] ?></td>
                                                 <td><?= $row['crew_needed'] ?></td>
                                                 <td>
                                                     <?php if (!empty($row['spk_release'])): ?>
@@ -288,30 +325,17 @@ if ($result && $result->num_rows > 0) {
                                                     ?>%
                                                 </td>
                                                 <td><?= $row['kualitas_go'] ?></td>
+                                                <?php
+                                                $status = '';
+                                                $badge_color = '';
+                                                if (!empty($row['go_fix']) && !empty($row['gostore_date'])) {
+                                                    $status = getStatusRemarks($row['go_fix'], $row['gostore_date']);
+                                                    $badge_color = getStatusBadgeColor($status);
+                                                }
+                                                ?>
                                                 <td>
-                                                    <?php
-                                                        // Tentukan warna badge berdasarkan status approval owner
-                                                        $badge_color = '';
-                                                        switch ($row['status_go']) {
-                                                            case 'On Schedule':
-                                                                $badge_color = 'success';
-                                                                break;
-                                                            case 'Hold':
-                                                                $badge_color = 'danger';
-                                                                break;
-                                                            case 'Delayed':
-                                                                $badge_color = 'warning';
-                                                                break;
-                                                            case 'Accelerated':
-                                                                $badge_color = 'primary';
-                                                                break;
-                                                            default:
-                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
-                                                                break;
-                                                        }
-                                                    ?>
-                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_go']; ?>
+                                                    <span class="badge rounded-pill badge-<?= $badge_color ?>">
+                                                        <?= $status ?>
                                                     </span>
                                                 </td>
                                                 <td><?= $row['jml_hari'] ?></td>

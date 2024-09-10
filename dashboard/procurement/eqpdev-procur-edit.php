@@ -10,26 +10,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     $lamp_spkeqpdev = "";
 
-    if(isset($_FILES["lamp_spkeqpdev"])) {
-        $lamp_spkeqpdev_paths = array();
+    if (isset($_FILES['lamp_spkeqpdev']) && $_FILES['lamp_spkeqpdev']['error'][0] != UPLOAD_ERR_NO_FILE) {
+        $existing_files = isset($_POST['existing_files']) ? explode(",", $_POST['existing_files']) : array();
+        $new_files = array();
 
-        // Loop through each file
-        foreach($_FILES['lamp_spkeqpdev']['name'] as $key => $filename) {
-            $file_tmp = $_FILES['lamp_spkeqpdev']['tmp_name'][$key];
-            $file_name = $_FILES['lamp_spkeqpdev']['name'][$key];
-            $target_dir = "../uploads/";
-            $target_file = $target_dir . basename($file_name);
+        foreach ($_FILES['lamp_spkeqpdev']['name'] as $key => $filename) {
+            if ($filename) {
+                $target_dir = "../uploads/";
+                $target_file = $target_dir . basename($filename);
 
-            // Attempt to move the uploaded file to the target directory
-            if (move_uploaded_file($file_tmp, $target_file)) {
-                $lamp_spkeqpdev_paths[] = $file_name;
-            } else {
-                echo "Gagal mengunggah file " . $file_name . "<br>";
+                if (!is_dir($target_dir)) {
+                    mkdir($target_dir, 0777, true);
+                }
+
+                if (move_uploaded_file($_FILES['lamp_spkeqpdev']['tmp_name'][$key], $target_file)) {
+                    $new_files[] = trim($filename);
+                } else {
+                    echo "Failed to upload file: " . $_FILES['lamp_spkeqpdev']['name'][$key] . "<br>";
+                }
             }
         }
 
-        // Join all file paths into a comma-separated string
-        $lamp_spkeqpdev = implode(",", $lamp_spkeqpdev_paths);
+        $all_files = array_merge($existing_files, $new_files);
+        $lamp_spkeqpdev = implode(",", array_filter($all_files));
+    } else {
+        $lamp_spkeqpdev = isset($_POST['existing_files']) ? $_POST['existing_files'] : "";
     }
     // Update data di database untuk tabel resto
     $sql1 = "UPDATE equipment SET lamp_spkeqpdev = ? WHERE id = ?";

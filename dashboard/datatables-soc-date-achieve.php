@@ -56,7 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["kode_lahan"]) && isset
 
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT land.id, land.kode_lahan, land.nama_lahan, land.lokasi, land.lamp_land, 
-resto.*,
+resto.*, procurement.end_date as procur_end_date, procurement.sla_spkrab,
 summary_soc.*,
 draft.end_date AS draft_end_date,
 dokumen_loacd.*
@@ -65,6 +65,7 @@ JOIN draft ON land.kode_lahan = draft.kode_lahan
 LEFT JOIN resto ON land.kode_lahan = resto.kode_lahan
 LEFT JOIN summary_soc ON resto.kode_lahan = summary_soc.kode_lahan
 LEFT JOIN dokumen_loacd ON land.kode_lahan = dokumen_loacd.kode_lahan
+LEFT JOIN procurement ON land.kode_lahan = procurement.kode_lahan
 GROUP BY summary_soc.kode_lahan
 ";
 $result = $conn->query($sql);
@@ -120,7 +121,30 @@ function getStatusBadgeColor($remarks) {
     <link href="../dist-assets/css/plugins/datatables.min.css" rel="stylesheet"  />
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/icofont/1.0.1/css/icofont.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> 
+    <style>
+        .hidden {
+            display: none;
+        },
+
+        .small-column {
+            max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */
+            overflow: hidden; /* Memotong konten yang meluas */
+            text-overflow: ellipsis; /* Menampilkan elipsis jika konten terlalu panjang */
+            white-space: nowrap; /* Mencegah teks membungkus ke baris baru */
+        }
+
+        th, td {
+                white-space: nowrap;
+            }
+        table.dataTable {
+            border-collapse:  collapse!important;
+        }
+        div.dataTables_wrapper {
+            width: 100%;
+            margin: 0 auto;
+        }
+    </style>
 </head>
 
 <body class="text-left">
@@ -218,9 +242,9 @@ function getStatusBadgeColor($remarks) {
                                                     <?php endif; ?>
                                                 </td>
                                                 <td>
-                                                    <?php if (!empty($row['spk_date'])): ?>
+                                                    <?php if (!empty($row['procur_end_date'])): ?>
                                                         <?php
-                                                        $date = new DateTime($row['spk_date']);
+                                                        $date = new DateTime($row['procur_end_date']);
                                                         $formattedDate = $date->format('d M y');
                                                         ?>
                                                         <?= $formattedDate ?>
@@ -230,6 +254,14 @@ function getStatusBadgeColor($remarks) {
                                                         <!-- <span>Not Available</span> -->
                                                     <?php endif; ?>
                                                 </td>
+                                                <?php
+                                                $status = '';
+                                                $badge_color = '';
+                                                if (!empty($row['procur_end_date']) && !empty($row['sla_spkrab'])) {
+                                                    $status = getStatusRemarks($row['procur_end_date'], $row['sla_spkrab']);
+                                                    $badge_color = getStatusBadgeColor($status);
+                                                }
+                                                ?>
                                                 <td>
                                                     <span class="badge rounded-pill badge-<?= $badge_color ?>">
                                                         <?= $status ?>

@@ -18,7 +18,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
     $id = $_POST["id"];
     $kode_lahan = $_POST["kode_lahan"];
     $confirm_fatpsm = $_POST["confirm_fatpsm"];
-    $catatan_psmfat = $_POST["catatan_psmfat"];
+    // $catatan_psmfat = $_POST["catatan_psmfat"];
+    $catatan_baru = $_POST["catatan_psmfat"];
     $psmfat_date = null;
     $issue_detail = isset($_POST["issue_detail"]) ? $_POST["issue_detail"] : null;
     $pic = isset($_POST["pic"]) ? $_POST["pic"] : null;
@@ -67,6 +68,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         $stmt_get_resto->fetch();
         $stmt_get_resto->close();
 
+        // Ambil catatan lama dari database
+        $sql_get_catatan = "SELECT catatan_psmfat FROM draft WHERE id = ?";
+        $stmt_get_catatan = $conn->prepare($sql_get_catatan);
+        $stmt_get_catatan->bind_param("i", $id);
+        $stmt_get_catatan->execute();
+        $stmt_get_catatan->bind_result($catatan_lama);
+        $stmt_get_catatan->fetch();
+        $stmt_get_catatan->close();
+
+        // Gabungkan catatan lama dengan catatan baru (dipisah dengan paragraf baru)
+        if (!empty($catatan_lama)) {
+            $catatan_baru = $catatan_lama . "<br><br>" . $catatan_baru;
+        }
+
         // Tentukan nilai start_konstruksi
         if ($confirm_fatpsm == 'Approve') {
             $psmfat_date = date("Y-m-d H:i:s");
@@ -96,7 +111,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             // Query untuk memperbarui status confirm_fatpsm di tabel draft
             $sql_update = "UPDATE draft SET confirm_fatpsm = ?, catatan_psmfat = ?, psmfat_date = ?, confirm_bod = ?, slabod_date = ?, confirm_nego = ? WHERE id = ?";
             $stmt_update = $conn->prepare($sql_update);
-            $stmt_update->bind_param("ssssssi", $confirm_fatpsm, $catatan_psmfat, $psmfat_date, $confirm_bod, $slabod_date, $confirm_nego, $id);
+            $stmt_update->bind_param("ssssssi", $confirm_fatpsm, $catatan_baru, $psmfat_date, $confirm_bod, $slabod_date, $confirm_nego, $id);
             $stmt_update->execute();
             // Query untuk memperbarui status confirm_fatpsm di tabel draft
             $sql_resto = "UPDATE resto SET start_konstruksi = ? WHERE kode_lahan = ?";
@@ -137,7 +152,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             // Komit transaksi
             $conn->commit();
             echo "Status berhasil diperbarui.";
-            $queryIR = "SELECT email FROM user WHERE level IN ('Legal','BoD')";
+
+            $queryIR = "SELECT email FROM user WHERE level IN ('Legal')";
             $resultIR = mysqli_query($conn, $queryIR);
 
             if ($resultIR && mysqli_num_rows($resultIR) > 0) {
@@ -174,19 +190,79 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                                     <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
                                         <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
                                             <img src="cid:header_image" alt="Header Image" style="max-width: 100%; height: auto; margin-bottom: 20px;">
-                                            <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Team,</h2>
-                                            <p>You have 1 New Active Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.</p>
-                                            <p>Thank you for your prompt attention to this matter.</p>
+                                            <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Legal Team,</h2>
+                                            <p>We would like to inform you that a new Active Resto SOC Ticket has been created in the Review Draft Table Sewa & PSM By TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+Your prompt attention to this matter is greatly appreciated.</p>
                                             <p></p>
-                                            <p>Best regards,</p>
-                                            <p>Resto - SOC</p>
+                                            <p>Have a good day!</p>
                                         </div>
                                     </div>';
-                                    $mail->AltBody = 'Dear Team,'
-                                                . 'You have 1 New Active Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.'
-                                                . 'Thank you for your prompt attention to this matter.'
-                                                . 'Best regards,'
-                                                . 'Resto - SOC';
+                                    $mail->AltBody = 'Dear Legal Team,'
+                                                . 'We would like to inform you that a new Active Resto SOC Ticket has been created in the Review Draft Table Sewa & PSM By TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+Your prompt attention to this matter is greatly appreciated.'
+                                                . 'Have a good day!';
+
+                    // Send email
+                    if ($mail->send()) {
+                        echo "Email sent successfully!<br>";
+                    } else {
+                        echo "Failed to send email. Error: {$mail->ErrorInfo}<br>";
+                    }
+
+                } catch (Exception $e) {
+                    echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+                }
+            } else {
+                echo "No email found for the selected resto or IR users.";
+            }
+            $queryIR = "SELECT email FROM user WHERE level IN ('BoD')";
+            $resultIR = mysqli_query($conn, $queryIR);
+
+            if ($resultIR && mysqli_num_rows($resultIR) > 0) {
+                while ($rowIR = mysqli_fetch_assoc($resultIR)) {
+                    if (!empty($rowIR['email'])) {
+                        $toEmails[] = $rowIR['email'];
+                    }
+                }
+            }
+            var_dump($toEmails);
+            if (!empty($toEmails)) {
+
+                try {
+                    // SMTP configuration
+                    $mail = new PHPMailer(true);
+                    $mail->isSMTP();
+                    // $mail->SMTPDebug = 2;
+                    $mail->SMTPAuth = true;
+                    $mail->SMTPSecure = 'ssl';
+                    $mail->Host = 'miegacoan.co.id';
+                    $mail->Port = 465;
+                    $mail->Username = 'resto-soc@miegacoan.co.id';
+                    $mail->Password = '9)5X]*hjB4sh';
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+                    $mail->setFrom('resto-soc@miegacoan.co.id', 'Pesta Pora Abadi');
+
+                    foreach ($toEmails as $toEmail) {
+                        $mail->addAddress($toEmail);
+                    }
+
+                    // Email content
+                    $mail->Subject = 'Notification: 1 New Active Resto SOC Ticket';
+                                    $mail->Body    = '
+                                    <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                                        <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
+                                            <img src="cid:header_image" alt="Header Image" style="max-width: 100%; height: auto; margin-bottom: 20px;">
+                                            <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Bu @arie,</h2>
+                                            <p>We would like to inform you that a new Active Resto SOC Ticket has been created in the Review Draft Table Sewa & PSM By TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                            Your prompt attention to this matter is greatly appreciated.</p>
+                                            <p></p>
+                                            <p>Have a good day!</p>
+                                        </div>
+                                    </div>';
+                                    $mail->AltBody = 'Dear Bu @arie,'
+                                                . 'We would like to inform you that a new Active Resto SOC Ticket has been created in the Review Draft Table Sewa & PSM By TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                    Your prompt attention to this matter is greatly appreciated.'
+                                                . 'Have a good day!';
 
                     // Send email
                     if ($mail->send()) {
@@ -214,7 +290,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             // Query untuk memperbarui confirm_fatpsm, psmfat_date di tabel draft dan memasukkan data ke dalam tabel hold_project
             $sql_update_re = "UPDATE draft SET confirm_fatpsm = ?, catatan_psmfat = ?, psmfat_date = ? WHERE id = ?";
             $stmt_update_re = $conn->prepare($sql_update_re);
-            $stmt_update_re->bind_param("sssi", $confirm_fatpsm, $catatan_psmfat, $psmfat_date, $id);
+            $stmt_update_re->bind_param("sssi", $confirm_fatpsm, $catatan_baru, $psmfat_date, $id);
             $stmt_update_re->execute();
 
             $status_hold = "In Process";
@@ -244,7 +320,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             $sql_update_pending = "UPDATE draft SET confirm_fatpsm = ?, catatan_psmfat = ?, confirm_nego = ?, psmfat_date = ? WHERE id = ?";
             $stmt_update_pending = $conn->prepare($sql_update_pending);
             $confirm_nego = "In Revision";
-            $stmt_update_pending->bind_param("ssssi", $confirm_fatpsm, $catatan_psmfat, $confirm_nego, $psmfat_date, $id);
+            $stmt_update_pending->bind_param("ssssi", $confirm_fatpsm, $catatan_baru, $confirm_nego, $psmfat_date, $id);
             $stmt_update_pending->execute();
 
             // Komit transaksi
@@ -254,7 +330,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_vl di tabel draft
             $sql = "UPDATE draft SET confirm_fatpsm = ?, catatan_psmfat = ? WHERE id = ?";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ssi", $confirm_fatpsm, $catatan_psmfat, $id);
+            $stmt->bind_param("ssi", $confirm_fatpsm, $catatan_baru, $id);
             $stmt->execute();
 
             // Check if update was successful

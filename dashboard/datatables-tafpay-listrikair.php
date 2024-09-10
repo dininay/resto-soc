@@ -143,7 +143,7 @@ function getBadgeColor($remarks) {
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Data Pembayaran Listrik & Air PDAM</h1>
+                    <h1>Data Pembayaran Air PDAM</h1>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
                 <!-- end of row-->
@@ -166,10 +166,7 @@ function getBadgeColor($remarks) {
                                                 <th>Kode Store</th>
                                                 <th>Nama Lahan</th>
                                                 <th>Sumber Air</th>
-                                                <th>Sumber Listrik</th>
                                                 <th>No ID PDAM</th>
-                                                <th>No ID PLN</th>
-                                                <th>Lampiran Bukti Bayar Listrik</th>
                                                 <th>Lampiran Bukti Bayar Air PDAM</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
@@ -183,31 +180,7 @@ function getBadgeColor($remarks) {
                                                 <td><?= $row['kode_store'] ?></td>
                                                 <td><?= $row['nama_lahan'] ?></td>
                                                 <td><?= $row['sumber_air'] ?></td>
-                                                <td><?= $row['sumber_listrik'] ?></td>
                                                 <td><?= $row['id_pdam'] ?></td>
-                                                <td><?= $row['id_pln'] ?></td>
-                                                <?php
-                                                // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_paylistrik_files = explode(",", $row['lamp_paylistrik']); // Pisahkan nama file menjadi array
-                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_paylistrik'])) {
-                                                    echo '<td>
-                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
-                                                    // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_paylistrik_files as $listrik) {
-                                                        echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $listrik . '" target="_blank">
-                                                                    <i class="fas fa-file-pdf nav-icon"></i>
-                                                                </a>
-                                                            </li>';
-                                                    }
-                                                    echo '</ul>
-                                                        </td>';
-                                                } else {
-                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
-                                                    echo '<td></td>';
-                                                }
-                                                ?>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_paypdam_files = explode(",", $row['lamp_paypdam']); // Pisahkan nama file menjadi array
@@ -330,7 +303,7 @@ function getBadgeColor($remarks) {
                                                     $work_end = '17:00';
 
                                                     // Cek apakah hari ini adalah hari kerja dan waktu kerja
-                                                    if ($row['status_tafpay'] != "Paid" && $current_time >= $work_start && $current_time <= $work_end && $current_day >= 1 && $current_day <= 5) {
+                                                    if ($row['status_tafpay'] != "Paid" && $current_day >= 1 && $current_day <= 5) {
                                                         echo '<a href="fat/tafpay-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>';
@@ -413,10 +386,7 @@ function getBadgeColor($remarks) {
                                                 <th>Kode Store</th>
                                                 <th>Nama Lahan</th>
                                                 <th>Sumber Air</th>
-                                                <th>Sumber Listrik</th>
                                                 <th>No ID PDAM</th>
-                                                <th>No ID PLN</th>
-                                                <th>Lampiran Bukti Bayar Listrik</th>
                                                 <th>Lampiran Bukti Bayar Air PDAM</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>

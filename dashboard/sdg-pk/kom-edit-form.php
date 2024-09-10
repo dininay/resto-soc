@@ -92,13 +92,49 @@ if(isset($_GET['id'])) {
                                 <div class="form-group row">
                                     <label class="col-sm-3 col-form-label" for="start_konstruksi">Tgl Start Konstruksi<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="start_konstruksi" name="start_konstruksi" type="date" placeholder="Tgl Start Konstruksi" value="<?php echo $row['start_konstruksi']; ?>"/>
+                                        <input class="form-control" id="start_konstruksi" name="start_konstruksi" type="date" placeholder="Tgl Start Konstruksi" value="<?php echo $row['start_konstruksi']; ?>" onchange="calculateEndDate()"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
                                     <label class="col-sm-3 col-form-label" for="sla_consact">Tgl End Konstruksi<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="sla_consact" name="sla_consact" type="date" placeholder="Tgl Start Konstruksi" value="<?php echo $row['sla_consact']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="pm_cons">PM Kontraktor<strong><span style="color: red;">*</span></strong></label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="pm_cons" name="pm_cons" type="text" placeholder="PM Kontraktor" value="<?php echo $row['pm_cons']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="sm_cons">SM Kontraktor<strong><span style="color: red;">*</span></strong></label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="sm_cons" name="sm_cons" type="text" placeholder="SM Kontraktor" value="<?php echo $row['sm_cons']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="pm_ppa">Project Manager PPA<strong><span style="color: red;">*</span></strong></label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="pm_ppa" name="pm_ppa" type="text" placeholder="Project Manager PPA" value="<?php echo $row['pm_ppa']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="cons_manager">Construction Manager<strong><span style="color: red;">*</span></strong></label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="cons_manager" name="cons_manager" type="text" placeholder="Construction Manager" value="<?php echo $row['cons_manager']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="site_inspect">Site Inspector<strong><span style="color: red;">*</span></strong></label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="site_inspect" name="site_inspect" type="text" placeholder="Site Inspector" value="<?php echo $row['site_inspect']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="tgl_agendastkons">Tgl ST Kontraktor<strong><span style="color: red;">*</span></strong></label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="tgl_agendastkons" name="tgl_agendastkons" type="date" placeholder="Tgl Start Konstruksi" value="<?php echo $row['tgl_agendastkons']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -345,6 +381,34 @@ if(isset($_GET['id'])) {
 
     // Panggil fungsi saat halaman dimuat untuk menyesuaikan tampilan berdasarkan nilai awal
     window.onload = toggleObstacleDetail;
+</script>
+
+<script>
+function calculateEndDate() {
+    // Ambil elemen input tanggal
+    var startDateInput = document.getElementById("start_konstruksi");
+    var endDateInput = document.getElementById("sla_consact");
+
+    // Ambil nilai dari input start_konstruksi
+    var startDateValue = startDateInput.value;
+    
+    // Jika tanggal start ada isinya
+    if (startDateValue) {
+        // Konversi ke format Date
+        var startDate = new Date(startDateValue);
+
+        // Tambahkan 80 hari
+        startDate.setDate(startDate.getDate() + 80);
+
+        // Format tanggal ke yyyy-mm-dd
+        var day = ("0" + startDate.getDate()).slice(-2);
+        var month = ("0" + (startDate.getMonth() + 1)).slice(-2); // Bulan dimulai dari 0
+        var year = startDate.getFullYear();
+
+        // Set nilai di input sla_consact
+        endDateInput.value = year + "-" + month + "-" + day;
+    }
+}
 </script>
 </body>
 

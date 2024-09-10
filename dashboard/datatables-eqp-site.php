@@ -13,7 +13,7 @@ d.jadwal_psm, s.lamp_desainplan, c.kode_store, e.*
         INNER JOIN resto r ON d.kode_lahan = r.kode_lahan
         INNER JOIN procurement p ON r.kode_lahan = r.kode_lahan
         INNER JOIN equipment e ON e.kode_lahan = r.kode_lahan
-        WHERE r.status_kom = 'Done'
+        WHERE r.status_kom = 'On Going Project'
         GROUP BY l.kode_lahan";
 $result = $conn->query($sql);
 
@@ -344,7 +344,7 @@ function getBadgeColor($remarks) {
                                                     $work_start = '08:00';
                                                     $work_end = '17:00';
 
-                                                    if ($status_eqpsite === 'Approve') {
+                                                    if ($status_eqpsite === 'Done') {
                                                         // Menentukan label berdasarkan remarks
                                                         $status_label = '';
                                                         switch ($remarks) {
@@ -386,7 +386,7 @@ function getBadgeColor($remarks) {
                                                 
                                                 <td>
                                                     <!-- Tombol Edit -->
-                                                    <?php if ($row['status_eqpsite'] != "Approve"): ?>
+                                                    <?php if ($row['status_eqpsite'] != "Done"): ?>
                                                     <?php
                                                     // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
                                                     date_default_timezone_set('Asia/Jakarta');
@@ -406,7 +406,7 @@ function getBadgeColor($remarks) {
                                                     // Menghitung selisih hari
                                                     $interval = $today->diff($sla_steqp)->format("%r%a");
 
-                                                    if ($row['status_eqpsite'] != "Approve" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                    if ($row['status_eqpsite'] != "Approve") {
                                                         echo '<a href="sdg-pk/eqpsite-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>';

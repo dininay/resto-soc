@@ -170,8 +170,11 @@ $conn->close();
                                                 <th>Lampiran VD</th>
                                                 <th>Lampiran Draft</th>
                                                 <th>Lampiran Sign PSM</th>
-                                                <th>Tgl Release PSM</th>
+                                                <th>Legal Send Date</th>
+                                                <th>Done Review PSM Date</th>
                                                 <th>Confirm TAF</th>
+                                                <th>Catatan Legal</th>
+                                                <th>Catatan TAF</th>
                                                 <th>SLA</th>
 												<th>Action</th>
                                             </tr>
@@ -298,6 +301,16 @@ $conn->close();
                                                 ?>   
                                                 <?php
                                                 // Pastikan $row['fatpsm_date'] sudah didefinisikan dan memeriksa apakah nilai tidak kosong
+                                                if (!empty($row['end_date'])) {
+                                                    $date = new DateTime($row['end_date']);
+                                                    $formattedDate = $date->format('d M y');
+                                                } else {
+                                                    $formattedDate = ''; // Menampilkan string kosong jika tanggal kosong
+                                                }
+                                                ?>
+                                                <td><?= $formattedDate ?></td>
+                                                <?php
+                                                // Pastikan $row['fatpsm_date'] sudah didefinisikan dan memeriksa apakah nilai tidak kosong
                                                 if (!empty($row['psmfat_date'])) {
                                                     $date = new DateTime($row['psmfat_date']);
                                                     $formattedDate = $date->format('d M y');
@@ -329,6 +342,8 @@ $conn->close();
                                                         <?php echo $row['confirm_fatpsm']; ?>
                                                     </span>
                                                 </td>
+                                                <td><?= $row['catatan_psm'] ?></td>
+                                                <td><?= $row['catatan_psmfat'] ?></td>
                                                 <td>
                                                     <?php
                                                     // Mengatur timezone ke Asia/Jakarta
@@ -413,7 +428,7 @@ $conn->close();
                                                     $work_end = '17:00';
 
                                                     // Cek apakah hari ini adalah hari kerja dan waktu kerja
-                                                    if ($row['confirm_fatpsm'] != "Approve" && $current_time >= $work_start && $current_time <= $work_end && $current_day >= 1 && $current_day <= 5) {
+                                                    if ($row['confirm_fatpsm'] != "Approve" && $current_day >= 1 && $current_day <= 5) {
                                                         // echo '<a href="marketing/marketing-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                         //     <i class="nav-icon i-Pen-2"></i>
                                                         // </a>';
@@ -448,6 +463,13 @@ $conn->close();
                                                                             <option value="In Revision">In Revision</option>
                                                                         </select>
                                                                     </div>
+                                                                    <!-- Catatan Sebelumnya (Read Only) -->
+                                                                    <div class="form-group">
+                                                                        <label for="catatan_psmfat">Catatan Sign PSM</label>
+                                                                        <input type="text" class="form-control" id="catatan_psmfat" name="catatan_psmfat" value="<?= $row['catatan_psmfat']; ?>">
+                                                                    </div>
+
+                                                                    <!-- Catatan Sign PSM -->
                                                                     <div class="form-group">
                                                                         <label for="catatan_psmfat">Catatan Sign PSM</label>
                                                                         <input type="text" class="form-control" id="catatan_psmfat" name="catatan_psmfat">
@@ -509,8 +531,11 @@ $conn->close();
                                                 <th>Lampiran VD</th>
                                                 <th>Lampiran Draft</th>
                                                 <th>Lampiran Sign PSM</th>
-                                                <th>Tgl Release PSM</th>
+                                                <th>Legal Send Date</th>
+                                                <th>Done Review PSM Date</th>
                                                 <th>Confirm TAF</th>
+                                                <th>Catatan Legal</th>
+                                                <th>Catatan TAF</th>
                                                 <th>SLA</th>
 												<th>Action</th>
                                             </tr>

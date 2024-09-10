@@ -171,9 +171,10 @@ function getBadgeColor($remarks) {
                                                 <th>Note</th>
                                                 <th>Lampiran WO Obstacle</th>
                                                 <th>Obstacle Date</th>
-                                                <th>Temuan Urugan</th>
-                                                <th>Lampiran Legal</th>
                                                 <th>Status Legal</th>
+                                                <th>Lampiran Legal</th>
+                                                <th>Temuan Urugan</th>
+                                                <th>Potensi Masalah</th>
                                                 <th>Lampiran Survey & Layouting</th>
 												<th>Status Survey & Layouting</th>
                                                 <th>SLA</th>
@@ -239,22 +240,28 @@ function getBadgeColor($remarks) {
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
-                                                        switch ($row['urugan']) {
-                                                            case 'No':
+                                                        switch ($row['status_obslegal']) {
+                                                            case 'Done':
                                                                 $badge_color = 'success';
                                                                 break;
-                                                            case 'Yes':
-                                                                $badge_color = 'warning';
+                                                            case 'Pending':
+                                                                $badge_color = 'danger';
                                                                 break;
+                                                            case 'In Process':
+                                                                $badge_color = 'primary';
+                                                                break;
+                                                                case 'Not Obstacle':
+                                                                    $badge_color = 'success';
+                                                                    break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
                                                                 break;
                                                         }
                                                     ?>
                                                     <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['urugan']; ?>
+                                                        <?php echo $row['status_obslegal']; ?>
                                                     </span>
-                                                </td>
+                                                </td> 
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_legal_files = explode(",", $row['lamp_legal']); // Pisahkan nama file menjadi array
@@ -281,28 +288,42 @@ function getBadgeColor($remarks) {
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
-                                                        switch ($row['status_obslegal']) {
-                                                            case 'Done':
+                                                        switch ($row['urugan']) {
+                                                            case 'No':
                                                                 $badge_color = 'success';
                                                                 break;
-                                                            case 'Pending':
-                                                                $badge_color = 'danger';
+                                                            case 'Yes':
+                                                                $badge_color = 'warning';
                                                                 break;
-                                                            case 'In Process':
-                                                                $badge_color = 'primary';
-                                                                break;
-                                                                case 'Not Obstacle':
-                                                                    $badge_color = 'success';
-                                                                    break;
                                                             default:
                                                                 $badge_color = 'secondary'; // Warna default jika status tidak dikenali
                                                                 break;
                                                         }
                                                     ?>
                                                     <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_obslegal']; ?>
+                                                        <?php echo $row['urugan']; ?>
                                                     </span>
-                                                </td> 
+                                                </td>
+                                                <td>
+                                                    <?php
+                                                        // Tentukan warna badge berdasarkan status approval owner
+                                                        $badge_color = '';
+                                                        switch ($row['potensi_masalah']) {
+                                                            case 'No':
+                                                                $badge_color = 'success';
+                                                                break;
+                                                            case 'Yes':
+                                                                $badge_color = 'warning';
+                                                                break;
+                                                            default:
+                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
+                                                                break;
+                                                        }
+                                                    ?>
+                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
+                                                        <?php echo $row['potensi_masalah']; ?>
+                                                    </span>
+                                                </td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_survey_files = explode(",", $row['lamp_survey']); // Pisahkan nama file menjadi array
@@ -424,7 +445,7 @@ function getBadgeColor($remarks) {
                                                     $work_start = '08:00';
                                                     $work_end = '17:00';
 
-                                                    if ($row['status_obssdg'] != "Done" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                    if ($row['status_obssdg'] != "Done") {
                                                         echo '<a href="sdg-design/obstacle-land-edit-form.php?id='. $row['id'].'" class="btn btn-sm btn-warning mr-2">
                                                             <i class="i-Pen-2"></i>
                                                             </a>';
@@ -511,9 +532,10 @@ function getBadgeColor($remarks) {
                                                 <th>Note</th>
                                                 <th>Lampiran WO Obstacle</th>
                                                 <th>Obstacle Date</th>
-                                                <th>Temuan Urugan</th>
-                                                <th>Lampiran Legal</th>
                                                 <th>Status Legal</th>
+                                                <th>Lampiran Legal</th>
+                                                <th>Temuan Urugan</th>
+                                                <th>Potensi Masalah</th>
                                                 <th>Lampiran Survey & Layouting</th>
 												<th>Status Survey & Layouting</th>
                                                 <th>SLA</th>

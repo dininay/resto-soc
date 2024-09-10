@@ -2,17 +2,12 @@
 // Koneksi ke database
 include "../koneksi.php";
 
+$status_scm = "";
 // Query untuk mengambil data dari tabel land
-$sql = "
-SELECT
-obs_sdg.*,
-land.kode_lahan,
-land.nama_lahan,
-land.lokasi,
-dokumen_loacd.kode_store
-FROM obs_sdg
-INNER JOIN land ON obs_sdg.kode_lahan = land.kode_lahan
-INNER JOIN dokumen_loacd ON obs_sdg.kode_lahan = dokumen_loacd.kode_lahan";
+$sql = "SELECT socdate_scm.*, dokumen_loacd.kode_store, land.nama_lahan 
+from socdate_scm 
+Inner join land ON land.kode_lahan = socdate_scm.kode_lahan
+Inner join dokumen_loacd ON dokumen_loacd.kode_lahan = socdate_scm.kode_lahan";
 $result = $conn->query($sql);
 
 
@@ -27,6 +22,48 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
+function calculateScoring($start_date, $sla_date) {
+    $start_date_obj = new DateTime($start_date);
+    $sla_date_obj = new DateTime($sla_date);
+    
+    // Jika start_date tidak melebihi sla_date, berikan skor 100
+    if ($start_date_obj <= $sla_date_obj) {
+        return 100;
+    }
+
+    // Menghitung selisih hari antara start_date dan sla_date
+    $date_diff = $start_date_obj->diff($sla_date_obj)->days;
+    
+    // Skor dikurangi dengan selisih hari keterlambatan
+    $scoring = max(0, 100 - ($date_diff * 10)); // Penyesuaian sesuai logika bisnis
+    
+    return round($scoring, 2);
+}
+
+// Fungsi untuk menentukan remarks berdasarkan scoring
+function getRemarks($scoring) {
+    if ($scoring >= 75) {
+        return "good";
+    } elseif ($scoring >= 0) {
+        return "poor";
+    } else {
+        return "bad";
+    }
+}
+
+// Fungsi untuk menentukan warna badge berdasarkan remarks
+function getBadgeColor($remarks) {
+    switch ($remarks) {
+        case 'good':
+            return 'success'; // Hijau
+        case 'poor':
+            return 'warning'; // Kuning
+        case 'bad':
+            return 'danger'; // Merah
+        default:
+            return 'secondary'; // Default jika remarks tidak dikenali
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="">
@@ -44,6 +81,25 @@ if ($result && $result->num_rows > 0) {
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/feather-icon.css">
 	<link rel="stylesheet" type="text/css" href="../dist-assets/css/icofont.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .hidden {
+            display: none;
+        },
+
+        .small-column {
+            max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */
+            overflow: hidden; /* Memotong konten yang meluas */
+            text-overflow: ellipsis; /* Menampilkan elipsis jika konten terlalu panjang */
+            white-space: nowrap; /* Mencegah teks membungkus ke baris baru */
+        }
+
+        th, td {
+                white-space: nowrap;
+            }
+        table.dataTable {
+            border-collapse:  collapse!important;
+        }
+    </style>
 </head>
 
 <body class="text-left">
@@ -59,7 +115,7 @@ if ($result && $result->num_rows > 0) {
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>List Data Obstacle from SDG Design</h1>
+                    <h1>Data Issue Urgent Utensils</h1>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
                 <!-- end of row-->
@@ -69,7 +125,7 @@ if ($result && $result->num_rows > 0) {
                             <div class="card-body">
                                 <h4 class="card-title mb-3"></h4>
 								<div class="footer-bottom float-right">
-                                <p><a class="btn btn-primary btn-icon m-1" href="sdg-design/obstacle-land-form.php">+ add Obstacle</a></p>
+									<!-- <p><a class="btn btn-primary btn-icon m-1" href="scm/scm-from.php">+ add Data </a></p> -->
 									<p>
 									  <span class="flex-grow-1"></span></p>
 								</div>
@@ -79,57 +135,30 @@ if ($result && $result->num_rows > 0) {
                                         <thead>
                                             <tr>
                                                 <th>Inventory Code</th>
+                                                <th>Nama Lahan</th>
                                                 <th>Kode Store</th>
-                                                <th>Nama Lokasi</th>
-                                                <th>Alamat Lokasi</th>
-                                                <th>Obstacle</th>
-                                                <th>Note</th>
-                                                <th>Obstacle Date</th>
-												<th>Status SDG</th>
-                                                <th>Lampiran Legal</th>
-                                                <th>Obstacle Legal Date</th>
-                                                <th>Status Legal</th>
-                                                <th>Action</th>
+                                                <th>Lampiran Surat Jalan</th>
+                                                <th>Lampiran Doc Utensil</th>
+												<th>Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                         <?php foreach ($data as $row): ?>
                                             <tr>
                                                 <td><?= $row['kode_lahan'] ?></td>
-                                                <td><?= $row['kode_store'] ?></td>
                                                 <td><?= $row['nama_lahan'] ?></td>
-                                                <td><?= $row['lokasi'] ?></td>
-                                                <td><?= $row['obstacle'] ?></td>
-                                                <td><?= $row['note'] ?></td>
-                                                <td><?= $row['obs_date'] ?></td>
-                                                <td>
-                                                    <?php
-                                                        // Tentukan warna badge berdasarkan status approval owner
-                                                        $badge_color = '';
-                                                        switch ($row['status_obssdg']) {
-                                                            case 'Diajukan':
-                                                                $badge_color = 'success';
-                                                                break;
-                                                            default:
-                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
-                                                                break;
-                                                        }
-                                                    ?>
-                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_obssdg']; ?>
-                                                    </span>
-                                                </td>
+                                                <td><?= $row['kode_store'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
-                                                $lamp_legal_files = explode(",", $row['lamp_legal']); // Pisahkan nama file menjadi array
+                                                $lamp_sj_files = explode(",", $row['lamp_sj']); // Pisahkan nama file menjadi array
                                                 // Periksa apakah array tidak kosong sebelum menampilkan ikon
-                                                if (!empty($row['lamp_legal'])) {
+                                                if (!empty($row['lamp_sj'])) {
                                                     echo '<td>
                                                             <ul style="list-style-type: none; padding: 0; margin: 0;">';
                                                     // Loop untuk setiap file dalam array
-                                                    foreach ($lamp_legal_files as $loacd) {
+                                                    foreach ($lamp_sj_files as $sj) {
                                                         echo '<li style="display: inline-block; margin-right: 5px;">
-                                                                <a href="uploads/' . $loacd . '" target="_blank">
+                                                                <a href="uploads/' . $sj . '" target="_blank">
                                                                     <i class="fas fa-file-pdf nav-icon"></i>
                                                                 </a>
                                                             </li>';
@@ -141,56 +170,134 @@ if ($result && $result->num_rows > 0) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>
-                                                <td><?= $row['obslegal_date'] ?></td>
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $lamp_utensil_files = explode(",", $row['lamp_utensil']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['lamp_utensil'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($lamp_utensil_files as $sj) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $sj . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>
                                                 <td>
+                                                    <!-- Tombol Edit -->
+                                                    <?php if ($row['status_scm'] != "Done"): ?>
                                                     <?php
-                                                        // Tentukan warna badge berdasarkan status approval owner
-                                                        $badge_color = '';
-                                                        switch ($row['status_obslegal']) {
-                                                            case 'Done':
-                                                                $badge_color = 'success';
-                                                                break;
-                                                            case 'Pending':
-                                                                $badge_color = 'danger';
-                                                                break;
-                                                            case 'In Process':
-                                                                $badge_color = 'primary';
-                                                                break;
-                                                            default:
-                                                                $badge_color = 'secondary'; // Warna default jika status tidak dikenali
-                                                                break;
-                                                        }
+                                                    // Mengatur timezone ke Asia/Jakarta
+                                                    date_default_timezone_set('Asia/Jakarta');
+
+                                                    // Mendapatkan waktu sekarang
+                                                    $now = new DateTime();
+                                                    $current_time = $now->format('H:i');
+
+                                                    // Jam kerja
+                                                    $work_start = '08:00';
+                                                    $work_end = '17:00';
+
+                                                    if ($row['status_scm'] != "Done") {
+                                                        // echo '<a href="scm/scm-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
+                                                        //     <i class="nav-icon i-Pen-2"></i>
+                                                        // </a>';
+                                                        // echo '<button class="btn btn-sm btn-primary edit-btn mr-2" data-toggle="modal" data-target="#editModal" data-id="'. $row['id'] .'" data-status="'.$row['status_scm'] .'">
+                                                        //     <i class="nav-icon i-Book"></i>
+                                                        // </button>';
+                                                        echo '<a href="datatables-data-procurutensil.php?id='. $row['kode_lahan'].'" class="btn btn-sm btn-info">
+                                                            <i class="nav-icon i-Loading-2"></i>
+                                                        </a>';
+                                                    }
                                                     ?>
-                                                    <span class="badge rounded-pill badge-<?php echo $badge_color; ?>">
-                                                        <?php echo $row['status_obslegal']; ?>
-                                                    </span>
+                                                    <?php endif; ?>
                                                 </td>
-                                                <td>
-                                                <!-- Tombol Edit -->
-                                                        <div>
-                                                            <?php if ($row['status_obslegal'] !== 'Done') : ?>
-                                                            <a href="legal/obstacle-legal-edit-form.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-warning mr-2">
-                                                            <i class="i-Pen-2"></i>
-                                                            </a>
-                                                            <?php endif; ?>
+                                                <!-- Modal -->
+                                                <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+                                                    <div class="modal-dialog" role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="editModalLabel">Edit Status</h5>
+                                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <form id="statusForm" method="post" action="scm/scm-process.php" enctype="multipart/form-data">
+                                                                    <input type="hidden" name="id" value=<?= $row['id'] ?> id="modalKodeLahan">
+                                                                    <div class="form-group">
+                                                                        <label for="statusSelect">Status Done SCM<strong><span style="color: red;">*</span></strong></label>
+                                                                        <select class="form-control" id="statusSelect" name="status_scm" Placeholder="Pilih">
+                                                                            <option value="In Process">In Process</option>
+                                                                            <option value="Pending">Pending</option>
+                                                                            <option value="Done">Done</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="catatan_scm">Catatan SCM</label>
+                                                                        <input type="text" class="form-control" id="catatan_scm" name="catatan_scm">
+                                                                    </div>
+                                                                    <div id="issueDetailSection" class="hidden">
+                                                                        <div class="form-group">
+                                                                            <label for="issue_detail">Issue Detail<strong><span style="color: red;">*</span></strong></label>
+                                                                            <textarea class="form-control" id="issue_detail" name="issue_detail"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="pic">PIC<strong><span style="color: red;">*</span></strong></label>
+                                                                            <select class="form-control" id="pic" name="pic">
+                                                                                <option value="">Pilih PIC</option>
+                                                                                <option value="Legal">Legal</option>
+                                                                                <option value="Marketing">Marketing</option>
+                                                                                <option value="Landlord">Landlord</option>
+                                                                                <option value="Scm">SCM</option>
+                                                                                <option value="Sdg-project">SDG Project</option>
+                                                                                <option value="Sdg-design">SDG Design</option>
+                                                                                <option value="Sdg-equipment">SDG Equipment</option>
+                                                                                <option value="Sdg-qs">SDG QS</option>
+                                                                                <option value="Operations">Operations</option>
+                                                                                <option value="Procurement">Procurement</option>
+                                                                                <option value="Taf">TAF</option>
+                                                                                <option value="HR">HR</option>
+                                                                                <option value="Academy">Academy</option>
+                                                                                <option value="Negotiator">Negotiator</option>
+                                                                                <option value="Others">Others</option>
+                                                                            </select>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="action_plan">Action Plan<strong><span style="color: red;">*</span></strong></label>
+                                                                            <textarea class="form-control" id="action_plan" name="action_plan"></textarea>
+                                                                        </div>
+                                                                        <div class="form-group">
+                                                                            <label for="kronologi">Upload File Kronologi<strong><span style="color: red;">*</span></strong></label>
+                                                                            <input type="file" class="form-control" id="kronologi" name="kronologi[]" multiple>
+                                                                        </div>
+                                                                    </div>
+                                                                    <button type="submit" class="btn btn-primary">Save changes</button>
+                                                                </form>
+                                                            </div>
                                                         </div>
-                                                </td>
+                                                    </div>
+                                                </div>
+                                            </tr>
                                         <?php endforeach; ?>
                                         </tbody>
                                         <tfoot>
                                             <tr>
                                                 <th>Inventory Code</th>
+                                                <th>Nama Lahan</th>
                                                 <th>Kode Store</th>
-                                                <th>Nama Lokasi</th>
-                                                <th>Alamat Lokasi</th>
-                                                <th>Obstacle</th>
-                                                <th>Note</th>
-                                                <th>Obstacle Date</th>
-												<th>Status SDG</th>
-                                                <th>Lampiran Legal</th>
-                                                <th>Obstacle Legal Date</th>
-                                                <th>Status Legal</th>
-                                                <th>Action</th>
+                                                <th>Lampiran Surat Jalan</th>
+                                                <th>Lampiran Doc Utensil</th>
+												<th>Action</th>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -413,6 +520,42 @@ if ($result && $result->num_rows > 0) {
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
     <script>
+    $(document).ready(function(){
+        // Saat tombol edit diklik
+        $('.edit-btn').click(function(){
+            // Ambil data-id dari tombol edit
+            var id = $(this).data('id');
+
+            // Isi nilai input tersembunyi dengan ID yang diambil
+            $('#modalKodeLahan').val(id);
+        });
+    });
+    
+    // Function to toggle the visibility of issue detail section
+    function toggleIssueDetail() {
+        var statusSelect = document.getElementById("statusSelect");
+        var issueDetailSection = document.getElementById("issueDetailSection");
+
+        if (statusSelect.value === "Pending") {
+            issueDetailSection.style.display = "block";
+        } else {
+            issueDetailSection.style.display = "none";
+        }
+    }
+
+    // Event listener for statusSelect change
+    $('#statusSelect').on('change', function () {
+        toggleIssueDetail();
+    });
+</script>
+<?php if ($status_scm == 'Pending') { ?>
+    <script>
+        $(document).ready(function () {
+            $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'
+        });
+    </script>
+<?php } ?>
+    <script>
         // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
         function setDelete(element) {
             var id = element.id;
@@ -420,15 +563,22 @@ if ($result && $result->num_rows > 0) {
         }
     </script>
     <script>
-$(document).ready(function() {
-    $(".edit-btn").click(function() {
-        // Sembunyikan semua form yang terbuka
-        $(".status-form").hide();
-        // Tampilkan form di samping tombol edit yang diklik
-        $(this).next(".status-form").show();
-    });
-});
-</script>
+        $(document).ready(function() {
+            // Hancurkan DataTable jika sudah ada
+            if ($.fn.DataTable.isDataTable('#zero_configuration_table')) {
+                $('#zero_configuration_table').DataTable().destroy();
+            }
+
+            // Inisialisasi DataTable
+            $('#zero_configuration_table').DataTable({
+                scrollX: true, // Menambahkan scroll horizontal
+                fixedColumns: {
+                    leftColumns: 3, // Jumlah kolom yang ingin di-fix
+                    topColumns: 2
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

@@ -80,7 +80,7 @@ INNER JOIN dokumen_loacd c ON d.kode_lahan = c.kode_lahan
 INNER JOIN sdg_rab r ON d.kode_lahan = r.kode_lahan
 INNER JOIN procurement p ON d.kode_lahan = p.kode_lahan
 INNER JOIN sdg_desain s ON d.kode_lahan = s.kode_lahan
-WHERE r.confirm_qsurugan = 'Approve'
+WHERE r.confirm_qsurugan IN ('Done','Approve')
 GROUP BY l.kode_lahan";
 $result = $conn->query($sql);
 
@@ -262,7 +262,7 @@ function getBadgeColor($remarks) {
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['confirm_qsurugan']) {
-                                                            case 'Approve':
+                                                            case 'Done':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -492,7 +492,7 @@ function getBadgeColor($remarks) {
                                                     $work_start = '08:00';
                                                     $work_end = '17:00';
 
-                                                    if ($row['status_procururugan'] != "Approve" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                    if ($row['status_procururugan'] != "Approve") {
                                                         echo '<a href="procurement/spk-urugan-procur-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>';

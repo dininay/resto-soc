@@ -41,11 +41,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         // Jika status_approvlegalvd diubah menjadi Approve
         if ($status_sdg == 'Approve') {
             $sdgpk_date = date("Y-m-d H:i:s");
-
+            $slaQuery = "SELECT SUM(sla) as total_day FROM master_slacons WHERE divisi = 'spk-procur'";
+            $results = $conn->query($slaQuery);
+            if ($results && $results->num_rows > 0) {
+                $row = $results->fetch_assoc();
+                $total_day = $row['total_day'];
+                $current_date = new DateTime();
+                $current_date->modify("+$total_day days");
+                $sla_tafpay = $current_date->format('Y-m-d');
+            }
+            $status = "In Process";
             // Query untuk memperbarui status status_sdg di tabel draft
-            $sql_update = "UPDATE socdate_sdg SET status_sdg = ?, sdgpk_date = ?, catatan_sdg = ? WHERE id = ?";
+            $sql_update = "UPDATE socdate_sdg SET status_sdg = ?, sdgpk_date = ?, catatan_sdg = ?, status_tafpay = ?, sla_tafpay = ? WHERE id = ?";
             $stmt_update = $conn->prepare($sql_update);
-            $stmt_update->bind_param("sssi", $status_sdg, $sdgpk_date, $catatan_sdg, $id);
+            $stmt_update->bind_param("sssssi", $status_sdg, $sdgpk_date, $catatan_sdg, $status_tafpay, $sla_tafpay, $id);
             $stmt_update->execute();
 
             if ($stmt_update->affected_rows > 0) {

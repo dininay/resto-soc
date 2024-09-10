@@ -8,8 +8,7 @@ if(isset($_GET['id'])) {
     $id = $_GET['id'];
 
     // Query untuk mendapatkan data resep berdasarkan ID
-    $result = $conn->query("SELECT 
-    draft.*, dokumen_loacd.kode_store FROM draft LEFT JOIN dokumen_loacd ON draft.kode_lahan = dokumen_loacd.kode_lahan WHERE draft.id = '$id'");
+    $result = $conn->query("SELECT * from dokumen_loacd WHERE id = '$id'");
 
     // Periksa apakah data ditemukan
     if ($result->num_rows > 0) {

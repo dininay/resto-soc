@@ -14,7 +14,7 @@ $mail = new PHPMailer(true);
 include "../../koneksi.php";
 
 // Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST["status_spkfat"])&& isset($_POST["catatan_spkfat"])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST["status_spkfat"]) && isset($_POST["catatan_spkfat"])) {
     $id = $_POST["id"];
     $status_spkfat = $_POST["status_spkfat"];
     $catatan_spkfat = $_POST["catatan_spkfat"];
@@ -62,10 +62,67 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
             if ($status_spkfat == 'Done Review') {
                 $spkfat_date = date("Y-m-d");
                 $status_approvprocurement = "Approve";
+                if (isset($_FILES["lamp_spkconsdone"])) {
+                    $lamp_spkconsdone_paths = array();
+                    foreach ($_FILES['lamp_spkconsdone']['name'] as $key => $filename) {
+                        $file_tmp = $_FILES['lamp_spkconsdone']['tmp_name'][$key];
+                        $target_dir = "../uploads/";
+                        $target_file = $target_dir . basename($filename);
+            
+                        // Attempt to move the uploaded file to the target directory
+                        if (move_uploaded_file($file_tmp, $target_file)) {
+                            $lamp_spkconsdone_paths[] = $filename;
+                        } else {
+                            echo "Gagal mengunggah file " . $filename . "<br>";
+                        }
+                    }
+            
+                    // Join all file paths into a comma-separated string
+                    $lamp_spkconsdone = implode(",", $lamp_spkconsdone_paths);
+                }
+
+                    $sql_sla = "SELECT sla FROM master_sla WHERE divisi = 'SPK'";
+                    $result_sla = $conn->query($sql_sla);
+                    if ($result_sla->num_rows > 0) {
+                        $row_sla = $result_sla->fetch_assoc();
+                        $hari_sla = $row_sla['sla'];
+                        echo "SLA days: $hari_sla<br>";
+
+                        // Tentukan sla_spk
+                        $sla_kom = date("Y-m-d", strtotime("$end_date + $hari_sla days"));
+                        echo "SLA SPK: $sla_spk<br>";
+                    } else {
+                        // Rollback transaksi jika data SLA tidak ditemukan
+                        $conn->rollback();
+                        echo "Error: Data SLA tidak ditemukan untuk divisi SPK.";
+                    }
+
+                    $sql_slafinal = "SELECT sla FROM master_sla WHERE divisi = 'SPK-Tender'";
+                    $result_slafinal = $conn->query($sql_slafinal);
+                    if ($result_slafinal->num_rows > 0) {
+                        $row_slafinal = $result_slafinal->fetch_assoc();
+                        $hari_slafinal = $row_slafinal['sla'];
+                        echo "SLA days: $hari_slafinal<br>";
+
+                        // Tentukan sla_spk
+                        $sla_finalspk = date("Y-m-d", strtotime("$spkfat_date + $hari_slafinal days"));
+                        echo "SLA SPK: $sla_finalspk<br>";
+                    } else {
+                        // Rollback transaksi jika data SLA tidak ditemukan
+                        $conn->rollback();
+                        echo "Error: Data SLA tidak ditemukan untuk divisi SPK.";
+                    }
+                    $status_finalspk = "In Process";
                 // Query untuk memperbarui submit_legal dan catatan_owner di tabel procurement
-                $sql_update_pending = "UPDATE procurement SET status_spkfat = ?, catatan_spkfat = ?, spkfat_date = ?, status_approvprocurement = ? WHERE id = ?";
+                $sql_update_pending = "UPDATE procurement SET status_spkfat = ?, catatan_spkfat = ?, spkfat_date = ?, status_approvprocurement = ?, lamp_spkconsdone = ?, status_finalspk = ?, sla_finalspk = ? WHERE id = ?";
                 $stmt_update_pending = $conn->prepare($sql_update_pending);
-                $stmt_update_pending->bind_param("ssssi", $status_spkfat, $catatan_spkfat, $spkfat_date, $status_approvprocurement, $id);
+                $stmt_update_pending->bind_param("sssssssi", $status_spkfat, $catatan_spkfat, $spkfat_date, $status_approvprocurement, $lamp_spkconsdone, $status_finalspk, $sla_finalspk, $id);
+                $stmt_update_pending->execute();
+
+                $status_kom = "In Process";
+                $sql_update_pending = "UPDATE resto SET status_kom = ?, sla_kom = ? WHERE id = ?";
+                $stmt_update_pending = $conn->prepare($sql_update_pending);
+                $stmt_update_pending->bind_param("ssi", $status_kom, $sla_kom, $id);
                 $stmt_update_pending->execute();
                 
                 // Periksa apakah kode_lahan ada di tabel hold_project
@@ -87,70 +144,131 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                 $conn->commit();
                 echo "Status berhasil diperbarui.";
                      
-            $queryIR = "SELECT email FROM user WHERE level IN ('Procurement','SDG-QS')";
-            $resultIR = mysqli_query($conn, $queryIR);
-
-            if ($resultIR && mysqli_num_rows($resultIR) > 0) {
-                while ($rowIR = mysqli_fetch_assoc($resultIR)) {
-                    if (!empty($rowIR['email'])) {
-                        $toEmails[] = $rowIR['email'];
+                $queryIR = "SELECT email FROM user WHERE level IN ('Procurement')";
+                $resultIR = mysqli_query($conn, $queryIR);
+    
+                if ($resultIR && mysqli_num_rows($resultIR) > 0) {
+                    while ($rowIR = mysqli_fetch_assoc($resultIR)) {
+                        if (!empty($rowIR['email'])) {
+                            $toEmails[] = $rowIR['email'];
+                        }
                     }
                 }
-            }
-            var_dump($toEmails);
-            if (!empty($toEmails)) {
-
-                try {
-                    // SMTP configuration
-                    $mail = new PHPMailer(true);
-                    $mail->isSMTP();
-                    // $mail->SMTPDebug = 2;
-                    $mail->SMTPAuth = true;
-                    $mail->SMTPSecure = 'ssl';
-                    $mail->Host = 'miegacoan.co.id';
-                    $mail->Port = 465;
-                    $mail->Username = 'resto-soc@miegacoan.co.id';
-                    $mail->Password = '9)5X]*hjB4sh';
-                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-                    $mail->setFrom('resto-soc@miegacoan.co.id', 'Pesta Pora Abadi');
-
-                    foreach ($toEmails as $toEmail) {
-                        $mail->addAddress($toEmail);
+                var_dump($toEmails);
+                if (!empty($toEmails)) {
+    
+                    try {
+                        // SMTP configuration
+                        $mail = new PHPMailer(true);
+                        $mail->isSMTP();
+                        // $mail->SMTPDebug = 2;
+                        $mail->SMTPAuth = true;
+                        $mail->SMTPSecure = 'ssl';
+                        $mail->Host = 'miegacoan.co.id';
+                        $mail->Port = 465;
+                        $mail->Username = 'resto-soc@miegacoan.co.id';
+                        $mail->Password = '9)5X]*hjB4sh';
+                        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+                        $mail->setFrom('resto-soc@miegacoan.co.id', 'Pesta Pora Abadi');
+    
+                        foreach ($toEmails as $toEmail) {
+                            $mail->addAddress($toEmail);
+                        }
+    
+                        // Email content
+                        $mail->Subject = 'Notification: 1 New Active Resto SOC Ticket';
+                                        $mail->Body    = '
+                                        <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                                            <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
+                                                <img src="cid:header_image" alt="Header Image" style="max-width: 100%; height: auto; margin-bottom: 20px;">
+                                                <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Procurement Team,</h2>
+                                                <p>We would like to inform you that a new Active Resto SOC Ticket has been created in the Review SPK Construction by TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                Your prompt attention to this matter is greatly appreciated.</p>
+                                                <p></p>
+                                                <p>Have a good day!</p>
+                                            </div>
+                                        </div>';
+                                        $mail->AltBody = 'Dear Procurement Team,'
+                                                    . 'We would like to inform you that a new Active Resto SOC Ticket has been created in the Review SPK Construction by TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                        Your prompt attention to this matter is greatly appreciated.'
+                                                    . 'Have a good day!';
+    
+                        // Send email
+                        if ($mail->send()) {
+                            echo "Email sent successfully!<br>";
+                        } else {
+                            echo "Failed to send email. Error: {$mail->ErrorInfo}<br>";
+                        }
+    
+                    } catch (Exception $e) {
+                        echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
                     }
-
-                    // Email content
-                    $mail->Subject = 'Notification: 1 New SPK DOne Review from TAF Resto SOC Ticket';
-                                    $mail->Body    = '
-                                    <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
-                                        <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
-                                            <img src="cid:header_image" alt="Header Image" style="max-width: 100%; height: auto; margin-bottom: 20px;">
-                                            <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Team,</h2>
-                                            <p>You have 1 New SPK DOne Review from TAF Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.</p>
-                                            <p>Thank you for your prompt attention to this matter.</p>
-                                            <p></p>
-                                            <p>Best regards,</p>
-                                            <p>Resto - SOC</p>
-                                        </div>
-                                    </div>';
-                                    $mail->AltBody = 'Dear Team,'
-                                                . 'You have 1 New SPK DOne Review from TAF Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.'
-                                                . 'Thank you for your prompt attention to this matter.'
-                                                . 'Best regards,'
-                                                . 'Resto - SOC';
-
-                    // Send email
-                    if ($mail->send()) {
-                        echo "Email sent successfully!<br>";
-                    } else {
-                        echo "Failed to send email. Error: {$mail->ErrorInfo}<br>";
-                    }
-
-                } catch (Exception $e) {
-                    echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+                } else {
+                    echo "No email found for the selected resto or IR users.";
                 }
-            } else {
-                echo "No email found for the selected resto or IR users.";
-            }
+                 
+                $queryIR = "SELECT email FROM user WHERE level IN ('SDG-QS')";
+                $resultIR = mysqli_query($conn, $queryIR);
+    
+                if ($resultIR && mysqli_num_rows($resultIR) > 0) {
+                    while ($rowIR = mysqli_fetch_assoc($resultIR)) {
+                        if (!empty($rowIR['email'])) {
+                            $toEmails[] = $rowIR['email'];
+                        }
+                    }
+                }
+                var_dump($toEmails);
+                if (!empty($toEmails)) {
+    
+                    try {
+                        // SMTP configuration
+                        $mail = new PHPMailer(true);
+                        $mail->isSMTP();
+                        // $mail->SMTPDebug = 2;
+                        $mail->SMTPAuth = true;
+                        $mail->SMTPSecure = 'ssl';
+                        $mail->Host = 'miegacoan.co.id';
+                        $mail->Port = 465;
+                        $mail->Username = 'resto-soc@miegacoan.co.id';
+                        $mail->Password = '9)5X]*hjB4sh';
+                        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+                        $mail->setFrom('resto-soc@miegacoan.co.id', 'Pesta Pora Abadi');
+    
+                        foreach ($toEmails as $toEmail) {
+                            $mail->addAddress($toEmail);
+                        }
+    
+                        // Email content
+                        $mail->Subject = 'Notification: 1 New Active Resto SOC Ticket';
+                                        $mail->Body    = '
+                                        <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                                            <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
+                                                <img src="cid:header_image" alt="Header Image" style="max-width: 100%; height: auto; margin-bottom: 20px;">
+                                                <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear SDG-QS Team,</h2>
+                                                <p>We would like to inform you that a new Active Resto SOC Ticket has been created in the Review SPK Construction by TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                Your prompt attention to this matter is greatly appreciated.</p>
+                                                <p></p>
+                                                <p>Have a good day!</p>
+                                            </div>
+                                        </div>';
+                                        $mail->AltBody = 'Dear SDG-QS Team,'
+                                                    . 'We would like to inform you that a new Active Resto SOC Ticket has been created in the Review SPK Construction by TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                        Your prompt attention to this matter is greatly appreciated.'
+                                                    . 'Have a good day!';
+    
+                        // Send email
+                        if ($mail->send()) {
+                            echo "Email sent successfully!<br>";
+                        } else {
+                            echo "Failed to send email. Error: {$mail->ErrorInfo}<br>";
+                        }
+    
+                    } catch (Exception $e) {
+                        echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+                    }
+                } else {
+                    echo "No email found for the selected resto or IR users.";
+                }
             } elseif ($status_spkfat == 'Pending') {
                 // Ambil kode_lahan dari tabel procurement
                 $sql_get_kode_lahan = "SELECT kode_lahan FROM procurement WHERE id = ?";

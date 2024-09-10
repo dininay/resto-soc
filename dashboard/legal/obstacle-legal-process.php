@@ -58,24 +58,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                     $sql_select_sla_qs = "SELECT sla FROM master_sla WHERE divisi = 'QS'";
                     $result_sla_qs = $conn->query($sql_select_sla_qs);
                     
-                    if ($row_sla_qs = $result_sla_qs->fetch_assoc()) {
-                        $sla_days_qs = $row_sla_qs['sla'];
-                        $end_date_obj = new DateTime($row['end_date']);
-                        $end_date_obj->modify("+$sla_days_qs days");
-                        $sla_date = $end_date_obj->format("Y-m-d");
-
-                        // Masukkan data ke tabel sdg_rab
-                        $sql_insert = "INSERT INTO sdg_rab (kode_lahan, confirm_sdgqs, sla_date) VALUES (?,?,?)";
-                        $stmt_insert = $conn->prepare($sql_insert);
-                        // Tambahkan 'In Process' untuk kolom confirm_sdgqs
-                        $confirm_sdgqs = 'In Process';
-                        $stmt_insert->bind_param("sss", $row['kode_lahan'], $confirm_sdgqs, $sla_date);
-                        $stmt_insert->execute();
-                    } else {
-                        $conn->rollback();
-                        echo "Error: SLA not found for divisi: SDG-QS.";
-                        exit;
-                    }
                     // Ambil kode_lahan dari tabel re
                     $sql_get_kode_lahan = "SELECT kode_lahan FROM sdg_desain WHERE id = ?";
                     $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);

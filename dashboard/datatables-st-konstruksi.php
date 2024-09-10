@@ -11,7 +11,7 @@ d.jadwal_psm, s.lamp_desainplan, c.kode_store
         INNER JOIN sdg_desain s ON d.kode_lahan = s.kode_lahan
         INNER JOIN resto r ON d.kode_lahan = r.kode_lahan
         INNER JOIN procurement p ON r.kode_lahan = r.kode_lahan
-        WHERE r.status_kom = 'Done'
+        WHERE r.status_kom = 'On Going Project'
         GROUP BY l.kode_lahan";
 $result = $conn->query($sql);
 
@@ -402,7 +402,7 @@ function getBadgeColor($remarks) {
                                                     $work_start = '08:00';
                                                     $work_end = '17:00';
 
-                                                    if ($row['status_stkonstruksi'] != "Done" && $current_time >= $work_start && $current_time <= $work_end && $interval <= 30 && $interval >= 0) {
+                                                    if ($row['status_stkonstruksi'] != "Done" && $interval <= 30 && $interval >= 0) {
                                                         echo '<a href="sdg-pk/stkons-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>';

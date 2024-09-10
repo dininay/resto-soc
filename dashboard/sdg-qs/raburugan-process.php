@@ -57,8 +57,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
 
         // Eksekusi query update
         if ($stmt_update->execute() === TRUE) {
-            // Jika confirm_qsurugan diubah menjadi Approve
-            if ($confirm_qsurugan == 'Approve') {
+            // Jika confirm_qsurugan diubah menjadi Done
+            if ($confirm_qsurugan == 'Done') {
                 // Ambil data dari tabel sdg_rab berdasarkan id yang diedit
                 $sql_select = "SELECT kode_lahan FROM sdg_rab WHERE id = ?";
                 $stmt_select = $conn->prepare($sql_select);
@@ -87,25 +87,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
 
                         if ($stmt_check->num_rows > 0) {
                             // Jika ada, lakukan update
-                            $sql_update = "UPDATE procurement SET 
-                                        status_procururugan = ?, 
-                                        sla_spkurugan = ?, 
-                                        status_tenderurugan = ?, 
-                                        slatenderurugan_date = ? 
-                                        WHERE kode_lahan = ?";
+                            $sql_update = "UPDATE procurement SET status_tenderurugan = ?, slatenderurugan_date = ? WHERE kode_lahan = ?";
                             $stmt_update = $conn->prepare($sql_update);
                             $status_tenderurugan = "In Process";
                             $status_procururugan = "In Process";
-                            $stmt_update->bind_param("sssss", $status_procururugan, $sla_spkurugan, $status_tenderurugan, $slatenderurugan_date, $row['kode_lahan']);
+                            $stmt_update->bind_param("sss", $status_procururugan, $slatenderurugan_date, $row['kode_lahan']);
                             $stmt_update->execute();
                         } else {
                             // Jika tidak ada, lakukan insert
-                            $sql_insert = "INSERT INTO procurement (kode_lahan, status_procururugan, sla_spkurugan, status_tenderurugan, slatenderurugan_date) 
-                                        VALUES (?, ?, ?, ?, ?)";
+                            $sql_insert = "INSERT INTO procurement (kode_lahan, status_tenderurugan, slatenderurugan_date) 
+                                        VALUES (?, ?, ?)";
                             $stmt_insert = $conn->prepare($sql_insert);
                             $status_tenderurugan = "In Process";
                             $status_procururugan = "In Process";
-                            $stmt_insert->bind_param("sssss", $row['kode_lahan'], $status_procururugan, $sla_spkurugan, $status_tenderurugan, $slatenderurugan_date);
+                            $stmt_insert->bind_param("sss", $row['kode_lahan'], $status_tenderurugan, $slatenderurugan_date);
                             $stmt_insert->execute();
                         }
 
@@ -300,8 +295,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                                         <p>You have 1 New Active Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.</p>
                                         <p>Thank you for your prompt attention to this matter.</p>
                                         <p></p>
-                                        <p>Best regards,</p>
-                                        <p>Resto - SOC</p>
+                                        <p>Have a good day!</p>
                                     </div>
                                 </div>';
                                 $mail->AltBody = 'Dear Team,'
@@ -325,7 +319,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                         echo "Email tidak dapat dikirim. Error: {$mail->ErrorInfo}";
                     }
             } else {
-                // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_$status_obssdg
+                // Jika status tidak diubah menjadi Done, Reject, atau Pending, hanya perlu memperbarui status_$status_obssdg
                 $sql_update_other = "UPDATE sdg_rab SET confirm_qsurugan = ?, catatan_qsurugan = ?, qsurugan_date = ? WHERE id = ?";
                 $stmt_update_other = $conn->prepare($sql_update_other);
                 $stmt_update_other->bind_param("sssi", $confirm_qsurugan, $catatan_qsurugan, $qsurugan_date, $id);

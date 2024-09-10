@@ -11,7 +11,7 @@ INNER JOIN dokumen_loacd c ON d.kode_lahan = c.kode_lahan
 INNER JOIN sdg_rab r ON d.kode_lahan = r.kode_lahan
 INNER JOIN procurement p ON d.kode_lahan = p.kode_lahan
 INNER JOIN sdg_desain s ON d.kode_lahan = s.kode_lahan
-WHERE r.confirm_sdgqs = 'Approve'
+WHERE r.confirm_sdgqs IN ('Done','Approve')
 GROUP BY l.kode_lahan";
 $result = $conn->query($sql);
 
@@ -173,7 +173,7 @@ function getBadgeColor($remarks) {
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['confirm_sdgqs']) {
-                                                            case 'Approve':
+                                                            case 'Done':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -388,7 +388,7 @@ function getBadgeColor($remarks) {
                                                     $work_end = '17:00';
 
                                                     // Cek apakah hari ini adalah hari kerja dan waktu kerja
-                                                    if ($row['status_spkfat'] != "Done Review" && $current_time >= $work_start && $current_time <= $work_end && $current_day >= 1 && $current_day <= 5) {
+                                                    if ($row['status_spkfat'] != "Done Review" && $current_day >= 1 && $current_day <= 5) {
                                                         // echo '<a href="marketing/marketing-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                         //     <i class="nav-icon i-Pen-2"></i>
                                                         // </a>';
@@ -425,6 +425,10 @@ function getBadgeColor($remarks) {
                                                                         <label for="catatan_spkfat">Catatan TAF</label>
                                                                         <input type="text" class="form-control" id="catatan_spkfat" name="catatan_spkfat">
                                                                     </div>
+                                                                        <div class="form-group">
+                                                                            <label for="lamp_spkconsdone">Upload SPK Done Paraf<strong><span style="color: red;">*</span></strong></label>
+                                                                            <input type="file" class="form-control" id="lamp_spkconsdone" name="lamp_spkconsdone[]" multiple>
+                                                                        </div>
                                                                     <div id="issueDetailSection" class="hidden">
                                                                         <div class="form-group">
                                                                             <label for="issue_detail">Issue Detail<strong><span style="color: red;">*</span></strong></label>

@@ -90,7 +90,13 @@ if(isset($_GET['id'])) {
                                         <input class="form-control" id="pasanglistrik_date" name="pasanglistrik_date" type="date" placeholder="Tgl Pemasangan Listrik" value="<?php echo $row['pasanglistrik_date']; ?>"/>
                                     </div>
                                 </div>
-                                <div class="form-group row">
+                                <div class="form-group row" id="id-reg" style="display: none;">
+                                    <label class="col-sm-3 col-form-label" for="id_regpln">ID Register<strong><span style="color: red;">*</span></strong></label>
+                                    <div class="col-sm-9">
+                                        <input class="form-control" id="id_regpln" name="id_regpln" type="text" placeholder="ID Register" value="<?php echo $row['id_regpln']; ?>"/>
+                                    </div>
+                                </div>
+                                <div class="form-group row" id="id-listrik" style="display: none;">
                                     <label class="col-sm-3 col-form-label" for="id_pln">ID PLN<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="id_pln" name="id_pln" type="text" placeholder="ID PLN" value="<?php echo $row['id_pln']; ?>"/>
@@ -102,13 +108,13 @@ if(isset($_GET['id'])) {
                                         <input class="form-control" id="note_sumberlistrik" name="note_sumberlistrik" type="text" placeholder="Lainnya" value="<?php echo $row['note_sumberlistrik']; ?>"/>
                                     </div>
                                 </div> -->
-                                <div class="form-group row">
+                                <div class="form-group row" id="va-listrik" style="display: none;">
                                     <label class="col-sm-3 col-form-label" for="hasil_va">Hasil VA (Voltege Ampere)<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="hasil_va" name="hasil_va" type="text" placeholder="Hasil VA" value="<?php echo $row['hasil_va']; ?>"/>
                                     </div>
                                 </div>
-                                <div class="form-group row">
+                                <div class="form-group row" id="slo-listrik" style="display: none;">
                                     <label class="col-sm-3 col-form-label" for="lamp_slo">Upload Document SLO<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multiple-file-upload">
@@ -116,11 +122,19 @@ if(isset($_GET['id'])) {
                                         </div>
                                     </div>
                                 </div>
-                                <div class="form-group row">
+                                <div class="form-group row" id="nidi-listrik" style="display: none;">
                                     <label class="col-sm-3 col-form-label" for="lamp_nidi">Upload Document NIDI<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multiple-file-upload">
                                             <input name="lamp_nidi[]" type="file" multiple="multiple" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row" id="wo-listrik" style="display: none;">
+                                    <label class="col-sm-3 col-form-label" for="form_wolistrik">Upload WO Pengajuan Payment Listrik<strong><span style="color: red;">*</span></strong></label>
+                                    <div class="col-sm-9">
+                                        <div class="dropzone" id="multiple-file-upload">
+                                            <input name="form_wolistrik[]" type="file" multiple="multiple" />
                                         </div>
                                     </div>
                                 </div>
@@ -316,13 +330,41 @@ if(isset($_GET['id'])) {
     function toggleListrikDetail() {
         var sumberListrik = document.getElementById("sumber_listrik");
         var lampiranFilter = document.getElementById("note-listrik");
+        var idReg = document.getElementById("id-reg");
         var tglListrik = document.getElementById("tgl-listrik");
+        var idListrik = document.getElementById("id-listrik");
+        var vaListrik = document.getElementById("va-listrik");
+        var sloListrik = document.getElementById("slo-listrik");
+        var nidiListrik = document.getElementById("nidi-listrik");
+        var woListrik = document.getElementById("wo-listrik");
+
         if (sumberListrik.value === "Penyambungan Daya Baru PLN") {
             lampiranFilter.style.display = "flex";
             tglListrik.style.display = "flex";
+            idReg.style.display = "flex";
+            idListrik.style.display = "none";
+            vaListrik.style.display = "none";
+            sloListrik.style.display = "none";
+            nidiListrik.style.display = "none";
+            woListrik.style.display = "none";
+        } else if (sumberListrik.value === "Tambah Listrik Existing") {
+            idListrik.style.display = "flex";
+            vaListrik.style.display = "flex";
+            sloListrik.style.display = "flex";
+            nidiListrik.style.display = "flex";
+            woListrik.style.display = "flex";
+            lampiranFilter.style.display = "none";
+            tglListrik.style.display = "none";
+            idReg.style.display = "none";
         } else {
             lampiranFilter.style.display = "none";
             tglListrik.style.display = "none";
+            idReg.style.display = "none";
+            idListrik.style.display = "none";
+            vaListrik.style.display = "none";
+            sloListrik.style.display = "none";
+            nidiListrik.style.display = "none";
+            woListrik.style.display = "none";
         }
     }
 

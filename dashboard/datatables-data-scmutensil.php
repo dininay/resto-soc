@@ -130,7 +130,13 @@ if (isset($_GET['id'])) {
                                                             case 'In Process':
                                                                 $badge_color = 'primary';
                                                                 break;
-                                                            case 'Waiting Still In Procurement':
+                                                            case 'Pending In Procurement':
+                                                                $badge_color = 'warning';
+                                                            break;
+                                                            case 'Pending In IT':
+                                                                $badge_color = 'warning';
+                                                            break;
+                                                            case 'Pending In HRGA':
                                                                 $badge_color = 'warning';
                                                             break;
                                                             default:
@@ -236,7 +242,9 @@ if (isset($_GET['id'])) {
                                                                         <select class="form-control" id="statusSelect" name="status_utensil" Placeholder="Pilih">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Receive In Store">Receive In Store (Done)</option>
-                                                                            <option value="Waiting Still In Procurement">Waiting Still In Procurement</option>
+                                                                            <option value="Pending In Procurement">Pending In Procurement</option>
+                                                                            <option value="Pending In IT">Pending In IT</option>
+                                                                            <option value="Pending In HRGA">Pending In HRGA</option>
                                                                             <option value="Progress Utensil Receive">Progress Utensil Receive</option>
                                                                         </select>
                                                                     </div>

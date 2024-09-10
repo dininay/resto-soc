@@ -166,7 +166,9 @@ function getBadgeColor($remarks) {
                                                 <th>Nama Lahan</th>
                                                 <th>Sumber Listrik</th>
                                                 <th>Note Sumber Listrik</th>
+                                                <th>ID Register PLN</th>
                                                 <th>Lampiran Pengajuan Listrik</th>
+                                                <th>Lampiran Pengajuan Payment Listrik Existing</th>
                                                 <th>Hasil Voltege Ampere (VA)</th>
                                                 <th>ID PLN</th>
                                                 <th>Lampiran SLO</th>
@@ -184,6 +186,7 @@ function getBadgeColor($remarks) {
                                                 <td><?= $row['nama_lahan'] ?></td>
                                                 <td><?= $row['sumber_listrik'] ?></td>
                                                 <td><?= $row['note_sumberlistrik'] ?></td>
+                                                <td><?= $row['id_regpln'] ?></td>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $form_pengajuanlistrik_files = explode(",", $row['form_pengajuanlistrik']); // Pisahkan nama file menjadi array
@@ -193,6 +196,28 @@ function getBadgeColor($remarks) {
                                                             <ul style="list-style-type: none; padding: 0; margin: 0;">';
                                                     // Loop untuk setiap file dalam array
                                                     foreach ($form_pengajuanlistrik_files as $listrik) {
+                                                        echo '<li style="display: inline-block; margin-right: 5px;">
+                                                                <a href="uploads/' . $listrik . '" target="_blank">
+                                                                    <i class="fas fa-file-pdf nav-icon"></i>
+                                                                </a>
+                                                            </li>';
+                                                    }
+                                                    echo '</ul>
+                                                        </td>';
+                                                } else {
+                                                    // Jika kolom kosong, tampilkan kolom kosong untuk menjaga tata letak tabel
+                                                    echo '<td></td>';
+                                                }
+                                                ?>
+                                                <?php
+                                                // Bagian ini di dalam loop yang menampilkan data tabel
+                                                $form_wolistrik_files = explode(",", $row['form_wolistrik']); // Pisahkan nama file menjadi array
+                                                // Periksa apakah array tidak kosong sebelum menampilkan ikon
+                                                if (!empty($row['form_wolistrik'])) {
+                                                    echo '<td>
+                                                            <ul style="list-style-type: none; padding: 0; margin: 0;">';
+                                                    // Loop untuk setiap file dalam array
+                                                    foreach ($form_wolistrik_files as $listrik) {
                                                         echo '<li style="display: inline-block; margin-right: 5px;">
                                                                 <a href="uploads/' . $listrik . '" target="_blank">
                                                                     <i class="fas fa-file-pdf nav-icon"></i>
@@ -351,7 +376,7 @@ function getBadgeColor($remarks) {
                                                     $work_start = '08:00';
                                                     $work_end = '17:00';
 
-                                                    if ($row['status_sdglistrik'] != "Done" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                    if ($row['status_sdglistrik'] != "Done") {
                                                         echo '<a href="sdg-pk/sdgpk-rto-listrik-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>';
@@ -438,7 +463,9 @@ function getBadgeColor($remarks) {
                                                 <th>Nama Lahan</th>
                                                 <th>Sumber Listrik</th>
                                                 <th>Note Sumber Listrik</th>
+                                                <th>ID Register PLN</th>
                                                 <th>Lampiran Pengajuan Listrik</th>
+                                                <th>Lampiran Pengajuan Payment Listrik Existing</th>
                                                 <th>Hasil Voltege Ampere (VA)</th>
                                                 <th>ID PLN</th>
                                                 <th>Lampiran SLO</th>

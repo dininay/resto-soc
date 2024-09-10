@@ -3,10 +3,11 @@
 include "../../koneksi.php";
 
 // Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["status_kondisilahan"]) && isset($_POST["catatan_kondisilahan"])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["status_kondisilahan"]) && isset($_POST["catatan_kondisilahan"]) && isset($_POST["tgl_kondisilahan"])) {
     $id = $_POST["id"];
     $status_kondisilahan = $_POST["status_kondisilahan"];
     $catatan_kondisilahan = $_POST["catatan_kondisilahan"];
+    $tgl_kondisilahan = $_POST["tgl_kondisilahan"];
     $kondisilahan_date = null;
     $issue_detail = isset($_POST["issue_detail"]) ? $_POST["issue_detail"] : null;
     $pic = isset($_POST["pic"]) ? $_POST["pic"] : null;
@@ -42,9 +43,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             $kondisilahan_date = date("Y-m-d H:i:s");
 
             // Query untuk memperbarui status status_kondisilahan di tabel draft
-            $sql_update = "UPDATE draft SET status_kondisilahan = ?, catatan_kondisilahan = ?, kondisilahan_date = ? WHERE id = ?";
+            $sql_update = "UPDATE draft SET status_kondisilahan = ?, catatan_kondisilahan = ?, tgl_kondisilahan = ?, kondisilahan_date = ? WHERE id = ?";
             $stmt_update = $conn->prepare($sql_update);
-            $stmt_update->bind_param("sssi", $status_kondisilahan, $catatan_kondisilahan, $kondisilahan_date, $id);
+            $stmt_update->bind_param("ssssi", $status_kondisilahan, $catatan_kondisilahan, $tgl_kondisilahan, $kondisilahan_date, $id);
             $stmt_update->execute();
 
             if ($stmt_update->affected_rows > 0) {
@@ -157,9 +158,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 }
             } else {
                 // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_vl di tabel re
-                $sql = "UPDATE draft SET status_kondisilahan = ?, catatan_kondisilahan = ? WHERE id = ?";
+                $sql = "UPDATE draft SET status_kondisilahan = ?, catatan_kondisilahan = ?, tgl_kondisilahan = ? WHERE id = ?";
                 $stmt = $conn->prepare($sql);
-                $stmt->bind_param("ssi", $status_kondisilahan, $catatan_kondisilahan, $id);
+                $stmt->bind_param("sssi", $status_kondisilahan, $catatan_kondisilahan, $tgl_kondisilahan, $id);
                 $stmt->execute();
     
                 // Check if update was successful

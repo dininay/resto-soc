@@ -99,7 +99,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("ssi", $status_utensil, $qty_date, $id);
             $stmt->execute();
-        } elseif ($status_utensil == 'Waiting Still In Procurement') {
+        } elseif ($status_utensil == 'Pending In Procurement') {
+            // Jika status id diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_vl di tabel re
+            $sql = "UPDATE utensil SET status_utensil = ?, qty_date = ? WHERE id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ssi", $status_utensil, $qty_date, $id);
+            $stmt->execute();
+        } elseif ($status_utensil == 'Pending In IT') {
+            // Jika status id diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_vl di tabel re
+            $sql = "UPDATE utensil SET status_utensil = ?, qty_date = ? WHERE id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ssi", $status_utensil, $qty_date, $id);
+            $stmt->execute();
+        } elseif ($status_utensil == 'Pending In HRGA') {
             // Jika status id diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_vl di tabel re
             $sql = "UPDATE utensil SET status_utensil = ?, qty_date = ? WHERE id = ?";
             $stmt = $conn->prepare($sql);

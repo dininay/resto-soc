@@ -171,7 +171,7 @@ if (isset($_GET['id'])) {
                                 <div class="form-group row">
                                     <label class="col-sm-3 col-form-label" for="project_sales">Project Sales<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
-                                        <input class="form-control" id="project_sales" name="project_sales" type="text" placeholder="100.000.000" value="<?php echo $row['project_sales']; ?>"/>
+                                        <input class="form-control" id="project_sales" name="project_sales" type="text" oninput="formatRupiah(this)" placeholder="Masukkan Angka Saja" value="<?php echo $row['project_sales']; ?>"/>
                                     </div>
                                 </div>
                                 <div class="form-group row">
@@ -420,6 +420,23 @@ if (isset($_GET['id'])) {
     <script src="../../dist-assets/js/scripts/sidebar.compact.script.min.js"></script>
     <script src="../../dist-assets/js/scripts/customizer.script.min.js"></script>
     
+    <script>
+        function formatRupiah(input) {
+            let value = input.value.replace(/[^,\d]/g, '').toString();
+            let split = value.split(',');
+            let sisa = split[0].length % 3;
+            let rupiah = split[0].substr(0, sisa);
+            let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if (ribuan) {
+                let separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+
+            rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+            input.value = 'Rp. ' + rupiah;
+        }
+    </script>
 </body>
 
 </html>

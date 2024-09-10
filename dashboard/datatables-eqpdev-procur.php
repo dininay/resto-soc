@@ -369,7 +369,7 @@ function getBadgeColor($remarks) {
                                                     $work_start = '08:00';
                                                     $work_end = '17:00';
 
-                                                    if ($row['status_eqpdevprocur'] != "Approve" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                    if ($row['status_eqpdevprocur'] != "Approve") {
                                                         echo '<a href="procurement/eqpdev-procur-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>';

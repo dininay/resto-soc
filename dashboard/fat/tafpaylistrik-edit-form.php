@@ -8,16 +8,18 @@ if(isset($_GET['id'])) {
     $id = $_GET['id'];
 
     // Query untuk mendapatkan data resep berdasarkan ID
-    $result = $conn->query("SELECT * FROM sdg_desain WHERE id = '$id'");
+    $result = $conn->query("SELECT * FROM socdate_sdg WHERE id = '$id'");
 
     // Periksa apakah data ditemukan
     if ($result->num_rows > 0) {
         // Ambil data resep
         $row = $result->fetch_assoc();
+        
     } else {
         echo "Data tidak ditemukan.";
     }
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -50,35 +52,29 @@ if(isset($_GET['id'])) {
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Land Survey</h1>
+                    <h1>TAF Payment Listrik PLN & Air PDAM</h1>
                     <ul>
                         <li><a href="href">Edit</a></li>
-                        <li>Land Survey</li>
+                        <li>TAF Payment Listrik PLN & Air PDAM</li>
                     </ul>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
                 <div class="row">
-                    <div class="col-md-7">
+                    <div class="col-md-6">
                         <div class="card mb-5">
                             <div class="card-body">
-                            <form method="post" action="survey-land-edit.php" enctype="multipart/form-data">
-                            <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
-                                <div class="form-group row" id="note">
-                                    <label class="col-sm-3 col-form-label" for="note_survey">Catatan Survey</label>
-                                    <div class="col-sm-9">
-                                        <textarea class="form-control" id="note_survey" name="note_survey" rows="4" cols="50"><?php echo $row['note_survey']; ?></textarea>
-                                    </div>
-                                </div>
-                                <div class="form-group row" id="lamp-survey">
-                                    <label class="col-sm-3 col-form-label" for="lamp_survey">Upload Dokumen Pendukung<strong><span style="color: red;">*</span></strong></label>
+                            <form method="post" action="tafpay-edit.php" enctype="multipart/form-data">
+                                <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="lamp_paylistrik">Upload Lampiran Bukti Pembayaran Listrik<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
-                                            <input name="lamp_survey[]" type="file" multiple="multiple" />
+                                            <input name="lamp_paylistrik[]" type="file" multiple="multiple" />
                                         </div>
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <div class="col-sm-10">
+                                    <div class="col-sm-9">
                                         <button class="btn btn-primary" type="submit">Simpan</button>
                                     </div>
                                 </div>
@@ -259,23 +255,34 @@ if(isset($_GET['id'])) {
     <script src="../../dist-assets/js/scripts/script.min.js"></script>
     <script src="../../dist-assets/js/scripts/sidebar.compact.script.min.js"></script>
     <script src="../../dist-assets/js/scripts/customizer.script.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.2/dropzone.min.js"></script>
-    
     <script>
-        // Tambahkan event listener untuk radio button ganti_lampiran
-        document.querySelectorAll('input[name="ganti_lampiran"]').forEach(function(radio) {
-            radio.addEventListener('change', function() {
-                if (this.value === 'ya') {
-                    // Jika pilihannya ya, tampilkan input untuk unggah file baru
-                    document.getElementById('lampiran_baru').style.display = 'block';
-                } else {
-                    // Jika pilihannya tidak, sembunyikan input untuk unggah file baru
-                    document.getElementById('lampiran_baru').style.display = 'none';
-                }
-            });
-        });
-    </script>
+    function toggleFilterDetail() {
+        var filterAir = document.getElementById("filter_air");
+        var lampiranFilter = document.getElementById("filter-air");
+        if (filterAir.value === "Yes") {
+            lampiranFilter.style.display = "flex";
+        } else {
+            lampiranFilter.style.display = "none";
+        }
+    }
 
+    // Panggil fungsi saat halaman dimuat untuk menyesuaikan tampilan berdasarkan nilai awal
+    window.onload = toggleFilterDetail;
+    </script>
+    <script>
+    function toggleUjilabDetail() {
+        var ujiLab = document.getElementById("kesesuaian_ujilab");
+        var lampiranUjilab = document.getElementById("uji-lab");
+        if (ujiLab.value === "Yes") {
+            lampiranUjilab.style.display = "flex";
+        } else {
+            lampiranUjilab.style.display = "none";
+        }
+    }
+
+    // Call the function on page load to set the initial display state
+    window.onload = toggleUjilabDetail;
+</script>
 </body>
 
 </html>

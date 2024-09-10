@@ -327,7 +327,8 @@ $conn->close();
                                                     $work_start = '08:00';
                                                     $work_end = '17:00';
 
-                                                    if ($row['status_approvowner'] != "Approve" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                    if ($row['status_approvowner'] != "Approve") {
+                                                        // if ($row['status_approvowner'] != "Approve" && $current_time >= $work_start && $current_time <= $work_end) {
                                                         echo '<button class="btn btn-sm btn-warning edit-btn" data-toggle="modal" data-target="#editModal" data-id="' . $row['kode_lahan'] . '" data-status="' . $row['status_approvowner'] . '">
                                                                 <i class="nav-icon i-Pen-2"></i>
                                                             </button>';

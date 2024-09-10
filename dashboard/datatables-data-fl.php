@@ -8,7 +8,7 @@ if (isset($_GET['id'])) {
     $kode_lahan = $_GET['id'];
     
     // Debugging: Tampilkan nilai kode_lahan
-    echo "Kode Lahan: " . htmlspecialchars($kode_lahan) . "<br>";
+    // echo "Kode Lahan: " . htmlspecialchars($kode_lahan) . "<br>";
 
     // Query untuk mengambil data dari tabel crew
     $sql = "SELECT * FROM crewfl WHERE kode_lahan = ?";
@@ -23,10 +23,10 @@ if (isset($_GET['id'])) {
             $data[] = $row;
         }
     } else {
-        echo "Data tidak ditemukan.";
+        // echo "Data tidak ditemukan.";
     }
 } else {
-    echo "Kode Lahan tidak ditentukan.";
+    // echo "Kode Lahan tidak ditentukan.";
 }
 ?>
 <!DOCTYPE html>

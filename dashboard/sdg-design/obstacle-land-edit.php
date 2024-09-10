@@ -19,6 +19,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $urugan = $_POST["urugan"];
     $note = $_POST["note"];
     $obs_detail = $_POST["obs_detail"];
+    $potensi_masalah = $_POST["potensi_masalah"];
     $obs_date = date("Y-m-d");
 
     // Tentukan status berdasarkan nilai obstacle
@@ -31,6 +32,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
         $status_obslegal = 'Not Obstacle';
         $status_obssdg = 'Not Obstacle';
+    }
+
+    if ($confirm_sdgurugan == 'Yes'){
+        $confirm_sdgurugan = "In Process";
+        $sql_select_sla_sdgd = "SELECT sla FROM master_sla WHERE divisi = 'Urugan'";
+        $result_select_sla_sdgd = $conn->query($sql_select_sla_sdgd);
+    
+        if ($result_select_sla_sdgd && $result_select_sla_sdgd->num_rows > 0) {
+            $row_sla_sdgd = $result_select_sla_sdgd->fetch_assoc();
+            $sla_sdgd = $row_sla_sdgd['sla'];
+        } else {
+            throw new Exception("Tidak dapat mengambil data SLA dari tabel master_sla.");
+        }
+        
+        $sla_urugan = date('Y-m-d', strtotime($obs_date . ' + ' . $sla_sdgd . ' days'));
+    } else if ($confirm_sdgurugan == 'No'){
+        $confirm_sdgurugan = Null;
+    } else {
+        $confirm_sdgurugan = Null;
     }
     $note_survey = $_POST["note_survey"];
 
@@ -84,20 +104,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Ambil SLA dari tabel master_sla dengan divisi = Design
-    $sql_select_sla_sdgd = "SELECT sla FROM master_sla WHERE divisi = 'Urugan'";
-    $result_select_sla_sdgd = $conn->query($sql_select_sla_sdgd);
-
-    if ($result_select_sla_sdgd && $result_select_sla_sdgd->num_rows > 0) {
-        $row_sla_sdgd = $result_select_sla_sdgd->fetch_assoc();
-        $sla_sdgd = $row_sla_sdgd['sla'];
-    } else {
-        throw new Exception("Tidak dapat mengambil data SLA dari tabel master_sla.");
-    }
-    
-    $sla_urugan = date('Y-m-d', strtotime($obs_date . ' + ' . $sla_sdgd . ' days'));
-    $confirm_sdgurugan = "In Process";
     // Update data di database
-    $sql = "UPDATE sdg_desain SET status_obslegal = '$status_obslegal', obstacle = '$obstacle', urugan = '$urugan', sla_urugan = '$sla_urugan', confirm_sdgurugan = '$confirm_sdgurugan', note = '$note', obs_detail = '$obs_detail', note_survey = '$note_survey', lamp_layouting = '$lamp_layouting', lamp_survey = '$lamp_survey', obs_date = '$obs_date' WHERE id = '$id'";
+    $sql = "UPDATE sdg_desain SET status_obslegal = '$status_obslegal', obstacle = '$obstacle', potensi_masalah = '$potensi_masalah', urugan = '$urugan', confirm_sdgurugan = '$confirm_sdgurugan', note = '$note', obs_detail = '$obs_detail', note_survey = '$note_survey', lamp_layouting = '$lamp_layouting', lamp_survey = '$lamp_survey', obs_date = '$obs_date' WHERE id = '$id'";
     var_dump($sql);
     if ($conn->query($sql) === TRUE) {
         header("Location: " . $base_url . "/datatables-obstacle-sdg.php");

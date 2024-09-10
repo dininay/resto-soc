@@ -10,26 +10,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     $lamp_woeqp = "";
 
-    if(isset($_FILES["lamp_woeqp"])) {
-        $lamp_woeqp_paths = array();
+    if (isset($_FILES['lamp_woeqp']) && $_FILES['lamp_woeqp']['error'][0] != UPLOAD_ERR_NO_FILE) {
+        $existing_files = isset($_POST['existing_files']) ? explode(",", $_POST['existing_files']) : array();
+        $new_files = array();
 
-        // Loop through each file
-        foreach($_FILES['lamp_woeqp']['name'] as $key => $filename) {
-            $file_tmp = $_FILES['lamp_woeqp']['tmp_name'][$key];
-            $file_name = $_FILES['lamp_woeqp']['name'][$key];
-            $target_dir = "../uploads/";
-            $target_file = $target_dir . basename($file_name);
+        foreach ($_FILES['lamp_woeqp']['name'] as $key => $filename) {
+            if ($filename) {
+                $target_dir = "../uploads/";
+                $target_file = $target_dir . basename($filename);
 
-            // Attempt to move the uploaded file to the target directory
-            if (move_uploaded_file($file_tmp, $target_file)) {
-                $lamp_woeqp_paths[] = $file_name;
-            } else {
-                echo "Gagal mengunggah file " . $file_name . "<br>";
+                if (!is_dir($target_dir)) {
+                    mkdir($target_dir, 0777, true);
+                }
+
+                if (move_uploaded_file($_FILES['lamp_woeqp']['tmp_name'][$key], $target_file)) {
+                    $new_files[] = trim($filename);
+                } else {
+                    echo "Failed to upload file: " . $_FILES['lamp_woeqp']['name'][$key] . "<br>";
+                }
             }
         }
 
-        // Join all file paths into a comma-separated string
-        $lamp_woeqp = implode(",", $lamp_woeqp_paths);
+        $all_files = array_merge($existing_files, $new_files);
+        $lamp_woeqp = implode(",", array_filter($all_files));
+    } else {
+        $lamp_woeqp = isset($_POST['existing_files']) ? $_POST['existing_files'] : "";
     }
     // $lamp_woeqp = "";
 

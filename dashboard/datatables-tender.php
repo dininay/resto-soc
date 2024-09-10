@@ -15,7 +15,7 @@ $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, 
         INNER JOIN procurement p ON l.kode_lahan = p.kode_lahan
         LEFT JOIN resto r ON l.kode_lahan = r.kode_lahan
         LEFT JOIN vendor v ON p.nama_vendor = v.kode_vendor
-        WHERE p.status_approvprocurement IN ('In Process','Approve','Pending')
+        WHERE p.status_tender IN ('In Process','Done','Approve','Pending')
         GROUP BY l.kode_lahan";
 $result = $conn->query($sql);
 
@@ -513,7 +513,7 @@ function getBadgeColor($remarks) {
                                                     $work_start = '08:00';
                                                     $work_end = '17:00';
 
-                                                    if ($row['status_tender'] != "Done" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                    if ($row['status_tender'] != "Done") {
                                                         echo '<a href="procurement/procurement-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>';

@@ -92,6 +92,23 @@ if(isset($_GET['id'])) {
                             </div>
                         </div>
                     </div>
+                    
+                    <div class="col-md-4">
+                                <div class="card mb-5">
+                                    <div class="card-body">
+                                        <div class="form-group row">
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">Perlu Diperhatikan !</p>
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">Format excel / spreadsheet yang dimasukkan berisi data sebagai berikut :</p>
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">- No</p>
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">- Kode</p>
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">- Item Name</p>
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">- PIC</p>
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">- Satuan</p>
+                                            <p class="col-sm-12" style="margin-bottom: 1px;">- Mandatory</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                 </div>
 				<!-- end of main-content -->
                 <!-- Footer Start -->

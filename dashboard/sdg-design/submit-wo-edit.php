@@ -71,7 +71,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 SET submit_wo = '$submit_wo', lamp_wo = '$lamp_wo', wo_date = '$wo_date', status_spkwo = '$status_spkwo', sla_spkwo = '$sla_spkwo' 
                 WHERE id = '$id'";
         
-        if ($conn->query($sql) === TRUE) {
             $queryIR = "SELECT email FROM user WHERE level IN ('Procurement')";
             $resultIR = mysqli_query($conn, $queryIR);
 
@@ -136,19 +135,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             } else {
                 echo "No email found for the selected resto or IR users.";
             }
-        } else {
-            // Update data di database
-            $sql = "UPDATE sdg_desain 
-                    SET submit_wo = '$submit_wo', lamp_wo = '$lamp_wo', wo_date = '$wo_date', status_spkwo = '$status_spkwo', sla_spkwo = '$sla_spkwo' 
-                    WHERE id = '$id'";
-        }
+             
+    } elseif ($submit_wo == "No") {
+        // Update data di database
+        $sql = "UPDATE sdg_desain 
+                SET submit_wo = '$submit_wo', wo_date = '$wo_date', status_spkwo = ''
+                WHERE id = '$id'";
+    } else {
+        // Update data di database
+        $sql = "UPDATE sdg_desain 
+                SET submit_wo = '$submit_wo', wo_date = '$wo_date' 
+                WHERE id = '$id'";
+    }
     
+    if ($conn->query($sql) === TRUE) {
     header("Location: " . $base_url . "/datatables-submit-wo.php");
-    exit();
+    exit();       
+    } else {
+        echo "Error: " . $sql . "<br>" . $conn->error;
+    }
     
-} else {
-    echo "Error: " . $sql . "<br>" . $conn->error;
-}
 }
 
 // Menutup koneksi database

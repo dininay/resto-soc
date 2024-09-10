@@ -68,9 +68,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 $slavd_date = date('Y-m-d H:i:s', strtotime($start_date . ' + ' . $sla_negosiator_days . ' days'));
 
                 // Query untuk memperbarui status_$status_obssdg dan status_approvlegalvd
-                $sql = "UPDATE sdg_desain SET status_obssdg = ?, obs_date = ?, sla_date = ?, confirm_sdgdesain = ? WHERE id = ?";
+                $sql = "UPDATE sdg_desain SET status_obssdg = ?, obs_date = ? WHERE id = ?";
                 $stmt = $conn->prepare($sql);
-                $stmt->bind_param("ssssi", $status_obssdg, $obs_date, $slavd_date, $confirm_sdgdesain, $id);
+                $stmt->bind_param("ssi", $status_obssdg, $obs_date, $id);
                 $stmt->execute();
                 
                 // Ambil kode_lahan dari tabel sdg_desain

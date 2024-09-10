@@ -3,6 +3,9 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+require '../../PHPMailer-6.8.1/src/Exception.php';
+require '../../PHPMailer-6.8.1/src/PHPMailer.php';
+require '../../PHPMailer-6.8.1/src/SMTP.php';
 require '../../vendor/autoload.php'; // Hanya jika menggunakan Composer
 
 // Inisialisasi PHPMailer
@@ -92,18 +95,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                         echo "Error: Data SLA tidak ditemukan untuk divisi SPK.";
                     }
 
-                    
+                    // Ambil jumlah hari dari tabel master_sla berdasarkan divisi SPK
+                    $sql_sla = "SELECT sla FROM master_sla WHERE divisi = 'SPK-Tender'";
+                    $result_sla = $conn->query($sql_sla);
+                    if ($result_sla->num_rows > 0) {
+                        $row_sla = $result_sla->fetch_assoc();
+                        $hari_sla = $row_sla['sla'];
+                        echo "SLA days: $hari_sla<br>";
+
+                        // Tentukan sla_spk
+                        $sla_spk = date("Y-m-d", strtotime("$end_date + $hari_sla days"));
+                        $sla_spkrab = date("Y-m-d", strtotime("$end_date + $hari_sla days"));
+                        echo "SLA SPK-Tender: $sla_spk<br>";
+                    } else {
+                        // Rollback transaksi jika data SLA tidak ditemukan
+                        $conn->rollback();
+                        echo "Error: Data SLA tidak ditemukan untuk divisi SPK-Tender.";
+                    }
+
+                    $status_approvprocurement = "In Process";
                 // Query untuk memperbarui submit_legal dan catatan_owner di tabel procurement
-                $sql_update_pending = "UPDATE procurement SET status_tender = ?, catatan_tender = ?, end_date = ? WHERE id = ?";
+                $sql_update_pending = "UPDATE procurement SET status_tender = ?, catatan_tender = ?, end_date = ?, status_approvprocurement = ?, sla_spkrab = ? WHERE id = ?";
                 $stmt_update_pending = $conn->prepare($sql_update_pending);
-                $stmt_update_pending->bind_param("sssi", $status_tender, $catatan_tender, $end_date, $id);
+                $stmt_update_pending->bind_param("sssssi", $status_tender, $catatan_tender, $end_date, $status_approvprocurement, $sla_spkrab, $id);
                 $stmt_update_pending->execute();
                     
                         // Update sla_spk dan status_spk di tabel resto
-                        $sql_update_spk = "UPDATE resto SET sla_kom = ?, status_kom = 'In Process' WHERE kode_lahan = (SELECT kode_lahan FROM procurement WHERE id = ?)";
-                        $stmt_update_spk = $conn->prepare($sql_update_spk);
-                        $stmt_update_spk->bind_param("si", $sla_spk, $id);
-                        $stmt_update_spk->execute();
+                        // $sql_update_spk = "UPDATE resto SET sla_kom = ?, status_kom = 'In Process' WHERE kode_lahan = (SELECT kode_lahan FROM procurement WHERE id = ?)";
+                        // $stmt_update_spk = $conn->prepare($sql_update_spk);
+                        // $stmt_update_spk->bind_param("si", $sla_spk, $id);
+                        // $stmt_update_spk->execute();
                 }
                 // Periksa apakah kode_lahan ada di tabel hold_project
                 $sql_check_hold = "SELECT kode_lahan FROM hold_project WHERE kode_lahan = (SELECT kode_lahan FROM procurement WHERE id = ?)";
@@ -160,8 +181,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                                         <p>You have 1 New Active Done Construction Tender Process Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.</p>
                                         <p>Thank you for your prompt attention to this matter.</p>
                                         <p></p>
-                                        <p>Best regards,</p>
-                                        <p>Resto - SOC</p>
+                                        <p>Have a good day!</p>
                                     </div>
                                 </div>';
                                 $mail->AltBody = 'Dear Team,'

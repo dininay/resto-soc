@@ -161,7 +161,7 @@ function getBadgeColor($remarks) {
 								</div>
                                 <p>
 							  <div class="table-responsive">
-                              <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
+                                    <table class="display table table-striped table-bordered" id="zero_configuration_table" style="width:100%">
                                         <thead>
                                             <tr>
                                                 <th>Inventory Code</th>
@@ -395,7 +395,7 @@ function getBadgeColor($remarks) {
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['confirm_sdgurugan']) {
-                                                            case 'Approve':
+                                                            case 'Done':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -419,7 +419,7 @@ function getBadgeColor($remarks) {
                                                     date_default_timezone_set('Asia/Jakarta');
 
                                                     $start_date = $row['urugan_date'];
-                                                    $sla_date = $row['sla_urugan'];
+                                                    $sla_date = $row['sla_survey'];
                                                     $confirm_sdgurugan = $row['confirm_sdgurugan'];
 
                                                     // Menghitung scoring
@@ -434,7 +434,7 @@ function getBadgeColor($remarks) {
                                                     $work_start = '08:00';
                                                     $work_end = '17:00';
 
-                                                    if ($confirm_sdgurugan === 'Approve') {
+                                                    if ($confirm_sdgurugan === 'Done') {
                                                         // Menentukan label berdasarkan remarks
                                                         $status_label = '';
                                                         switch ($remarks) {
@@ -476,7 +476,7 @@ function getBadgeColor($remarks) {
                                                 
                                                 <td>
                                                     <!-- Tombol Edit -->
-                                                    <?php if ($row['confirm_sdgurugan'] != "Approve"): ?>
+                                                    <?php if ($row['confirm_sdgurugan'] != "Done"): ?>
                                                     <?php
                                                     // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
                                                     date_default_timezone_set('Asia/Jakarta');
@@ -489,7 +489,7 @@ function getBadgeColor($remarks) {
                                                     $work_start = '08:00';
                                                     $work_end = '17:00';
 
-                                                    if ($row['confirm_sdgurugan'] != "Approve" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                    if ($row['confirm_sdgurugan'] != "Done") {
                                                         echo '<a href="sdg-design/urugan-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>';
@@ -519,7 +519,7 @@ function getBadgeColor($remarks) {
                                                                         <select class="form-control" id="statusSelect" name="confirm_sdgurugan" Placeholder="Pilih">
                                                                             <option value="In Process">In Process</option>
                                                                             <option value="Pending">Pending</option>
-                                                                            <option value="Approve">Approve</option>
+                                                                            <option value="Done">Done</option>
                                                                         </select>
                                                                     </div>
                                                                     <div class="form-group">

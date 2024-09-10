@@ -9,7 +9,7 @@ $sql = "SELECT sdg_desain.*, dokumen_loacd.kode_store, land.nama_lahan
  JOIN land ON sdg_desain.kode_lahan = land.kode_lahan
  JOIN dokumen_loacd ON sdg_desain.kode_lahan = dokumen_loacd.kode_lahan
  JOIN draft ON sdg_desain.kode_lahan = draft.kode_lahan
- where sdg_desain.status_obslegal IN ('In Process', 'Done') AND sdg_desain.confirm_sdgdesain = 'Approve' AND draft.confirm_re = 'Done'
+ where sdg_desain.status_obslegal IN ('In Process', 'Done') AND sdg_desain.confirm_sdgdesain = 'Done' AND draft.confirm_re = 'Done'
  GROUP BY sdg_desain.kode_lahan";
 $result = $conn->query($sql);
 
@@ -205,7 +205,7 @@ function getBadgeColor($remarks) {
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['confirm_sdgdesain']) {
-                                                            case 'Approve':
+                                                            case 'Done':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -345,7 +345,7 @@ function getBadgeColor($remarks) {
                                                     $work_start = '08:00';
                                                     $work_end = '17:00';
 
-                                                    if ($row['status_obslegal'] != "Done" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                    if ($row['status_obslegal'] != "Done") {
                                                         echo '<a href="legal/obstacle-legal-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>';

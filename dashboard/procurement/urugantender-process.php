@@ -3,6 +3,9 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+require '../../PHPMailer-6.8.1/src/Exception.php';
+require '../../PHPMailer-6.8.1/src/PHPMailer.php';
+require '../../PHPMailer-6.8.1/src/SMTP.php';
 require '../../vendor/autoload.php'; // Hanya jika menggunakan Composer
 
 // Inisialisasi PHPMailer
@@ -75,7 +78,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                     $stmt_update_status->execute();
 
                     // Ambil jumlah hari dari tabel master_sla berdasarkan divisi SPK
-                    $sql_sla = "SELECT sla FROM master_sla WHERE divisi = 'SPK'";
+                    $sql_sla = "SELECT sla FROM master_sla WHERE divisi = 'SPK-Tender'";
                     $result_sla = $conn->query($sql_sla);
                     if ($result_sla->num_rows > 0) {
                         $row_sla = $result_sla->fetch_assoc();
@@ -84,19 +87,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
 
                         // Tentukan sla_spk
                         $sla_spk = date("Y-m-d", strtotime("$tenderurugan_date + $hari_sla days"));
-                        $sla_fattender = date("Y-m-d", strtotime("$tenderurugan_date + $hari_sla days"));
-                        echo "SLA SPK: $sla_spk<br>";
+                        $sla_spkurugan = date("Y-m-d", strtotime("$tenderurugan_date + $hari_sla days"));
+                        echo "SLA SPK-Tender: $sla_spk<br>";
                     } else {
                         // Rollback transaksi jika data SLA tidak ditemukan
                         $conn->rollback();
-                        echo "Error: Data SLA tidak ditemukan untuk divisi SPK.";
+                        echo "Error: Data SLA tidak ditemukan untuk divisi SPK-Tender.";
                     }
 
-                    
+                    $status_procururugan = "In Process";
                 // Query untuk memperbarui submit_legal dan catatan_owner di tabel procurement
-                $sql_update_pending = "UPDATE procurement SET status_tenderurugan = ?, catatan_tenderurugan = ?, tenderurugan_date = ? WHERE id = ?";
+                $sql_update_pending = "UPDATE procurement SET status_tenderurugan = ?, catatan_tenderurugan = ?, tenderurugan_date = ?, status_procururugan = ?, sla_spkurugan = ? WHERE id = ?";
                 $stmt_update_pending = $conn->prepare($sql_update_pending);
-                $stmt_update_pending->bind_param("sssi", $status_tenderurugan, $catatan_tenderurugan, $tenderurugan_date, $id);
+                $stmt_update_pending->bind_param("sssssi", $status_tenderurugan, $catatan_tenderurugan, $tenderurugan_date, $status_procururugan, $sla_spkurugan, $id);
                 $stmt_update_pending->execute();
                     
                         // Update sla_spk dan status_spk di tabel resto
@@ -160,8 +163,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                                         <p>You have 1 New Active Done Urugan Tender Process Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.</p>
                                         <p>Thank you for your prompt attention to this matter.</p>
                                         <p></p>
-                                        <p>Best regards,</p>
-                                        <p>Resto - SOC</p>
+                                        <p>Have a good day!</p>
                                     </div>
                                 </div>';
                                 $mail->AltBody = 'Dear Team,'

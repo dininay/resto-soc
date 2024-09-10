@@ -9,9 +9,7 @@ $sql = "SELECT d.*, r.lamp_vl, l.lamp_land, r.status_approvowner, r.status_appro
         FROM re r
         INNER JOIN land l ON r.kode_lahan = l.kode_lahan
         JOIN dokumen_loacd d ON r.kode_lahan = d.kode_lahan
-        WHERE r.status_approvowner = 'Approve'
-          AND r.status_approvnego = 'Approve'
-          AND d.status_approvloacd = 'Approve'";
+        WHERE d.status_approvlegalvd IN ('In Process','Approve','In Revision')";
 
 $result = $conn->query($sql);
 
@@ -450,7 +448,7 @@ function getBadgeColor($remarks) {
                                                     $work_start = '08:00';
                                                     $work_end = '17:00';
 
-                                                    if ($row['status_approvlegalvd'] != "Approve" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                    if ($row['status_approvlegalvd'] != "Approve") {
                                                         echo '<a href="legal/vd-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mb-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>';

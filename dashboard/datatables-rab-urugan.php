@@ -301,7 +301,7 @@ function getBadgeColor($remarks) {
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['confirm_qsurugan']) {
-                                                            case 'Approve':
+                                                            case 'Done':
                                                                 $badge_color = 'success';
                                                                 break;
                                                             case 'Pending':
@@ -343,7 +343,7 @@ function getBadgeColor($remarks) {
                                                     $work_start = '08:00';
                                                     $work_end = '17:00';
 
-                                                    if ($confirm_qsurugan === 'Approve') {
+                                                    if ($confirm_qsurugan === 'Done') {
                                                         // Menentukan label berdasarkan remarks
                                                         $status_label = '';
                                                         switch ($remarks) {
@@ -385,7 +385,7 @@ function getBadgeColor($remarks) {
                                                 
                                                 <td>
                                                     <!-- Tombol Edit -->
-                                                    <?php if ($row['confirm_qsurugan'] != "Approve"): ?>
+                                                    <?php if ($row['confirm_qsurugan'] != "Done"): ?>
                                                     <?php
                                                     // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
                                                     date_default_timezone_set('Asia/Jakarta');
@@ -398,7 +398,7 @@ function getBadgeColor($remarks) {
                                                     $work_start = '08:00';
                                                     $work_end = '17:00';
 
-                                                    if ($row['confirm_qsurugan'] != "Approve" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                    if ($row['confirm_qsurugan'] != "Done") {
                                                         echo '<a href="sdg-qs/urugan-qs-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                             <i class="nav-icon i-Pen-2"></i>
                                                         </a>';
@@ -424,11 +424,11 @@ function getBadgeColor($remarks) {
                                                             <form id="statusForm" method="post" action="sdg-qs/raburugan-process.php" enctype="multipart/form-data">
                                                                 <input type="hidden" name="id" id="modalKodeLahan">
                                                                 <div class="form-group">
-                                                                    <label for="statusSelect">Status Approve SDG QS<strong><span style="color: red;">*</span></strong></label>
+                                                                    <label for="statusSelect">Status SDG QS<strong><span style="color: red;">*</span></strong></label>
                                                                     <select class="form-control" id="statusSelect" name="confirm_qsurugan" Placeholder="Pilih">
                                                                         <option value="In Process">In Process</option>
                                                                         <option value="Pending">Pending</option>
-                                                                        <option value="Approve">Approve</option>
+                                                                        <option value="Done">Done</option>
                                                                         <option value="In Design Revision">In Design Revision</option>
                                                                     </select>
                                                                 </div>

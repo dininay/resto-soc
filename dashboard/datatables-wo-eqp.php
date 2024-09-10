@@ -13,7 +13,7 @@ d.jadwal_psm, s.lamp_desainplan, c.kode_store, e.*
         INNER JOIN resto r ON d.kode_lahan = r.kode_lahan
         INNER JOIN procurement p ON p.kode_lahan = r.kode_lahan
         INNER JOIN equipment e ON e.kode_lahan = r.kode_lahan
-        WHERE r.status_kom = 'Done'
+        WHERE r.status_kom = 'On Going Project'
         GROUP BY l.kode_lahan";
 $result = $conn->query($sql);
 

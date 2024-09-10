@@ -85,7 +85,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Update data di database
-    $sql = "UPDATE socdate_it SET lamp_printer = '$lamp_printer', lamp_cctv = '$lamp_cctv', lamp_internet = '$lamp_internet' WHERE id = '$id'";
+    $sql = "UPDATE socdate_it SET lamp_cctv = '$lamp_cctv', lamp_internet = '$lamp_internet' WHERE id = '$id'";
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
         header("Location: " . $base_url . "/datatables-it.php");

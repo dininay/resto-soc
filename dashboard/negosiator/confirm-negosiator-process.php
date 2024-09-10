@@ -80,7 +80,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             }
 
             // Ambil SLA dari tabel master_sla dengan divisi = Design
-            $sql_select_sla_sdgd = "SELECT sla FROM master_sla WHERE divisi = 'Layouting'";
+            $sql_select_sla_sdgd = "SELECT sla FROM master_sla WHERE divisi = 'Design'";
             $result_select_sla_sdgd = $conn->query($sql_select_sla_sdgd);
 
             if ($result_select_sla_sdgd && $result_select_sla_sdgd->num_rows > 0) {
@@ -101,6 +101,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 // Jika status diubah menjadi Approve, tambahkan data ke tabel dokumen_loacd dan sdg_desain
                 $sla_date = date('Y-m-d', strtotime($nego_date . ' + ' . $sla . ' days'));
                 $sla_survey = date('Y-m-d', strtotime($nego_date . ' + ' . $sla_sdgd . ' days'));
+                $sla_design = date('Y-m-d', strtotime($nego_date . ' + ' . $sla_sdgd . ' days'));
+                $slavdlegal_date = date('Y-m-d', strtotime($nego_date . ' + ' . $sla_sdgd . ' days'));
 
                 // Query untuk mengambil data yang diperbarui
                 $sql_select = "SELECT * FROM re WHERE id = ?";
@@ -112,22 +114,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
 
                 // Variabel tambahan untuk dokumen_loacd
                 $status_approvloacd = "In Process";
+                $status_approvlegalvd = "In Process";
                 $confirm_sdgdesain = "In Process";
                 $status_obssdg = "In Process";
                 $confirm_layout = "In Process";
 
                 // Insert data ke tabel dokumen_loacd
-                $sql_dokumen = "INSERT INTO dokumen_loacd (kode_lahan, status_approvloacd, slaloa_date, masa_berlaku, deal_sewa) 
-                                VALUES (?, ?, ?, ?, ?)";
+                $sql_dokumen = "INSERT INTO dokumen_loacd (kode_lahan, status_approvloacd, slaloa_date, masa_berlaku, deal_sewa, status_approvlegalvd, slavd_date, slavdlegal_date) 
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
                 $stmt_dokumen = $conn->prepare($sql_dokumen);
-                $stmt_dokumen->bind_param("sssss", $updated_row['kode_lahan'], $status_approvloacd, $sla_date, $masa_berlaku, $deal_sewa);
+                $stmt_dokumen->bind_param("ssssssss", $updated_row['kode_lahan'], $status_approvloacd, $sla_date, $masa_berlaku, $deal_sewa, $status_approvlegalvd, $slavd_date, $slavdlegal_date);
                 $stmt_dokumen->execute();
 
                 // Insert data ke tabel sdg_desain
-                $sql_sdgd = "INSERT INTO sdg_desain (kode_lahan, status_obssdg, sla_survey) 
-                             VALUES ( ?, ?, ?)";
+                $sql_sdgd = "INSERT INTO sdg_desain (kode_lahan, status_obssdg, sla_survey, confirm_sdgdesain, sla_date) 
+                             VALUES ( ?, ?, ?, ?, ?)";
                 $stmt_sdgd = $conn->prepare($sql_sdgd);
-                $stmt_sdgd->bind_param("sss", $updated_row['kode_lahan'],  $status_obssdg, $sla_survey);
+                $stmt_sdgd->bind_param("sssss", $updated_row['kode_lahan'],  $status_obssdg, $sla_survey, $confirm_sdgdesain, $sla_design);
                 $stmt_sdgd->execute();
 
                 // Query untuk memasukkan data ke dalam tabel hold_project

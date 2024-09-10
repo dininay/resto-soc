@@ -127,24 +127,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                     }
 
                     // Email content
-                    $mail->Subject = 'Notification: 1 New Information Payment by TAF Resto SOC Ticket';
+                    $mail->Subject = 'Notification: 1 New Active Resto SOC Ticket';
                                     $mail->Body    = '
                                     <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
                                         <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
                                             <img src="cid:header_image" alt="Header Image" style="max-width: 100%; height: auto; margin-bottom: 20px;">
-                                            <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Team,</h2>
-                                            <p>You have 1 New Information Payment by TAF Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.</p>
-                                            <p>Thank you for your prompt attention to this matter.</p>
+                                            <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear SDG-Project Team,</h2>
+                                            <p>We would like to inform you that a new Active Resto SOC Ticket has been created in the payment for electricity & water Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                            Your prompt attention to this matter is greatly appreciated.</p>
                                             <p></p>
-                                            <p>Best regards,</p>
-                                            <p>Resto - SOC</p>
+                                            <p>Have a good day!</p>
                                         </div>
                                     </div>';
-                                    $mail->AltBody = 'Dear Team,'
-                                                . 'You have 1 New Information Payment by TAF Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.'
-                                                . 'Thank you for your prompt attention to this matter.'
-                                                . 'Best regards,'
-                                                . 'Resto - SOC';
+                                    $mail->AltBody = 'Dear SDG-Project Team,'
+                                                . 'We would like to inform you that a new Active Resto SOC Ticket has been created in the payment for electricity & water Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                    Your prompt attention to this matter is greatly appreciated.'
+                                                . 'Have a good day!';
 
                     // Send email
                     if ($mail->send()) {
@@ -198,17 +196,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
 
             // Eksekusi query
             if ($stmt->execute() === TRUE) {
-                echo "<script>
-                        alert('Status berhasil diperbarui.');
-                        window.location.href = window.location.href;
-                     </script>";
+                header("Location:  " . $base_url . "/datatables-tafpay-listrikair.php");
+                exit();
             } else {
                 echo "Error: " . $sql . "<br>" . $conn->error;
             }
         }
         
-        header("Location:  " . $base_url . "/datatables-tafpay-listrikair.php");
-        exit();
     } catch (Exception $e) {
         // Rollback transaksi jika terjadi kesalahan
         $conn->rollback();

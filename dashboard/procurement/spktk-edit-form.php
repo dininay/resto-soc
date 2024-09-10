@@ -8,7 +8,7 @@ if(isset($_GET['id'])) {
     $id = $_GET['id'];
 
     // Query untuk mendapatkan data resep berdasarkan ID
-    $result = $conn->query("SELECT * FROM draft WHERE id = '$id'");
+    $result = $conn->query("SELECT * FROM jobadd WHERE id = '$id'");
 
     // Periksa apakah data ditemukan
     if ($result->num_rows > 0) {
@@ -19,6 +19,7 @@ if(isset($_GET['id'])) {
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en" dir="">
@@ -32,116 +33,130 @@ if(isset($_GET['id'])) {
     <link href="https://fonts.googleapis.com/css?family=Nunito:300,400,400i,600,700,800,900" rel="stylesheet" />
     <link href="../../dist-assets/css/themes/lite-purple.min.css" rel="stylesheet" />
     <link href="../../dist-assets/css/plugins/perfect-scrollbar.min.css" rel="stylesheet" />
-    
-
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
 <body class="text-left">
     <div class="app-admin-wrap layout-sidebar-compact sidebar-dark-purple sidenav-open clearfix">
 		<?php
-			include '../layouts/right-sidebar.php';
+			include '../../layouts/right-sidebar-data.php';
 		?>
 
         <!--=============== Left side End ================-->
         <div class="main-content-wrap d-flex flex-column">
 			<?php
-			include '../layouts/top-sidebar.php';
+			include '../../layouts/top-sidebar.php';
 		?>
 
 			<!-- ============ Body content start ============= -->
             <div class="main-content">
                 <div class="breadcrumb">
-                    <h1>Validasi Lahan To Legal</h1>
+                    <h1>Data SPK Job Add Less</h1>
                     <ul>
-                        <li><a href="href">Detail</a></li>
-                        <li>Validasi Lahan To Legal</li>
+                        <li><a href="href">Edit</a></li>
+                        <li>Data SPK Job Add Less</li>
                     </ul>
                 </div>
                 <div class="separator-breadcrumb border-top"></div>
                 <div class="row">
                     <div class="col-md-6">
                         <div class="card mb-5">
-                            <div class="card-body printable" id="print-content">
-                            <form >
-                                <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                    <div class="form-group row">
-                                        <label class="col-sm-4 col-form-label" for="kode_lokasi">Inventory Code</label>
-                                        <div class="col-sm-8">
-                                            <p class="form-control-static"><?php echo $row['kode_lahan']; ?></p>
+                            <div class="card-body">
+                            <form method="post" action="spktk-edit.php" enctype="multipart/form-data">
+                            <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
+                                <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="lamp_jobadd">Upload Lampiran SPK Job Add<strong><span style="color: red;">*</span></strong></label>
+                                    <div class="col-sm-9">
+                                        <div class="dropzone" id="multple-file-upload" >
+                                            <input name="lamp_jobadd[]" type="file" multiple="multiple" />
                                         </div>
-                                    </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                    <div class="form-group row">
-                                        <label class="col-sm-4 col-form-label" for="nama_lokasi">Nama Lahan</label>
-                                        <div class="col-sm-8">
-                                            <p class="form-control-static"><?php echo $row['nama_lahan']; ?></p>
-                                        </div>
-                                    </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                    <div class="form-group row">
-                                        <label class="col-sm-4 col-form-label" for="lokasi">Lokasi</label>
-                                        <div class="col-sm-8">
-                                            <p class="form-control-static"><?php echo $row['lokasi']; ?></p>
-                                        </div>
-                                    </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                    <div class="form-group row">
-                                        <label class="col-sm-4 col-form-label" for="status_approvowner">Approval Owner</label>
-                                        <div class="col-sm-8">
-                                            <p class="form-control-static"><?php echo $row['status_approvowner']; ?></p>
-                                        </div>
-                                    </div>
                                     </div>
                                 </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                    <div class="form-group row">
-                                        <label class="col-sm-4 col-form-label" for="status_approvlegal">Approval Legal</label>
-                                        <div class="col-sm-8">
-                                            <p class="form-control-static"><?php echo $row['status_approvlegal']; ?></p>
+                                <!-- <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Lampiran Company Profile Sebelumnya</label>
+                                    <div class="col-sm-9">
+                                        <?php echo $row['lamp_profil']; ?>
+                                    </div>
+                                </div> -->
+                                <!-- Tambahkan pertanyaan apakah ingin mengganti lampiran -->
+                                <!-- <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Mau Ganti Lampiran?</label>
+                                    <div class="col-sm-9">
+                                        <input type="radio" name="ganti_lampirancp" value="ya"> Ya
+                                        <input type="radio" name="ganti_lampirancp" value="tidak" checked> Tidak
+                                    </div>
+                                </div> -->
+                                <!-- Jika pengguna ingin mengganti lampiran, tampilkan input untuk unggah file -->
+                                <!-- <div class="form-group row" id="lampiran_barucp" style="display: none;">
+                                    <label class="col-sm-3 col-form-label" for="lamp_profil">Upload Baru</label>
+                                    <div class="col-sm-9">
+                                        <div class="dropzone" id="multple-file-upload">
+                                            <input name="lamp_profil[]" type="file" multiple="multiple" />
                                         </div>
                                     </div>
+                                </div> -->
+                                <!-- <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Lampiran Sebelumnya</label>
+                                    <div class="col-sm-9">
+                                        <?php echo $row['lamp_vendor']; ?>
                                     </div>
-                                    <div class="col-md-6">
-                                    <div class="form-group row">
-                                        <label class="col-sm-4 col-form-label" for="start_date">Start Date</label>
-                                        <div class="col-sm-8">
-                                            <p class="form-control-static"><?php echo $row['start_date']; ?></p>
+                                </div> -->
+                                <!-- Tambahkan pertanyaan apakah ingin mengganti lampiran -->
+                                <!-- <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label">Mau Ganti Lampiran?</label>
+                                    <div class="col-sm-9">
+                                        <input type="radio" name="ganti_lampiran" value="ya"> Ya
+                                        <input type="radio" name="ganti_lampiran" value="tidak" checked> Tidak
+                                    </div>
+                                </div> -->
+                                <!-- Jika pengguna ingin mengganti lampiran, tampilkan input untuk unggah file -->
+                                <!-- <div class="form-group row" id="lampiran_baru" style="display: none;">
+                                    <label class="col-sm-3 col-form-label" for="lamp_vendor">Upload Baru</label>
+                                    <div class="col-sm-9">
+                                        <div class="dropzone" id="multple-file-upload">
+                                            <input name="lamp_vendor[]" type="file" multiple="multiple" />
                                         </div>
                                     </div>
+                                </div> -->
+
+                                <!-- <div class="form-group row">
+                                    <label class="col-sm-3 col-form-label" for="nama_vendor">Nama Vendor</label>
+                                    <div class="col-sm-9">
+                                        <select class="form-control" id="nama_vendor" name="nama_vendor">
+                                            <option value="">Pilih Nama Vendor</option>
+                                            <?php
+                                            if ($result_vendor && $result_vendor->num_rows > 0) {
+                                                while ($row_vendor = $result_vendor->fetch_assoc()) {
+                                                    echo "<option value='" . $row_vendor["kode_vendor"] . "' data-lampiran='" . $row_vendor["lamp_vendor"] . "'>" . $row_vendor["nama"] . "</option>";
+                                                }
+                                            } else {
+                                                echo "<option value=''>Tidak ada kode vendor tersedia</option>";
+                                            }
+                                            ?>
+                                        </select>
                                     </div>
-                                    <div class="col-md-6">
-                                    <div class="form-group row">
-                                        <label class="col-sm-4 col-form-label" for="end_date">End Date</label>
-                                        <div class="col-sm-8">
-                                            <p class="form-control-static"><?php echo $row['end_date']; ?></p>
+                                </div> -->
+                                    <!-- <div class="form-group row">
+                                        <label class="col-sm-3 col-form-label" for="lamp_profil">Lampiran Company Profile</label>
+                                        <div class="col-sm-9">
+                                            <input type="text" class="form-control" id="lamp_profil" name="lamp_profil" value="" readonly>
                                         </div>
                                     </div>
-                                    </div>
-                                    <div class="col-md-6">
                                     <div class="form-group row">
-                                        <label class="col-sm-4 col-form-label" for="lamp_draf">Lampiran</label>
-                                        <div class="col-sm-8">
-                                            <p class="form-control-static"><?php echo $row['lamp_draf']; ?></p>
+                                        <label class="col-sm-3 col-form-label" for="lamp_vendor">Lampiran Vendor</label>
+                                        <div class="col-sm-9">
+                                            <input type="text" class="form-control" id="lamp_vendor" name="lamp_vendor" value="" readonly>
                                         </div>
-                                    </div>
+                                    </div>-->
+                                <div class="form-group row">
+                                    <div class="col-sm-10">
+                                        <button class="btn btn-primary" type="submit">Simpan</button>
                                     </div>
                                 </div>
                             </form>
+
                             </div>
                         </div>
-                                <div class="form-group row">
-                                    <div class="col-sm-10">
-                                    <a href="/Resto/dashboard/datatables-validasi-lahan.php" class="btn btn-primary">Kembali</a>
-                                        <!-- <button class="btn btn-warning" onclick="printPDF()">Print PDF</button> -->
-                                    </div>
-                                </div>
                     </div>
                 </div>
 				<!-- end of main-content -->
@@ -309,65 +324,61 @@ if(isset($_GET['id'])) {
             </div>
         </div>
     </div>
-    <script src="../dist-assets/js/plugins/jquery-3.3.1.min.js"></script>
-    <script src="../dist-assets/js/plugins/bootstrap.bundle.min.js"></script>
-    <script src="../dist-assets/js/plugins/perfect-scrollbar.min.js"></script>
-    <script src="../dist-assets/js/scripts/script.min.js"></script>
-    <script src="../dist-assets/js/scripts/sidebar.compact.script.min.js"></script>
-    <script src="../dist-assets/js/scripts/customizer.script.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.2/dropzone.min.js"></script>
-    
+    <script src="../../dist-assets/js/plugins/jquery-3.3.1.min.js"></script>
+    <script src="../../dist-assets/js/plugins/bootstrap.bundle.min.js"></script>
+    <script src="../../dist-assets/js/plugins/perfect-scrollbar.min.js"></script>
+    <script src="../../dist-assets/js/scripts/script.min.js"></script>
+    <script src="../../dist-assets/js/scripts/sidebar.compact.script.min.js"></script>
+    <script src="../../dist-assets/js/scripts/customizer.script.min.js"></script>
     <script>
-        // Tambahkan event listener untuk radio button ganti_lampiran
-        document.querySelectorAll('input[name="ganti_lampiran"]').forEach(function(radio) {
-            radio.addEventListener('change', function() {
-                if (this.value === 'ya') {
-                    // Jika pilihannya ya, tampilkan input untuk unggah file baru
-                    document.getElementById('lampiran_baru').style.display = 'block';
-                } else {
-                    // Jika pilihannya tidak, sembunyikan input untuk unggah file baru
-                    document.getElementById('lampiran_baru').style.display = 'none';
-                }
-            });
+    // Tambahkan event listener untuk radio button ganti_lampirancp
+    document.querySelectorAll('input[name="ganti_lampirancp"]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            if (this.value === 'ya') {
+                // Jika pilihannya ya, tampilkan input untuk unggah file baru
+                document.getElementById('lampiran_barucp').style.display = 'block';
+            } else {
+                // Jika pilihannya tidak, sembunyikan input untuk unggah file baru
+                document.getElementById('lampiran_barucp').style.display = 'none';
+            }
         });
-    </script>
-    <script>
-    function printPDF() {
-        window.print();
-    }
-</script>
-<!-- <script>
-    // Inisialisasi Dropzone
-    Dropzone.autoDiscover = false;
-    var myDropzone = new Dropzone("#dropzone", {
-        url: "upload.php", // Tentukan URL untuk mengunggah file
-        addRemoveLinks: true, // Tampilkan tautan hapus untuk setiap file yang diunggah
-        acceptedFiles: "application/pdf, image/jpeg, image/jpg, image/png",
- // Jenis file yang diizinkan (dalam contoh ini, hanya file PDF yang diizinkan)
-        init: function() {
-            // Aksi setelah unggahan selesai
-            this.on("complete", function(file) {
-                // Hapus file dari Dropzone jika unggahan berhasil
-                if (file.status === "success") {
-                    myDropzone.removeFile(file);
-                }
-            });
-        }
     });
 
-    // Tambahkan file yang sudah ada ke Dropzone saat inisialisasi
-    var existingFiles = "<?php echo $row['lamp_land']; ?>";
-    if (existingFiles) {
-        var files = existingFiles.split(",");
-        for (var i = 0; i < files.length; i++) {
-            var mockFile = { name: files[i], size: 12345 }; // Ganti 12345 dengan ukuran sebenarnya jika diketahui
-            myDropzone.emit("addedfile", mockFile);
-            myDropzone.emit("thumbnail", mockFile, "path/to/thumbnail"); // Ganti path/to/thumbnail dengan URL thumbnail yang sesuai
-            myDropzone.emit("complete", mockFile);
-        }
+    // Tambahkan event listener untuk radio button ganti_lampiran
+    document.querySelectorAll('input[name="ganti_lampiran"]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            if (this.value === 'ya') {
+                // Jika pilihannya ya, tampilkan input untuk unggah file baru
+                document.getElementById('lampiran_baru').style.display = 'block';
+            } else {
+                // Jika pilihannya tidak, sembunyikan input untuk unggah file baru
+                document.getElementById('lampiran_baru').style.display = 'none';
+            }
+        });
+    });
+</script>
+    <script>
+    function fetchVendors(cityId) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "procurement_get.php", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                document.getElementById("kode_vendor").innerHTML = xhr.responseText;
+            }
+        };
+        xhr.send("city_id=" + cityId);
     }
-</script> -->
-
+</script>
+    <script>
+        function updateLampiran() {
+            var selectedOption = document.getElementById('nama_vendor').selectedOptions[0];
+            var lampiran = selectedOption.getAttribute('data-lampiran');
+            var profil = selectedOption.getAttribute('data-profil');
+            document.getElementById('lamp_profil').value = profil;
+            document.getElementById('lamp_vendor').value = lampiran;
+        }
+    </script>
 </body>
 
 </html>

@@ -177,6 +177,7 @@ $conn->close();
                                                 <th>Lampiran Draft Table Sewa</th>
                                                 <th>Lampiran Final PSM & Table Sewa</th>
                                                 <th>Confirm RE</th>
+                                                <th>Tgl Done Pengondisian</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -354,6 +355,7 @@ $conn->close();
                                                         <?php echo $row['confirm_re']; ?>
                                                     </span>
                                                 </td>  
+                                                <td><?= $row['tgl_kondisilahan'] ?></td>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -452,7 +454,7 @@ $conn->close();
                                                     $work_start = '08:00';
                                                     $work_end = '17:00';
 
-                                                    if ($row['status_kondisilahan'] != "Approve" && $current_time >= $work_start && $current_time <= $work_end) {
+                                                    if ($row['status_kondisilahan'] != "Approve") {
                                                         echo '<button class="btn btn-sm btn-primary edit-btn" data-toggle="modal" data-target="#editModal" data-id="'. $row['id'] .'" data-status="'.$row['status_kondisilahan'] .'">
                                                             <i class="nav-icon i-Book"></i>
                                                         </button>';
@@ -484,6 +486,10 @@ $conn->close();
                                                                     <div class="form-group">
                                                                         <label for="catatan_kondisilahan">Catatan Kondisi Lahan</label>
                                                                         <input type="text" class="form-control" id="catatan_kondisilahan" name="catatan_kondisilahan">
+                                                                    </div>
+                                                                    <div class="form-group">
+                                                                        <label for="tgl_kondisilahan">Tgl Selesai Pengondisian</label>
+                                                                        <input type="date" class="form-control" id="tgl_kondisilahan" name="tgl_kondisilahan">
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">
                                                                         <div class="form-group">
@@ -544,6 +550,7 @@ $conn->close();
                                                 <th>Lampiran Draft Table Sewa</th>
                                                 <th>Lampiran Final PSM & Table Sewa</th>
                                                 <th>Confirm RE</th>
+                                                <th>Tgl Done Pengondisian</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>

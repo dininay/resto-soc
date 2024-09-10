@@ -53,7 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         $kronologi = null; // Set kronologi to null if no files were uploaded
     }
 
-    if ($confirm_sdgdesain == 'Approve') {
+    if ($confirm_sdgdesain == 'Done') {
         $submit_legal = 'In Process';
         $start_date = date("Y-m-d H:i:s");
     } else {
@@ -117,8 +117,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
 
         // Eksekusi query
         if ($stmt->execute() === TRUE) {
-            // Jika submit_legal diubah menjadi Approve
-            if ($confirm_sdgdesain == 'Approve') {
+            // Jika submit_legal diubah menjadi Done
+            if ($confirm_sdgdesain == 'Done') {
                 // Ambil data dari tabel sdg_desain berdasarkan id yang diedit
                 $sql_select = "SELECT kode_lahan, end_date FROM sdg_desain WHERE id = ?";
                 $stmt_select = $conn->prepare($sql_select);
@@ -145,12 +145,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                         if ($stmt_check->num_rows > 0) {
                             $confirm_sdgqs = "In Process";
                             // Jika ada, lakukan update
-                            $sql_update = "UPDATE sdg_rab SET 
-                                        confirm_sdgqs = ?, 
-                                        sla_date = ? 
-                                        WHERE kode_lahan = ?";
+                            $sql_update = "UPDATE sdg_rab SET confirm_sdgqs = ? WHERE kode_lahan = ?";
                             $stmt_update = $conn->prepare($sql_update);
-                            $stmt_update->bind_param("sss", $confirm_sdgqs, $sla_date, $row['kode_lahan']);
+                            $stmt_update->bind_param("ss", $confirm_sdgqs, $row['kode_lahan']);
                             $stmt_update->execute();
                         } else {
                             // Jika tidak ada, lakukan insert
@@ -297,7 +294,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 $conn->commit();
                 echo "Status berhasil diperbarui dan data ditahan.";
             } else {
-                // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_$status_obssdg
+                // Jika status tidak diubah menjadi Done, Reject, atau Pending, hanya perlu memperbarui status_$status_obssdg
                 $sql = "UPDATE sdg_desain SET confirm_sdgdesain = ?, catatan_sdgdesain = ?, obstacle = ?, submit_legal = ?, start_date = ?, slalegal_date = ? WHERE kode_lahan = ?";
                 $stmt = $conn->prepare($sql);
                 $stmt->bind_param("sssssss", $confirm_sdgdesain, $catatan_sdgdesain, $obstacle, $submit_legal, $start_date, $slalegal_date, $kode_lahan);
