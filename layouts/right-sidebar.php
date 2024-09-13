@@ -319,7 +319,7 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                     </li>
                     <?php endif; ?>
                     <!-- RE Head -->
-                    <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "Real-Estate") : ?>
+                    <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "Real Estate") : ?>
                     <li class="nav-item <?php echo ($current_page == 'datatables-land-sourcing' || $current_page == 'datatables-potensi-masalah-re' || $current_page == 'datatables-validasi-lahan' || $current_page == 'datatables-draft-sewa-legal'  || $current_page == 'datatables-loa-cd' || $current_page == 'datatables-validasi-data'|| $current_page == 'datatables-bussiness-planning'
                     || $current_page == 'datatables-submit-to-owner') ? 'active' : ''; ?>" data-item="uikits">
                         <a class="nav-item-hold" href="#">
@@ -488,10 +488,9 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         <div class="triangle"></div>
                     </li>
                     <?php endif; ?>
-
                     <!-- FAT Head -->
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "TAF") : ?>
-                    <li class="nav-item <?php echo ($current_page == 'datatables-fat' || $current_page == 'datatables-review-rab-urugan' || $current_page == 'datatables-tender-fat' || $current_page == 'datatables-spk-fat' || $current_page == 'datatables-sign-psm-fat' || $current_page == 'datatables-tafpay-listrikair' || $current_page == 'datatables-tafpay-listrik' || $current_page =='datatables-review-wo-from-sdg' || $current_page == 'datatables-review-spkfa-procurement' || $current_page == 'datatables-review-rab-from-sdg' || $current_page == 'datatables-review-spkipal-procurement' || $current_page == 'datatables-review-spkeqp' || $current_page == 'datatables-kode-store-taf') ? 'active' : ''; ?>" data-item="fat">
+                    <li class="nav-item <?php echo ($current_page == 'datatables-fat' || $current_page == 'datatables-review-rab-urugan' || $current_page == 'datatables-tender-fat' || $current_page == 'datatables-spk-fat' || $current_page == 'datatables-sign-psm-fat' || $current_page == 'datatables-tafpay-listrikair' || $current_page == 'datatables-tafpay-listrik' || $current_page == 'datatables-listrik' || $current_page =='datatables-review-wo-from-sdg' || $current_page == 'datatables-review-spkfa-procurement' || $current_page == 'datatables-review-rab-from-sdg' || $current_page == 'datatables-review-spkipal-procurement' || $current_page == 'datatables-review-spkeqp' || $current_page == 'datatables-kode-store-taf'  || strpos($current_page, 'log-note-psm')!== false || strpos($current_page, 'log-note-spk')!== false || strpos($current_page, 'sdgpk-rto-listrik-edit-form')!== false) ? 'active' : ''; ?>" data-item="fat">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Cursor-Click"></i>
                             <span class="nav-text">FAT</span>
@@ -1349,7 +1348,7 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         <li class="nav-item <?php echo $current_page == 'datatables-ir' ? 'active' : ''; ?>">
                             <a href="datatables-ir.php">
                                 <i class="nav-icon i-Medal-2"></i>
-                                <span class="item-name mr-2">Pengamanan Reguler</span>
+                                <span class="item-name mr-2">CS & Security</span>
                             <span class="badge <?php echo ($countir > 0) ? 'badge-danger' : 'badge-success'; ?>">
                                 <?php echo $countir > 0 ? $countir : '0'; ?>
                             </span>
@@ -1520,7 +1519,7 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                                 <span class="item-name mr-2">Review SPK for RAB Urugan</span>
                             </a>
                         </li> -->
-                        <li class="nav-item <?php echo $current_page == 'datatables-review-rab-from-sdg' ? 'active' : ''; ?>">
+                        <li class="nav-item <?php echo ($current_page == 'datatables-review-rab-from-sdg' || strpos($current_page, 'log-note-spk')!== false ) ? 'active' : ''; ?>">
                             <a href="datatables-review-rab-from-sdg.php">
                                 <i class="nav-icon i-Tag-2"></i>
                                 <span class="item-name mr-2">Review SPK for RAB Construction</span>
@@ -1529,7 +1528,7 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                             </span>
                             </a>
                         </li>
-						<li class="nav-item <?php echo $current_page == 'datatables-sign-psm-fat' ? 'active' : ''; ?>">
+						<li class="nav-item <?php echo ($current_page == 'datatables-sign-psm-fat' || strpos($current_page, 'log-note-psm')!== false ) ? 'active' : ''; ?>">
                             <a href="datatables-sign-psm-fat.php">
                                 <i class="nav-icon i-Checked-User"></i>
                                 <span class="item-name mr-2">PSM Review</span>

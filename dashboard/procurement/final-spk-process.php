@@ -82,6 +82,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                 $stmt_update_pending->bind_param("sssi", $status_finalspk, $catatan_finalspk, $finalspk_date, $id);
                 $stmt_update_pending->execute();
                 
+                                // Ambil SLA dari tabel master_sla untuk divisi SPK
+                $sql_sla_spk = "SELECT sla FROM master_sla WHERE divisi = 'SPK'";
+                $result_sla_spk = $conn->query($sql_sla_spk);
+                if ($result_sla_spk->num_rows > 0) {
+                    $row_sla_spk = $result_sla_spk->fetch_assoc();
+                    $hari_sla_spk = $row_sla_spk['sla'];
+
+                    // Hitung sla_spkwo berdasarkan wo_date + SLA dari divisi SPK
+                    $sla_kom = date("Y-m-d", strtotime($finalspk_date . ' + ' . $hari_sla_spk . ' days'));
+                } else {
+                    echo "Error: Data SLA tidak ditemukan untuk divisi SPK.";
+                    exit;
+                }
+                
+                $sql_get_kode_lahan = "SELECT kode_lahan FROM procurement WHERE id = ?";
+                $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+                $stmt_get_kode_lahan->bind_param("i", $id);
+                $stmt_get_kode_lahan->execute();
+                $stmt_get_kode_lahan->bind_result($kode_lahan);
+                $stmt_get_kode_lahan->fetch();
+                $stmt_get_kode_lahan->close();
+                
+                $status_kom = "In Process";
+                $sql_update = "UPDATE resto SET status_kom = ?, sla_kom = ? WHERE kode_lahan = ?";
+                $stmt_update = $conn->prepare($sql_update);
+                $stmt_update->bind_param("sss", $status_kom, $sla_kom, $kode_lahan);
+                $stmt_update->execute();
+
                 // Periksa apakah kode_lahan ada di tabel hold_project
                 $sql_check_hold = "SELECT kode_lahan FROM hold_project WHERE kode_lahan = (SELECT kode_lahan FROM procurement WHERE id = ?)";
                 $stmt_check_hold = $conn->prepare($sql_check_hold);

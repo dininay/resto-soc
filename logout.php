@@ -18,6 +18,6 @@ if (ini_get("session.use_cookies")) {
 session_destroy();
 
 // Redirect pengguna ke halaman index
-header("location: /index.php");
+header("location: /resto-soc/index.php");
 exit;
 ?>

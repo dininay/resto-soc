@@ -13,13 +13,24 @@ $mail = new PHPMailer(true);
 // Koneksi ke database
 include "../../koneksi.php";
 
+// Set timezone ke Jakarta
+date_default_timezone_set('Asia/Jakarta');
+
 // Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["kode_lahan"]) && isset($_POST["confirm_fatpsm"]) && isset($_POST["catatan_psmfat"])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["kode_lahan"]) && isset($_POST["confirm_fatpsm"]) && isset($_POST['catatan_psmfat']) && is_array($_POST['catatan_psmfat'])) {
     $id = $_POST["id"];
     $kode_lahan = $_POST["kode_lahan"];
     $confirm_fatpsm = $_POST["confirm_fatpsm"];
-    // $catatan_psmfat = $_POST["catatan_psmfat"];
-    $catatan_baru = $_POST["catatan_psmfat"];
+    
+    // $catatan_psmfat_array = isset($_POST["catatan_psmfat"]) ? $_POST["catatan_psmfat"] : [];
+    // print_r($catatan_psmfat_array);
+    // $catatan_psmfat = json_encode($catatan_psmfat_array);
+    // echo $catatan_psmfat;
+    
+    // Pastikan $_POST['catatan_psmfat'] adalah array
+    $catatan_psmfat = implode(';', array_map('htmlspecialchars', $_POST['catatan_psmfat']));
+
+    $fat_date = date("Y-m-d H:i:s");
     $psmfat_date = null;
     $issue_detail = isset($_POST["issue_detail"]) ? $_POST["issue_detail"] : null;
     $pic = isset($_POST["pic"]) ? $_POST["pic"] : null;
@@ -68,20 +79,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         $stmt_get_resto->fetch();
         $stmt_get_resto->close();
 
-        // Ambil catatan lama dari database
-        $sql_get_catatan = "SELECT catatan_psmfat FROM draft WHERE id = ?";
-        $stmt_get_catatan = $conn->prepare($sql_get_catatan);
-        $stmt_get_catatan->bind_param("i", $id);
-        $stmt_get_catatan->execute();
-        $stmt_get_catatan->bind_result($catatan_lama);
-        $stmt_get_catatan->fetch();
-        $stmt_get_catatan->close();
-
-        // Gabungkan catatan lama dengan catatan baru (dipisah dengan paragraf baru)
-        if (!empty($catatan_lama)) {
-            $catatan_baru = $catatan_lama . "<br><br>" . $catatan_baru;
-        }
-
         // Tentukan nilai start_konstruksi
         if ($confirm_fatpsm == 'Approve') {
             $psmfat_date = date("Y-m-d H:i:s");
@@ -108,11 +105,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             }
             $confirm_bod = "In Process";
             $confirm_nego = "Approve";
-            // Query untuk memperbarui status confirm_fatpsm di tabel draft
-            $sql_update = "UPDATE draft SET confirm_fatpsm = ?, catatan_psmfat = ?, psmfat_date = ?, confirm_bod = ?, slabod_date = ?, confirm_nego = ? WHERE id = ?";
-            $stmt_update = $conn->prepare($sql_update);
-            $stmt_update->bind_param("ssssssi", $confirm_fatpsm, $catatan_baru, $psmfat_date, $confirm_bod, $slabod_date, $confirm_nego, $id);
-            $stmt_update->execute();
+                // Query untuk memperbarui status confirm_fatpsm di tabel draft
+                $sql_update = "UPDATE draft SET confirm_fatpsm = ?, catatan_psmfat = ?, psmfat_date = ?, confirm_bod = ?, slabod_date = ?, confirm_nego = ? WHERE id = ?";
+                $stmt_update = $conn->prepare($sql_update);
+                $stmt_update->bind_param("ssssssi", $confirm_fatpsm, $catatan_psmfat, $psmfat_date, $confirm_bod, $slabod_date, $confirm_nego, $id);
+                $stmt_update->execute();
+            
+                $sql_get_kode_lahan = "SELECT kode_lahan FROM draft WHERE id = ?";
+                $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+                $stmt_get_kode_lahan->bind_param("i", $id);
+                $stmt_get_kode_lahan->execute();
+                $stmt_get_kode_lahan->bind_result($kode_lahan);
+                $stmt_get_kode_lahan->fetch();
+                $stmt_get_kode_lahan->free_result();
+                    // Melanjutkan ke proses insert jika kode_lahan tidak kosong
+                    $sql_insert = "INSERT INTO note_psm (kode_lahan, catatan_psmfat, fat_date) VALUES (?, ?, ?)";
+                    $stmt_insert = $conn->prepare($sql_insert);
+                    $stmt_insert->bind_param("sss", $kode_lahan, $catatan_psmfat, $fat_date);
+                    var_dump($kode_lahan);
+                    $stmt_insert->execute();
+                    if ($stmt_insert->execute()) {
+                        echo "Data berhasil dimasukkan.";
+                    } else {
+                        echo "Gagal memasukkan data: " . $stmt_insert->error;
+                    }
+
             // Query untuk memperbarui status confirm_fatpsm di tabel draft
             $sql_resto = "UPDATE resto SET start_konstruksi = ? WHERE kode_lahan = ?";
             $stmt_resto = $conn->prepare($sql_resto);
@@ -184,22 +201,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                         $mail->addAddress($toEmail);
                     }
 
+                    $imagePath = '../../assets/images/logo-email.png';
+                    $mail->addEmbeddedImage($imagePath, 'embedded_image', 'logo-email.png', 'base64', 'image/png');
+
                     // Email content
                     $mail->Subject = 'Notification: 1 New Active Resto SOC Ticket';
                                     $mail->Body    = '
-                                    <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
-                                        <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
-                                            <img src="cid:header_image" alt="Header Image" style="max-width: 100%; height: auto; margin-bottom: 20px;">
-                                            <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Legal Team,</h2>
-                                            <p>We would like to inform you that a new Active Resto SOC Ticket has been created in the Review Draft Table Sewa & PSM By TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
-Your prompt attention to this matter is greatly appreciated.</p>
-                                            <p></p>
-                                            <p>Have a good day!</p>
+                                        <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333; margin: 0; padding: 0;">
+                                        <div style="background-color: #f7f7f7; border-radius: 8px; padding: 0; margin: 0; text-align: center;">
+                                            <img src="cid:embedded_image" alt="Header Image" style="display: block; width: 50%; height: auto; margin: 0 auto;">
+                                            <div style="padding: 20px; background-color: #f7f7f7; border-radius: 8px;">
+                                                <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Legal Team,</h2>
+                                                <p>We would like to inform you that a new Active Resto SOC Ticket has been created in the Review Draft Table Sewa & PSM By TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                Your prompt attention to this matter is greatly appreciated.</p>
+                                                <p></p>
+                                                <p>Have a good day!</p>
+                                            </div>
                                         </div>
                                     </div>';
                                     $mail->AltBody = 'Dear Legal Team,'
                                                 . 'We would like to inform you that a new Active Resto SOC Ticket has been created in the Review Draft Table Sewa & PSM By TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
-Your prompt attention to this matter is greatly appreciated.'
+                                                Your prompt attention to this matter is greatly appreciated.'
                                                 . 'Have a good day!';
 
                     // Send email
@@ -246,22 +268,27 @@ Your prompt attention to this matter is greatly appreciated.'
                         $mail->addAddress($toEmail);
                     }
 
+                    $imagePath = '../../assets/images/logo-email.png';
+                    $mail->addEmbeddedImage($imagePath, 'embedded_image', 'logo-email.png', 'base64', 'image/png');
+
                     // Email content
                     $mail->Subject = 'Notification: 1 New Active Resto SOC Ticket';
                                     $mail->Body    = '
-                                    <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
-                                        <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
-                                            <img src="cid:header_image" alt="Header Image" style="max-width: 100%; height: auto; margin-bottom: 20px;">
-                                            <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Bu @arie,</h2>
-                                            <p>We would like to inform you that a new Active Resto SOC Ticket has been created in the Review Draft Table Sewa & PSM By TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
-                                            Your prompt attention to this matter is greatly appreciated.</p>
-                                            <p></p>
-                                            <p>Have a good day!</p>
+                                        <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333; margin: 0; padding: 0;">
+                                        <div style="background-color: #f7f7f7; border-radius: 8px; padding: 0; margin: 0; text-align: center;">
+                                            <img src="cid:embedded_image" alt="Header Image" style="display: block; width: 50%; height: auto; margin: 0 auto;">
+                                            <div style="padding: 20px; background-color: #f7f7f7; border-radius: 8px;">
+                                                <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Bu @Arie,</h2>
+                                                <p>We would like to inform you that a new Active Resto SOC Ticket has been created in the Review Draft Table Sewa & PSM By TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                Your prompt attention to this matter is greatly appreciated.</p>
+                                                <p></p>
+                                                <p>Have a good day!</p>
+                                            </div>
                                         </div>
                                     </div>';
-                                    $mail->AltBody = 'Dear Bu @arie,'
+                                    $mail->AltBody = 'Dear Bu @Arie,'
                                                 . 'We would like to inform you that a new Active Resto SOC Ticket has been created in the Review Draft Table Sewa & PSM By TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
-                                                    Your prompt attention to this matter is greatly appreciated.'
+                                                Your prompt attention to this matter is greatly appreciated.'
                                                 . 'Have a good day!';
 
                     // Send email
@@ -290,7 +317,7 @@ Your prompt attention to this matter is greatly appreciated.'
             // Query untuk memperbarui confirm_fatpsm, psmfat_date di tabel draft dan memasukkan data ke dalam tabel hold_project
             $sql_update_re = "UPDATE draft SET confirm_fatpsm = ?, catatan_psmfat = ?, psmfat_date = ? WHERE id = ?";
             $stmt_update_re = $conn->prepare($sql_update_re);
-            $stmt_update_re->bind_param("sssi", $confirm_fatpsm, $catatan_baru, $psmfat_date, $id);
+            $stmt_update_re->bind_param("sssi", $confirm_fatpsm, $catatan_psmfat, $psmfat_date, $id);
             $stmt_update_re->execute();
 
             $status_hold = "In Process";
@@ -315,14 +342,99 @@ Your prompt attention to this matter is greatly appreciated.'
             $stmt_get_kode_lahan->bind_result($kode_lahan);
             $stmt_get_kode_lahan->fetch();
             $stmt_get_kode_lahan->free_result();
+                // Query untuk memperbarui submit_legal dan catatan_owner di tabel sdg_rab
+                $sql_update_pending = "UPDATE draft SET confirm_fatpsm = ?, catatan_psmfat = ?, confirm_nego = ?, psmfat_date = ? WHERE id = ?";
+                $stmt_update_pending = $conn->prepare($sql_update_pending);
+                $confirm_nego = "In Revision";
+                $stmt_update_pending->bind_param("ssssi", $confirm_fatpsm, $catatan_psmfat, $confirm_nego, $psmfat_date, $id);
+                $stmt_update_pending->execute();
 
-            // Query untuk memperbarui submit_legal dan catatan_owner di tabel sdg_rab
-            $sql_update_pending = "UPDATE draft SET confirm_fatpsm = ?, catatan_psmfat = ?, confirm_nego = ?, psmfat_date = ? WHERE id = ?";
-            $stmt_update_pending = $conn->prepare($sql_update_pending);
-            $confirm_nego = "In Revision";
-            $stmt_update_pending->bind_param("ssssi", $confirm_fatpsm, $catatan_baru, $confirm_nego, $psmfat_date, $id);
-            $stmt_update_pending->execute();
+            $sql_get_kode_lahan = "SELECT kode_lahan FROM draft WHERE id = ?";
+                $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+                $stmt_get_kode_lahan->bind_param("i", $id);
+                $stmt_get_kode_lahan->execute();
+                $stmt_get_kode_lahan->bind_result($kode_lahan);
+                $stmt_get_kode_lahan->fetch();
+                $stmt_get_kode_lahan->free_result();
+                    // Melanjutkan ke proses insert jika kode_lahan tidak kosong
+                    $sql_insert = "INSERT INTO note_psm (kode_lahan, catatan_psmfat, fat_date) VALUES (?, ?, ?)";
+                    $stmt_insert = $conn->prepare($sql_insert);
+                    $stmt_insert->bind_param("sss", $kode_lahan, $catatan_psmfat, $fat_date);
+                    var_dump($kode_lahan);
+                    $stmt_insert->execute();
+                    if ($stmt_insert->execute()) {
+                        echo "Data berhasil dimasukkan.";
+                    } else {
+                        echo "Gagal memasukkan data: " . $stmt_insert->error;
+                    }
+                
+            $queryIR = "SELECT email FROM user WHERE level IN ('Legal')";
+            $resultIR = mysqli_query($conn, $queryIR);
 
+            if ($resultIR && mysqli_num_rows($resultIR) > 0) {
+                while ($rowIR = mysqli_fetch_assoc($resultIR)) {
+                    if (!empty($rowIR['email'])) {
+                        $toEmails[] = $rowIR['email'];
+                    }
+                }
+            }
+            var_dump($toEmails);
+            if (!empty($toEmails)) {
+
+                try {
+                    // SMTP configuration
+                    $mail = new PHPMailer(true);
+                    $mail->isSMTP();
+                    // $mail->SMTPDebug = 2;
+                    $mail->SMTPAuth = true;
+                    $mail->SMTPSecure = 'ssl';
+                    $mail->Host = 'miegacoan.co.id';
+                    $mail->Port = 465;
+                    $mail->Username = 'resto-soc@miegacoan.co.id';
+                    $mail->Password = '9)5X]*hjB4sh';
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+                    $mail->setFrom('resto-soc@miegacoan.co.id', 'Pesta Pora Abadi');
+
+                    foreach ($toEmails as $toEmail) {
+                        $mail->addAddress($toEmail);
+                    }
+
+                    $imagePath = '../../assets/images/logo-email.png';
+                    $mail->addEmbeddedImage($imagePath, 'embedded_image', 'logo-email.png', 'base64', 'image/png');
+
+                    // Email content
+                    $mail->Subject = 'Notification: 1 New Active Resto SOC Ticket';
+                                    $mail->Body    = '
+                                        <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333; margin: 0; padding: 0;">
+                                        <div style="background-color: #f7f7f7; border-radius: 8px; padding: 0; margin: 0; text-align: center;">
+                                            <img src="cid:embedded_image" alt="Header Image" style="display: block; width: 50%; height: auto; margin: 0 auto;">
+                                            <div style="padding: 20px; background-color: #f7f7f7; border-radius: 8px;">
+                                                <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Legal Team,</h2>
+                                                <p>We would like to inform you that a new Active Resto SOC Ticket has been created in the Revition Draft Table Sewa & PSM By TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                Your prompt attention to this matter is greatly appreciated.</p>
+                                                <p></p>
+                                                <p>Have a good day!</p>
+                                            </div>
+                                        </div>
+                                    </div>';
+                                    $mail->AltBody = 'Dear Legal Team,'
+                                                . 'We would like to inform you that a new Active Resto SOC Ticket has been created in the Revition Draft Table Sewa & PSM By TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                Your prompt attention to this matter is greatly appreciated.'
+                                                . 'Have a good day!';
+
+                    // Send email
+                    if ($mail->send()) {
+                        echo "Email sent successfully!<br>";
+                    } else {
+                        echo "Failed to send email. Error: {$mail->ErrorInfo}<br>";
+                    }
+
+                } catch (Exception $e) {
+                    echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+                }
+            } else {
+                echo "No email found for the selected resto or IR users.";
+            }
             // Komit transaksi
             $conn->commit();
             echo "Status berhasil diperbarui dan data ditahan.";
@@ -330,7 +442,7 @@ Your prompt attention to this matter is greatly appreciated.'
             // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_vl di tabel draft
             $sql = "UPDATE draft SET confirm_fatpsm = ?, catatan_psmfat = ? WHERE id = ?";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ssi", $confirm_fatpsm, $catatan_baru, $id);
+            $stmt->bind_param("ssi", $confirm_fatpsm, $catatan_psmfat, $id);
             $stmt->execute();
 
             // Check if update was successful
@@ -347,8 +459,8 @@ Your prompt attention to this matter is greatly appreciated.'
         // Komit transaksi
         $conn->commit();
         // Redirect ke halaman datatables-sign-psm-fat.php
-        header("Location: ../datatables-sign-psm-fat.php");
-        exit; // Pastikan tidak ada output lain setelah header redirect
+        // header("Location: ../datatables-sign-psm-fat.php");
+        // exit; // Pastikan tidak ada output lain setelah header redirect
     } catch (Exception $e) {
         // Rollback transaksi jika terjadi kesalahan
         $conn->rollback();

@@ -243,15 +243,16 @@ $conn->close();
                                                     </span>
                                                 </td>
                                                 <td><?= $row['catatan_owner'] ?></td>
-                                                <td>
-                                                    <?php
-                                                    if (!empty($row['start_date'])) {
-                                                        $date = new DateTime($row['start_date']);
-                                                        $formattedDate = $date->format('d M y');
-                                                        echo $formattedDate;
-                                                    }
-                                                    ?>
-                                                </td>
+                                            <?php
+                                            // Assuming $row['bp_date'] contains a date string
+                                            $date = !empty($row['start_date']) ? new DateTime($row['start_date']) : null;
+
+                                            if ($date) {
+                                                echo "<td>" . $date->format('d M y') . "</td>";
+                                            } else {
+                                                echo "<td></td>"; // Or leave it empty if there's no date
+                                            }
+                                            ?>
                                                 <td>
                                                     <?php
                                                     // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)

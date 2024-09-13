@@ -588,60 +588,64 @@ if (isset($_GET['id'])) {
     });
 </script>
     <script>
-    $(document).ready(function(){
-        // Saat tombol edit diklik
-        $('.edit-btn').click(function(){
-            // Ambil data-id dari tombol edit
-            var id = $(this).data('id');
+        $(document).ready(function() {
+            // Saat tombol edit diklik
+            $('.edit-btn').click(function() {
+                var id = $(this).data('id');
+                var status_utensil = $(this).data('status');
+                
+                // Isi nilai input tersembunyi dengan ID dan status yang diambil
+                $('#modalId').val(id);
+                $('#statusSelect').val(status_utensil).change(); // Set status and trigger change event
+            });
 
-            // Isi nilai input tersembunyi dengan ID yang diambil
-            $('#modalId').val(id);
-        });
-    });
+            $('#editModalb').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget); // Button that triggered the modal
+                var id = button.data('id'); // Extract id from data-* attribute
+                var status_utensil = button.data('status'); // Extract status_utensil from data-* attribute
 
-    $(document).ready(function() {
-        $('#editModalb').on('show.bs.modal', function (event) {
-            var button = $(event.relatedTarget); // Button that triggered the modal
-            var id = button.data('id'); // Extract id from data-* attribute
-            var kode_utensil = button.data('kode'); // Extract kode_utensil from data-* attribute
-
-            var modal = $(this);
+                var modal = $(this);
+                
+                // Set the modalId value in the input field
+                modal.find('#modalId').val(id);
+                // Set the statusSelect value
+                modal.find('#statusSelect').val(status_utensil);
+                // Call functions to handle detail sections visibility
+                toggleIssueDetail();
+                toggleReceiveDetail();
+            });
             
-            // Set the kode_utensil value in the input field
-            modal.find('#kode_utensil').val(kode_utensil);
+            // Function to toggle the visibility of issue detail section
+            function toggleIssueDetail() {
+                var statusSelect = document.getElementById("statusSelect");
+                var issueDetailSection = document.getElementById("issueDetailSection");
+
+                if (statusSelect.value === "Pending In Procurement") { // Update to correct value
+                    issueDetailSection.style.display = "block";
+                } else {
+                    issueDetailSection.style.display = "none";
+                }
+            }
+
+            // Function to toggle the visibility of receive detail section
+            function toggleReceiveDetail() {
+                var statusSelect = document.getElementById("statusSelect");
+                var receiveDetailSection = document.getElementById("receiveDetailSection");
+
+                if (statusSelect.value === "Progress Utensil Receive") {
+                    receiveDetailSection.style.display = "block";
+                } else {
+                    receiveDetailSection.style.display = "none";
+                }
+            }
+
+            // Event listener for statusSelect change
+            $('#statusSelect').on('change', function () {
+                toggleIssueDetail();
+                toggleReceiveDetail();
+            });
         });
-    });
-    
-    // Function to toggle the visibility of issue detail section
-    function toggleIssueDetail() {
-        var statusSelect = document.getElementById("statusSelect");
-        var issueDetailSection = document.getElementById("issueDetailSection");
-
-        if (statusSelect.value === "Pending") {
-            issueDetailSection.style.display = "block";
-        } else {
-            issueDetailSection.style.display = "none";
-        }
-    }
-
-    // Function to toggle the visibility of issue detail section
-    function toggleReceiveDetail() {
-        var statusSelect = document.getElementById("statusSelect");
-        var receiveDetailSection = document.getElementById("receiveDetailSection");
-
-        if (statusSelect.value === "Progress Utensil Receive") {
-            receiveDetailSection.style.display = "block";
-        } else {
-            receiveDetailSection.style.display = "none";
-        }
-    }
-
-    // Event listener for statusSelect change
-    $('#statusSelect').on('change', function () {
-        toggleIssueDetail();
-        toggleReceiveDetail();
-    });
-</script>
+    </script>
     <script>
         // Fungsi untuk mengatur id data yang akan dihapus ke dalam modal
         function setDelete(element) {

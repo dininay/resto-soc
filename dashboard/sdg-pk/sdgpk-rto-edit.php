@@ -19,6 +19,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Ambil nilai tgl_berlaku dan penanggungjawab dari formulir
     $id = $_POST['id'];
     $sumber_air = $_POST['sumber_air']; 
+    $sdgsumber_date = date("Y-m-d H:i:s");
     // Periksa apakah kunci 'lampiran' ada dalam $_FILES
     $lamp_sumberair = "";
 
@@ -118,7 +119,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Update data di database
-    $sql = "UPDATE socdate_sdg SET sumber_air = '$sumber_air', lamp_sumberair = '$lamp_sumberair', kesesuaian_ujilab = '$kesesuaian_ujilab', lamp_ujilab = '$lamp_ujilab', filter_air = '$filter_air', lamp_filterair = '$lamp_filterair', debit_airsumur = '$debit_airsumur', debit_airpdam = '$debit_airpdam', id_pdam = '$id_pdam', status_sdgsumber = '$status_sdgsumber', status_procurspkwofa = '$status_procurspkwofa', status_tafpay = '$status_tafpay', sla_spkwofa = '$sla_spkwofa', sla_tafpay = '$sla_tafpay' WHERE id = '$id'";
+    $sql = "UPDATE socdate_sdg SET sumber_air = '$sumber_air', lamp_sumberair = '$lamp_sumberair', kesesuaian_ujilab = '$kesesuaian_ujilab', lamp_ujilab = '$lamp_ujilab', filter_air = '$filter_air', lamp_filterair = '$lamp_filterair', debit_airsumur = '$debit_airsumur', debit_airpdam = '$debit_airpdam', id_pdam = '$id_pdam', status_sdgsumber = '$status_sdgsumber', status_procurspkwofa = '$status_procurspkwofa', status_tafpay = '$status_tafpay', sla_spkwofa = '$sla_spkwofa', sla_tafpay = '$sla_tafpay', sdg_sumber = '$sdg_sumber' WHERE id = '$id'";
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
         

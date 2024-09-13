@@ -64,6 +64,42 @@ function getBadgeColor($remarks) {
             return 'secondary'; // Default jika remarks tidak dikenali
     }
 }
+
+// Your loop to process each row
+foreach ($data as $row) {
+    $kode_lahan = $row['kode_lahan'];
+
+    // Prepare and execute query for receive_in_store
+    $sql_receive_in_store = "
+        SELECT COUNT(*) AS receive_count
+        FROM utensil
+        WHERE status_utensil = 'Receive In Store' AND kode_lahan = ?
+    ";
+    $stmt_receive_in_store = $conn->prepare($sql_receive_in_store);
+    $stmt_receive_in_store->bind_param("s", $kode_lahan);
+    $stmt_receive_in_store->execute();
+    $result_receive_in_store = $stmt_receive_in_store->get_result();
+    $receive_in_store_count = $result_receive_in_store->fetch_assoc()['receive_count'];
+
+    // Prepare and execute query for total_data
+    $sql_total_data = "
+        SELECT COUNT(*) AS total_count
+        FROM utensil
+        WHERE kode_lahan = ?
+    ";
+    $stmt_total_data = $conn->prepare($sql_total_data);
+    $stmt_total_data->bind_param("s", $kode_lahan);
+    $stmt_total_data->execute();
+    $result_total_data = $stmt_total_data->get_result();
+    $total_count = $result_total_data->fetch_assoc()['total_count'];
+
+    // Calculate progress
+    $progress = $total_count > 0 ? ($receive_in_store_count / $total_count) * 100 : 0;
+
+    // Continue with the rest of your processing
+}
+echo "Receive In Store Count: " . $receive_in_store_count . "<br>";
+echo "Total Count: " . $total_count . "<br>";
 ?>
 <!DOCTYPE html>
 <html lang="en" dir="">
@@ -139,6 +175,7 @@ function getBadgeColor($remarks) {
                                                 <th>Kode Store</th>
                                                 <th>Lampiran Surat Jalan</th>
                                                 <th>Lampiran Doc Utensil</th>
+                                                <th>Progress Utensil</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>
@@ -194,6 +231,9 @@ function getBadgeColor($remarks) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>
+                                                <td>
+                                                    <?= number_format($progress, 2) . '%' ?>
+                                                </td>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -384,6 +424,7 @@ function getBadgeColor($remarks) {
                                                 <th>Kode Store</th>
                                                 <th>Lampiran Surat Jalan</th>
                                                 <th>Lampiran Doc Utensil</th>
+                                                <th>Progress Utensil</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
 												<th>Action</th>

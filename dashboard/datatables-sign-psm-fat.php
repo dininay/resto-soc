@@ -170,11 +170,10 @@ $conn->close();
                                                 <th>Lampiran VD</th>
                                                 <th>Lampiran Draft</th>
                                                 <th>Lampiran Sign PSM</th>
-                                                <th>Legal Send Date</th>
-                                                <th>Done Review PSM Date</th>
-                                                <th>Confirm TAF</th>
-                                                <th>Catatan Legal</th>
+                                                <th>Legal Submit Date</th>
                                                 <th>Catatan TAF</th>
+                                                <th>Confirm TAF</th>
+                                                <th>Done Review TAF Date</th>
                                                 <th>SLA</th>
 												<th>Action</th>
                                             </tr>
@@ -303,22 +302,17 @@ $conn->close();
                                                 // Pastikan $row['fatpsm_date'] sudah didefinisikan dan memeriksa apakah nilai tidak kosong
                                                 if (!empty($row['end_date'])) {
                                                     $date = new DateTime($row['end_date']);
-                                                    $formattedDate = $date->format('d M y');
+                                                    $formattedDate = $date->format('d M y H:i');
                                                 } else {
                                                     $formattedDate = ''; // Menampilkan string kosong jika tanggal kosong
                                                 }
                                                 ?>
                                                 <td><?= $formattedDate ?></td>
-                                                <?php
-                                                // Pastikan $row['fatpsm_date'] sudah didefinisikan dan memeriksa apakah nilai tidak kosong
-                                                if (!empty($row['psmfat_date'])) {
-                                                    $date = new DateTime($row['psmfat_date']);
-                                                    $formattedDate = $date->format('d M y');
-                                                } else {
-                                                    $formattedDate = ''; // Menampilkan string kosong jika tanggal kosong
-                                                }
-                                                ?>
-                                                <td><?= $formattedDate ?></td>
+                                                <td>
+                                                    <a href="log-note-psm.php?id=<?php echo ($row['kode_lahan']); ?>" class="btn btn-info btn-sm">
+                                                        <i class="fas fa-info-circle"></i>
+                                                    </a>
+                                                </td>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -342,8 +336,16 @@ $conn->close();
                                                         <?php echo $row['confirm_fatpsm']; ?>
                                                     </span>
                                                 </td>
-                                                <td><?= $row['catatan_psm'] ?></td>
-                                                <td><?= $row['catatan_psmfat'] ?></td>
+                                                <?php
+                                                // Pastikan $row['fatpsm_date'] sudah didefinisikan dan memeriksa apakah nilai tidak kosong
+                                                if (!empty($row['psmfat_date'])) {
+                                                    $date = new DateTime($row['psmfat_date']);
+                                                    $formattedDate = $date->format('d M y H:i');
+                                                } else {
+                                                    $formattedDate = ''; // Menampilkan string kosong jika tanggal kosong
+                                                }
+                                                ?>
+                                                <td><?= $formattedDate ?></td>
                                                 <td>
                                                     <?php
                                                     // Mengatur timezone ke Asia/Jakarta
@@ -463,17 +465,27 @@ $conn->close();
                                                                             <option value="In Revision">In Revision</option>
                                                                         </select>
                                                                     </div>
-                                                                    <!-- Catatan Sebelumnya (Read Only) -->
-                                                                    <div class="form-group">
-                                                                        <label for="catatan_psmfat">Catatan Sign PSM</label>
-                                                                        <input type="text" class="form-control" id="catatan_psmfat" name="catatan_psmfat" value="<?= $row['catatan_psmfat']; ?>">
-                                                                    </div>
-
                                                                     <!-- Catatan Sign PSM -->
                                                                     <div class="form-group">
                                                                         <label for="catatan_psmfat">Catatan Sign PSM</label>
-                                                                        <input type="text" class="form-control" id="catatan_psmfat" name="catatan_psmfat">
+                                                                        <div id="catatan-container">
+                                                                            <!-- Container for catatan inputs -->
+                                                                            <div class="input-group mb-2">
+                                                                                <input type="text" class="form-control" name="catatan_psmfat[]" placeholder="Masukkan catatan">
+                                                                                <div class="input-group-append">
+                                                                                    <button class="btn btn-danger remove-catatan" type="button">-</button>
+                                                                                    <button class="btn btn-primary" type="button" id="add-catatan">+</button>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
                                                                     </div>
+                                                                    <!-- <div class="form-group">
+                                                                        <label for="catatan_psmfat">Catatan Sign PSM</label>
+                                                                        <div id="catatan-container">
+                                                                            <input type="text" class="form-control" id="catatan_psmfat" name="catatan_psmfat[]" placeholder="Masukkan catatan">
+                                                                        </div>
+                                                                        <button type="button" id="addCatatan" class="btn btn-primary mt-2">+</button>
+                                                                    </div> -->
                                                                     <div id="issueDetailSection" class="hidden">
                                                                         <div class="form-group">
                                                                             <label for="issue_detail">Issue Detail<strong><span style="color: red;">*</span></strong></label>
@@ -531,11 +543,10 @@ $conn->close();
                                                 <th>Lampiran VD</th>
                                                 <th>Lampiran Draft</th>
                                                 <th>Lampiran Sign PSM</th>
-                                                <th>Legal Send Date</th>
-                                                <th>Done Review PSM Date</th>
-                                                <th>Confirm TAF</th>
-                                                <th>Catatan Legal</th>
+                                                <th>Legal Submit Date</th>
                                                 <th>Catatan TAF</th>
+                                                <th>Confirm TAF</th>
+                                                <th>Done Review TAF Date</th>
                                                 <th>SLA</th>
 												<th>Action</th>
                                             </tr>
@@ -949,7 +960,75 @@ $(document).ready(function() {
             });
         });
     </script>
+    <script>
+        function loadNoteDetails(id) {
+    $.ajax({
+        url: 'getpsm_kode_lahan.php', // Path file PHP untuk mendapatkan kode_lahan
+        type: 'GET',
+        data: { id: id },
+        success: function(response) {
+            let data = JSON.parse(response);
 
+            if (data.error) {
+                console.error('Error:', data.error);
+                return;
+            }
+
+            let kodeLahan = data.kode_lahan;
+
+            // Kemudian ambil detail note menggunakan kode_lahan
+            $.ajax({
+                url: 'notepsm_details.php', // Path file PHP untuk mendapatkan detail note
+                type: 'GET',
+                data: { kode_lahan: kodeLahan },
+                success: function(response) {
+                    let noteData = JSON.parse(response);
+
+                    if (noteData.error) {
+                        console.error('Error:', noteData.error);
+                        return;
+                    }
+
+                    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+                    const procDateFormatted = noteData.legal_date ? new Date(noteData.legal_date).toLocaleDateString('en-US', options) : 'N/A';
+                    const tafDateFormatted = noteData.fat_date ? new Date(noteData.fat_date).toLocaleDateString('en-US', options) : 'N/A';
+
+                    $('#legal_date').text(procDateFormatted);
+                    $('#fat_date').text(tafDateFormatted);
+                    $('#catatan_psmlegal').text(noteData.catatan_psmlegal || 'N/A');
+                    $('#catatan_psmfat').text(noteData.catatan_psmfat || 'N/A');
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error fetching note details:', error);
+                }
+            });
+        },
+        error: function(xhr, status, error) {
+            console.error('Error fetching kode_lahan:', error);
+        }
+    });
+}
+    </script>
+    <script>
+    $(document).ready(function() {
+        // Tambah input catatan
+        $('#add-catatan').click(function() {
+            $('#catatan-container').append(
+                `<div class="input-group mb-2">
+                    <input type="text" class="form-control" name="catatan_psmfat[]" placeholder="Masukkan catatan">
+                    <div class="input-group-append">
+                        <button class="btn btn-danger remove-catatan" type="button">-</button>
+                    </div>
+                </div>`
+            );
+        });
+
+        // Hapus input catatan
+        $('#catatan-container').on('click', '.remove-catatan', function() {
+            $(this).closest('.input-group').remove();
+        });
+    });
+    </script>
 </body>
 
 </html>

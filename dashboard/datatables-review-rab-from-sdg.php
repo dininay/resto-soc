@@ -1,7 +1,6 @@
 <?php
 // Koneksi ke database
 include "../koneksi.php";
-
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT l.kode_lahan, l.nama_lahan, l.lokasi, l.lamp_land, c.lamp_loacd, d.lamp_draf, r.id, r.kode_lahan, s.lamp_desainplan, r.keterangan, 
 r.jenis_biaya, r.jumlah, r.date, r.lamp_rab, r.confirm_sdgqs, r.sla_date, r.start_date, c.kode_store, c.lamp_vd, c.status_approvlegalvd, p.*
@@ -14,6 +13,7 @@ INNER JOIN sdg_desain s ON d.kode_lahan = s.kode_lahan
 WHERE r.confirm_sdgqs IN ('Done','Approve')
 GROUP BY l.kode_lahan";
 $result = $conn->query($sql);
+
 
 $status_approvprocurement = "";
 // Inisialisasi variabel $data dengan array kosong
@@ -112,6 +112,16 @@ function getBadgeColor($remarks) {
             width: 100%;
             margin: 0 auto;
         }
+        .note-details {
+    font-size: 14px;
+}
+.note-details p {
+    margin: 0;
+}
+.note-details small {
+    font-size: 12px;
+    color: gray;
+}
     </style>
 </head>
 
@@ -156,6 +166,8 @@ function getBadgeColor($remarks) {
                                                 <th>Status VD</th>
                                                 <th>Lampiran VD</th>
                                                 <th>Lampiran SPK RAB</th>
+                                                <th>Procurement Submit Date</th>
+                                                <th>Catatan</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
                                                 <th>Action</th>
@@ -281,6 +293,21 @@ function getBadgeColor($remarks) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>
+                                                <?php
+                                                // Pastikan $row['fatpsm_date'] sudah didefinisikan dan memeriksa apakah nilai tidak kosong
+                                                if (!empty($row['start_date'])) {
+                                                    $date = new DateTime($row['start_date']);
+                                                    $formattedDate = $date->format('d M y H:i');
+                                                } else {
+                                                    $formattedDate = ''; // Menampilkan string kosong jika tanggal kosong
+                                                }
+                                                ?>
+                                                <td><?= $formattedDate ?></td>
+                                                <td>
+                                                    <a href="log-note-spk.php?id=<?php echo ($row['kode_lahan']); ?>" class="btn btn-info btn-sm">
+                                                        <i class="fas fa-info-circle"></i>
+                                                    </a>
+                                                </td>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -470,6 +497,36 @@ function getBadgeColor($remarks) {
                                                         </div>
                                                     </div>
                                                 </div>
+
+                                                <!-- <div class="modal fade" id="noteModal" tabindex="-1" role="dialog" aria-labelledby="noteModalLabel" aria-hidden="true">
+                                                    <div class="modal-dialog" role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="noteModalLabel">Note Details</h5>
+                                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <div class="note-details">
+                                                                    <div class="d-flex justify-content-between">
+                                                                        <div>
+                                                                            <p><small id="proc_date"></small></p>
+                                                                            <p id="catatan_proc"></p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p><small id="taf_date"></small></p>
+                                                                            <p id="catatan_spkfat"></p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div> -->
                                             </tr>
                                         <?php endforeach; ?>
                                         </tbody>
@@ -485,6 +542,8 @@ function getBadgeColor($remarks) {
                                                 <th>Status VD</th>
                                                 <th>Lampiran VD</th>
                                                 <th>Lampiran SPK RAB</th>
+                                                <th>Procurement Submit Date</th>
+                                                <th>Catatan</th>
                                                 <th>Status</th>
                                                 <th>SLA</th>
                                                 <th>Action</th>
@@ -780,6 +839,58 @@ $(document).ready(function() {
             });
         });
     </script>
+    <script>
+        function loadNoteDetails(id) {
+    $.ajax({
+        url: 'getspk_kode_lahan.php', // Path file PHP untuk mendapatkan kode_lahan
+        type: 'GET',
+        data: { id: id },
+        success: function(response) {
+            let data = JSON.parse(response);
+
+            if (data.error) {
+                console.error('Error:', data.error);
+                return;
+            }
+
+            let kodeLahan = data.kode_lahan;
+
+            // Kemudian ambil detail note menggunakan kode_lahan
+            $.ajax({
+                url: 'notespk_details.php', // Path file PHP untuk mendapatkan detail note
+                type: 'GET',
+                data: { kode_lahan: kodeLahan },
+                success: function(response) {
+                    let noteData = JSON.parse(response);
+
+                    if (noteData.error) {
+                        console.error('Error:', noteData.error);
+                        return;
+                    }
+
+                    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+                    const procDateFormatted = noteData.proc_date ? new Date(noteData.proc_date).toLocaleDateString('en-US', options) : 'N/A';
+                    const tafDateFormatted = noteData.taf_date ? new Date(noteData.taf_date).toLocaleDateString('en-US', options) : 'N/A';
+
+                    $('#proc_date').text(procDateFormatted);
+                    $('#taf_date').text(tafDateFormatted);
+                    $('#catatan_proc').text(noteData.catatan_proc || 'N/A');
+                    $('#catatan_spkfat').text(noteData.catatan_spkfat || 'N/A');
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error fetching note details:', error);
+                }
+            });
+        },
+        error: function(xhr, status, error) {
+            console.error('Error fetching kode_lahan:', error);
+        }
+    });
+}
+    </script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.min.js"></script>
+
 </body>
 
 </html>

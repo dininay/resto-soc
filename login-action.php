@@ -27,10 +27,55 @@ if ($cek > 0) {
         case "Admin":
             header("location:dashboard/index.php");
             break;
-        case "Re":
+        case "Real Estate":
             header("location:dashboard/index.php");
             break;
         case "Legal":
+            header("location:dashboard/index.php");
+            break;
+        case "TAF":
+            header("location:dashboard/index.php");
+            break;
+        case "SDG-Design":
+            header("location:dashboard/index.php");
+            break;
+        case "SDG-QS":
+            header("location:dashboard/index.php");
+            break;
+        case "SDG-Project":
+            header("location:dashboard/index.php");
+            break;
+        case "SDG-Equipment":
+            header("location:dashboard/index.php");
+            break;
+        case "Procurement":
+            header("location:dashboard/index.php");
+            break;
+        case "BoD":
+            header("location:dashboard/index.php");
+            break;
+        case "HR":
+            header("location:dashboard/index.php");
+            break;
+        case "Academy":
+            header("location:dashboard/index.php");
+            break;
+        case "SCM":
+            header("location:dashboard/index.php");
+            break;
+        case "Marketing":
+            header("location:dashboard/index.php");
+            break;
+        case "IT":
+            header("location:dashboard/index.php");
+            break;
+        case "Negotiator":
+            header("location:dashboard/index.php");
+            break;
+        case "PMO":
+            header("location:dashboard/index.php");
+            break;
+        case "MnR":
             header("location:dashboard/index.php");
             break;
         default:

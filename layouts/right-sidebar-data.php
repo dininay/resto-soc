@@ -247,7 +247,7 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
 
                     <!-- FAT Head -->
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "FAT") : ?>
-                    <li class="nav-item <?php echo ($current_page == 'datatables-fat' || $current_page == 'datatables-review-rab-urugan' || $current_page == 'datatables-tender-fat' || $current_page == 'datatables-spk-fat' ||  $current_page == 'datatables-tafpay-listrikair' || $current_page == 'datatables-tafpay-listrik' || strpos($current_page, 'tafpaylistrik-edit-form')!== false || $current_page == 'datatables-sign-psm-fat' || strpos($current_page, 'fat-edit-form')!== false || strpos($current_page, 'tafpay-edit-form')!== false || strpos($current_page, 'kode-store-edit-form') !== false) ? 'active' : ''; ?>" data-item="fat">
+                    <li class="nav-item <?php echo ($current_page == 'datatables-fat' || $current_page == 'datatables-review-rab-urugan' || $current_page == 'datatables-tender-fat' || $current_page == 'datatables-spk-fat' ||  $current_page == 'datatables-tafpay-listrikair' || $current_page == 'datatables-tafpay-listrik' || strpos($current_page, 'tafpaylistrik-edit-form')!== false || $current_page == 'datatables-sign-psm-fat' || strpos($current_page, 'fat-edit-form')!== false || strpos($current_page, 'tafpay-edit-form')!== false || strpos($current_page, 'kode-store-edit-form') !== false  || strpos($current_page, 'sdgpk-rto-listrik-edit-form')!== false) ? 'active' : ''; ?>" data-item="fat">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Cursor-Click"></i>
                             <span class="nav-text">FAT</span>
@@ -1098,7 +1098,7 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                                 <span class="item-name mr-2">Payment - Air PDAM</span>
                             </a>
                         </li>
-                        <li class="nav-item <?php echo $current_page == 'datatables-listrik' ? 'active' : ''; ?>">
+                        <li class="nav-item <?php echo ($current_page == 'datatables-listrik' || strpos($current_page, 'sdgpk-rto-listrik-edit-form')!== false) ? 'active' : ''; ?>">
                             <a href="<?= $base_url . '/datatables-listrik.php'?>">
                                 <i class="nav-icon i-Pen-2"></i>
                                 <span class="item-name mr-2">Payment - Listrik</span>

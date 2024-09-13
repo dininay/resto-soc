@@ -13,12 +13,17 @@ $mail = new PHPMailer(true);
 // Koneksi ke database
 include "../../koneksi.php";
 
+// Set timezone ke Jakarta
+date_default_timezone_set('Asia/Jakarta');
+
 // Proses jika ada pengiriman data dari formulir untuk memperbarui status
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["confirm_nego"]) && isset($_POST["catatan_psm"])) {
     $id = $_POST["id"];
     $confirm_nego = $_POST["confirm_nego"];
     $catatan_psm = $_POST["catatan_psm"];
+    $catatan_psmlegal = $_POST["catatan_psm"];
     $end_date = null;
+    $legal_date = date("Y-m-d H:i:s");
     $issue_detail = isset($_POST["issue_detail"]) ? $_POST["issue_detail"] : null;
     $pic = isset($_POST["pic"]) ? $_POST["pic"] : null;
     $action_plan = isset($_POST["action_plan"]) ? $_POST["action_plan"] : null;
@@ -52,39 +57,120 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         if ($confirm_nego == 'In Review By TAF') {
             $end_date = date("Y-m-d H:i:s");
 
-            // Ambil SLA dari tabel master_sla untuk divisi ST-EQP
-            $sql_sla_steqp = "SELECT sla FROM master_sla WHERE divisi = 'FAT-Sewa'";
-            $result_sla_steqp = $conn->query($sql_sla_steqp);
-            if ($result_sla_steqp->num_rows > 0) {
-                $row_sla_steqp = $result_sla_steqp->fetch_assoc();
-                $hari_sla_steqp = $row_sla_steqp['sla'];
-                $slafatpsm_date = date("Y-m-d", strtotime($end_date . ' + ' . $hari_sla_steqp . ' days'));
-            } else {
-                $conn->rollback();
-                echo "Error: Data SLA tidak ditemukan untuk divisi FAT-Sewa.";
-                exit;
-            }
-            $confirm_fatpsm = "In Process";
+            // Ambil confirm_fatpsm dari tabel draft berdasarkan id
+            $sql_check_confirm = "SELECT confirm_fatpsm FROM draft WHERE id = ?";
+            $stmt_check = $conn->prepare($sql_check_confirm);
+            $stmt_check->bind_param("i", $id);
+            $stmt_check->execute();
+            $result_confirm = $stmt_check->get_result();
 
-            // Query untuk memperbarui status confirm_nego di tabel draft
-            $sql_update = "UPDATE draft SET confirm_nego = ?, catatan_psm = ?, end_date = ?, confirm_fatpsm = ?, slafatpsm_date = ? WHERE id = ?";
-            $stmt_update = $conn->prepare($sql_update);
-            $stmt_update->bind_param("sssssi", $confirm_nego, $catatan_psm, $end_date, $confirm_fatpsm, $slafatpsm_date, $id);
-            $stmt_update->execute();
+            if ($result_confirm->num_rows > 0) {
+                $row_confirm = $result_confirm->fetch_assoc();
+                $confirm_fatpsm = $row_confirm['confirm_fatpsm'];
+                
+                // Jika confirm_fatpsm = 'In Revision'
+                if ($confirm_fatpsm == 'In Revision') {
+                    // Ambil SLA dari tabel master_sla untuk divisi FAT-Sewa-2
+                    $sql_sla_sewa2 = "SELECT sla FROM master_sla WHERE divisi = 'FAT-Sewa-2'";
+                    $result_sla_sewa2 = $conn->query($sql_sla_sewa2);
+                    if ($result_sla_sewa2->num_rows > 0) {
+                        $row_sla_sewa2 = $result_sla_sewa2->fetch_assoc();
+                        $hari_sla_sewa2 = $row_sla_sewa2['sla'];
 
-            if ($stmt_update->affected_rows > 0) {
-                echo "Status berhasil diperbarui.";
+                        // Cek waktu saat ini
+                        $current_time = date('H:i');
+
+                        // Jika submit setelah jam 12:00 siang, tambahkan 1 hari ke SLA
+                        if ($current_time > '12:00') {
+                            $hari_sla_sewa2 += 1;
+                        }
+
+                        // Hitung tanggal SLA berdasarkan end_date
+                        $slafatpsm_date = date("Y-m-d", strtotime($end_date . ' + ' . $hari_sla_sewa2 . ' days'));
+                    } else {
+                        $conn->rollback();
+                        echo "Error: Data SLA tidak ditemukan untuk divisi FAT-Sewa-2.";
+                        exit;
+                    }
+                    
+                    $confirm_fatpsm = "In Process";
+                    // Perbarui status di tabel draft
+                    $sql_update = "UPDATE draft SET confirm_nego = ?, catatan_psm = ?, end_date = ?, confirm_fatpsm = ?, slafatpsm_date = ? WHERE id = ?";
+                    $stmt_update = $conn->prepare($sql_update);
+                    $stmt_update->bind_param("sssssi", $confirm_nego, $catatan_psm, $end_date, $confirm_fatpsm, $slafatpsm_date, $id);
+                    $stmt_update->execute();
+
+                    if ($stmt_update->affected_rows > 0) {
+                        echo "Status berhasil diperbarui.";
+                    } else {
+                        echo "Gagal memperbarui status.";
+                    }
+                }
+                // Jika confirm_fatpsm = NULL
+                else if (is_null($confirm_fatpsm)) {
+                    // Ambil SLA dari tabel master_sla untuk divisi FAT-Sewa
+                    $sql_sla_steqp = "SELECT sla FROM master_sla WHERE divisi = 'FAT-Sewa'";
+                    $result_sla_steqp = $conn->query($sql_sla_steqp);
+                    if ($result_sla_steqp->num_rows > 0) {
+                        $row_sla_steqp = $result_sla_steqp->fetch_assoc();
+                        $hari_sla_steqp = $row_sla_steqp['sla'];
+
+                        // Cek waktu saat ini
+                        $current_time = date('H:i');
+
+                        // Jika submit setelah jam 12:00 siang, tambahkan 1 hari ke SLA
+                        if ($current_time > '12:00') {
+                            $hari_sla_steqp += 1;
+                        }
+
+                        // Hitung tanggal SLA berdasarkan end_date
+                        $slafatpsm_date = date("Y-m-d", strtotime($end_date . ' + ' . $hari_sla_steqp . ' days'));
+                    } else {
+                        $conn->rollback();
+                        echo "Error: Data SLA tidak ditemukan untuk divisi FAT-Sewa.";
+                        exit;
+                    }
+                    
+                    $confirm_fatpsm = "In Process";
+                    // Perbarui status di tabel draft
+                    $sql_update = "UPDATE draft SET confirm_nego = ?, catatan_psm = ?, end_date = ?, confirm_fatpsm = ?, slafatpsm_date = ? WHERE id = ?";
+                    $stmt_update = $conn->prepare($sql_update);
+                    $stmt_update->bind_param("sssssi", $confirm_nego, $catatan_psm, $end_date, $confirm_fatpsm, $slafatpsm_date, $id);
+                    $stmt_update->execute();
+
+                    if ($stmt_update->affected_rows > 0) {
+                        echo "Status berhasil diperbarui.";
+                    } else {
+                        echo "Gagal memperbarui status.";
+                    }
+                } else {
+                    echo "Tidak ada tindakan yang perlu diambil untuk confirm_fatpsm = $confirm_fatpsm.";
+                    exit;
+                }
+
             } else {
-                echo "Gagal memperbarui status.";
+                echo "Error: ID tidak ditemukan di tabel draft.";
             }
             // Ambil kode_lahan dari tabel re
-            $sql_get_kode_lahan = "SELECT kode_lahan FROM draft WHERE id = ?";
+            $sql_get_kode_lahan = "SELECT kode_lahan, lamp_draf, lamp_signpsm FROM draft WHERE id = ?";
             $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
             $stmt_get_kode_lahan->bind_param("i", $id);
             $stmt_get_kode_lahan->execute();
-            $stmt_get_kode_lahan->bind_result($kode_lahan);
+            $stmt_get_kode_lahan->bind_result($kode_lahan, $lamp_draf, $lamp_signpsm);
             $stmt_get_kode_lahan->fetch();
             $stmt_get_kode_lahan->free_result();
+            
+            // Melanjutkan ke proses insert jika kode_lahan tidak kosong
+            $sql_insert = "INSERT INTO note_psm (kode_lahan, catatan_psmlegal, legal_date) VALUES (?, ?, ?)";
+            $stmt_insert = $conn->prepare($sql_insert);
+            $stmt_insert->bind_param("sss", $kode_lahan, $catatan_psmlegal, $legal_date);
+            var_dump($kode_lahan);
+            $stmt_insert->execute();
+            if ($stmt_insert->execute()) {
+                echo "Data berhasil dimasukkan.";
+            } else {
+                echo "Gagal memasukkan data: " . $stmt_insert->error;
+            }
 
             // Periksa apakah kode_lahan ada di tabel hold_project
             $sql_check_hold = "SELECT kode_lahan FROM hold_project WHERE kode_lahan = ?";
@@ -135,25 +221,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                         $mail->addAddress($toEmail);
                     }
 
+                    $imagePath = '../../assets/images/logo-email.png';
+                    $mail->addEmbeddedImage($imagePath, 'embedded_image', 'logo-email.png', 'base64', 'image/png');
+
+                    // Lampirkan file dari folder cPanel
+                    $file_dir = "../uploads/"; // Ganti dengan direktori file yang sesuai
+                    if (!empty($lamp_draf)) {
+                        $mail->addAttachment($file_dir . $lamp_draf);
+                    }
+                    if (!empty($lamp_signpsm)) {
+                        $mail->addAttachment($file_dir . $lamp_signpsm);
+                    }
+
                     // Email content
                     $mail->Subject = 'Notification: 1 New Active Resto SOC Ticket';
-                                    $mail->Body    = '
-                                    <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
-                                        <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
-                                            <img src="cid:header_image" alt="Header Image" style="max-width: 100%; height: auto; margin-bottom: 20px;">
-                                            <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Team,</h2>
-                                            <p>You have 1 New Active Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.</p>
-                                            <p>Thank you for your prompt attention to this matter.</p>
-                                            <p></p>
-                                            <p>Best regards,</p>
-                                            <p>Resto - SOC</p>
-                                        </div>
-                                    </div>';
-                                    $mail->AltBody = 'Dear Team,'
-                                                . 'You have 1 New Active Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.'
-                                                . 'Thank you for your prompt attention to this matter.'
-                                                . 'Best regards,'
-                                                . 'Resto - SOC';
+                    $mail->Body    = '
+                        <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333; margin: 0; padding: 0;">
+                        <div style="background-color: #f7f7f7; border-radius: 8px; padding: 0; margin: 0; text-align: center;">
+                            <img src="cid:embedded_image" alt="Header Image" style="display: block; width: 50%; height: auto; margin: 0 auto;">
+                            <div style="padding: 20px; background-color: #f7f7f7; border-radius: 8px;">
+                                <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear TAF Team,</h2>
+                                <p>We would like to inform you that a new Active Resto SOC Ticket has been created in the Review Draft Table Sewa & PSM By TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                Your prompt attention to this matter is greatly appreciated.</p>
+                                <p></p>
+                                <p>Have a good day!</p>
+                            </div>
+                        </div>
+                    </div>';
+                    $mail->AltBody = 'Dear TAF Team,'
+                                . 'We would like to inform you that a new Active Resto SOC Ticket has been created in the Review Draft Table Sewa & PSM By TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                Your prompt attention to this matter is greatly appreciated.'
+                                . 'Have a good day!';
 
                     // Send email
                     if ($mail->send()) {

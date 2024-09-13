@@ -30,7 +30,7 @@
                                 <i class="i-Lock-User mr-1"></i> <?php echo $_SESSION['username']; ?>
 
                                 </div>
-                                <a class="dropdown-item" href="/logout.php">Sign out</a>
+                                <a class="dropdown-item" href="../logout.php">Sign out</a>
                             </div>
                         </div>
                   </div>

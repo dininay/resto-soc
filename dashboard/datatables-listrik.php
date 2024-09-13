@@ -1,7 +1,7 @@
 <?php
 // Koneksi ke database
 include "../koneksi.php";
-$status_ipalscm = "";
+$status_tafpaylistrik = "";
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT socdate_sdg.*, d.kode_store, l.nama_lahan, r.gostore_date
 from socdate_sdg
@@ -168,8 +168,10 @@ function getBadgeColor($remarks) {
                                                 <th>Sumber Listrik</th>
                                                 <th>No ID Register</th>
                                                 <th>No ID PLN</th>
+                                                <th>MEP Submit Date</th>
                                                 <th>Lampiran Bukti Bayar Listrik</th>
                                                 <th>Status</th>
+                                                <th>Paid by TAF</th>
                                                 <th>SLA</th>
 												<th>Action</th>
                                             </tr>
@@ -183,6 +185,16 @@ function getBadgeColor($remarks) {
                                                 <td><?= $row['sumber_listrik'] ?></td>
                                                 <td><?= $row['id_regpln'] ?></td>
                                                 <td><?= $row['id_pln'] ?></td>
+                                                <?php
+                                                // Assuming $row['bp_date'] contains a date string
+                                                $date = !empty($row['sdglistrik_date']) ? new DateTime($row['sdglistrik_date']) : null;
+    
+                                                if ($date) {
+                                                    echo "<td>" . $date->format('d M y H:i') . "</td>";
+                                                } else {
+                                                    echo "<td></td>"; // Or leave it empty if there's no date
+                                                }
+                                                ?>
                                                 <?php
                                                 // Bagian ini di dalam loop yang menampilkan data tabel
                                                 $lamp_paylistrik_files = explode(",", $row['lamp_paylistrik']); // Pisahkan nama file menjadi array
@@ -228,6 +240,16 @@ function getBadgeColor($remarks) {
                                                         <?php echo $row['status_tafpaylistrik']; ?>
                                                     </span>
                                                 </td>
+                                                <?php
+                                                // Assuming $row['bp_date'] contains a date string
+                                                $date = !empty($row['tafpaylistrik_date']) ? new DateTime($row['tafpaylistrik_date']) : null;
+    
+                                                if ($date) {
+                                                    echo "<td>" . $date->format('d M y H:i') . "</td>";
+                                                } else {
+                                                    echo "<td></td>"; // Or leave it empty if there's no date
+                                                }
+                                                ?>
                                                 <td>
                                                     <?php
                                                     // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
@@ -390,8 +412,10 @@ function getBadgeColor($remarks) {
                                                 <th>Sumber Listrik</th>
                                                 <th>No ID Register</th>
                                                 <th>No ID PLN</th>
+                                                <th>MEP Submit Date</th>
                                                 <th>Lampiran Bukti Bayar Listrik</th>
                                                 <th>Status</th>
+                                                <th>Paid by TAF</th>
                                                 <th>SLA</th>
 												<th>Action</th>
                                             </tr>
@@ -651,7 +675,7 @@ function getBadgeColor($remarks) {
         toggleIssueDetail();
     });
 </script>
-<?php if ($status_sdg == 'Pending') { ?>
+<?php if ($status_tafpaylistrik == 'Pending') { ?>
     <script>
         $(document).ready(function () {
             $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'

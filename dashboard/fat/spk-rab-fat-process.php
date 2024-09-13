@@ -18,6 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
     $id = $_POST["id"];
     $status_spkfat = $_POST["status_spkfat"];
     $catatan_spkfat = $_POST["catatan_spkfat"];
+    $taf_date = date("Y-m-d H:i:s");
     $issue_detail = isset($_POST["issue_detail"]) ? $_POST["issue_detail"] : null;
     $pic = isset($_POST["pic"]) ? $_POST["pic"] : null;
     $action_plan = isset($_POST["action_plan"]) ? $_POST["action_plan"] : null;
@@ -124,6 +125,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                 $stmt_update_pending = $conn->prepare($sql_update_pending);
                 $stmt_update_pending->bind_param("ssi", $status_kom, $sla_kom, $id);
                 $stmt_update_pending->execute();
+            
+                $sql_get_kode_lahan = "SELECT kode_lahan FROM procurement WHERE id = ?";
+                $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+                $stmt_get_kode_lahan->bind_param("i", $id);
+                $stmt_get_kode_lahan->execute();
+                $stmt_get_kode_lahan->bind_result($kode_lahan);
+                $stmt_get_kode_lahan->fetch();
+                $stmt_get_kode_lahan->free_result();
+                    // Melanjutkan ke proses insert jika kode_lahan tidak kosong
+                    $sql_insert = "INSERT INTO note_spk (kode_lahan, catatan_spkfat, taf_date) VALUES (?, ?, ?)";
+                    $stmt_insert = $conn->prepare($sql_insert);
+                    $stmt_insert->bind_param("sss", $kode_lahan, $catatan_spkfat, $taf_date);
+                    $stmt_insert->execute();
                 
                 // Periksa apakah kode_lahan ada di tabel hold_project
                 $sql_check_hold = "SELECT kode_lahan FROM hold_project WHERE kode_lahan = (SELECT kode_lahan FROM procurement WHERE id = ?)";
@@ -314,6 +328,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                 $status_approvprocurement = "In Revision";
                 $stmt_update_pending->bind_param("ssssi", $status_spkfat, $catatan_spkfat, $status_approvprocurement, $spkfat_date, $id);
                 $stmt_update_pending->execute();
+            
+                // Periksa apakah kode_lahan ada di tabel hold_project
+                
+                $sql_get_kode_lahan = "SELECT kode_lahan FROM procurement WHERE id = ?";
+                $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+                $stmt_get_kode_lahan->bind_param("i", $id);
+                $stmt_get_kode_lahan->execute();
+                $stmt_get_kode_lahan->bind_result($kode_lahan);
+                $stmt_get_kode_lahan->fetch();
+                $stmt_get_kode_lahan->free_result();
+                    // Melanjutkan ke proses insert jika kode_lahan tidak kosong
+                    $sql_insert = "INSERT INTO note_spk (kode_lahan, catatan_spkfat, taf_date) VALUES (?, ?, ?)";
+                    $stmt_insert = $conn->prepare($sql_insert);
+                    $stmt_insert->bind_param("sss", $kode_lahan, $catatan_spkfat, $taf_date);
+                    var_dump($kode_lahan);
+                    $stmt_insert->execute();
+                    if ($stmt_insert->execute()) {
+                        echo "Data berhasil dimasukkan.";
+                    } else {
+                        echo "Gagal memasukkan data: " . $stmt_insert->error;
+                    }
                   
             try {
                 // Pengaturan server SMTP

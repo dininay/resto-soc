@@ -1,7 +1,7 @@
 <?php
 // Koneksi ke database
 include "../koneksi.php";
-$status_ipalscm = "";
+$status_tafpay = "";
 // Query untuk mengambil data dari tabel land
 $sql = "SELECT socdate_sdg.*, d.kode_store, l.nama_lahan, r.gostore_date
 from socdate_sdg
@@ -168,7 +168,9 @@ function getBadgeColor($remarks) {
                                                 <th>Sumber Air</th>
                                                 <th>No ID PDAM</th>
                                                 <th>Lampiran Bukti Bayar Air PDAM</th>
+                                                <th>MEP Submit Date</th>
                                                 <th>Status</th>
+                                                <th>Paid by TAF</th>
                                                 <th>SLA</th>
 												<th>Action</th>
                                             </tr>
@@ -203,6 +205,16 @@ function getBadgeColor($remarks) {
                                                     echo '<td></td>';
                                                 }
                                                 ?>
+                                                <?php
+                                                // Assuming $row['bp_date'] contains a date string
+                                                $date = !empty($row['sdgsumber_date']) ? new DateTime($row['sdgsumber_date']) : null;
+    
+                                                if ($date) {
+                                                    echo "<td>" . $date->format('d M y H:i') . "</td>";
+                                                } else {
+                                                    echo "<td></td>"; // Or leave it empty if there's no date
+                                                }
+                                                ?>
                                                 <td>
                                                     <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
@@ -226,6 +238,16 @@ function getBadgeColor($remarks) {
                                                         <?php echo $row['status_tafpay']; ?>
                                                     </span>
                                                 </td>
+                                                <?php
+                                                // Assuming $row['bp_date'] contains a date string
+                                                $date = !empty($row['tafpay_date']) ? new DateTime($row['tafpay_date']) : null;
+    
+                                                if ($date) {
+                                                    echo "<td>" . $date->format('d M y H:i') . "</td>";
+                                                } else {
+                                                    echo "<td></td>"; // Or leave it empty if there's no date
+                                                }
+                                                ?>
                                                 <td>
                                                     <?php
                                                     // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
@@ -388,7 +410,9 @@ function getBadgeColor($remarks) {
                                                 <th>Sumber Air</th>
                                                 <th>No ID PDAM</th>
                                                 <th>Lampiran Bukti Bayar Air PDAM</th>
+                                                <th>MEP Submit Date</th>
                                                 <th>Status</th>
+                                                <th>Paid by TAF</th>
                                                 <th>SLA</th>
 												<th>Action</th>
                                             </tr>
@@ -648,7 +672,7 @@ function getBadgeColor($remarks) {
         toggleIssueDetail();
     });
 </script>
-<?php if ($status_sdg == 'Pending') { ?>
+<?php if ($status_tafpay == 'Pending') { ?>
     <script>
         $(document).ready(function () {
             $('#editModal').modal('show'); // Show modal if status_approvowner is 'Pending'

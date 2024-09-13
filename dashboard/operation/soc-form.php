@@ -32,7 +32,7 @@ while ($row_existing = $result_existing->fetch_assoc()) {
 }
 
 // Query untuk mengambil semua kode lahan yang sudah disetujui
-$result = $conn->query("SELECT DISTINCT kode_lahan FROM resto WHERE status_kom = 'Approve'");
+$result = $conn->query("SELECT DISTINCT kode_lahan FROM resto WHERE status_kom = 'On Going Project'");
 
 // Buat opsi-opsi untuk formulir
 $land_options = "";

@@ -197,6 +197,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                     } else {
                         throw new Exception("Error: Tidak dapat mengambil data SLA Negotiator dari tabel master_sla.");
                     }
+                    
+                
+                    $sql_get_kode_lahan = "SELECT kode_lahan FROM draft WHERE id = ?";
+                    $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+                    $stmt_get_kode_lahan->bind_param("i", $id);
+                    $stmt_get_kode_lahan->execute();
+                    $stmt_get_kode_lahan->bind_result($kode_lahan);
+                    $stmt_get_kode_lahan->fetch();
+                    $stmt_get_kode_lahan->close();
+                    
+                    $status_gostore = "In Process";
+                    $sql_update = "UPDATE resto SET status_gostore = ? WHERE kode_lahan = ?";
+                    $stmt_update = $conn->prepare($sql_update);
+                    $stmt_update->bind_param("ss", $status_gostore, $kode_lahan);
+                    $stmt_update->execute();
 
                     // Periksa apakah kode_lahan ada di tabel hold_project
                     $sql_check_hold = "SELECT kode_lahan FROM hold_project WHERE kode_lahan = ?";
