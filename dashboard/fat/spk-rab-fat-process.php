@@ -14,10 +14,10 @@ $mail = new PHPMailer(true);
 include "../../koneksi.php";
 
 // Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST["status_spkfat"]) && isset($_POST["catatan_spkfat"])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST["status_spkfat"]) && isset($_POST["catatan_spkfat"]) && is_array($_POST['catatan_spkfat'])) {
     $id = $_POST["id"];
     $status_spkfat = $_POST["status_spkfat"];
-    $catatan_spkfat = $_POST["catatan_spkfat"];
+    $catatan_spkfat = implode(';', array_map('htmlspecialchars', $_POST['catatan_spkfat']));
     $taf_date = date("Y-m-d H:i:s");
     $issue_detail = isset($_POST["issue_detail"]) ? $_POST["issue_detail"] : null;
     $pic = isset($_POST["pic"]) ? $_POST["pic"] : null;
@@ -63,24 +63,46 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
             if ($status_spkfat == 'Done Review') {
                 $spkfat_date = date("Y-m-d");
                 $status_approvprocurement = "Approve";
-                if (isset($_FILES["lamp_spkconsdone"])) {
-                    $lamp_spkconsdone_paths = array();
-                    foreach ($_FILES['lamp_spkconsdone']['name'] as $key => $filename) {
-                        $file_tmp = $_FILES['lamp_spkconsdone']['tmp_name'][$key];
-                        $target_dir = "../uploads/";
-                        $target_file = $target_dir . basename($filename);
-            
-                        // Attempt to move the uploaded file to the target directory
-                        if (move_uploaded_file($file_tmp, $target_file)) {
-                            $lamp_spkconsdone_paths[] = $filename;
-                        } else {
-                            echo "Gagal mengunggah file " . $filename . "<br>";
+                
+                    $sql_get_kode_lahan = "SELECT kode_lahan FROM procurement WHERE id = ?";
+                    $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+                    $stmt_get_kode_lahan->bind_param("i", $id);
+                    $stmt_get_kode_lahan->execute();
+                    $stmt_get_kode_lahan->bind_result($kode_lahan);
+                    $stmt_get_kode_lahan->fetch();
+                    $stmt_get_kode_lahan->free_result();
+
+                    // Periksa apakah kunci 'lampiran' ada dalam $_FILES
+                    $lamp_spkconsdone = "";
+                    if (isset($_FILES["lamp_spkconsdone"])) {
+                        $lamp_spkconsdone_paths = array();
+
+                        // Path ke direktori "uploads"
+                        $target_dir = "../uploads/" . $kode_lahan . "/";
+
+                        // Cek apakah folder dengan nama kode_lahan sudah ada
+                        if (!is_dir($target_dir)) {
+                            // Jika folder belum ada, buat folder baru
+                            mkdir($target_dir, 0777, true);
                         }
+
+                        // Loop untuk menangani setiap file yang diunggah
+                        foreach ($_FILES['lamp_spkconsdone']['name'] as $key => $filename) {
+                            $file_tmp = $_FILES['lamp_spkconsdone']['tmp_name'][$key];
+                            $file_name = $_FILES['lamp_spkconsdone']['name'][$key];
+                            $target_file = $target_dir . basename($file_name); // Simpan di folder kode_lahan
+
+                            // Pindahkan file yang diunggah ke target folder
+                            if (move_uploaded_file($file_tmp, $target_file)) {
+                                $lamp_spkconsdone_paths[] = $file_name; // Simpan nama file
+                            } else {
+                                echo "Gagal mengunggah file " . $file_name . "<br>";
+                            }
+                        }
+
+                        // Gabungkan semua nama file menjadi satu string, dipisahkan koma
+                        $lamp_spkconsdone = implode(",", $lamp_spkconsdone_paths);
                     }
-            
-                    // Join all file paths into a comma-separated string
-                    $lamp_spkconsdone = implode(",", $lamp_spkconsdone_paths);
-                }
 
                     $sql_sla = "SELECT sla FROM master_sla WHERE divisi = 'SPK'";
                     $result_sla = $conn->query($sql_sla);
@@ -188,23 +210,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                         foreach ($toEmails as $toEmail) {
                             $mail->addAddress($toEmail);
                         }
+
+                        $imagePath = '../../assets/images/logo-email.png';
+                        $mail->addEmbeddedImage($imagePath, 'embedded_image', 'logo-email.png', 'base64', 'image/png');
     
                         // Email content
                         $mail->Subject = 'Notification: 1 New Active Resto SOC Ticket';
                                         $mail->Body    = '
-                                        <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
-                                            <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
-                                                <img src="cid:header_image" alt="Header Image" style="max-width: 100%; height: auto; margin-bottom: 20px;">
-                                                <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Procurement Team,</h2>
-                                                <p>We would like to inform you that a new Active Resto SOC Ticket has been created in the Review SPK Construction by TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
-                                                Your prompt attention to this matter is greatly appreciated.</p>
-                                                <p></p>
-                                                <p>Have a good day!</p>
+                                            <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333; margin: 0; padding: 0;">
+                                            <div style="background-color: #f7f7f7; border-radius: 8px; padding: 0; margin: 0; text-align: center;">
+                                                <img src="cid:embedded_image" alt="Header Image" style="display: block; width: 50%; height: auto; margin: 0 auto;">
+                                                <div style="padding: 20px; background-color: #f7f7f7; border-radius: 8px;">
+                                                    <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Procurement Team,</h2>
+                                                    <p>We would like to inform you that a new Active Resto SOC Ticket has been created. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                    Your prompt attention to this matter is greatly appreciated.</p>
+                                                    <p></p>
+                                                    <p>Have a good day!</p>
+                                                </div>
                                             </div>
                                         </div>';
                                         $mail->AltBody = 'Dear Procurement Team,'
-                                                    . 'We would like to inform you that a new Active Resto SOC Ticket has been created in the Review SPK Construction by TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
-                                                        Your prompt attention to this matter is greatly appreciated.'
+                                                    . 'We would like to inform you that a new Active Resto SOC Ticket has been created. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                    Your prompt attention to this matter is greatly appreciated.'
                                                     . 'Have a good day!';
     
                         // Send email
@@ -350,66 +377,73 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"])  && isset($_POST
                         echo "Gagal memasukkan data: " . $stmt_insert->error;
                     }
                   
-            try {
-                // Pengaturan server SMTP
-                $mail->isSMTP();
-                $mail->Host = 'sandbox.smtp.mailtrap.io';  // Ganti dengan SMTP server Anda
-                $mail->SMTPAuth = true;
-                $mail->Username = 'ff811f556f5d12'; // Ganti dengan email Anda
-                $mail->Password = 'c60c92868ce0f8'; // Ganti dengan password email Anda
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-                $mail->Port = 2525;
-                
-                // Pengaturan pengirim dan penerima
-                $mail->setFrom('resto-soc@gacoan.com', 'Resto SOC');
+                    $queryIR = "SELECT email FROM user WHERE level IN ('Procurement')";
+                    $resultIR = mysqli_query($conn, $queryIR);
         
-                // Query untuk mendapatkan email pengguna dengan level "Real Estate"
-                $sql = "SELECT email FROM user WHERE level IN ('Procurement')";
-                $result = $conn->query($sql);
-        
-                if ($result->num_rows > 0) {
-                    while($row = $result->fetch_assoc()) {
-                        $email = $row['email'];
-                
-                        // Validasi format email sebelum menambahkannya sebagai penerima
-                        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                            $mail->addAddress($email); // Tambahkan setiap penerima email
-                            
-                            // Konten email
-                            $mail->isHTML(true);
-                            $mail->Subject = 'Notification: 1 New Active Resto SOC Ticket';
-                            $mail->Body    = '
-                            <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
-                                <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
-                                            <img src="cid:header_image" alt="Header Image" style="max-width: 100%; height: auto; margin-bottom: 20px;">
-                                    <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Team,</h2>
-                                    <p>You have 1 New Active Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.</p>
-                                    <p>Thank you for your prompt attention to this matter.</p>
-                                    <p></p>
-                                    <p>Best regards,</p>
-                                    <p>Resto - SOC</p>
-                                </div>
-                            </div>';
-                            $mail->AltBody = 'Dear Team,'
-                                           . 'You have 1 New Active Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.'
-                                           . 'Thank you for your prompt attention to this matter.'
-                                           . 'Best regards,'
-                                           . 'Resto - SOC';
-                
-                            // Kirim email
-                            $mail->send();
-                            $mail->clearAddresses(); // Hapus semua penerima sebelum loop berikutnya
-                        } else {
-                            echo "Invalid email format: " . $email;
+                    if ($resultIR && mysqli_num_rows($resultIR) > 0) {
+                        while ($rowIR = mysqli_fetch_assoc($resultIR)) {
+                            if (!empty($rowIR['email'])) {
+                                $toEmails[] = $rowIR['email'];
+                            }
                         }
+                    }
+                    var_dump($toEmails);
+                    if (!empty($toEmails)) {
+        
+                        try {
+                            // SMTP configuration
+                            $mail = new PHPMailer(true);
+                            $mail->isSMTP();
+                            // $mail->SMTPDebug = 2;
+                            $mail->SMTPAuth = true;
+                            $mail->SMTPSecure = 'ssl';
+                            $mail->Host = 'miegacoan.co.id';
+                            $mail->Port = 465;
+                            $mail->Username = 'resto-soc@miegacoan.co.id';
+                            $mail->Password = '9)5X]*hjB4sh';
+                            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+                            $mail->setFrom('resto-soc@miegacoan.co.id', 'Pesta Pora Abadi');
+        
+                            foreach ($toEmails as $toEmail) {
+                                $mail->addAddress($toEmail);
+                            }
+        
+                            $imagePath = '../../assets/images/logo-email.png';
+                            $mail->addEmbeddedImage($imagePath, 'embedded_image', 'logo-email.png', 'base64', 'image/png');
+        
+                            // Email content
+                            $mail->Subject = 'Notification: 1 New Active Revision By TAF Resto SOC Ticket';
+                                            $mail->Body    = '
+                                                <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333; margin: 0; padding: 0;">
+                                                <div style="background-color: #f7f7f7; border-radius: 8px; padding: 0; margin: 0; text-align: center;">
+                                                    <img src="cid:embedded_image" alt="Header Image" style="display: block; width: 50%; height: auto; margin: 0 auto;">
+                                                    <div style="padding: 20px; background-color: #f7f7f7; border-radius: 8px;">
+                                                        <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Procurement Team,</h2>
+                                                        <p>We would like to inform you that a new Active Revision By TAF Resto SOC Ticket has been created. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                        Your prompt attention to this matter is greatly appreciated.</p>
+                                                        <p></p>
+                                                        <p>Have a good day!</p>
+                                                    </div>
+                                                </div>
+                                            </div>';
+                                            $mail->AltBody = 'Dear Procurement Team,'
+                                                        . 'We would like to inform you that a new Active Revision By TAF Resto SOC Ticket has been created. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                        Your prompt attention to this matter is greatly appreciated.'
+                                                        . 'Have a good day!';
+        
+                            // Send email
+                            if ($mail->send()) {
+                                echo "Email sent successfully!<br>";
+                            } else {
+                                echo "Failed to send email. Error: {$mail->ErrorInfo}<br>";
+                            }
+        
+                        } catch (Exception $e) {
+                            echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
                         }
                     } else {
-                        echo "No emails found.";
+                        echo "No email found for the selected resto or IR users.";
                     }
-        
-                } catch (Exception $e) {
-                    echo "Email tidak dapat dikirim. Error: {$mail->ErrorInfo}";
-                }
                 // Komit transaksi
                 $conn->commit();
                 echo "Status berhasil diperbarui dan data ditahan.";

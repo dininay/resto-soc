@@ -246,8 +246,9 @@ function getBadgeColor($remarks) {
                                                 <th>Status Final PSM & Table Sewa</th>
                                                 <th>Nominal</th>
                                                 <th>Lampiran SPK RAB</th>
-                                                <th>Status Procurement</th>
                                                 <th>Catatan TAF</th>
+                                                <th>Status Procurement</th>
+                                                <th>Catatan Procurement</th>
                                                 <th>SLA</th>
                                                 <th>Action</th>
                                             </tr>
@@ -398,6 +399,22 @@ function getBadgeColor($remarks) {
                                                 ?>
                                                 <td>
                                                     <?php
+                                                    // Misalkan catatan dipisahkan oleh koma
+                                                    $catatanArray = explode(';', $row['catatan_spkfat']);
+                                                    
+                                                    if (!empty($catatanArray)) {
+                                                        echo '<ul>';
+                                                        foreach ($catatanArray as $catatan) {
+                                                            echo '<li>' . htmlspecialchars($catatan) . '</li>';
+                                                        }
+                                                        echo '</ul>';
+                                                    } else {
+                                                        echo 'Tidak ada catatan';
+                                                    }
+                                                    ?>
+                                                </td>
+                                                <td>
+                                                    <?php
                                                         // Tentukan warna badge berdasarkan status approval owner
                                                         $badge_color = '';
                                                         switch ($row['status_approvprocurement']) {
@@ -419,7 +436,22 @@ function getBadgeColor($remarks) {
                                                         <?php echo $row['status_approvprocurement']; ?>
                                                     </span>
                                                 </td>
-                                                <td><?= $row['catatan_spkfat'] ?></td>
+                                                <td>
+                                                    <?php
+                                                    // Misalkan catatan dipisahkan oleh koma
+                                                    $catatanArray = explode(';', $row['catatan_proc']);
+                                                    
+                                                    if (!empty($catatanArray)) {
+                                                        echo '<ul>';
+                                                        foreach ($catatanArray as $catatan) {
+                                                            echo '<li>' . htmlspecialchars($catatan) . '</li>';
+                                                        }
+                                                        echo '</ul>';
+                                                    } else {
+                                                        echo 'Tidak ada catatan';
+                                                    }
+                                                    ?>
+                                                </td>
                                                 <td>
                                                     <?php
                                                     // Mengatur timezone ke Asia/Jakarta (sesuaikan dengan timezone lokal Anda)
@@ -529,8 +561,17 @@ function getBadgeColor($remarks) {
                                                                         </select>
                                                                     </div>
                                                                     <div class="form-group">
-                                                                        <label for="catatan_proc">Catatan Procurement</label>
-                                                                        <input type="text" class="form-control" id="catatan_proc" name="catatan_proc">
+                                                                        <label for="catatan_proc">Catatan SPK Construction</label>
+                                                                        <div id="catatan-container">
+                                                                            <!-- Container for catatan inputs -->
+                                                                            <div class="input-group mb-2">
+                                                                                <input type="text" class="form-control" name="catatan_proc[]" placeholder="Masukkan catatan">
+                                                                                <div class="input-group-append">
+                                                                                    <button class="btn btn-danger remove-catatan" type="button">-</button>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                              <button class="btn btn-primary" type="button" id="add-catatan">+</button>
                                                                     </div>
                                                                     <div id="issueDetailSection" class="hidden">
                                                                         <div class="form-group">
@@ -590,8 +631,9 @@ function getBadgeColor($remarks) {
                                                 <th>Status Final PSM & Table Sewa</th>
                                                 <th>Nominal</th>
                                                 <th>Lampiran SPK RAB</th>
-                                                <th>Status Procurement</th>
                                                 <th>Catatan TAF</th>
+                                                <th>Status Procurement</th>
+                                                <th>Catatan Procurement</th>
                                                 <th>SLA</th>
                                                 <th>Action</th>
                                             </tr>
@@ -815,6 +857,61 @@ function getBadgeColor($remarks) {
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
+    <script>
+            $(document).ready(function() {
+        // Function to load and display existing catatan values
+        function loadCatatanValues() {
+            var catatanValue = $('input[name="catatan_proc[]"]').val();
+            if (catatanValue) {
+                // Split the values by semicolon ';'
+                var catatanArray = catatanValue.split(';');
+                // Loop through each value and append it to the container
+                catatanArray.forEach(function(value) {
+                    $('#catatan-container').append(
+                        `<div class="input-group mb-2">
+                            <input type="text" class="form-control catatan-input" name="catatan_proc[]" value="${value}" placeholder="Masukkan catatan">
+                            <div class="input-group-append">
+                                <button class="btn btn-danger remove-catatan" type="button">-</button>
+                            </div>
+                        </div>`
+                    );
+                });
+            }
+        }
+
+        // Call the function to load existing catatan values on page load
+        loadCatatanValues();
+
+        // Add new input catatan
+        $('#add-catatan').click(function() {
+            $('#catatan-container').append(
+                `<div class="input-group mb-2">
+                    <input type="text" class="form-control catatan-input" name="catatan_proc[]" placeholder="Masukkan catatan">
+                    <div class="input-group-append">
+                        <button class="btn btn-danger remove-catatan" type="button">-</button>
+                    </div>
+                </div>`
+            );
+        });
+
+        // Remove dynamic input fields
+        $('#catatan-container').on('click', '.remove-catatan', function() {
+            $(this).closest('.input-group').remove();
+        });
+
+        // Handle form submission
+        $('#statusForm').on('submit', function(event) {
+            // Gather all dynamic inputs before form submission
+            var dynamicInputs = $('#catatan-container input[name="catatan_proc[]"]').map(function() {
+                return $(this).val();
+            }).get();
+
+            // Set the hidden input value to the gathered dynamic inputs, joined by semicolon
+            $('input[name="catatan_proc[]"]').val(dynamicInputs.join(';'));
+
+        });
+    });
+    </script>
     <script>
     // JavaScript to handle opening the modal and setting form values
     $('#editModal').on('show.bs.modal', function (event) {

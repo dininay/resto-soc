@@ -8,55 +8,116 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Ambil nilai tgl_berlaku dan penanggungjawab dari formulir
     $id = $_POST['id'];
     $kode_lahan = $_POST['kode_lahan'];
-    
-    // Periksa apakah kunci 'lampiran' ada dalam $_FILES
     $lamp_signpsm = "";
-
-    if(isset($_FILES["lamp_signpsm"])) {
+    if (isset($_FILES["lamp_signpsm"])) {
         $lamp_signpsm_paths = array();
 
-        // Loop through each file
-        foreach($_FILES['lamp_signpsm']['name'] as $key => $filename) {
+        // Path ke direktori "uploads"
+        $target_dir = "../uploads/" . $kode_lahan . "/";
+
+        // Cek apakah folder dengan nama kode_lahan sudah ada
+        if (!is_dir($target_dir)) {
+            // Jika folder belum ada, buat folder baru
+            mkdir($target_dir, 0777, true);
+        }
+
+        // Loop untuk menangani setiap file yang diunggah
+        foreach ($_FILES['lamp_signpsm']['name'] as $key => $filename) {
             $file_tmp = $_FILES['lamp_signpsm']['tmp_name'][$key];
             $file_name = $_FILES['lamp_signpsm']['name'][$key];
-            $target_dir = "../uploads/";
-            $target_file = $target_dir . basename($file_name);
+            $target_file = $target_dir . basename($file_name); // Simpan di folder kode_lahan
 
-            // Attempt to move the uploaded file to the target directory
+            // Pindahkan file yang diunggah ke target folder
             if (move_uploaded_file($file_tmp, $target_file)) {
-                $lamp_signpsm_paths[] = $file_name;
+                $lamp_signpsm_paths[] = $file_name; // Simpan nama file
             } else {
                 echo "Gagal mengunggah file " . $file_name . "<br>";
             }
         }
 
-        // Join all file paths into a comma-separated string
+        // Gabungkan semua nama file menjadi satu string, dipisahkan koma
         $lamp_signpsm = implode(",", $lamp_signpsm_paths);
     }
 
     $lamp_draf = "";
-
-    if(isset($_FILES["lamp_draf"])) {
+    if (isset($_FILES["lamp_draf"])) {
         $lamp_draf_paths = array();
 
-        // Loop through each file
-        foreach($_FILES['lamp_draf']['name'] as $key => $filename) {
+        // Path ke direktori "uploads"
+        $target_dir = "../uploads/" . $kode_lahan . "/";
+
+        // Cek apakah folder dengan nama kode_lahan sudah ada
+        if (!is_dir($target_dir)) {
+            // Jika folder belum ada, buat folder baru
+            mkdir($target_dir, 0777, true);
+        }
+
+        // Loop untuk menangani setiap file yang diunggah
+        foreach ($_FILES['lamp_draf']['name'] as $key => $filename) {
             $file_tmp = $_FILES['lamp_draf']['tmp_name'][$key];
             $file_name = $_FILES['lamp_draf']['name'][$key];
-            $target_dir = "../uploads/";
-            $target_file = $target_dir . basename($file_name);
+            $target_file = $target_dir . basename($file_name); // Simpan di folder kode_lahan
 
-            // Attempt to move the uploaded file to the target directory
+            // Pindahkan file yang diunggah ke target folder
             if (move_uploaded_file($file_tmp, $target_file)) {
-                $lamp_draf_paths[] = $file_name;
+                $lamp_draf_paths[] = $file_name; // Simpan nama file
             } else {
                 echo "Gagal mengunggah file " . $file_name . "<br>";
             }
         }
 
-        // Join all file paths into a comma-separated string
+        // Gabungkan semua nama file menjadi satu string, dipisahkan koma
         $lamp_draf = implode(",", $lamp_draf_paths);
     }
+
+    // Periksa apakah kunci 'lampiran' ada dalam $_FILES
+    // $lamp_signpsm = "";
+
+    // if(isset($_FILES["lamp_signpsm"])) {
+    //     $lamp_signpsm_paths = array();
+
+    //     // Loop through each file
+    //     foreach($_FILES['lamp_signpsm']['name'] as $key => $filename) {
+    //         $file_tmp = $_FILES['lamp_signpsm']['tmp_name'][$key];
+    //         $file_name = $_FILES['lamp_signpsm']['name'][$key];
+    //         $target_dir = "../uploads/";
+    //         $target_file = $target_dir . basename($file_name);
+
+    //         // Attempt to move the uploaded file to the target directory
+    //         if (move_uploaded_file($file_tmp, $target_file)) {
+    //             $lamp_signpsm_paths[] = $file_name;
+    //         } else {
+    //             echo "Gagal mengunggah file " . $file_name . "<br>";
+    //         }
+    //     }
+
+    //     // Join all file paths into a comma-separated string
+    //     $lamp_signpsm = implode(",", $lamp_signpsm_paths);
+    // }
+
+    // $lamp_draf = "";
+
+    // if(isset($_FILES["lamp_draf"])) {
+    //     $lamp_draf_paths = array();
+
+    //     // Loop through each file
+    //     foreach($_FILES['lamp_draf']['name'] as $key => $filename) {
+    //         $file_tmp = $_FILES['lamp_draf']['tmp_name'][$key];
+    //         $file_name = $_FILES['lamp_draf']['name'][$key];
+    //         $target_dir = "../uploads/";
+    //         $target_file = $target_dir . basename($file_name);
+
+    //         // Attempt to move the uploaded file to the target directory
+    //         if (move_uploaded_file($file_tmp, $target_file)) {
+    //             $lamp_draf_paths[] = $file_name;
+    //         } else {
+    //             echo "Gagal mengunggah file " . $file_name . "<br>";
+    //         }
+    //     }
+
+    //     // Join all file paths into a comma-separated string
+    //     $lamp_draf = implode(",", $lamp_draf_paths);
+    // }
 
     // Update data di tabel dokumen_loacd
     $sql_update_dokumen_loacd = "UPDATE dokumen_loacd SET kode_store = ? WHERE kode_lahan = ?";

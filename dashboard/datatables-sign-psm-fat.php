@@ -171,7 +171,8 @@ $conn->close();
                                                 <th>Lampiran Draft</th>
                                                 <th>Lampiran Sign PSM</th>
                                                 <th>Legal Submit Date</th>
-                                                <th>Catatan TAF</th>
+                                                <th>Catatan From Legal</th>
+                                                <th>Catatan Review TAF</th>
                                                 <th>Confirm TAF</th>
                                                 <th>Done Review TAF Date</th>
                                                 <th>SLA</th>
@@ -308,6 +309,7 @@ $conn->close();
                                                 }
                                                 ?>
                                                 <td><?= $formattedDate ?></td>
+                                                <td><?= $row['catatan_psm'] ?></td>
                                                 <td>
                                                     <a href="log-note-psm.php?id=<?php echo ($row['kode_lahan']); ?>" class="btn btn-info btn-sm">
                                                         <i class="fas fa-info-circle"></i>
@@ -430,7 +432,7 @@ $conn->close();
                                                     $work_end = '17:00';
 
                                                     // Cek apakah hari ini adalah hari kerja dan waktu kerja
-                                                    if ($row['confirm_fatpsm'] != "Approve" && $current_day >= 1 && $current_day <= 5) {
+                                                    if ($row['confirm_fatpsm'] != "Approve" && $current_day >= 1 && $current_day <= 10) {
                                                         // echo '<a href="marketing/marketing-edit-form.php?id='. $row['id'] .'" class="btn btn-sm btn-warning mr-2">
                                                         //     <i class="nav-icon i-Pen-2"></i>
                                                         // </a>';
@@ -466,19 +468,22 @@ $conn->close();
                                                                         </select>
                                                                     </div>
                                                                     <!-- Catatan Sign PSM -->
-                                                                    <div class="form-group">
+                                                                        <div class="form-group">
+                                                                            <label for="catatan_psmfat">Upload Catatan First Review<strong><span style="color: red;">*</span></strong></label>
+                                                                            <input type="file" class="form-control" id="catatan_psmfat" name="catatan_psmfat">
+                                                                        </div>
+                                                                    <!-- <div class="form-group">
                                                                         <label for="catatan_psmfat">Catatan Sign PSM</label>
                                                                         <div id="catatan-container">
-                                                                            <!-- Container for catatan inputs -->
                                                                             <div class="input-group mb-2">
                                                                                 <input type="text" class="form-control" name="catatan_psmfat[]" placeholder="Masukkan catatan">
                                                                                 <div class="input-group-append">
                                                                                     <button class="btn btn-danger remove-catatan" type="button">-</button>
-                                                                                    <button class="btn btn-primary" type="button" id="add-catatan">+</button>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
-                                                                    </div>
+                                                                              <button class="btn btn-primary" type="button" id="add-catatan">+</button>
+                                                                    </div> -->
                                                                     <!-- <div class="form-group">
                                                                         <label for="catatan_psmfat">Catatan Sign PSM</label>
                                                                         <div id="catatan-container">
@@ -544,7 +549,8 @@ $conn->close();
                                                 <th>Lampiran Draft</th>
                                                 <th>Lampiran Sign PSM</th>
                                                 <th>Legal Submit Date</th>
-                                                <th>Catatan TAF</th>
+                                                <th>Catatan From Legal</th>
+                                                <th>Catatan Review TAF</th>
                                                 <th>Confirm TAF</th>
                                                 <th>Done Review TAF Date</th>
                                                 <th>SLA</th>
@@ -830,8 +836,66 @@ $conn->close();
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
+     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
     <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>     -->
     
+<script>
+$(document).ready(function() {
+    // Function to load and display existing catatan values
+    function loadCatatanValues() {
+        var catatanValue = $('input[name="catatan_psmfat[]"]').val();
+        if (catatanValue) {
+            // Split the values by semicolon ';'
+            var catatanArray = catatanValue.split(';');
+            // Loop through each value and append it to the container
+            catatanArray.forEach(function(value) {
+                $('#catatan-container').append(
+                    `<div class="input-group mb-2">
+                        <input type="text" class="form-control catatan-input" name="catatan_psmfat[]" value="${value}" placeholder="Masukkan catatan">
+                        <div class="input-group-append">
+                            <button class="btn btn-danger remove-catatan" type="button">-</button>
+                        </div>
+                    </div>`
+                );
+            });
+        }
+    }
+
+    // Call the function to load existing catatan values on page load
+    loadCatatanValues();
+
+    // Add new input catatan
+    $('#add-catatan').click(function() {
+        $('#catatan-container').append(
+            `<div class="input-group mb-2">
+                <input type="text" class="form-control catatan-input" name="catatan_psmfat[]" placeholder="Masukkan catatan">
+                <div class="input-group-append">
+                    <button class="btn btn-danger remove-catatan" type="button">-</button>
+                </div>
+            </div>`
+        );
+    });
+
+    // Remove dynamic input fields
+    $('#catatan-container').on('click', '.remove-catatan', function() {
+        $(this).closest('.input-group').remove();
+    });
+
+    // Handle form submission
+    $('#statusForm').on('submit', function(event) {
+        // Gather all dynamic inputs before form submission
+        var dynamicInputs = $('#catatan-container input[name="catatan_psmfat[]"]').map(function() {
+            return $(this).val();
+        }).get();
+
+        // Set the hidden input value to the gathered dynamic inputs, joined by semicolon
+        $('input[name="catatan_psmfat[]"]').val(dynamicInputs.join(';'));
+
+    });
+});
+</script>
+  
     <script>
     $(document).ready(function(){
         // Saat tombol edit diklik
@@ -944,6 +1008,8 @@ $(document).ready(function() {
     }
 </script>
 
+ 
+
 <script>
         $(document).ready(function() {
             // Hancurkan DataTable jika sudah ada
@@ -960,6 +1026,7 @@ $(document).ready(function() {
             });
         });
     </script>
+    
     <script>
         function loadNoteDetails(id) {
     $.ajax({
@@ -1009,26 +1076,7 @@ $(document).ready(function() {
     });
 }
     </script>
-    <script>
-    $(document).ready(function() {
-        // Tambah input catatan
-        $('#add-catatan').click(function() {
-            $('#catatan-container').append(
-                `<div class="input-group mb-2">
-                    <input type="text" class="form-control" name="catatan_psmfat[]" placeholder="Masukkan catatan">
-                    <div class="input-group-append">
-                        <button class="btn btn-danger remove-catatan" type="button">-</button>
-                    </div>
-                </div>`
-            );
-        });
-
-        // Hapus input catatan
-        $('#catatan-container').on('click', '.remove-catatan', function() {
-            $(this).closest('.input-group').remove();
-        });
-    });
-    </script>
+   
 </body>
 
 </html>

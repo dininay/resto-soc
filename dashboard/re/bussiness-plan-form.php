@@ -46,30 +46,36 @@
                     <div class="col-md-6">
                         <div class="card mb-5">
                             <div class="card-body">
-                            <form method="post" action="bussiness-plan-process.php" enctype="multipart/form-data">
-                                <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="kode_lokasi">Kota<strong><span style="color: red;">*</span></strong></label>
-                                    <div class="col-sm-9">
-                                    <select class="form-control" id="kode_lokasi" name="city">
-                                        <option value="">Pilih Kota</option>
-                                        <?php
-                                        // Query untuk mengambil kode_lahan dari tabel procurement
-                                        $sql = "SELECT City FROM master_city";
-                                        $result = $conn->query($sql);
+                            <form method="post" action="bussiness-plan-process.php" enctype="multipart/form-data"><div class="form-group row">
+    <label class="col-sm-3 col-form-label" for="provinsi">Provinsi<strong><span style="color: red;">*</span></strong></label>
+    <div class="col-sm-9">
+        <select class="form-control" id="provinsi" name="provinsi">
+            <option value="">Pilih Provinsi</option>
+            <?php
+            // Query untuk mengambil semua provinsi dari tabel master_city
+            $sql = "SELECT DISTINCT Provinsi FROM master_city ORDER BY Provinsi";
+            $result = $conn->query($sql);
 
-                                        // Memeriksa apakah hasil query ada
-                                        if ($result->num_rows > 0) {
-                                            // Output data dari setiap baris
-                                            while($row = $result->fetch_assoc()) {
-                                                echo "<option value='" . $row["City"] . "'>" . $row["City"] . "</option>";
-                                            }
-                                        } else {
-                                            echo "<option value=''>Tidak ada kode city tersedia</option>";
-                                        }
-                                        ?>
-                                    </select>
-                                    </div>
-                                </div>
+            if ($result->num_rows > 0) {
+                while($row = $result->fetch_assoc()) {
+                    echo "<option value='" . $row["Provinsi"] . "'>" . $row["Provinsi"] . "</option>";
+                }
+            } else {
+                echo "<option value=''>Tidak ada provinsi tersedia</option>";
+            }
+            ?>
+        </select>
+    </div>
+</div>
+
+<div class="form-group row">
+    <label class="col-sm-3 col-form-label" for="kota">Kota<strong><span style="color: red;">*</span></strong></label>
+    <div class="col-sm-9">
+        <select class="form-control" id="kota" name="city">
+            <option value="">Pilih Kota</option>
+        </select>
+    </div>
+</div>
                                 <!-- <div class="form-group row">
                                     <label class="col-sm-2 col-form-label" for="kode_lokasi">Kode Lahan</label>
                                     <div class="col-sm-10">
@@ -270,6 +276,35 @@
     <script src="../../dist-assets/js/scripts/script.min.js"></script>
     <script src="../../dist-assets/js/scripts/sidebar.compact.script.min.js"></script>
     <script src="../../dist-assets/js/scripts/customizer.script.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#provinsi').change(function() {
+            var provinsi = $(this).val();
+            
+            // Mengosongkan daftar kota sebelumnya
+            $('#kota').empty().append('<option value="">Pilih Kota</option>');
+
+            if(provinsi != '') {
+                $.ajax({
+                    url: 'get_kota.php',
+                    method: 'POST',
+                    data: {provinsi: provinsi},
+                    dataType: 'json',
+                    success: function(response) {
+                        if(response.length > 0) {
+                            $.each(response, function(index, kota) {
+                                $('#kota').append('<option value="' + kota + '">' + kota + '</option>');
+                            });
+                        } else {
+                            $('#kota').append('<option value="">Tidak ada kota tersedia</option>');
+                        }
+                    }
+                });
+            }
+        });
+    });
+</script>
 </body>
 
 </html>

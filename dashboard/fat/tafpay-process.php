@@ -54,12 +54,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
 
         // Jika status_tafpay diubah menjadi Proceed
         if ($status_tafpay == 'Paid') {
+                $sql_get_kode_lahan = "SELECT status_procurspkwofa FROM socdate_sdg WHERE id = ?";
+                $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+                $stmt_get_kode_lahan->bind_param("i", $id);
+                $stmt_get_kode_lahan->execute();
+                $stmt_get_kode_lahan->bind_result($status_procurspkwofa);
+                $stmt_get_kode_lahan->fetch();
+                $stmt_get_kode_lahan->free_result();
+
+                if ($status_procurspkwofa === "Approve" && $status_tafpay === "Paid") {
+                    $status_sdgsumber = "Done";
+                } else {
+                    $status_sdgsumber = "Proceed";
+                }
             var_dump($status_tafpay); // Debugging untuk memastikan status Proceed masuk
 
             // Query untuk memperbarui status_tafpay dan obstacle
-            $sql = "UPDATE socdate_sdg SET status_tafpay = ?, tafpay_date = ? WHERE id = ?";
+            $sql = "UPDATE socdate_sdg SET status_tafpay = ?, tafpay_date = ?, status_sdgsumber = ? WHERE id = ?";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ssi", $status_tafpay, $tafpay_date, $id);
+            $stmt->bind_param("sssi", $status_tafpay, $tafpay_date, $status_sdgsumber, $id);
             
             // Eksekusi query
             if ($stmt->execute()) {
@@ -127,23 +140,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                     }
 
                     // Email content
-                    $mail->Subject = 'Notification: 1 New Active Resto SOC Ticket';
+                    $mail->Subject = 'Notification: 1 New Information Of Payment by TAF Resto SOC Ticket';
                                     $mail->Body    = '
-                                    <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
-                                        <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
-                                            <img src="cid:header_image" alt="Header Image" style="max-width: 100%; height: auto; margin-bottom: 20px;">
-                                            <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear SDG-Project Team,</h2>
-                                            <p>We would like to inform you that a new Active Resto SOC Ticket has been created in the payment for electricity & water Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
-                                            Your prompt attention to this matter is greatly appreciated.</p>
-                                            <p></p>
-                                            <p>Have a good day!</p>
+                                        <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333; margin: 0; padding: 0;">
+                                        <div style="background-color: #f7f7f7; border-radius: 8px; padding: 0; margin: 0; text-align: center;">
+                                            <img src="cid:embedded_image" alt="Header Image" style="display: block; width: 50%; height: auto; margin: 0 auto;">
+                                            <div style="padding: 20px; background-color: #f7f7f7; border-radius: 8px;">
+                                                <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear SDG-Project Team,</h2>
+                                                <p>We would like to inform you that a new Information Of Payment by TAF Resto SOC Ticket has been created. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                Your prompt attention to this matter is greatly appreciated.</p>
+                                                <p></p>
+                                                <p>Have a good day!</p>
+                                            </div>
                                         </div>
                                     </div>';
                                     $mail->AltBody = 'Dear SDG-Project Team,'
-                                                . 'We would like to inform you that a new Active Resto SOC Ticket has been created in the payment for electricity & water Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
-                                                    Your prompt attention to this matter is greatly appreciated.'
+                                                . 'We would like to inform you that a new Information Of Payment by TAF Resto SOC Ticket has been created. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                Your prompt attention to this matter is greatly appreciated.'
                                                 . 'Have a good day!';
-
                     // Send email
                     if ($mail->send()) {
                         echo "Email sent successfully!<br>";

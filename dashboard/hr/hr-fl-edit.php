@@ -37,7 +37,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         foreach ($_FILES['lamp_fl']['name'] as $key => $filename) {
             $file_tmp = $_FILES['lamp_fl']['tmp_name'][$key];
             $file_name = $_FILES['lamp_fl']['name'][$key];
-            $target_dir = "../uploads/";
+            $target_dir = "../uploads/" . $kode_lahan . "/";
+
+            // Cek apakah folder dengan nama kode_lahan sudah ada
+            if (!is_dir($target_dir)) {
+                // Jika folder belum ada, buat folder baru
+                mkdir($target_dir, 0777, true);
+            }
             $target_file = $target_dir . basename($file_name);
 
             // Cek apakah file berhasil diupload

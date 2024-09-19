@@ -67,7 +67,14 @@ if(isset($_GET['id'])) {
                             <input type="hidden" name="kode_lahan" value="<?php echo $row['kode_lahan']; ?>">
                             
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_draf">Upload Draft Table Sewa<strong><span style="color: red;">*</span></strong></label>
+                                    <label class="col-sm-3 col-form-label">Lampiran Sebelumnya</label>
+                                    <div class="col-sm-9">
+                                        <?php echo $row['lamp_draf']; ?>
+                                    </div>
+                                </div>
+                                <!-- Jika pengguna ingin mengganti lampiran, tampilkan input untuk unggah file -->
+                                <div class="form-group row" id="lampiran_baru">
+                                    <label class="col-sm-3 col-form-label" for="lamp_draf">Upload Baru<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_draf[]" type="file" multiple="multiple" />
@@ -75,7 +82,14 @@ if(isset($_GET['id'])) {
                                     </div>
                                 </div>
                                 <div class="form-group row">
-                                    <label class="col-sm-3 col-form-label" for="lamp_signpsm">Upload Sign PSM<strong><span style="color: red;">*</span></strong></label>
+                                    <label class="col-sm-3 col-form-label">Lampiran Sebelumnya</label>
+                                    <div class="col-sm-9">
+                                        <?php echo $row['lamp_signpsm']; ?>
+                                    </div>
+                                </div>
+                                <!-- Jika pengguna ingin mengganti lampiran, tampilkan input untuk unggah file -->
+                                <div class="form-group row" id="lampiran_baru">
+                                    <label class="col-sm-3 col-form-label" for="lamp_signpsm">Upload Baru<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <div class="dropzone" id="multple-file-upload" >
                                             <input name="lamp_signpsm[]" type="file" multiple="multiple" />
@@ -92,6 +106,19 @@ if(isset($_GET['id'])) {
                             </div>
                         </div>
                     </div>
+                            <div class="col-md-4">
+                                <div class="card mb-5">
+                                    <div class="card-body">
+                                        <div class="form-group row">
+                                            <p class="col-sm-12" style="margin-bottom: 5px;">Perlu Diperhatikan !</p>
+                                            <p class="col-sm-12" style="margin-bottom: 5px;">- Harap mengikuti guidance MoM re. Sewa menyewa lahan dan/atau bangunan tgl 24 July 2024.</p>
+                                            <p class="col-sm-12" style="margin-bottom: 5px;">- LOA Harus Sudah Ditandatangani oleh kedua belah pihak.</p>
+                                            <p class="col-sm-12" style="margin-bottom: 5px;">- Informasi di dalam PSM (seperti identias LL, nomor rekening, kota, dll) sudah terisi lengkap sebelum dikirim TAF.</p>
+                                            <p class="col-sm-12" style="margin-bottom: 5px;">- Klausul dan dokumen pendukung selain yang berkaitan dengan monetary (yang sehubungan dengan dan/atau memiliki efek di jumlah dan termin pembayaran sewa) telah di review dan diverifikasi oleh department lainnya yang bersangkutan ie. Manager Legal & Manager RE dengan memberikan statement by email.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                 </div>
 				<!-- end of main-content -->
                 <!-- Footer Start -->

@@ -452,7 +452,7 @@ $current_page = basename($_SERVER['REQUEST_URI'], ".php");
                                 <span class="item-name">Validasi Doc Legal (VD)</span>
                             </a>
                         </li>
-						<li class="nav-item <?= ($current_page == 'datatables-sign-psm-legal' || strpos($current_page, 'sign-psm-edit-form') !== false) ? 'active' : ''; ?>">
+						<li class="nav-item <?= ($current_page == 'datatables-sign-psm-legal' || strpos($current_page, 'sign-psm-edit-form') !== false  || strpos($current_page, 'log-note-legal-psm')!== false) ? 'active' : ''; ?>">
                             <a href="<?= $base_url . '/datatables-sign-psm-legal.php'?>">
                                 <i class="nav-icon i-Checked-User"></i>
                                 <span class="item-name">Draft PSM Legal</span>

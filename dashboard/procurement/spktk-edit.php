@@ -8,29 +8,46 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $id = $_POST['id'];
     $nominal_spkjobadd = $_POST['nominal_spkjobadd'];
             // Periksa apakah kunci 'lampiran' ada dalam $_FILES
-    $lamp_jobadd = "";
-
-    if(isset($_FILES["lamp_jobadd"])) {
-        $lamp_jobadd_paths = array();
-
-        // Loop through each file
-        foreach($_FILES['lamp_jobadd']['name'] as $key => $filename) {
-            $file_tmp = $_FILES['lamp_jobadd']['tmp_name'][$key];
-            $file_name = $_FILES['lamp_jobadd']['name'][$key];
-            $target_dir = "../uploads/";
-            $target_file = $target_dir . basename($file_name);
-
-            // Attempt to move the uploaded file to the target directory
-            if (move_uploaded_file($file_tmp, $target_file)) {
-                $lamp_jobadd_paths[] = $file_name;
-            } else {
-                echo "Gagal mengunggah file " . $file_name . "<br>";
+    
+            $sql_get_kode_lahan = "SELECT kode_lahan FROM jobadd WHERE id = ?";
+            $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+            $stmt_get_kode_lahan->bind_param("i", $id);
+            $stmt_get_kode_lahan->execute();
+            $stmt_get_kode_lahan->bind_result($kode_lahan);
+            $stmt_get_kode_lahan->fetch();
+            $stmt_get_kode_lahan->free_result();
+        
+            // Periksa apakah kunci 'lampiran' ada dalam $_FILES
+            $lamp_jobadd = "";
+            if (isset($_FILES["lamp_jobadd"])) {
+                $lamp_jobadd_paths = array();
+        
+                // Path ke direktori "uploads"
+                $target_dir = "../uploads/" . $kode_lahan . "/";
+        
+                // Cek apakah folder dengan nama kode_lahan sudah ada
+                if (!is_dir($target_dir)) {
+                    // Jika folder belum ada, buat folder baru
+                    mkdir($target_dir, 0777, true);
+                }
+        
+                // Loop untuk menangani setiap file yang diunggah
+                foreach ($_FILES['lamp_jobadd']['name'] as $key => $filename) {
+                    $file_tmp = $_FILES['lamp_jobadd']['tmp_name'][$key];
+                    $file_name = $_FILES['lamp_jobadd']['name'][$key];
+                    $target_file = $target_dir . basename($file_name); // Simpan di folder kode_lahan
+        
+                    // Pindahkan file yang diunggah ke target folder
+                    if (move_uploaded_file($file_tmp, $target_file)) {
+                        $lamp_jobadd_paths[] = $file_name; // Simpan nama file
+                    } else {
+                        echo "Gagal mengunggah file " . $file_name . "<br>";
+                    }
+                }
+        
+                // Gabungkan semua nama file menjadi satu string, dipisahkan koma
+                $lamp_jobadd = implode(",", $lamp_jobadd_paths);
             }
-        }
-
-        // Join all file paths into a comma-separated string
-        $lamp_jobadd = implode(",", $lamp_jobadd_paths);
-    }
     // Update data di database
     $sql = "UPDATE jobadd SET lamp_jobadd = '$lamp_jobadd', nominal_spkjobadd = '$nominal_spkjobadd' WHERE id = '$id'";
 

@@ -10,6 +10,8 @@ require '../../vendor/autoload.php'; // Hanya jika menggunakan Composer
 
 // Inisialisasi PHPMailer
 $mail = new PHPMailer(true);
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 // Koneksi ke database
 include "../../koneksi.php";
 
@@ -17,7 +19,7 @@ include "../../koneksi.php";
 date_default_timezone_set('Asia/Jakarta');
 
 // Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["kode_lahan"]) && isset($_POST["confirm_fatpsm"]) && isset($_POST['catatan_psmfat']) && is_array($_POST['catatan_psmfat'])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["kode_lahan"]) && isset($_POST["confirm_fatpsm"])) {
     $id = $_POST["id"];
     $kode_lahan = $_POST["kode_lahan"];
     $confirm_fatpsm = $_POST["confirm_fatpsm"];
@@ -28,7 +30,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
     // echo $catatan_psmfat;
     
     // Pastikan $_POST['catatan_psmfat'] adalah array
-    $catatan_psmfat = implode(';', array_map('htmlspecialchars', $_POST['catatan_psmfat']));
+    // $catatan_psmfat = implode(';', array_map('htmlspecialchars', $_POST['catatan_psmfat']));
 
     $fat_date = date("Y-m-d H:i:s");
     $psmfat_date = null;
@@ -105,11 +107,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             }
             $confirm_bod = "In Process";
             $confirm_nego = "Approve";
-                // Query untuk memperbarui status confirm_fatpsm di tabel draft
-                $sql_update = "UPDATE draft SET confirm_fatpsm = ?, catatan_psmfat = ?, psmfat_date = ?, confirm_bod = ?, slabod_date = ?, confirm_nego = ? WHERE id = ?";
-                $stmt_update = $conn->prepare($sql_update);
-                $stmt_update->bind_param("ssssssi", $confirm_fatpsm, $catatan_psmfat, $psmfat_date, $confirm_bod, $slabod_date, $confirm_nego, $id);
-                $stmt_update->execute();
             
                 $sql_get_kode_lahan = "SELECT kode_lahan FROM draft WHERE id = ?";
                 $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
@@ -118,17 +115,63 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 $stmt_get_kode_lahan->bind_result($kode_lahan);
                 $stmt_get_kode_lahan->fetch();
                 $stmt_get_kode_lahan->free_result();
-                    // Melanjutkan ke proses insert jika kode_lahan tidak kosong
-                    $sql_insert = "INSERT INTO note_psm (kode_lahan, catatan_psmfat, fat_date) VALUES (?, ?, ?)";
-                    $stmt_insert = $conn->prepare($sql_insert);
-                    $stmt_insert->bind_param("sss", $kode_lahan, $catatan_psmfat, $fat_date);
-                    var_dump($kode_lahan);
-                    $stmt_insert->execute();
-                    if ($stmt_insert->execute()) {
-                        echo "Data berhasil dimasukkan.";
+                
+            // Periksa apakah ada lampiran
+            $catatan_psmfat = "";
+            if (isset($_FILES["catatan_psmfat"])) {
+                $catatan_psmfat_paths = array();
+
+                // Loop setiap file yang diunggah
+                foreach ($_FILES['catatan_psmfat']['name'] as $key => $filename) {
+                    $file_tmp = $_FILES['catatan_psmfat']['tmp_name'][$key];
+                    $file_name = $_FILES['catatan_psmfat']['name'][$key];
+                    $target_dir = "../uploads/";
+                    $target_file = $target_dir . basename($file_name);
+
+                    // Cek apakah file berhasil diupload
+                    if (move_uploaded_file($file_tmp, $target_file)) {
+                        $catatan_psmfat_paths[] = $file_name;
+                        echo "File berhasil diunggah: $target_file<br>";
+
+                        // Cek apakah file Excel dan impor data
+                        $file_extension = pathinfo($file_name, PATHINFO_EXTENSION);
+                        if ($file_extension == 'xlsx' || $file_extension == 'xls') {
+                            $spreadsheet = IOFactory::load($target_file);
+                            $sheet = $spreadsheet->getActiveSheet();
+                            $highestRow = $sheet->getHighestRow();
+
+                            // Loop setiap baris di file Excel
+                            for ($row = 2; $row <= $highestRow; $row++) {
+                                $pasal_page = $sheet->getCell('A' . $row)->getValue();
+                                $catatan_psmfat = $sheet->getCell('B' . $row)->getValue();
+                                $remarks = $sheet->getCell('C' . $row)->getValue();
+
+                                // Insert data ke database
+                                $sql_insert = "INSERT INTO note_psm (kode_lahan, pasal_page, catatan_psmfat, remarks, fat_date) VALUES (?, ?, ?, ?, ?)";
+                                $stmt_insert = $conn->prepare($sql_insert);
+                                $stmt_insert->bind_param("sssss", $kode_lahan, $pasal_page, $catatan_psmfat, $remarks, $fat_date);
+
+                                if ($stmt_insert->execute()) {
+                                    echo "Data berhasil disimpan untuk baris $row<br>";
+                                } else {
+                                    echo "Gagal menyimpan data pada baris $row: " . $stmt_insert->error . "<br>";
+                                }
+                            }
+                        }
                     } else {
-                        echo "Gagal memasukkan data: " . $stmt_insert->error;
+                        echo "Gagal mengunggah file " . htmlspecialchars($file_name) . "<br>";
                     }
+                }
+
+                // Gabungkan semua file lampiran ke satu string
+                $catatan_psmfat = implode(",", $catatan_psmfat_paths);
+            }
+            
+                // Query untuk memperbarui status confirm_fatpsm di tabel draft
+                $sql_update = "UPDATE draft SET confirm_fatpsm = ?, catatan_psmfat = ?, psmfat_date = ?, confirm_bod = ?, slabod_date = ?, confirm_nego = ? WHERE id = ?";
+                $stmt_update = $conn->prepare($sql_update);
+                $stmt_update->bind_param("ssssssi", $confirm_fatpsm, $catatan_psmfat, $psmfat_date, $confirm_bod, $slabod_date, $confirm_nego, $id);
+                $stmt_update->execute();
 
             // Query untuk memperbarui status confirm_fatpsm di tabel draft
             $sql_resto = "UPDATE resto SET start_konstruksi = ? WHERE kode_lahan = ?";
@@ -212,7 +255,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                                             <img src="cid:embedded_image" alt="Header Image" style="display: block; width: 50%; height: auto; margin: 0 auto;">
                                             <div style="padding: 20px; background-color: #f7f7f7; border-radius: 8px;">
                                                 <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Legal Team,</h2>
-                                                <p>We would like to inform you that a new Active Resto SOC Ticket has been created in the Review Draft Table Sewa & PSM By TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                <p>We would like to inform you that a new Active Resto SOC Ticket has been created. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
                                                 Your prompt attention to this matter is greatly appreciated.</p>
                                                 <p></p>
                                                 <p>Have a good day!</p>
@@ -220,7 +263,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                                         </div>
                                     </div>';
                                     $mail->AltBody = 'Dear Legal Team,'
-                                                . 'We would like to inform you that a new Active Resto SOC Ticket has been created in the Review Draft Table Sewa & PSM By TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                . 'We would like to inform you that a new Active Resto SOC Ticket has been created. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
                                                 Your prompt attention to this matter is greatly appreciated.'
                                                 . 'Have a good day!';
 
@@ -237,6 +280,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             } else {
                 echo "No email found for the selected resto or IR users.";
             }
+            
             $queryIR = "SELECT email FROM user WHERE level IN ('BoD')";
             $resultIR = mysqli_query($conn, $queryIR);
 
@@ -279,7 +323,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                                             <img src="cid:embedded_image" alt="Header Image" style="display: block; width: 50%; height: auto; margin: 0 auto;">
                                             <div style="padding: 20px; background-color: #f7f7f7; border-radius: 8px;">
                                                 <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Bu @Arie,</h2>
-                                                <p>We would like to inform you that a new Active Resto SOC Ticket has been created in the Review Draft Table Sewa & PSM By TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                <p>We would like to inform you that a new Active Resto SOC Ticket has been created. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
                                                 Your prompt attention to this matter is greatly appreciated.</p>
                                                 <p></p>
                                                 <p>Have a good day!</p>
@@ -287,7 +331,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                                         </div>
                                     </div>';
                                     $mail->AltBody = 'Dear Bu @Arie,'
-                                                . 'We would like to inform you that a new Active Resto SOC Ticket has been created in the Review Draft Table Sewa & PSM By TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                . 'We would like to inform you that a new Active Resto SOC Ticket has been created. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
                                                 Your prompt attention to this matter is greatly appreciated.'
                                                 . 'Have a good day!';
 
@@ -334,7 +378,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             echo "Status berhasil diperbarui dan data ditahan.";
         } elseif ($confirm_fatpsm == 'In Revision') {
             $psmfat_date = date("Y-m-d H:i:s");
-            // Ambil kode_lahan dari tabel sdg_rab
+            // Ambil kode_lahan dari tabel draft
             $sql_get_kode_lahan = "SELECT kode_lahan FROM draft WHERE id = ?";
             $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
             $stmt_get_kode_lahan->bind_param("i", $id);
@@ -342,31 +386,63 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             $stmt_get_kode_lahan->bind_result($kode_lahan);
             $stmt_get_kode_lahan->fetch();
             $stmt_get_kode_lahan->free_result();
-                // Query untuk memperbarui submit_legal dan catatan_owner di tabel sdg_rab
-                $sql_update_pending = "UPDATE draft SET confirm_fatpsm = ?, catatan_psmfat = ?, confirm_nego = ?, psmfat_date = ? WHERE id = ?";
-                $stmt_update_pending = $conn->prepare($sql_update_pending);
-                $confirm_nego = "In Revision";
-                $stmt_update_pending->bind_param("ssssi", $confirm_fatpsm, $catatan_psmfat, $confirm_nego, $psmfat_date, $id);
-                $stmt_update_pending->execute();
 
-            $sql_get_kode_lahan = "SELECT kode_lahan FROM draft WHERE id = ?";
-                $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
-                $stmt_get_kode_lahan->bind_param("i", $id);
-                $stmt_get_kode_lahan->execute();
-                $stmt_get_kode_lahan->bind_result($kode_lahan);
-                $stmt_get_kode_lahan->fetch();
-                $stmt_get_kode_lahan->free_result();
-                    // Melanjutkan ke proses insert jika kode_lahan tidak kosong
-                    $sql_insert = "INSERT INTO note_psm (kode_lahan, catatan_psmfat, fat_date) VALUES (?, ?, ?)";
-                    $stmt_insert = $conn->prepare($sql_insert);
-                    $stmt_insert->bind_param("sss", $kode_lahan, $catatan_psmfat, $fat_date);
-                    var_dump($kode_lahan);
-                    $stmt_insert->execute();
-                    if ($stmt_insert->execute()) {
-                        echo "Data berhasil dimasukkan.";
+            // Cek apakah file diunggah
+            if (isset($_FILES["catatan_psmfat"])) {
+                $file_tmp = $_FILES['catatan_psmfat']['tmp_name'];
+                $file_name = $_FILES['catatan_psmfat']['name'];
+                $target_dir = "../uploads/";
+                $target_file = $target_dir . basename($file_name);
+
+                // Cek apakah file berhasil diunggah
+                if (move_uploaded_file($file_tmp, $target_file)) {
+                    echo "File berhasil diunggah: $target_file<br>";
+
+                    // Cek apakah file adalah Excel
+                    $file_extension = pathinfo($file_name, PATHINFO_EXTENSION);
+                    if ($file_extension == 'xlsx' || $file_extension == 'xls') {
+                        // Load spreadsheet file
+                        $spreadsheet = IOFactory::load($target_file);
+                        $sheet = $spreadsheet->getActiveSheet();
+                        $highestRow = $sheet->getHighestRow();
+
+                        // Loop setiap baris mulai dari baris ke-2
+                        for ($row = 2; $row <= $highestRow; $row++) {
+                            $pasal_page = $sheet->getCell('A' . $row)->getValue();
+                            $catatan_psmfatisi = $sheet->getCell('B' . $row)->getValue();
+                            $remarks = $sheet->getCell('C' . $row)->getValue(); // Jika ada kolom tambahan
+
+                            // Pastikan kolom tidak kosong sebelum insert
+                            if (!empty($pasal_page) && !empty($catatan_psmfatisi)) {
+                                // Insert data ke database
+                                $sql_insert = "INSERT INTO note_psm (kode_lahan, pasal_page, catatan_psmfat, remarks) VALUES (?, ?, ?, ?)";
+                                $stmt_insert = $conn->prepare($sql_insert);
+                                $stmt_insert->bind_param("ssss", $kode_lahan, $pasal_page, $catatan_psmfatisi, $remarks);
+
+                                // Cek apakah insert berhasil
+                                if ($stmt_insert->execute()) {
+                                    echo "Data berhasil disimpan untuk baris $row<br>";
+                                } else {
+                                    echo "Gagal menyimpan data pada baris $row: " . $stmt_insert->error . "<br>";
+                                }
+                            } else {
+                                echo "Baris $row tidak memiliki data yang cukup untuk dimasukkan.<br>";
+                            }
+                        }
                     } else {
-                        echo "Gagal memasukkan data: " . $stmt_insert->error;
+                        echo "File bukan file Excel.<br>";
                     }
+                } else {
+                    echo "Gagal mengunggah file " . htmlspecialchars($file_name) . "<br>";
+                }
+            }
+
+            // Query untuk memperbarui submit_legal dan catatan_owner di tabel draft
+            $sql_update_pending = "UPDATE draft SET confirm_fatpsm = ?, catatan_psmfat = ?, confirm_nego = ?, psmfat_date = ? WHERE id = ?";
+            $stmt_update_pending = $conn->prepare($sql_update_pending);
+            $confirm_nego = "In Revision";
+            $stmt_update_pending->bind_param("ssssi", $confirm_fatpsm, $catatan_psmfat, $confirm_nego, $psmfat_date, $id);
+            $stmt_update_pending->execute();
                 
             $queryIR = "SELECT email FROM user WHERE level IN ('Legal')";
             $resultIR = mysqli_query($conn, $queryIR);
@@ -439,14 +515,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             $conn->commit();
             echo "Status berhasil diperbarui dan data ditahan.";
         } else {
-            // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_vl di tabel draft
-            $sql = "UPDATE draft SET confirm_fatpsm = ?, catatan_psmfat = ? WHERE id = ?";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ssi", $confirm_fatpsm, $catatan_psmfat, $id);
-            $stmt->execute();
-
-            // Check if update was successful
-            if ($stmt->affected_rows > 0) {
+            
+            // $catatan_psmfat_array = json_encode(explode(';', $catatan_psmfat));
+            // array_pop($catatan_psmfat_array);
+            // $catatan_psmfat_json = json_encode($catatan_psmfat_array);
+            // $catatan_psmfat_json = json_encode($catatan_psmfat_string);
+           if (!empty($catatan_psmfat)) {
+                $catatan_psmfat_array = explode(';', $catatan_psmfat);
+            
+                $catatan_psmfat_filtered = array_filter($catatan_psmfat_array, function($value) {
+                    return trim($value) !== ''; 
+                });
+            
+                $catatan_psmfat_json = json_encode($catatan_psmfat_filtered);
+            } else {
+                $catatan_psmfat_json = json_encode([]);
+            }
+            
+                $sql = "UPDATE draft SET confirm_fatpsm = ?, catatan_psmfat = ? WHERE id = ?";
+                $stmt = $conn->prepare($sql);
+                $stmt->bind_param("ssi", $confirm_fatpsm, $catatan_psmfat_json, $id);
+        
+                $stmt->execute();
+                 if ($stmt->affected_rows > 0) {
                 echo "<script>
                         alert('Status berhasil diperbarui.');
                         window.location.href = window.location.href;
@@ -454,6 +545,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             } else {
                 echo "Error: Gagal memperbarui status. Tidak ada perubahan dilakukan.";
             }
+            
+            // Check if update was successful
+           
         }
 
         // Komit transaksi

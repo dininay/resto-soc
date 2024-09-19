@@ -83,7 +83,7 @@ if ($sla_result->num_rows > 0) {
     $row = $sla_result->fetch_assoc();
     $sla_value = $row['sla'];
 } else {
-    echo "No SLA value found for 'Owner Surveyor'";
+    echo "No SLA value found for 'VL'";
 }
 
 function calculateScoring($start_date, $end_date, $sla) {

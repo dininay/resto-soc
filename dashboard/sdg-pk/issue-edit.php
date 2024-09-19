@@ -11,26 +11,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $target_done = $_POST['target_done'];
     $issue = $_POST['issue'];
     $lamp_defect = "";
-
-    if(isset($_FILES["lamp_defect"])) {
+    if (isset($_FILES["lamp_defect"])) {
         $lamp_defect_paths = array();
 
-        // Loop through each file
-        foreach($_FILES['lamp_defect']['name'] as $key => $filename) {
+        // Path ke direktori "uploads"
+        $target_dir = "../uploads/" . $kode_lahan . "/";
+
+        // Cek apakah folder dengan nama kode_lahan sudah ada
+        if (!is_dir($target_dir)) {
+            // Jika folder belum ada, buat folder baru
+            mkdir($target_dir, 0777, true);
+        }
+
+        // Loop untuk menangani setiap file yang diunggah
+        foreach ($_FILES['lamp_defect']['name'] as $key => $filename) {
             $file_tmp = $_FILES['lamp_defect']['tmp_name'][$key];
             $file_name = $_FILES['lamp_defect']['name'][$key];
-            $target_dir = "../uploads/";
-            $target_file = $target_dir . basename($file_name);
+            $target_file = $target_dir . basename($file_name); // Simpan di folder kode_lahan
 
-            // Attempt to move the uploaded file to the target directory
+            // Pindahkan file yang diunggah ke target folder
             if (move_uploaded_file($file_tmp, $target_file)) {
-                $lamp_defect_paths[] = $file_name;
+                $lamp_defect_paths[] = $file_name; // Simpan nama file
             } else {
                 echo "Gagal mengunggah file " . $file_name . "<br>";
             }
         }
 
-        // Join all file paths into a comma-separated string
+        // Gabungkan semua nama file menjadi satu string, dipisahkan koma
         $lamp_defect = implode(",", $lamp_defect_paths);
     }
 

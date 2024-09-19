@@ -21,73 +21,110 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $sumber_air = $_POST['sumber_air']; 
     $sdgsumber_date = date("Y-m-d H:i:s");
     // Periksa apakah kunci 'lampiran' ada dalam $_FILES
-    $lamp_sumberair = "";
+        
+    $sql_get_kode_lahan = "SELECT kode_lahan FROM socdate_sdg WHERE id = ?";
+    $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+    $stmt_get_kode_lahan->bind_param("i", $id);
+    $stmt_get_kode_lahan->execute();
+    $stmt_get_kode_lahan->bind_result($kode_lahan);
+    $stmt_get_kode_lahan->fetch();
+    $stmt_get_kode_lahan->free_result();
 
-    if(isset($_FILES["lamp_sumberair"])) {
+    // Periksa apakah kunci 'lampiran' ada dalam $_FILES
+    $lamp_sumberair = "";
+    if (isset($_FILES["lamp_sumberair"])) {
         $lamp_sumberair_paths = array();
 
-        // Loop through each file
-        foreach($_FILES['lamp_sumberair']['name'] as $key => $filename) {
+        // Path ke direktori "uploads"
+        $target_dir = "../uploads/" . $kode_lahan . "/";
+
+        // Cek apakah folder dengan nama kode_lahan sudah ada
+        if (!is_dir($target_dir)) {
+            // Jika folder belum ada, buat folder baru
+            mkdir($target_dir, 0777, true);
+        }
+
+        // Loop untuk menangani setiap file yang diunggah
+        foreach ($_FILES['lamp_sumberair']['name'] as $key => $filename) {
             $file_tmp = $_FILES['lamp_sumberair']['tmp_name'][$key];
             $file_name = $_FILES['lamp_sumberair']['name'][$key];
-            $target_dir = "../uploads/";
-            $target_file = $target_dir . basename($file_name);
+            $target_file = $target_dir . basename($file_name); // Simpan di folder kode_lahan
 
-            // Attempt to move the uploaded file to the target directory
+            // Pindahkan file yang diunggah ke target folder
             if (move_uploaded_file($file_tmp, $target_file)) {
-                $lamp_sumberair_paths[] = $file_name;
+                $lamp_sumberair_paths[] = $file_name; // Simpan nama file
             } else {
                 echo "Gagal mengunggah file " . $file_name . "<br>";
             }
         }
 
-        // Join all file paths into a comma-separated string
+        // Gabungkan semua nama file menjadi satu string, dipisahkan koma
         $lamp_sumberair = implode(",", $lamp_sumberair_paths);
     }
     $kesesuaian_ujilab = $_POST['kesesuaian_ujilab']; 
     // Periksa apakah kunci 'lampiran' ada dalam $_FILES
-    $lamp_ujilab = null;
-
-    // Periksa apakah file lamp_ujilab ada dalam $_FILES
+        
+    // Periksa apakah kunci 'lampiran' ada dalam $_FILES
+    $lamp_ujilab = "";
     if (isset($_FILES["lamp_ujilab"])) {
         $lamp_ujilab_paths = array();
+
+        // Path ke direktori "uploads"
+        $target_dir = "../uploads/" . $kode_lahan . "/";
+
+        // Cek apakah folder dengan nama kode_lahan sudah ada
+        if (!is_dir($target_dir)) {
+            // Jika folder belum ada, buat folder baru
+            mkdir($target_dir, 0777, true);
+        }
+
+        // Loop untuk menangani setiap file yang diunggah
         foreach ($_FILES['lamp_ujilab']['name'] as $key => $filename) {
             $file_tmp = $_FILES['lamp_ujilab']['tmp_name'][$key];
-            $target_dir = "../uploads/";
-            $target_file = $target_dir . basename($filename);
+            $file_name = $_FILES['lamp_ujilab']['name'][$key];
+            $target_file = $target_dir . basename($file_name); // Simpan di folder kode_lahan
 
-            // Attempt to move the uploaded file to the target directory
+            // Pindahkan file yang diunggah ke target folder
             if (move_uploaded_file($file_tmp, $target_file)) {
-                $lamp_ujilab_paths[] = $filename;
+                $lamp_ujilab_paths[] = $file_name; // Simpan nama file
             } else {
-                echo "Gagal mengunggah file " . $filename . "<br>";
+                echo "Gagal mengunggah file " . $file_name . "<br>";
             }
         }
 
-        // Join all file paths into a comma-separated string
+        // Gabungkan semua nama file menjadi satu string, dipisahkan koma
         $lamp_ujilab = implode(",", $lamp_ujilab_paths);
     }
     $filter_air = $_POST['filter_air']; 
     // Periksa apakah kunci 'lampiran' ada dalam $_FILES
-    $lamp_filterair = null;
-
-    // Periksa apakah file lamp_filterair ada dalam $_FILES
+    $lamp_filterair = "";
     if (isset($_FILES["lamp_filterair"])) {
         $lamp_filterair_paths = array();
+
+        // Path ke direktori "uploads"
+        $target_dir = "../uploads/" . $kode_lahan . "/";
+
+        // Cek apakah folder dengan nama kode_lahan sudah ada
+        if (!is_dir($target_dir)) {
+            // Jika folder belum ada, buat folder baru
+            mkdir($target_dir, 0777, true);
+        }
+
+        // Loop untuk menangani setiap file yang diunggah
         foreach ($_FILES['lamp_filterair']['name'] as $key => $filename) {
             $file_tmp = $_FILES['lamp_filterair']['tmp_name'][$key];
-            $target_dir = "../uploads/";
-            $target_file = $target_dir . basename($filename);
+            $file_name = $_FILES['lamp_filterair']['name'][$key];
+            $target_file = $target_dir . basename($file_name); // Simpan di folder kode_lahan
 
-            // Attempt to move the uploaded file to the target directory
+            // Pindahkan file yang diunggah ke target folder
             if (move_uploaded_file($file_tmp, $target_file)) {
-                $lamp_filterair_paths[] = $filename;
+                $lamp_filterair_paths[] = $file_name; // Simpan nama file
             } else {
-                echo "Gagal mengunggah file " . $filename . "<br>";
+                echo "Gagal mengunggah file " . $file_name . "<br>";
             }
         }
 
-        // Join all file paths into a comma-separated string
+        // Gabungkan semua nama file menjadi satu string, dipisahkan koma
         $lamp_filterair = implode(",", $lamp_filterair_paths);
     }
     $debit_airsumur = $_POST['debit_airsumur']; 
@@ -157,20 +194,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // Email content
                 $mail->Subject = 'Notification: 1 New Active Resto SOC Ticket';
                                 $mail->Body    = '
-                                <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
-                                    <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
-                                            <img src="cid:header_image" alt="Header Image" style="max-width: 100%; height: auto; margin-bottom: 20px;">
-                                        <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Team,</h2>
-                                        <p>You have 1 New Active Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.</p>
-                                        <p>Thank you for your prompt attention to this matter.</p>
-                                        <p></p>
-                                        <p>Have a good day!</p>
-                                    </div>
-                                </div>';
-                                $mail->AltBody = 'Dear Team,'
-                                            . 'You have 1 New Active Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.'
-                                            . 'Thank you for your prompt attention to this matter.'
-                                            . 'Have a good day!';
+                                        <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333; margin: 0; padding: 0;">
+                                        <div style="background-color: #f7f7f7; border-radius: 8px; padding: 0; margin: 0; text-align: center;">
+                                            <img src="cid:embedded_image" alt="Header Image" style="display: block; width: 50%; height: auto; margin: 0 auto;">
+                                            <div style="padding: 20px; background-color: #f7f7f7; border-radius: 8px;">
+                                                <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Procurement Team,</h2>
+                                                <p>We would like to inform you that a new Active Resto SOC Ticket has been created. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                Your prompt attention to this matter is greatly appreciated.</p>
+                                                <p></p>
+                                                <p>Have a good day!</p>
+                                            </div>
+                                        </div>
+                                    </div>';
+                                    $mail->AltBody = 'Dear Procurement Team,'
+                                                . 'We would like to inform you that a new Active Resto SOC Ticket has been created. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                Your prompt attention to this matter is greatly appreciated.'
+                                                . 'Have a good day!';
 
                 // Send email
                 if ($mail->send()) {

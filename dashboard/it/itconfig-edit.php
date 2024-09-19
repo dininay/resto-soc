@@ -10,53 +10,76 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $kode_dvr = $_POST['kode_dvr'];
     $web_report = $_POST['web_report'];
     $akun_gis = $_POST['akun_gis'];
+    
+    $sql_get_kode_lahan = "SELECT kode_lahan FROM socdate_it WHERE id = ?";
+    $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+    $stmt_get_kode_lahan->bind_param("i", $id);
+    $stmt_get_kode_lahan->execute();
+    $stmt_get_kode_lahan->bind_result($kode_lahan);
+    $stmt_get_kode_lahan->fetch();
+    $stmt_get_kode_lahan->free_result();
+
     // Periksa apakah kunci 'lampiran' ada dalam $_FILES
     $lamp_config = "";
-
-    if(isset($_FILES["lamp_config"])) {
+    if (isset($_FILES["lamp_config"])) {
         $lamp_config_paths = array();
 
-        // Loop through each file
-        foreach($_FILES['lamp_config']['name'] as $key => $filename) {
+        // Path ke direktori "uploads"
+        $target_dir = "../uploads/" . $kode_lahan . "/";
+
+        // Cek apakah folder dengan nama kode_lahan sudah ada
+        if (!is_dir($target_dir)) {
+            // Jika folder belum ada, buat folder baru
+            mkdir($target_dir, 0777, true);
+        }
+
+        // Loop untuk menangani setiap file yang diunggah
+        foreach ($_FILES['lamp_config']['name'] as $key => $filename) {
             $file_tmp = $_FILES['lamp_config']['tmp_name'][$key];
             $file_name = $_FILES['lamp_config']['name'][$key];
-            $target_dir = "../uploads/";
-            $target_file = $target_dir . basename($file_name);
+            $target_file = $target_dir . basename($file_name); // Simpan di folder kode_lahan
 
-            // Attempt to move the uploaded file to the target directory
+            // Pindahkan file yang diunggah ke target folder
             if (move_uploaded_file($file_tmp, $target_file)) {
-                $lamp_config_paths[] = $file_name;
+                $lamp_config_paths[] = $file_name; // Simpan nama file
             } else {
                 echo "Gagal mengunggah file " . $file_name . "<br>";
             }
         }
 
-        // Join all file paths into a comma-separated string
+        // Gabungkan semua nama file menjadi satu string, dipisahkan koma
         $lamp_config = implode(",", $lamp_config_paths);
     }
 
     // Periksa apakah kunci 'lampiran' ada dalam $_FILES
     $lamp_printer = "";
-
-    if(isset($_FILES["lamp_printer"])) {
+    if (isset($_FILES["lamp_printer"])) {
         $lamp_printer_paths = array();
 
-        // Loop through each file
-        foreach($_FILES['lamp_printer']['name'] as $key => $filename) {
+        // Path ke direktori "uploads"
+        $target_dir = "../uploads/" . $kode_lahan . "/";
+
+        // Cek apakah folder dengan nama kode_lahan sudah ada
+        if (!is_dir($target_dir)) {
+            // Jika folder belum ada, buat folder baru
+            mkdir($target_dir, 0777, true);
+        }
+
+        // Loop untuk menangani setiap file yang diunggah
+        foreach ($_FILES['lamp_printer']['name'] as $key => $filename) {
             $file_tmp = $_FILES['lamp_printer']['tmp_name'][$key];
             $file_name = $_FILES['lamp_printer']['name'][$key];
-            $target_dir = "../uploads/";
-            $target_file = $target_dir . basename($file_name);
+            $target_file = $target_dir . basename($file_name); // Simpan di folder kode_lahan
 
-            // Attempt to move the uploaded file to the target directory
+            // Pindahkan file yang diunggah ke target folder
             if (move_uploaded_file($file_tmp, $target_file)) {
-                $lamp_printer_paths[] = $file_name;
+                $lamp_printer_paths[] = $file_name; // Simpan nama file
             } else {
                 echo "Gagal mengunggah file " . $file_name . "<br>";
             }
         }
 
-        // Join all file paths into a comma-separated string
+        // Gabungkan semua nama file menjadi satu string, dipisahkan koma
         $lamp_printer = implode(",", $lamp_printer_paths);
     }
 

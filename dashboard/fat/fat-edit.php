@@ -9,52 +9,76 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $id = $_POST['id'];
     $email = $_POST['email'];
     // Periksa apakah kunci 'lampiran' ada dalam $_FILES
-    $lamp_qris = "";
+    
+    $sql_get_kode_lahan = "SELECT kode_lahan FROM socdate_fat WHERE id = ?";
+    $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+    $stmt_get_kode_lahan->bind_param("i", $id);
+    $stmt_get_kode_lahan->execute();
+    $stmt_get_kode_lahan->bind_result($kode_lahan);
+    $stmt_get_kode_lahan->fetch();
+    $stmt_get_kode_lahan->free_result();
 
-    if(isset($_FILES["lamp_qris"])) {
+    // Periksa apakah kunci 'lampiran' ada dalam $_FILES
+    $lamp_qris = "";
+    if (isset($_FILES["lamp_qris"])) {
         $lamp_qris_paths = array();
 
-        // Loop through each file
-        foreach($_FILES['lamp_qris']['name'] as $key => $filename) {
+        // Path ke direktori "uploads"
+        $target_dir = "../uploads/" . $kode_lahan . "/";
+
+        // Cek apakah folder dengan nama kode_lahan sudah ada
+        if (!is_dir($target_dir)) {
+            // Jika folder belum ada, buat folder baru
+            mkdir($target_dir, 0777, true);
+        }
+
+        // Loop untuk menangani setiap file yang diunggah
+        foreach ($_FILES['lamp_qris']['name'] as $key => $filename) {
             $file_tmp = $_FILES['lamp_qris']['tmp_name'][$key];
             $file_name = $_FILES['lamp_qris']['name'][$key];
-            $target_dir = "../uploads/";
-            $target_file = $target_dir . basename($file_name);
+            $target_file = $target_dir . basename($file_name); // Simpan di folder kode_lahan
 
-            // Attempt to move the uploaded file to the target directory
+            // Pindahkan file yang diunggah ke target folder
             if (move_uploaded_file($file_tmp, $target_file)) {
-                $lamp_qris_paths[] = $file_name;
+                $lamp_qris_paths[] = $file_name; // Simpan nama file
             } else {
                 echo "Gagal mengunggah file " . $file_name . "<br>";
             }
         }
 
-        // Join all file paths into a comma-separated string
+        // Gabungkan semua nama file menjadi satu string, dipisahkan koma
         $lamp_qris = implode(",", $lamp_qris_paths);
     }
 
-    // // Periksa apakah kunci 'lampiran' ada dalam $_FILES
+    // Periksa apakah kunci 'lampiran' ada dalam $_FILES
     $lamp_st = "";
-
-    if(isset($_FILES["lamp_st"])) {
+    if (isset($_FILES["lamp_st"])) {
         $lamp_st_paths = array();
 
-        // Loop through each file
-        foreach($_FILES['lamp_st']['name'] as $key => $filename) {
+        // Path ke direktori "uploads"
+        $target_dir = "../uploads/" . $kode_lahan . "/";
+
+        // Cek apakah folder dengan nama kode_lahan sudah ada
+        if (!is_dir($target_dir)) {
+            // Jika folder belum ada, buat folder baru
+            mkdir($target_dir, 0777, true);
+        }
+
+        // Loop untuk menangani setiap file yang diunggah
+        foreach ($_FILES['lamp_st']['name'] as $key => $filename) {
             $file_tmp = $_FILES['lamp_st']['tmp_name'][$key];
             $file_name = $_FILES['lamp_st']['name'][$key];
-            $target_dir = "../uploads/";
-            $target_file = $target_dir . basename($file_name);
+            $target_file = $target_dir . basename($file_name); // Simpan di folder kode_lahan
 
-            // Attempt to move the uploaded file to the target directory
+            // Pindahkan file yang diunggah ke target folder
             if (move_uploaded_file($file_tmp, $target_file)) {
-                $lamp_st_paths[] = $file_name;
+                $lamp_st_paths[] = $file_name; // Simpan nama file
             } else {
                 echo "Gagal mengunggah file " . $file_name . "<br>";
             }
         }
 
-        // Join all file paths into a comma-separated string
+        // Gabungkan semua nama file menjadi satu string, dipisahkan koma
         $lamp_st = implode(",", $lamp_st_paths);
     }
 

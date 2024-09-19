@@ -101,6 +101,19 @@ if(isset($_GET['id'])) {
                             </div>
                         </div>
                     </div>
+                            <div class="col-md-4">
+                                <div class="card mb-5">
+                                    <div class="card-body">
+                                        <div class="form-group row">
+                                            <p class="col-sm-12" style="margin-bottom: 5px;">Perlu Diperhatikan !</p>
+                                            <p class="col-sm-12" style="margin-bottom: 5px;">- Harap mengikuti guidance MoM re. Sewa menyewa lahan dan/atau bangunan tgl 24 July 2024.</p>
+                                            <p class="col-sm-12" style="margin-bottom: 5px;">- LOA Harus Sudah Ditandatangani oleh kedua belah pihak.</p>
+                                            <p class="col-sm-12" style="margin-bottom: 5px;">- Informasi di dalam PSM (seperti identias LL, nomor rekening, kota, dll) sudah terisi lengkap sebelum dikirim TAF.</p>
+                                            <p class="col-sm-12" style="margin-bottom: 5px;">- Klausul dan dokumen pendukung selain yang berkaitan dengan monetary (yang sehubungan dengan dan/atau memiliki efek di jumlah dan termin pembayaran sewa) telah di review dan diverifikasi oleh department lainnya yang bersangkutan ie. Manager Legal & Manager RE dengan memberikan statement by email.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                 </div>
 				<!-- end of main-content -->
                 <!-- Footer Start -->

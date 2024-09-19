@@ -18,28 +18,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     // Ambil nilai tgl_berlaku dan penanggungjawab dari formulir
     $id = $_POST['id'];
+        
+    $sql_get_kode_lahan = "SELECT kode_lahan FROM socdate_sdg WHERE id = ?";
+    $stmt_get_kode_lahan = $conn->prepare($sql_get_kode_lahan);
+    $stmt_get_kode_lahan->bind_param("i", $id);
+    $stmt_get_kode_lahan->execute();
+    $stmt_get_kode_lahan->bind_result($kode_lahan);
+    $stmt_get_kode_lahan->fetch();
+    $stmt_get_kode_lahan->free_result();
+
     // Periksa apakah kunci 'lampiran' ada dalam $_FILES
     $lampwo_reqipal = "";
-
-    if(isset($_FILES["lampwo_reqipal"])) {
+    if (isset($_FILES["lampwo_reqipal"])) {
         $lampwo_reqipal_paths = array();
 
-        // Loop through each file
-        foreach($_FILES['lampwo_reqipal']['name'] as $key => $filename) {
+        // Path ke direktori "uploads"
+        $target_dir = "../uploads/" . $kode_lahan . "/";
+
+        // Cek apakah folder dengan nama kode_lahan sudah ada
+        if (!is_dir($target_dir)) {
+            // Jika folder belum ada, buat folder baru
+            mkdir($target_dir, 0777, true);
+        }
+
+        // Loop untuk menangani setiap file yang diunggah
+        foreach ($_FILES['lampwo_reqipal']['name'] as $key => $filename) {
             $file_tmp = $_FILES['lampwo_reqipal']['tmp_name'][$key];
             $file_name = $_FILES['lampwo_reqipal']['name'][$key];
-            $target_dir = "../uploads/";
-            $target_file = $target_dir . basename($file_name);
+            $target_file = $target_dir . basename($file_name); // Simpan di folder kode_lahan
 
-            // Attempt to move the uploaded file to the target directory
+            // Pindahkan file yang diunggah ke target folder
             if (move_uploaded_file($file_tmp, $target_file)) {
-                $lampwo_reqipal_paths[] = $file_name;
+                $lampwo_reqipal_paths[] = $file_name; // Simpan nama file
             } else {
                 echo "Gagal mengunggah file " . $file_name . "<br>";
             }
         }
 
-        // Join all file paths into a comma-separated string
+        // Gabungkan semua nama file menjadi satu string, dipisahkan koma
         $lampwo_reqipal = implode(",", $lampwo_reqipal_paths);
     }
 
@@ -61,67 +77,80 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
         
-        $queryIR = "SELECT email FROM user WHERE level IN ('SCM')";
-        $resultIR = mysqli_query($conn, $queryIR);
-
-        if ($resultIR && mysqli_num_rows($resultIR) > 0) {
-            while ($rowIR = mysqli_fetch_assoc($resultIR)) {
-                if (!empty($rowIR['email'])) {
-                    $toEmails[] = $rowIR['email'];
+        $departments = [
+            'SCM'
+        ];
+        
+        // Loop through each department
+        foreach ($departments as $department) {
+            // Query to get emails for the current department
+            $query = "SELECT email FROM user WHERE level = '$department'";
+            $result = mysqli_query($conn, $query);
+        
+            $toEmails = [];
+            if ($result && mysqli_num_rows($result) > 0) {
+                while ($row = mysqli_fetch_assoc($result)) {
+                    if (!empty($row['email'])) {
+                        $toEmails[] = $row['email'];
+                    }
                 }
             }
-        }
-        var_dump($toEmails);
-        if (!empty($toEmails)) {
-
-            try {
-                // SMTP configuration
-                $mail = new PHPMailer(true);
-                $mail->isSMTP();
-                // $mail->SMTPDebug = 2;
-                $mail->SMTPAuth = true;
-                $mail->SMTPSecure = 'ssl';
-                $mail->Host = 'miegacoan.co.id';
-                $mail->Port = 465;
-                $mail->Username = 'resto-soc@miegacoan.co.id';
-                $mail->Password = '9)5X]*hjB4sh';
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-                $mail->setFrom('resto-soc@miegacoan.co.id', 'Pesta Pora Abadi');
-
-                foreach ($toEmails as $toEmail) {
-                    $mail->addAddress($toEmail);
+        
+            if (!empty($toEmails)) {
+                try {
+                    // SMTP configuration
+                    $mail = new PHPMailer(true);
+                    $mail->isSMTP();
+                    $mail->SMTPAuth = true;
+                    $mail->SMTPSecure = 'ssl';
+                    $mail->Host = 'miegacoan.co.id';
+                    $mail->Port = 465;
+                    $mail->Username = 'resto-soc@miegacoan.co.id';
+                    $mail->Password = '9)5X]*hjB4sh';
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+                    $mail->setFrom('resto-soc@miegacoan.co.id', 'Pesta Pora Abadi');
+        
+                    // Add recipients
+                    foreach ($toEmails as $toEmail) {
+                        $mail->addAddress($toEmail);
+                    }
+        
+                    // Add embedded image
+                    $imagePath = '../../assets/images/logo-email.png';
+                    $mail->addEmbeddedImage($imagePath, 'embedded_image', 'logo-email.png', 'base64', 'image/png');
+        
+                    // Email content with personalized greeting
+                    $mail->Subject = 'Notification: New Active Resto SOC Ticket';
+                    $mail->Body = '
+                                        <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333; margin: 0; padding: 0;">
+                                        <div style="background-color: #f7f7f7; border-radius: 8px; padding: 0; margin: 0; text-align: center;">
+                                            <img src="cid:embedded_image" alt="Header Image" style="display: block; width: 50%; height: auto; margin: 0 auto;">
+                                            <div style="padding: 20px; background-color: #f7f7f7; border-radius: 8px;">
+                                                <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear '. $department .' Team,</h2>
+                                                <p>We would like to inform you that a new Active Resto SOC Ticket has been created. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                Your prompt attention to this matter is greatly appreciated.</p>
+                                                <p></p>
+                                                <p>Have a good day!</p>
+                                            </div>
+                                        </div>
+                                    </div>';
+                                    $mail->AltBody = 'Dear '. $department .' Team,'
+                                                . 'We would like to inform you that a new Active Resto SOC Ticket has been created. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                Your prompt attention to this matter is greatly appreciated.'
+                                                . 'Have a good day!';
+        
+                    // Send email
+                    if ($mail->send()) {
+                        echo "Email sent successfully to $department team!<br>";
+                    } else {
+                        echo "Failed to send email to $department team. Error: {$mail->ErrorInfo}<br>";
+                    }
+                } catch (Exception $e) {
+                    echo "Message could not be sent to $department team. Mailer Error: {$mail->ErrorInfo}<br>";
                 }
-
-                // Email content
-                $mail->Subject = 'Notification: 1 New Active Resto SOC Ticket';
-                                $mail->Body    = '
-                                <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
-                                    <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
-                                            <img src="cid:header_image" alt="Header Image" style="max-width: 100%; height: auto; margin-bottom: 20px;">
-                                        <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear Team,</h2>
-                                        <p>You have 1 New Active Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.</p>
-                                        <p>Thank you for your prompt attention to this matter.</p>
-                                        <p></p>
-                                        <p>Have a good day!</p>
-                                    </div>
-                                </div>';
-                                $mail->AltBody = 'Dear Team,'
-                                            . 'You have 1 New Active Resto SOC Ticket in the Resto SOC system. Please log in to the SOC application to review the details.'
-                                            . 'Thank you for your prompt attention to this matter.'
-                                            . 'Have a good day!';
-
-                // Send email
-                if ($mail->send()) {
-                    echo "Email sent successfully!<br>";
-                } else {
-                    echo "Failed to send email. Error: {$mail->ErrorInfo}<br>";
-                }
-
-            } catch (Exception $e) {
-                echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+            } else {
+                echo "No email found for the $department team.<br>";
             }
-        } else {
-            echo "No email found for the selected resto or IR users.";
         }
         header("Location:  " . $base_url . "/datatables-sdgpk-rto-ipal.php");
         exit();

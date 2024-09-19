@@ -56,10 +56,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         if ($status_tafpaylistrik == 'Paid') {
             var_dump($status_tafpaylistrik); // Debugging untuk memastikan status Proceed masuk
 
+            $status_sdglistrik = "Done";
             // Query untuk memperbarui status_tafpaylistrik dan obstacle
-            $sql = "UPDATE socdate_sdg SET status_tafpaylistrik = ?, tafpaylistrik_date = ? WHERE id = ?";
+            $sql = "UPDATE socdate_sdg SET status_tafpaylistrik = ?, tafpaylistrik_date = ?, status_sdglistrik = ? WHERE id = ?";
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ssi", $status_tafpaylistrik, $tafpaylistrik_date, $id);
+            $stmt->bind_param("sssi", $status_tafpaylistrik, $tafpaylistrik_date, $status_sdglistrik, $id);
             
             // Eksekusi query
             if ($stmt->execute()) {
@@ -127,21 +128,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                     }
 
                     // Email content
-                    $mail->Subject = 'Notification: 1 New Active Resto SOC Ticket';
+                    $mail->Subject = 'Notification: 1 New Information of Payment by TAF Resto SOC Ticket';
                                     $mail->Body    = '
-                                    <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
-                                        <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px;">
-                                            <img src="cid:header_image" alt="Header Image" style="max-width: 100%; height: auto; margin-bottom: 20px;">
-                                            <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear SDG-Project Team,</h2>
-                                            <p>We would like to inform you that a new Active Resto SOC Ticket has been created in the payment for electricity & water Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
-                                            Your prompt attention to this matter is greatly appreciated.</p>
-                                            <p></p>
-                                            <p>Have a good day!</p>
+                                        <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333; margin: 0; padding: 0;">
+                                        <div style="background-color: #f7f7f7; border-radius: 8px; padding: 0; margin: 0; text-align: center;">
+                                            <img src="cid:embedded_image" alt="Header Image" style="display: block; width: 50%; height: auto; margin: 0 auto;">
+                                            <div style="padding: 20px; background-color: #f7f7f7; border-radius: 8px;">
+                                                <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear SDG-Project Team,</h2>
+                                                <p>We would like to inform you that a new Information of Payment by TAF Resto SOC Ticket has been created. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                Your prompt attention to this matter is greatly appreciated.</p>
+                                                <p></p>
+                                                <p>Have a good day!</p>
+                                            </div>
                                         </div>
                                     </div>';
                                     $mail->AltBody = 'Dear SDG-Project Team,'
-                                                . 'We would like to inform you that a new Active Resto SOC Ticket has been created in the payment for electricity & water Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
-                                                    Your prompt attention to this matter is greatly appreciated.'
+                                                . 'We would like to inform you that a new Information of Payment by TAF Resto SOC Ticket has been created. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                Your prompt attention to this matter is greatly appreciated.'
                                                 . 'Have a good day!';
 
                     // Send email

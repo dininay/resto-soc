@@ -272,6 +272,269 @@ $counttafpay = isset($results['counttafpay']) ? $results['counttafpay'] : 0;
 $counttafpaylistrik = isset($results['counttafpaylistrik']) ? $results['counttafpaylistrik'] : 0;
 //ir
 $countir = isset($results['countir']) ? $results['countir'] : 0;
+
+//re
+$totalRe = 0;
+if (isset($results['countland'])) {
+    $totalRe += $results['countland'];
+}
+if (isset($results['countvlre'])) {
+    $totalRe += $results['countvlre'];
+}
+if (isset($results['countloacd'])) {
+    $totalRe += $results['countloacd'];
+}
+if (isset($results['countvdre'])) {
+    $totalRe += $results['countvdre'];
+}
+if (isset($results['countfinalpsm'])) {
+    $totalRe += $results['countfinalpsm'];
+}
+
+//legal
+$totalLegal = 0;
+if (isset($results['countvllegal'])) {
+    $totalLegal += $results['countvllegal'];
+}
+if (isset($results['countvdlegal'])) {
+    $totalLegal += $results['countvdlegal'];
+}
+if (isset($results['countpsmlegal'])) {
+    $totalLegal += $results['countpsmlegal'];
+}
+if (isset($results['countkondisilahan'])) {
+    $totalLegal += $results['countkondisilahan'];
+}
+if (isset($results['countdesignlegal'])) {
+    $totalLegal += $results['countdesignlegal'];
+}
+if (isset($results['countpermitlegal'])) {
+    $totalLegal += $results['countpermitlegal'];
+}
+if (isset($results['countmouparkir'])) {
+    $totalLegal += $results['countmouparkir'];
+}
+if (isset($results['countrestoname'])) {
+    $totalLegal += $results['countrestoname'];
+}
+
+//bod
+$totalBod = 0;
+if (isset($results['counthrowner'])) {
+    $totalBod += $results['counthrowner'];
+}
+if (isset($results['counthrbod'])) {
+    $totalBod += $results['counthrbod'];
+}
+if (isset($results['counthrgo'])) {
+    $totalBod += $results['counthrgo'];
+}
+
+//negotiator
+$totalNegotiator = 0;
+if (isset($results['countnego'])) {
+    $totalNegotiator += $results['countnego'];
+}
+
+//sdg-design
+$totalSdgDesign = 0;
+if (isset($results['countsurveylayout'])) {
+    $totalSdgDesign += $results['countsurveylayout'];
+}
+if (isset($results['countwodesign'])) {
+    $totalSdgDesign += $results['countwodesign'];
+}
+if (isset($results['counturugan'])) {
+    $totalSdgDesign += $results['counturugan'];
+}
+if (isset($results['countdesign'])) {
+    $totalSdgDesign += $results['countdesign'];
+}
+
+//sdg-qs
+$totalSdgQs = 0;
+if (isset($results['countraburugan'])) {
+    $totalSdgQs += $results['countraburugan'];
+}
+if (isset($results['countrabdesign'])) {
+    $totalSdgQs += $results['countrabdesign'];
+}
+if (isset($results['countrabjobadd'])) {
+    $totalSdgQs += $results['countrabjobadd'];
+}
+
+//procurement
+$totalProcur = 0;
+if (isset($results['countspkdesign'])) {
+    $totalProcur += $results['countspkdesign'];
+}
+if (isset($results['countspkurugan'])) {
+    $totalProcur += $results['countspkurugan'];
+}
+if (isset($results['counttenderurugan'])) {
+    $totalProcur += $results['counttenderurugan'];
+}
+if (isset($results['countspkcons'])) {
+    $totalProcur += $results['countspkcons'];
+}
+if (isset($results['counttendercons'])) {
+    $totalProcur += $results['counttendercons'];
+}
+if (isset($results['countspkfa'])) {
+    $totalProcur += $results['countspkfa'];
+}
+if (isset($results['countspkipal'])) {
+    $totalProcur += $results['countspkipal'];
+}
+if (isset($results['countspkeqp'])) {
+    $totalProcur += $results['countspkeqp'];
+}
+if (isset($results['countjobadd'])) {
+    $totalProcur += $results['countjobadd'];
+}
+if (isset($results['countfinalspkcons'])) {
+    $totalProcur += $results['countfinalspkcons'];
+}
+if (isset($results['countissueprocur'])) {
+    $totalProcur += $results['countissueprocur'];
+}
+
+//sdg-pk
+$totalSdgProject = 0;
+if (isset($results['countkom'])) {
+    $totalSdgProject += $results['countkom'];
+}
+if (isset($results['countcons'])) {
+    $totalSdgProject += $results['countcons'];
+}
+if (isset($results['countmepsa'])) {
+    $totalSdgProject += $results['countmepsa'];
+}
+if (isset($results['countmeplistrik'])) {
+    $totalSdgProject += $results['countmeplistrik'];
+}
+if (isset($results['countmepipal'])) {
+    $totalSdgProject += $results['countmepipal'];
+}
+if (isset($results['countstkons'])) {
+    $totalSdgProject += $results['countstkons'];
+}
+if (isset($results['countissue'])) {
+    $totalSdgProject += $results['countissue'];
+}
+if (isset($results['countwojobadd'])) {
+    $totalSdgProject += $results['countwojobadd'];
+}
+
+//equipment
+$totalSdgEqp = 0;
+if (isset($results['counteqp'])) {
+    $totalSdgEqp += $results['counteqp'];
+}
+if (isset($results['countwoeqp'])) {
+    $totalSdgEqp += $results['countwoeqp'];
+}
+if (isset($results['counteqpdev'])) {
+    $totalSdgEqp += $results['counteqpdev'];
+}
+if (isset($results['counteqpsite'])) {
+    $totalSdgEqp += $results['counteqpsite'];
+}
+
+//hr
+$totalHr = 0;
+if (isset($results['counthrff1'])) {
+    $totalHr += $results['counthrff1'];
+}
+if (isset($results['counthrff2'])) {
+    $totalHr += $results['counthrff2'];
+}
+if (isset($results['counthrff3'])) {
+    $totalHr += $results['counthrff3'];
+}
+if (isset($results['counthrfl'])) {
+    $totalHr += $results['counthrfl'];
+}
+if (isset($results['counthrqc'])) {
+    $totalHr += $results['counthrqc'];
+}
+if (isset($results['counthrhot'])) {
+    $totalHr += $results['counthrhot'];
+}
+if (isset($results['countissuehrga'])) {
+    $totalHr += $results['countissuehrga'];
+}
+if (isset($results['countir'])) {
+    $totalHr += $results['countir'];
+}
+
+//academy
+$totalAcademy = 0;
+if (isset($results['countkpt1'])) {
+    $totalAcademy += $results['countkpt1'];
+}
+if (isset($results['countkpt2'])) {
+    $totalAcademy += $results['countkpt2'];
+}
+if (isset($results['countkpt3'])) {
+    $totalAcademy += $results['countkpt3'];
+}
+if (isset($results['countacafl'])) {
+    $totalAcademy += $results['countacafl'];
+}
+if (isset($results['countacaqc'])) {
+    $totalAcademy += $results['countacaqc'];
+}
+
+//academy
+$totalScm = 0;
+if (isset($results['countutensil'])) {
+    $totalScm += $results['countutensil'];
+}
+if (isset($results['countscmipal'])) {
+    $totalScm += $results['countscmipal'];
+}
+
+//it
+$totalIt = 0;
+if (isset($results['countit'])) {
+    $totalIt += $results['countit'];
+}
+if (isset($results['countitconfig'])) {
+    $totalIt += $results['countitconfig'];
+}
+if (isset($results['countissueit'])) {
+    $totalIt += $results['countissueit'];
+}
+
+//marketing
+$totalMarketing = 0;
+if (isset($results['countmarketing'])) {
+    $totalMarketing += $results['countmarketing'];
+}
+
+
+//taf
+$totalTaf = 0;
+if (isset($results['counttafkode'])) {
+    $totalTaf += $results['counttafkode'];
+}
+if (isset($results['counttafpsm'])) {
+    $totalTaf += $results['counttafpsm'];
+}
+if (isset($results['counttafrab'])) {
+    $totalTaf += $results['counttafrab'];
+}
+if (isset($results['counttafqris'])) {
+    $totalTaf += $results['counttafqris'];
+}
+if (isset($results['counttafpay'])) {
+    $totalTaf += $results['counttafpay'];
+}
+if (isset($results['counttafpaylistrik'])) {
+    $totalTaf += $results['counttafpaylistrik'];
+}
+
 ?>
 <style>
     .nav-item.active a {
@@ -303,6 +566,24 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
     background-color: #28a745; /* Hijau */
     color: #fff;
 }
+
+.notification-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: red;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 8px;
+    font-size: 12px;
+    line-height: 1;
+    height: 20px;
+    vertical-align: middle;/* Tinggi badge */
+    text-align: center; /* Menyelaraskan teks di tengah */
+    display: flex; /* Menggunakan flexbox untuk memastikan teks berada di tengah */
+    align-items: center; /* Menyelaraskan teks secara vertikal */
+    justify-content: center;
+}
 </style>
        <div class="side-content-wrap">
             <div class="sidebar-left open rtl-ps-none" data-perfect-scrollbar data-suppress-scroll-x="true">
@@ -325,6 +606,9 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Library"></i>
                             <span class="nav-text">RE</span>
+                            <?php if ($totalRe > 0): ?>
+                                <span class="notification-badge"><?php echo $totalRe; ?></span>
+                            <?php endif; ?>
                         </a>
                         <div class="triangle"></div>
                     </li>
@@ -335,6 +619,9 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Tag-2"></i>
                             <span class="nav-text">BoD</span>
+                            <?php if ($totalBod > 0): ?>
+                                <span class="notification-badge"><?php echo $totalBod; ?></span>
+                            <?php endif; ?>
                         </a>
                         <div class="triangle"></div>
                     </li>
@@ -342,10 +629,13 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
 
                     <!-- Legal Head -->
                     <?php if ($_SESSION['level'] === "Admin" || $_SESSION['level'] === "Legal") : ?>
-                    <li class="nav-item <?php echo ($current_page == 'datatables-validasi-lahan-legal' || $current_page == 'datatables-potensi-masalah-legal' || $current_page == 'datatables-checkval-legal'|| $current_page == 'datatables-sign-psm-legal'|| $current_page == 'datatables-sp-submit-legal'|| $current_page == 'datatables-release-doc-legal' || $current_page == 'datatables-design-legal' || $current_page == 'datatables-valdoc-legal'|| $current_page == 'datatables-validasi-sp' || $current_page == 'datatables-obstacle-legal'|| $current_page == 'datatables-wovl'|| $current_page == 'datatables-wovd'|| $current_page == 'datatables-spk-legal'|| $current_page == 'datatables-mou-parkir'  || $current_page == 'datatables-resto-name' || $current_page == 'datatables-kondisi-lahan') ? 'active' : ''; ?>" data-item="extrakits">
+                    <li class="nav-item <?php echo ($current_page == 'datatables-validasi-lahan-legal' || $current_page == 'datatables-potensi-masalah-legal' || $current_page == 'datatables-checkval-legal'|| $current_page == 'datatables-sign-psm-legal'|| $current_page == 'datatables-sp-submit-legal'|| $current_page == 'datatables-release-doc-legal' || $current_page == 'datatables-design-legal' || $current_page == 'datatables-valdoc-legal'|| $current_page == 'datatables-validasi-sp' || $current_page == 'datatables-obstacle-legal'|| $current_page == 'datatables-wovl'|| $current_page == 'datatables-wovd'|| $current_page == 'datatables-spk-legal'|| $current_page == 'datatables-mou-parkir'  || $current_page == 'datatables-resto-name' || $current_page == 'datatables-kondisi-lahan' || strpos($current_page, 'log-note-legal-psm')!== false) ? 'active' : ''; ?>" data-item="extrakits">
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Suitcase"></i>
                             <span class="nav-text">Legal</span>
+                            <?php if ($totalLegal > 0): ?>
+                                <span class="notification-badge"><?php echo $totalLegal; ?></span>
+                            <?php endif; ?>
                         </a>
                         <div class="triangle"></div>
                     </li>
@@ -357,6 +647,9 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Computer-Secure"></i>
                             <span class="nav-text">Negotiator</span>
+                            <?php if ($totalNegotiator > 0): ?>
+                                <span class="notification-badge"><?php echo $totalNegotiator; ?></span>
+                            <?php endif; ?>
                         </a>
                         <div class="triangle"></div>
                     </li>
@@ -370,6 +663,9 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-File-Clipboard-File--Text"></i>
                             <span class="nav-text">SDG Design</span>
+                            <?php if ($totalSdgDesign > 0): ?>
+                                <span class="notification-badge"><?php echo $totalSdgDesign; ?></span>
+                            <?php endif; ?>
                         </a>
                         <div class="triangle"></div>
                     </li>
@@ -381,6 +677,9 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Administrator"></i>
                             <span class="nav-text">SDG QS</span>
+                            <?php if ($totalSdgQs > 0): ?>
+                                <span class="notification-badge"><?php echo $totalSdgQs; ?></span>
+                            <?php endif; ?>
                         </a>
                         <div class="triangle"></div>
                     </li>
@@ -393,6 +692,9 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Double-Tap"></i>
                             <span class="nav-text">Procurement</span>
+                            <?php if ($totalProcur > 0): ?>
+                                <span class="notification-badge"><?php echo $totalProcur; ?></span>
+                            <?php endif; ?>
                         </a>
                         <div class="triangle"></div>
                     </li>
@@ -405,6 +707,9 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-File-Horizontal-Text"></i>
                             <span class="nav-text">SDG PK</span>
+                            <?php if ($totalSdgProject > 0): ?>
+                                <span class="notification-badge"><?php echo $totalSdgProject; ?></span>
+                            <?php endif; ?>
                         </a>
                         <div class="triangle"></div>
                     </li>
@@ -417,6 +722,9 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Bell1"></i>
                             <span class="nav-text">SDG EQP</span>
+                            <?php if ($totalSdgEqp > 0): ?>
+                                <span class="notification-badge"><?php echo $totalSdgEqp; ?></span>
+                            <?php endif; ?>
                         </a>
                         <div class="triangle"></div>
                     </li>
@@ -440,6 +748,9 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-File-Clipboard-Text--Image"></i>
                             <span class="nav-text">HR</span>
+                            <?php if ($totalHr > 0): ?>
+                                <span class="notification-badge"><?php echo $totalHr; ?></span>
+                            <?php endif; ?>
                         </a>
                         <div class="triangle"></div>
                     </li>
@@ -451,6 +762,9 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Loading-3"></i>
                             <span class="nav-text">Academy</span>
+                            <?php if ($totalAcademy > 0): ?>
+                                <span class="notification-badge"><?php echo $totalAcademy; ?></span>
+                            <?php endif; ?>
                         </a>
                         <div class="triangle"></div>
                     </li>
@@ -462,6 +776,9 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Receipt-4"></i>
                             <span class="nav-text">SCM</span>
+                            <?php if ($totalScm > 0): ?>
+                                <span class="notification-badge"><?php echo $totalScm; ?></span>
+                            <?php endif; ?>
                         </a>
                         <div class="triangle"></div>
                     </li>
@@ -473,6 +790,9 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Width-Window"></i>
                             <span class="nav-text">IT</span>
+                            <?php if ($totalIt > 0): ?>
+                                <span class="notification-badge"><?php echo $totalIt; ?></span>
+                            <?php endif; ?>
                         </a>
                         <div class="triangle"></div>
                     </li>
@@ -484,6 +804,9 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Medal-2"></i>
                             <span class="nav-text">Marketing</span>
+                            <?php if ($totalMarketing > 0): ?>
+                                <span class="notification-badge"><?php echo $totalMarketing; ?></span>
+                            <?php endif; ?>
                         </a>
                         <div class="triangle"></div>
                     </li>
@@ -494,6 +817,9 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                         <a class="nav-item-hold" href="#">
                             <i class="nav-icon i-Cursor-Click"></i>
                             <span class="nav-text">FAT</span>
+                            <?php if ($totalTaf > 0): ?>
+                                <span class="notification-badge"><?php echo $totalTaf; ?></span>
+                            <?php endif; ?>
                         </a>
                         <div class="triangle"></div>
                     </li>
@@ -724,7 +1050,7 @@ $countir = isset($results['countir']) ? $results['countir'] : 0;
                             </span>
                             </a>
                         </li>
-						<li class="nav-item <?php echo $current_page == 'datatables-sign-psm-legal' ? 'active' : ''; ?>">
+						<li class="nav-item <?php echo ($current_page == 'datatables-sign-psm-legal' || strpos($current_page, 'log-note-legal-psm')!== false) ? 'active' : ''; ?>">
                             <a href="datatables-sign-psm-legal.php">
                                 <i class="nav-icon i-Checked-User"></i>
                                 <span class="item-name mr-2">Draft PSM Legal</span>

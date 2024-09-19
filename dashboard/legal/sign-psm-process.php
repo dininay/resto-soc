@@ -17,11 +17,13 @@ include "../../koneksi.php";
 date_default_timezone_set('Asia/Jakarta');
 
 // Proses jika ada pengiriman data dari formulir untuk memperbarui status
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["confirm_nego"]) && isset($_POST["catatan_psm"])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST["confirm_nego"]) && isset($_POST["catatan_psm"]) && is_array($_POST['catatan_psm'])) {
     $id = $_POST["id"];
     $confirm_nego = $_POST["confirm_nego"];
     $catatan_psm = $_POST["catatan_psm"];
-    $catatan_psmlegal = $_POST["catatan_psm"];
+
+    $catatan_psm = implode(';', array_map('htmlspecialchars', $_POST['catatan_psm']));
+
     $end_date = null;
     $legal_date = date("Y-m-d H:i:s");
     $issue_detail = isset($_POST["issue_detail"]) ? $_POST["issue_detail"] : null;
@@ -161,16 +163,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
             $stmt_get_kode_lahan->free_result();
             
             // Melanjutkan ke proses insert jika kode_lahan tidak kosong
-            $sql_insert = "INSERT INTO note_psm (kode_lahan, catatan_psmlegal, legal_date) VALUES (?, ?, ?)";
-            $stmt_insert = $conn->prepare($sql_insert);
-            $stmt_insert->bind_param("sss", $kode_lahan, $catatan_psmlegal, $legal_date);
-            var_dump($kode_lahan);
-            $stmt_insert->execute();
-            if ($stmt_insert->execute()) {
-                echo "Data berhasil dimasukkan.";
-            } else {
-                echo "Gagal memasukkan data: " . $stmt_insert->error;
-            }
+            // $sql_insert = "INSERT INTO note_psm (kode_lahan, catatan_psmlegal, legal_date) VALUES (?, ?, ?)";
+            // $stmt_insert = $conn->prepare($sql_insert);
+            // $stmt_insert->bind_param("sss", $kode_lahan, $catatan_psm, $legal_date);
+            // var_dump($kode_lahan);
+            // $stmt_insert->execute();
+            // if ($stmt_insert->execute()) {
+            //     echo "Data berhasil dimasukkan.";
+            // } else {
+            //     echo "Gagal memasukkan data: " . $stmt_insert->error;
+            // }
 
             // Periksa apakah kode_lahan ada di tabel hold_project
             $sql_check_hold = "SELECT kode_lahan FROM hold_project WHERE kode_lahan = ?";
@@ -236,22 +238,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                     // Email content
                     $mail->Subject = 'Notification: 1 New Active Resto SOC Ticket';
                     $mail->Body    = '
-                        <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333; margin: 0; padding: 0;">
-                        <div style="background-color: #f7f7f7; border-radius: 8px; padding: 0; margin: 0; text-align: center;">
-                            <img src="cid:embedded_image" alt="Header Image" style="display: block; width: 50%; height: auto; margin: 0 auto;">
-                            <div style="padding: 20px; background-color: #f7f7f7; border-radius: 8px;">
-                                <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear TAF Team,</h2>
-                                <p>We would like to inform you that a new Active Resto SOC Ticket has been created in the Review Draft Table Sewa & PSM By TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
-                                Your prompt attention to this matter is greatly appreciated.</p>
-                                <p></p>
-                                <p>Have a good day!</p>
-                            </div>
-                        </div>
-                    </div>';
-                    $mail->AltBody = 'Dear TAF Team,'
-                                . 'We would like to inform you that a new Active Resto SOC Ticket has been created in the Review Draft Table Sewa & PSM By TAF Process. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
-                                Your prompt attention to this matter is greatly appreciated.'
-                                . 'Have a good day!';
+                                            <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333; margin: 0; padding: 0;">
+                                            <div style="background-color: #f7f7f7; border-radius: 8px; padding: 0; margin: 0; text-align: center;">
+                                                <img src="cid:embedded_image" alt="Header Image" style="display: block; width: 50%; height: auto; margin: 0 auto;">
+                                                <div style="padding: 20px; background-color: #f7f7f7; border-radius: 8px;">
+                                                    <h2 style="font-size: 20px; color: #5cb85c; margin-bottom: 10px;">Dear TAF Team,</h2>
+                                                    <p>We would like to inform you that a new Active Resto SOC Ticket has been created. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                    Your prompt attention to this matter is greatly appreciated.</p>
+                                                    <p></p>
+                                                    <p>Have a good day!</p>
+                                                </div>
+                                            </div>
+                                        </div>';
+                                        $mail->AltBody = 'Dear TAF Team,'
+                                                    . 'We would like to inform you that a new Active Resto SOC Ticket has been created. This needs your attention, please log in to the SOC application to review the details at your earliest convenience.
+                                                    Your prompt attention to this matter is greatly appreciated.'
+                                                    . 'Have a good day!';
 
                     // Send email
                     if ($mail->send()) {
@@ -316,18 +318,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 $conn->commit();
                 echo "Status berhasil diperbarui dan data ditahan.";
             } else {
-                // Jika status tidak diubah menjadi Approve, Reject, atau Pending, hanya perlu memperbarui status_vl di tabel re
-                $sql = "UPDATE draft SET confirm_nego = ?, catatan_psm = ? WHERE id = ?";
-                $stmt = $conn->prepare($sql);
-                $stmt->bind_param("ssi", $confirm_nego, $catatan_psm, $id);
-                $stmt->execute();
-    
-                // Check if update was successful
-                if ($stmt->affected_rows > 0) {
+                if (!empty($catatan_psm)) {
+                    $catatan_psm_array = explode(';', $catatan_psm);
+                
+                    $catatan_psm_filtered = array_filter($catatan_psm_array, function($value) {
+                        return trim($value) !== ''; 
+                    });
+                
+                    $catatan_psm_json = json_encode($catatan_psm_filtered);
+                } else {
+                    $catatan_psm_json = json_encode([]);
+                }
+                
+                    $sql = "UPDATE draft SET confirm_nego = ?, catatan_psm = ? WHERE id = ?";
+                    $stmt = $conn->prepare($sql);
+                    $stmt->bind_param("ssi", $confirm_nego, $catatan_psm_json, $id);
+            
+                    $stmt->execute();
+                    if ($stmt->affected_rows > 0) {
                     echo "<script>
                             alert('Status berhasil diperbarui.');
                             window.location.href = window.location.href;
-                         </script>";
+                        </script>";
                 } else {
                     echo "Error: Gagal memperbarui status. Tidak ada perubahan dilakukan.";
                 }

@@ -19,47 +19,63 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $tgl_agendastkons = $_POST['tgl_agendastkons'];
     $status_consact = "In Process";
     $lamp_kom = "";
-
-    if(isset($_FILES["lamp_kom"])) {
+    if (isset($_FILES["lamp_kom"])) {
         $lamp_kom_paths = array();
 
-        // Loop through each file
-        foreach($_FILES['lamp_kom']['name'] as $key => $filename) {
+        // Path ke direktori "uploads"
+        $target_dir = "../uploads/" . $kode_lahan . "/";
+
+        // Cek apakah folder dengan nama kode_lahan sudah ada
+        if (!is_dir($target_dir)) {
+            // Jika folder belum ada, buat folder baru
+            mkdir($target_dir, 0777, true);
+        }
+
+        // Loop untuk menangani setiap file yang diunggah
+        foreach ($_FILES['lamp_kom']['name'] as $key => $filename) {
             $file_tmp = $_FILES['lamp_kom']['tmp_name'][$key];
             $file_name = $_FILES['lamp_kom']['name'][$key];
-            $target_dir = "../uploads/";
-            $target_file = $target_dir . basename($file_name);
+            $target_file = $target_dir . basename($file_name); // Simpan di folder kode_lahan
 
-            // Attempt to move the uploaded file to the target directory
+            // Pindahkan file yang diunggah ke target folder
             if (move_uploaded_file($file_tmp, $target_file)) {
-                $lamp_kom_paths[] = $file_name;
+                $lamp_kom_paths[] = $file_name; // Simpan nama file
             } else {
                 echo "Gagal mengunggah file " . $file_name . "<br>";
             }
         }
 
-        // Join all file paths into a comma-separated string
+        // Gabungkan semua nama file menjadi satu string, dipisahkan koma
         $lamp_kom = implode(",", $lamp_kom_paths);
     }
-    $lamp_obskom = null;
-
-    // Periksa apakah file lamp_obskom ada dalam $_FILES
+    $lamp_obskom = "";
     if (isset($_FILES["lamp_obskom"])) {
         $lamp_obskom_paths = array();
+
+        // Path ke direktori "uploads"
+        $target_dir = "../uploads/" . $kode_lahan . "/";
+
+        // Cek apakah folder dengan nama kode_lahan sudah ada
+        if (!is_dir($target_dir)) {
+            // Jika folder belum ada, buat folder baru
+            mkdir($target_dir, 0777, true);
+        }
+
+        // Loop untuk menangani setiap file yang diunggah
         foreach ($_FILES['lamp_obskom']['name'] as $key => $filename) {
             $file_tmp = $_FILES['lamp_obskom']['tmp_name'][$key];
-            $target_dir = "../uploads/";
-            $target_file = $target_dir . basename($filename);
+            $file_name = $_FILES['lamp_obskom']['name'][$key];
+            $target_file = $target_dir . basename($file_name); // Simpan di folder kode_lahan
 
-            // Attempt to move the uploaded file to the target directory
+            // Pindahkan file yang diunggah ke target folder
             if (move_uploaded_file($file_tmp, $target_file)) {
-                $lamp_obskom_paths[] = $filename;
+                $lamp_obskom_paths[] = $file_name; // Simpan nama file
             } else {
-                echo "Gagal mengunggah file " . $filename . "<br>";
+                echo "Gagal mengunggah file " . $file_name . "<br>";
             }
         }
 
-        // Join all file paths into a comma-separated string
+        // Gabungkan semua nama file menjadi satu string, dipisahkan koma
         $lamp_obskom = implode(",", $lamp_obskom_paths);
     }
 

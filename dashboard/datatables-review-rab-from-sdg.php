@@ -304,9 +304,20 @@ function getBadgeColor($remarks) {
                                                 ?>
                                                 <td><?= $formattedDate ?></td>
                                                 <td>
-                                                    <a href="log-note-spk.php?id=<?php echo ($row['kode_lahan']); ?>" class="btn btn-info btn-sm">
-                                                        <i class="fas fa-info-circle"></i>
-                                                    </a>
+                                                    <?php
+                                                    // Misalkan catatan dipisahkan oleh koma
+                                                    $catatanArray = explode(';', $row['catatan_spkfat']);
+                                                    
+                                                    if (!empty($catatanArray)) {
+                                                        echo '<ul>';
+                                                        foreach ($catatanArray as $catatan) {
+                                                            echo '<li>' . htmlspecialchars($catatan) . '</li>';
+                                                        }
+                                                        echo '</ul>';
+                                                    } else {
+                                                        echo 'Tidak ada catatan';
+                                                    }
+                                                    ?>
                                                 </td>
                                                 <td>
                                                     <?php
@@ -449,8 +460,17 @@ function getBadgeColor($remarks) {
                                                                         </select>
                                                                     </div>
                                                                     <div class="form-group">
-                                                                        <label for="catatan_spkfat">Catatan TAF</label>
-                                                                        <input type="text" class="form-control" id="catatan_spkfat" name="catatan_spkfat">
+                                                                        <label for="catatan_spkfat">Catatan SPK Construction TAF</label>
+                                                                        <div id="catatan-container">
+                                                                            <!-- Container for catatan inputs -->
+                                                                            <div class="input-group mb-2">
+                                                                                <input type="text" class="form-control" name="catatan_spkfat[]" placeholder="Masukkan catatan">
+                                                                                <div class="input-group-append">
+                                                                                    <button class="btn btn-danger remove-catatan" type="button">-</button>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                              <button class="btn btn-primary" type="button" id="add-catatan">+</button>
                                                                     </div>
                                                                         <div class="form-group">
                                                                             <label for="lamp_spkconsdone">Upload SPK Done Paraf<strong><span style="color: red;">*</span></strong></label>
@@ -768,6 +788,61 @@ function getBadgeColor($remarks) {
     <script src="../dist-assets/js/scripts/datatables.script.min.js"></script>
 	<script src="../dist-assets/js/icons/feather-icon/feather.min.js"></script>
     <script src="../dist-assets/js/icons/feather-icon/feather-icon.js"></script>
+    <script>
+            $(document).ready(function() {
+        // Function to load and display existing catatan values
+        function loadCatatanValues() {
+            var catatanValue = $('input[name="catatan_spkfat[]"]').val();
+            if (catatanValue) {
+                // Split the values by semicolon ';'
+                var catatanArray = catatanValue.split(';');
+                // Loop through each value and append it to the container
+                catatanArray.forEach(function(value) {
+                    $('#catatan-container').append(
+                        `<div class="input-group mb-2">
+                            <input type="text" class="form-control catatan-input" name="catatan_spkfat[]" value="${value}" placeholder="Masukkan catatan">
+                            <div class="input-group-append">
+                                <button class="btn btn-danger remove-catatan" type="button">-</button>
+                            </div>
+                        </div>`
+                    );
+                });
+            }
+        }
+
+        // Call the function to load existing catatan values on page load
+        loadCatatanValues();
+
+        // Add new input catatan
+        $('#add-catatan').click(function() {
+            $('#catatan-container').append(
+                `<div class="input-group mb-2">
+                    <input type="text" class="form-control catatan-input" name="catatan_spkfat[]" placeholder="Masukkan catatan">
+                    <div class="input-group-append">
+                        <button class="btn btn-danger remove-catatan" type="button">-</button>
+                    </div>
+                </div>`
+            );
+        });
+
+        // Remove dynamic input fields
+        $('#catatan-container').on('click', '.remove-catatan', function() {
+            $(this).closest('.input-group').remove();
+        });
+
+        // Handle form submission
+        $('#statusForm').on('submit', function(event) {
+            // Gather all dynamic inputs before form submission
+            var dynamicInputs = $('#catatan-container input[name="catatan_spkfat[]"]').map(function() {
+                return $(this).val();
+            }).get();
+
+            // Set the hidden input value to the gathered dynamic inputs, joined by semicolon
+            $('input[name="catatan_spkfat[]"]').val(dynamicInputs.join(';'));
+
+        });
+    });
+    </script>
     <script>
     // JavaScript to handle opening the modal and setting form values
     $('#editModal').on('show.bs.modal', function (event) {
