@@ -110,7 +110,7 @@ $conn->close();
 <style>
         .hidden {
             display: none;
-        },
+        }
 
         .small-column {
             max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */
@@ -468,7 +468,7 @@ $conn->close();
                                                                         </select>
                                                                     </div>
                                                                     <!-- Catatan Sign PSM -->
-                                                                        <div class="form-group">
+                                                                        <div class="form-group" id="uploadCatatanContainer">
                                                                             <label for="catatan_psmfat">Upload Catatan First Review<strong><span style="color: red;">*</span></strong></label>
                                                                             <input type="file" class="form-control" id="catatan_psmfat" name="catatan_psmfat">
                                                                         </div>
@@ -840,6 +840,16 @@ $conn->close();
     
     <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>     -->
     
+    <script>
+    // Asumsikan Anda telah mendapatkan nilai dari catatan_psmfat melalui AJAX atau variabel server-side ke JavaScript
+    var catatanPsmFat = "<?php echo $row['catatan_psmfat']; ?>"; // Nilai dari PHP atau ambil dari API
+
+    if (catatanPsmFat !== "") {
+        // Jika catatan_psmfat sudah ada isinya, sembunyikan elemen input
+        document.getElementById('uploadCatatanContainer').style.display = 'none';
+    }
+    </script>
+
 <script>
 $(document).ready(function() {
     // Function to load and display existing catatan values

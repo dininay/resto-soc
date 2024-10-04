@@ -117,60 +117,60 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 $stmt_get_kode_lahan->free_result();
                 
             // Periksa apakah ada lampiran
-            $catatan_psmfat = "";
-            if (isset($_FILES["catatan_psmfat"])) {
-                $catatan_psmfat_paths = array();
+            // $catatan_psmfat = "";
+            // if (isset($_FILES["catatan_psmfat"])) {
+            //     $catatan_psmfat_paths = array();
+            //     $catatan_psmfat = $file_name;
+            //     // Loop setiap file yang diunggah
+            //     foreach ($_FILES['catatan_psmfat']['name'] as $key => $filename) {
+            //         $file_tmp = $_FILES['catatan_psmfat']['tmp_name'][$key];
+            //         $file_name = $_FILES['catatan_psmfat']['name'][$key];
+            //         $target_dir = "../uploads/";
+            //         $target_file = $target_dir . basename($file_name);
 
-                // Loop setiap file yang diunggah
-                foreach ($_FILES['catatan_psmfat']['name'] as $key => $filename) {
-                    $file_tmp = $_FILES['catatan_psmfat']['tmp_name'][$key];
-                    $file_name = $_FILES['catatan_psmfat']['name'][$key];
-                    $target_dir = "../uploads/";
-                    $target_file = $target_dir . basename($file_name);
+            //         // Cek apakah file berhasil diupload
+            //         if (move_uploaded_file($file_tmp, $target_file)) {
+            //             $catatan_psmfat_paths[] = $file_name;
+            //             echo "File berhasil diunggah: $target_file<br>";
 
-                    // Cek apakah file berhasil diupload
-                    if (move_uploaded_file($file_tmp, $target_file)) {
-                        $catatan_psmfat_paths[] = $file_name;
-                        echo "File berhasil diunggah: $target_file<br>";
+            //             // Cek apakah file Excel dan impor data
+            //             $file_extension = pathinfo($file_name, PATHINFO_EXTENSION);
+            //             if ($file_extension == 'xlsx' || $file_extension == 'xls') {
+            //                 $spreadsheet = IOFactory::load($target_file);
+            //                 $sheet = $spreadsheet->getActiveSheet();
+            //                 $highestRow = $sheet->getHighestRow();
 
-                        // Cek apakah file Excel dan impor data
-                        $file_extension = pathinfo($file_name, PATHINFO_EXTENSION);
-                        if ($file_extension == 'xlsx' || $file_extension == 'xls') {
-                            $spreadsheet = IOFactory::load($target_file);
-                            $sheet = $spreadsheet->getActiveSheet();
-                            $highestRow = $sheet->getHighestRow();
+            //                 // Loop setiap baris di file Excel
+            //                 for ($row = 2; $row <= $highestRow; $row++) {
+            //                     $pasal_page = $sheet->getCell('A' . $row)->getValue();
+            //                     $catatan_psmfatisi = $sheet->getCell('B' . $row)->getValue();
+            //                     $remarks = $sheet->getCell('C' . $row)->getValue();
 
-                            // Loop setiap baris di file Excel
-                            for ($row = 2; $row <= $highestRow; $row++) {
-                                $pasal_page = $sheet->getCell('A' . $row)->getValue();
-                                $catatan_psmfat = $sheet->getCell('B' . $row)->getValue();
-                                $remarks = $sheet->getCell('C' . $row)->getValue();
+            //                     // Insert data ke database
+            //                     $sql_insert = "INSERT INTO note_psm (kode_lahan, pasal_page, catatan_psmfat, remarks, fat_date) VALUES (?, ?, ?, ?, ?)";
+            //                     $stmt_insert = $conn->prepare($sql_insert);
+            //                     $stmt_insert->bind_param("sssss", $kode_lahan, $pasal_page, $catatan_psmfatisi, $remarks, $fat_date);
 
-                                // Insert data ke database
-                                $sql_insert = "INSERT INTO note_psm (kode_lahan, pasal_page, catatan_psmfat, remarks, fat_date) VALUES (?, ?, ?, ?, ?)";
-                                $stmt_insert = $conn->prepare($sql_insert);
-                                $stmt_insert->bind_param("sssss", $kode_lahan, $pasal_page, $catatan_psmfat, $remarks, $fat_date);
+            //                     if ($stmt_insert->execute()) {
+            //                         echo "Data berhasil disimpan untuk baris $row<br>";
+            //                     } else {
+            //                         echo "Gagal menyimpan data pada baris $row: " . $stmt_insert->error . "<br>";
+            //                     }
+            //                 }
+            //             }
+            //         } else {
+            //             echo "Gagal mengunggah file " . htmlspecialchars($file_name) . "<br>";
+            //         }
+            //     }
 
-                                if ($stmt_insert->execute()) {
-                                    echo "Data berhasil disimpan untuk baris $row<br>";
-                                } else {
-                                    echo "Gagal menyimpan data pada baris $row: " . $stmt_insert->error . "<br>";
-                                }
-                            }
-                        }
-                    } else {
-                        echo "Gagal mengunggah file " . htmlspecialchars($file_name) . "<br>";
-                    }
-                }
-
-                // Gabungkan semua file lampiran ke satu string
-                $catatan_psmfat = implode(",", $catatan_psmfat_paths);
-            }
+            //     // Gabungkan semua file lampiran ke satu string
+            //     $catatan_psmfat = implode(",", $catatan_psmfat_paths);
+            // }
             
                 // Query untuk memperbarui status confirm_fatpsm di tabel draft
-                $sql_update = "UPDATE draft SET confirm_fatpsm = ?, catatan_psmfat = ?, psmfat_date = ?, confirm_bod = ?, slabod_date = ?, confirm_nego = ? WHERE id = ?";
+                $sql_update = "UPDATE draft SET confirm_fatpsm = ?, psmfat_date = ?, confirm_bod = ?, slabod_date = ?, confirm_nego = ? WHERE id = ?";
                 $stmt_update = $conn->prepare($sql_update);
-                $stmt_update->bind_param("ssssssi", $confirm_fatpsm, $catatan_psmfat, $psmfat_date, $confirm_bod, $slabod_date, $confirm_nego, $id);
+                $stmt_update->bind_param("sssssi", $confirm_fatpsm, $psmfat_date, $confirm_bod, $slabod_date, $confirm_nego, $id);
                 $stmt_update->execute();
 
             // Query untuk memperbarui status confirm_fatpsm di tabel draft
@@ -397,7 +397,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                 // Cek apakah file berhasil diunggah
                 if (move_uploaded_file($file_tmp, $target_file)) {
                     echo "File berhasil diunggah: $target_file<br>";
-
+                    $catatan_psmfat = $file_name;
                     // Cek apakah file adalah Excel
                     $file_extension = pathinfo($file_name, PATHINFO_EXTENSION);
                     if ($file_extension == 'xlsx' || $file_extension == 'xls') {
@@ -415,9 +415,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                             // Pastikan kolom tidak kosong sebelum insert
                             if (!empty($pasal_page) && !empty($catatan_psmfatisi)) {
                                 // Insert data ke database
-                                $sql_insert = "INSERT INTO note_psm (kode_lahan, pasal_page, catatan_psmfat, remarks) VALUES (?, ?, ?, ?)";
+                                $fat_date = date("Y-m-d H:i:s");
+                                $sql_insert = "INSERT INTO note_psm (kode_lahan, pasal_page, catatan_psmfat, remarks, fat_date) VALUES (?, ?, ?, ?, ?)";
                                 $stmt_insert = $conn->prepare($sql_insert);
-                                $stmt_insert->bind_param("ssss", $kode_lahan, $pasal_page, $catatan_psmfatisi, $remarks);
+                                $stmt_insert->bind_param("sssss", $kode_lahan, $pasal_page, $catatan_psmfatisi, $remarks, $fat_date);
 
                                 // Cek apakah insert berhasil
                                 if ($stmt_insert->execute()) {
@@ -553,8 +554,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         // Komit transaksi
         $conn->commit();
         // Redirect ke halaman datatables-sign-psm-fat.php
-        // header("Location: ../datatables-sign-psm-fat.php");
-        // exit; // Pastikan tidak ada output lain setelah header redirect
+        header("Location: ../datatables-sign-psm-fat.php");
+        exit; // Pastikan tidak ada output lain setelah header redirect
     } catch (Exception $e) {
         // Rollback transaksi jika terjadi kesalahan
         $conn->rollback();

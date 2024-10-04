@@ -1,4 +1,15 @@
 <?php
+// Include PHPMailer library files
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require '../../PHPMailer-6.8.1/src/Exception.php';
+require '../../PHPMailer-6.8.1/src/PHPMailer.php';
+require '../../PHPMailer-6.8.1/src/SMTP.php';
+require '../../vendor/autoload.php'; // Hanya jika menggunakan Composer
+
+// Inisialisasi PHPMailer
+$mail = new PHPMailer(true);
 // Koneksi ke database
 include "../../koneksi.php";
 
@@ -91,7 +102,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
                     }
                 }
             }
-            var_dump($toEmails);
             if (!empty($toEmails)) {
 
                 try {
@@ -198,7 +208,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
         // Komit transaksi
         $conn->commit();
         // Redirect ke halaman datatables-checkval-legal.php
-        header("Location: ../datatables-it.php");
+        header("Location: ../datatables-fat.php");
         exit; // Pastikan tidak ada output lain setelah header redirect
     } catch (Exception $e) {
         // Rollback transaksi jika terjadi kesalahan

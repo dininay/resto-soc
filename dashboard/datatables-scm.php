@@ -120,7 +120,7 @@ echo "Total Count: " . $total_count . "<br>";
     <style>
         .hidden {
             display: none;
-        },
+        }
 
         .small-column {
             max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */

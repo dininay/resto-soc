@@ -107,7 +107,7 @@ function getBadgeColor($remarks) {
     <style>
         .hidden {
             display: none;
-        },
+        }
 
         .small-column {
             max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */

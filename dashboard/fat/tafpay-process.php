@@ -210,13 +210,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
 
             // Eksekusi query
             if ($stmt->execute() === TRUE) {
-                header("Location:  " . $base_url . "/datatables-tafpay-listrikair.php");
-                exit();
             } else {
                 echo "Error: " . $sql . "<br>" . $conn->error;
             }
         }
         
+        header("Location:  " . $base_url . "/datatables-tafpay-listrikair.php");
+        exit();
     } catch (Exception $e) {
         // Rollback transaksi jika terjadi kesalahan
         $conn->rollback();

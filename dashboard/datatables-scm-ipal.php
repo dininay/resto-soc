@@ -7,7 +7,7 @@ $sql = "SELECT socdate_sdg.*, d.kode_store, l.nama_lahan
 from socdate_sdg
 JOIN land l ON socdate_sdg.kode_lahan = l.kode_lahan
 JOIN dokumen_loacd d ON socdate_sdg.kode_lahan = d.kode_lahan
-WHERE status_scmipal IN ('In Process', 'Done', 'Pending', 'Not Yet')";
+WHERE status_sdgipal IN ('Proceed', 'Approve', 'Done') OR status_scmipal IN ('In Process', 'Done', 'Pending', 'Not Yet')";
 $result = $conn->query($sql);
 
 
@@ -89,7 +89,7 @@ function getBadgeColor($remarks) {
     <style>
         .hidden {
             display: none;
-        },
+        }
 
         .small-column {
             max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */

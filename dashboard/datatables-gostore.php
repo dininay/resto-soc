@@ -39,10 +39,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && isset($_POST[
     }
 }
 // Query untuk mengambil data dari tabel land
-$sql = "SELECT r.*, d.nama_lahan, d.lokasi, dl.kode_store
+$sql = "SELECT r.*, d.nama_lahan, d.lokasi, dl.kode_store, s.go_fix, s.rto_act
         FROM land d
         INNER JOIN resto r ON d.kode_lahan = r.kode_lahan
         INNER JOIN dokumen_loacd dl ON d.kode_lahan = dl.kode_lahan
+        LEFT JOIN summary_soc s ON s.kode_lahan = r.kode_lahan
         WHERE status_approvlegalvd = 'Approve'";
 $result = $conn->query($sql);
 
@@ -115,6 +116,8 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Alamat Lokasi</th>
                                                 <th>Target GO Store</th>
                                                 <th>Target RTO</th>
+                                                <th>Actual GO Store</th>
+                                                <th>Actual RTO</th>
                                                 <th>Last Updated by</th>
 												<th>Action</th>
                                             </tr>
@@ -143,6 +146,30 @@ if ($result && $result->num_rows > 0) {
                                                 if (!empty($row['rto_date'])) {
                                                     // Format tanggal jika data ada
                                                     $date = new DateTime($row['rto_date']);
+                                                    $formattedDate = $date->format('d M y');
+                                                } else {
+                                                    // Jika data kosong, beri nilai kosong pada $formattedDate
+                                                    $formattedDate = '';
+                                                }
+                                                ?>
+                                                <td><?= $formattedDate ?></td>
+                                                <?php
+                                                // Periksa apakah $row['start_konstruksi'] ada dan tidak kosong
+                                                if (!empty($row['go_fix'])) {
+                                                    // Format tanggal jika data ada
+                                                    $date = new DateTime($row['go_fix']);
+                                                    $formattedDate = $date->format('d M y');
+                                                } else {
+                                                    // Jika data kosong, beri nilai kosong pada $formattedDate
+                                                    $formattedDate = '';
+                                                }
+                                                ?>
+                                                <td><?= $formattedDate ?></td>
+                                                <?php
+                                                // Periksa apakah $row['start_konstruksi'] ada dan tidak kosong
+                                                if (!empty($row['rto_act'])) {
+                                                    // Format tanggal jika data ada
+                                                    $date = new DateTime($row['rto_act']);
                                                     $formattedDate = $date->format('d M y');
                                                 } else {
                                                     // Jika data kosong, beri nilai kosong pada $formattedDate
@@ -202,6 +229,8 @@ if ($result && $result->num_rows > 0) {
                                                 <th>Alamat Lokasi</th>
                                                 <th>Target GO Store</th>
                                                 <th>Target RTO</th>
+                                                <th>Actual GO Store</th>
+                                                <th>Actual RTO</th>
                                                 <th>Last Updated by</th>
 												<th>Action</th>
                                             </tr>

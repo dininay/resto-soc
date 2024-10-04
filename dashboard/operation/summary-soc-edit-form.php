@@ -228,14 +228,14 @@ if (isset($_GET['id'])) {
                                             ?>%" readonly/>
                                     </div>
                                 </div>
-                                <div class="form-group row">
+                                <!-- <div class="form-group row">
                                     <label class="col-sm-3 col-form-label" for="status_go">Status GO<strong><span style="color: red;">*</span></strong></label>
                                     <div class="col-sm-9">
                                         <select class="form-control" id="status_go" name="status_go">
                                             <?php echo $options; ?>
                                         </select>
                                     </div>
-                                </div>
+                                </div> -->
                                 <div class="form-group row">
                                     <div class="col-sm-10">
                                         <button class="btn btn-primary" type="submit">Simpan</button>

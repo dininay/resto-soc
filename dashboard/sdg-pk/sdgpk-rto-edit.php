@@ -154,9 +154,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $current_date->modify("+$total_day days");
         $sla_tafpay = $current_date->format('Y-m-d');
     }
-
     // Update data di database
-    $sql = "UPDATE socdate_sdg SET sumber_air = '$sumber_air', lamp_sumberair = '$lamp_sumberair', kesesuaian_ujilab = '$kesesuaian_ujilab', lamp_ujilab = '$lamp_ujilab', filter_air = '$filter_air', lamp_filterair = '$lamp_filterair', debit_airsumur = '$debit_airsumur', debit_airpdam = '$debit_airpdam', id_pdam = '$id_pdam', status_sdgsumber = '$status_sdgsumber', status_procurspkwofa = '$status_procurspkwofa', status_tafpay = '$status_tafpay', sla_spkwofa = '$sla_spkwofa', sla_tafpay = '$sla_tafpay', sdg_sumber = '$sdg_sumber' WHERE id = '$id'";
+    $sql = "UPDATE socdate_sdg SET sumber_air = '$sumber_air', lamp_sumberair = '$lamp_sumberair', kesesuaian_ujilab = '$kesesuaian_ujilab', lamp_ujilab = '$lamp_ujilab', filter_air = '$filter_air', lamp_filterair = '$lamp_filterair', debit_airsumur = '$debit_airsumur', debit_airpdam = '$debit_airpdam', id_pdam = '$id_pdam', status_sdgsumber = '$status_sdgsumber', status_procurspkwofa = '$status_procurspkwofa', status_tafpay = '$status_tafpay', sla_spkwofa = '$sla_spkwofa', sla_tafpay = '$sla_tafpay' WHERE id = '$id'";
     // var_dump($sql);
     if ($conn->query($sql) === TRUE) {
         

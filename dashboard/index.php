@@ -1257,7 +1257,6 @@ function getStatusBadgeColor($status) {
     <script src="../dist-assets/js/plugins/echarts.min.js"></script>
     <script src="../dist-assets/js/scripts/echart.options.min.js"></script>
     <script src="../dist-assets/js/scripts/dashboard.v1.script.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
     <script>
     // Mengirim data status_go ke JavaScript

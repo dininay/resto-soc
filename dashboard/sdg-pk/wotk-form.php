@@ -12,7 +12,7 @@ $result = $stmt->get_result();
 
 if ($result->num_rows > 0) {
     $row = $result->fetch_assoc();
-    $city_name = $row['city'];
+    // $city_name = $row['city'];
     // Ambil data lainnya dari tabel procurement
     $kode_lahan = $row['kode_lahan']; 
 }

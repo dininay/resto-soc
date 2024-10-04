@@ -116,7 +116,7 @@ $conn->close();
 <style>
         .hidden {
             display: none;
-        },
+        }
 
         .small-column {
             max-width: 300px; /* Atur lebar maksimum sesuai kebutuhan */
@@ -834,7 +834,7 @@ $conn->close();
 
         // Update the modal's content.
         var modal = $(this);
-        modal.find('#modalKodeLahan').val(kodeLahan);
+        modal.find('#modalId').val(kodeLahan);
         modal.find('#statusSelect').val(status);
 
         // Toggle issue detail section visibility
